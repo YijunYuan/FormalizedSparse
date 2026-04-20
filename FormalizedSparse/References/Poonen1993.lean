@@ -152,8 +152,9 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
   unfold pAdicHahnSeries
   infer_instance
 
+-- The field of p-adic Hahn series is complete with respect to the valuation defined above.
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
-    CompleteSpace (pAdicHahnSeries p) := by sorry
+    CompleteSpace (pAdicHahnSeries p) := by admit
 
 -- Define an element of W(𝔽ₚ^⁻)((p^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support by the
 -- formula f ↦ ∑ₖ [f(k)]pᵏ
@@ -166,7 +167,7 @@ noncomputable def from_coeff {p : ℕ} [Fact (Nat.Prime p)]
 -- the `from_coeff` construction is the original function.
 theorem coeff_of_from_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     (s : ℚ → Fpbar p) (hspwo : s.support.IsPWO) :
-    (exists_canonical_expansion (from_coeff s hspwo)).choose.val = s := by
+    (from_coeff s hspwo).coeff = s := by
   have hEq :
       ⟨s, hspwo⟩ = (exists_canonical_expansion (from_coeff s hspwo)).choose := by
     apply (exists_canonical_expansion (from_coeff s hspwo)).choose_spec.2
@@ -174,7 +175,30 @@ theorem coeff_of_from_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
       (Quotient.exact (Quotient.out_eq (from_coeff s hspwo)))
   exact (congrArg Subtype.val hEq).symm
 
+-- The converse of the above theorem.
+theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
+    (x : pAdicHahnSeries p) :
+    from_coeff x.coeff (support_IsPWO x) = x := by
+  simp only [from_coeff, coeff]
+  set s := (exists_canonical_expansion x).choose
+  have h := (exists_canonical_expansion x).choose_spec.1
+  dsimp at h
+  obtain ⟨y, hy⟩ := h
+  have : Ideal.Quotient.mk (NullSeriesIdeal p)
+      (LiftedPAdicHahnSeries.from_coeff s.val s.prop) =
+    Ideal.Quotient.mk (NullSeriesIdeal p) x.out := by
+    apply Quotient.sound
+    change (Ideal.Quotient.ringCon (NullSeriesIdeal p))
+      (LiftedPAdicHahnSeries.from_coeff s.val s.prop) x.out
+    exact ⟨-y, by dsimp; rw [neg_vadd_eq_iff]; dsimp at hy; exact hy.symm⟩
+  rw [this]; exact Quotient.out_eq x
 
+def QpUn_emd_pAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] : QpUn p →+* pAdicHahnSeries p where
+  toFun a := sorry
+  map_one' := sorry
+  map_mul' := sorry
+  map_zero' := sorry
+  map_add' := sorry
 
 noncomputable def residue_RingEquiv (p : ℕ) [Fact (Nat.Prime p)] :
     Fpbar p →+* Valued.ResidueField (pAdicHahnSeries p) where
