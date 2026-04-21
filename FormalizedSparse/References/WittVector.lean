@@ -111,3 +111,7 @@ lemma embd_Cp_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℚᵘⁿ_[p], ‖y‖ = ‖(embd_Cp y)‖ := by admit
 
 end QpUn
+
+namespace Padic
+noncomputable abbrev to_QpUn {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] := QpUn.Qp_embd
+end Padic

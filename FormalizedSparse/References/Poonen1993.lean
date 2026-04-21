@@ -256,6 +256,19 @@ noncomputable def QpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+*
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] 𝕃_[p] := QpUn_embd.toAlgebra
 
+end pAdicHahnSeries
+end Poonen1993
+
+namespace QpUn
+
+noncomputable abbrev to_Lp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
+  Poonen1993.pAdicHahnSeries.QpUn_embd
+
+end QpUn
+
+namespace Poonen1993
+namespace pAdicHahnSeries
+
 instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by admit
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
@@ -301,6 +314,30 @@ theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
   admit
 
-end pAdicHahnSeries
+def IsHyperAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Prop :=
+  (∃ T : ℕ, ∀ q ∈ x.support, ∃ k : ℕ, (T * (p ^ k) * q).den = 1) ∧
+  (Set.image x.coeff x.support).Finite
 
+def HyperAlgebraicSubfield (p : ℕ) [Fact (Nat.Prime p)] : Subfield (𝕃_[p]) where
+  carrier := {x | IsHyperAlgebraic x}
+  zero_mem' := by admit
+  one_mem' := by admit
+  add_mem' := by admit
+  mul_mem' := by admit
+  neg_mem' := by admit
+  inv_mem' := by admit
+
+theorem HyperAlgebraicSubfield_isAlgClosed (p : ℕ) [Fact (Nat.Prime p)] :
+  IsAlgClosed (HyperAlgebraicSubfield p) := by
+  admit
+
+theorem HyperAlgebraicSubfield_include_Qp (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ x : ℚ_[p], IsHyperAlgebraic x.to_QpUn.to_Lp := by
+  admit
+
+theorem HyperAlgebraicSubfield_include_PadicAlgCl (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ x : (PadicAlgCl p), IsHyperAlgebraic (Cp_embd (p := p) x) := by
+  admit
+
+end pAdicHahnSeries
 end Poonen1993
