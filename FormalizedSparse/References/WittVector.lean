@@ -1,24 +1,10 @@
-import Mathlib.FieldTheory.Finite.GaloisField
-import Mathlib.RingTheory.HahnSeries.Multiplication
-import Mathlib.RingTheory.HahnSeries.Valuation
-import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
-import Mathlib.RingTheory.WittVector.Basic
-import Mathlib.RingTheory.WittVector.Complete
-import Mathlib.RingTheory.WittVector.DiscreteValuationRing
-import Mathlib.RingTheory.Valuation.Discrete.Basic
-import Mathlib.Algebra.Order.Floor.Defs
-import Mathlib.Data.Rat.Floor
-import Mathlib.Data.Int.Interval
-import Mathlib.Order.Filter.Defs
-import Mathlib.Topology.Defs.Filter
-import Mathlib.Topology.Algebra.Valued.WithVal
-import Mathlib.RingTheory.Ideal.Quotient.Defs
-import Mathlib.RingTheory.Valuation.ValuationSubring
-import Mathlib.RingTheory.WittVector.Compare
-import Mathlib.NumberTheory.Padics.Complex
-import Mathlib.Analysis.Normed.Field.WithAbs
-
 import FormalizedSparse.References.Miscellaneous
+import Mathlib.Analysis.Normed.Field.WithAbs
+import Mathlib.NumberTheory.Padics.Complex
+import Mathlib.RingTheory.Valuation.Discrete.Basic
+import Mathlib.RingTheory.WittVector.Compare
+import Mathlib.RingTheory.WittVector.DiscreteValuationRing
+import Mathlib.RingTheory.WittVector.Teichmuller
 
 open WittVector
 
