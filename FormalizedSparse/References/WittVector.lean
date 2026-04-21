@@ -18,6 +18,8 @@ import Mathlib.RingTheory.WittVector.Compare
 import Mathlib.NumberTheory.Padics.Complex
 import Mathlib.Analysis.Normed.Field.WithAbs
 
+import FormalizedSparse.References.Miscellaneous
+
 open WittVector
 
 -- The algebraic closure of F_p
@@ -49,9 +51,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
 
 open Classical in
 noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[p] ℝ := {
-  toFun a :=
-    if h : a = 0 then 0
-    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0) (Valued.v a)
+  toFun a := WithZeroMulInt.toNNReal (pInv_ne_zero p) (Valued.v a)
   map_mul' := sorry
   nonneg' := sorry
   eq_zero' := sorry
@@ -60,9 +60,7 @@ noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[
 
 open Classical in
 lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
-  abs p a =
-    if h : a = 0 then 0
-    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0)
+  abs p a = WithZeroMulInt.toNNReal (pInv_ne_zero p)
       (Valued.v a) := by
   unfold abs
   aesop
@@ -120,7 +118,7 @@ theorem embd_compatible (p : ℕ) [Fact (Nat.Prime p)] :
 
 -- The embedding from ℚᵘⁿ_[p] to ℂ_[p] keeps the valuation.
 lemma embd_Cp_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℚᵘⁿ_[p], WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1/ (p : NNReal) ≠ 0)
+  ∀ y : ℚᵘⁿ_[p], WithZeroMulInt.toNNReal (pInv_ne_zero p)
     (Valued.v y) = Valued.v (embd_Cp y) := by admit
 
 lemma embd_Cp_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :

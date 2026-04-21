@@ -12,10 +12,12 @@ import Mathlib.Data.Int.Interval
 import Mathlib.Order.Filter.Defs
 import Mathlib.Topology.Defs.Filter
 import Mathlib.Topology.Algebra.Valued.WithVal
+import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
 import Mathlib.RingTheory.Ideal.Quotient.Defs
 import Mathlib.RingTheory.Valuation.ValuationSubring
 
 import FormalizedSparse.References.WittVector
+import FormalizedSparse.References.Miscellaneous
 
 open WittVector
 
@@ -283,24 +285,19 @@ noncomputable def Cp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℂ_[p] →+* 𝕃_[p
   alg_Cp_embd.toRingHom
 
 open Classical in
-noncomputable def abs {p : ℕ} [Fact (Nat.Prime p)] : AbsoluteValue 𝕃_[p] ℝ := {
-  toFun a :=
-    if h : a = 0 then 0
-    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0) (Valued.v a)
-  map_mul' := sorry
-  nonneg' := sorry
-  eq_zero' := sorry
-  add_le' := sorry
-}
+noncomputable def abs {p : ℕ} [Fact (Nat.Prime p)] : AbsoluteValue 𝕃_[p] ℝ where
+  toFun a := WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v a)
+  map_mul' := by admit
+  nonneg' := by admit
+  eq_zero' := by admit
+  add_le' := by admit
 
 open Classical in
 lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : 𝕃_[p]) :
-  abs a =
-    if h : a = 0 then 0
-    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0)
-      (Valued.v a) := by
-  unfold abs
-  aesop
+  abs a = WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v a) := rfl
+
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField 𝕃_[p] :=
+  WithAbs.normedField abs
 
 theorem QpUn_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚᵘⁿ_[p],
@@ -308,13 +305,19 @@ theorem QpUn_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
       Valued.v (QpUn_embd x) := by
   admit
 
-/-
+theorem QpUn_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ x : ℚᵘⁿ_[p], ‖x‖ = ‖(QpUn_embd x)‖ := by
+  admit
+
 theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p],
     Valued.v y =
-      Valued.v (Cp_embd y) := by
+      WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v (Cp_embd y)) := by
   sorry
-  -/
+
+theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
+  admit
 
 end pAdicHahnSeries
 
