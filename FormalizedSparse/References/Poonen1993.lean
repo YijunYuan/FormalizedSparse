@@ -22,7 +22,6 @@ open WittVector
 namespace Poonen1993
 -- W(𝔽ₚ^⁻)((t^ℚ))
 abbrev LiftedPAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] := HahnSeries ℚ (ℤᵘⁿ_[p])
-
 namespace LiftedPAdicHahnSeries
 -- Define an element of W(𝔽ₚ^⁻)((t^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support
 -- by the formula f ↦ ∑ₖ [f(k)]tᵏ
@@ -39,7 +38,6 @@ LiftedPAdicHahnSeries p where
     · simp
 end LiftedPAdicHahnSeries
 
--- The set {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} is finite for any g and N.
 def finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : ℚ) (N : ℕ) :
   Finite {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} := by
   by_cases hs : Set.Nonempty x.support
@@ -121,9 +119,9 @@ theorem support_nonempty_of_nonzero
 open Classical in
 noncomputable def val
   (p : ℕ) [Fact (Nat.Prime p)] :
-  AddValuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithTop ℚ) := {
+  Valuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithZero (Multiplicative ℚ)) := {
   toFun x :=
-    if h : x = 0 then (⊤ : WithTop ℚ)
+    if h : x = 0 then 0
     else ((support_IsPWO x).isWF.min (support_nonempty_of_nonzero p x h) : WithTop ℚ)
   map_zero' := by admit
   map_one' := by admit
@@ -150,7 +148,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Field (𝕃_[p]) := by
   apply Ideal.Quotient.field
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
-  Valued (𝕃_[p]) (Multiplicative (WithTop ℚ)ᵒᵈ) := by
+  Valued (𝕃_[p]) (WithZero (Multiplicative ℚ)) := by
   unfold pAdicHahnSeries
   infer_instance
 
@@ -195,57 +193,128 @@ theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     exact ⟨-y, by dsimp; rw [neg_vadd_eq_iff]; dsimp at hy; exact hy.symm⟩
   rw [this]; exact Quotient.out_eq x
 
-def QpUn_embd (p : ℕ) [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] where
-  toFun a := sorry
-  map_one' := sorry
-  map_mul' := sorry
-  map_zero' := sorry
-  map_add' := sorry
-
-/-
-noncomputable def residue_RingEquiv (p : ℕ) [Fact (Nat.Prime p)] :
-    Fpbar p →+* Valued.ResidueField (𝕃_[p]) where
-  toFun a := by
-    let atei : pAdicHahnSeries p :=
-      Ideal.Quotient.mk (NullSeriesIdeal p) <|
-        HahnSeries.single 0 (teichmuller p a)
-    have : atei ∈ Valued.integer (pAdicHahnSeries p) := sorry
-    exact IsLocalRing.residue
-      (Valued.integer (pAdicHahnSeries p)) ⟨atei, this⟩
-  map_one' := by
-    simpa [pAdicHahnSeries,val] using MonoidHom.mem_mker.mp rfl
+noncomputable def ZpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℤᵘⁿ_[p] →+* 𝕃_[p] where
+  toFun a := Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 a)
+  map_one' := by simp
   map_mul' := by
     intro a b
-    simp only [map_mul (teichmuller p),
-      ← map_mul (IsLocalRing.residue (Valued.integer (pAdicHahnSeries p)))]
-    congr 1; ext
-    simp only [MulMemClass.mk_mul_mk,
-      ← map_mul (Ideal.Quotient.mk (NullSeriesIdeal p)),
-      HahnSeries.single_mul_single, zero_add]
-  map_zero' := by
-    simp only [teichmuller_zero, map_zero, IsLocalRing.residue_eq_zero_iff,
-      IsLocalRing.mem_maximalIdeal, mem_nonunits_iff]
-    refine Valuation.Integer.not_isUnit_iff_valuation_lt_one.mpr ?_
-    unfold Valued.v instValuedMultiplicativeOrderDualWithTopRat
+    change Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 (a * b)) =
+      Ideal.Quotient.mk (NullSeriesIdeal p) ((HahnSeries.single 0 a) * (HahnSeries.single 0 b))
+    rw [HahnSeries.single_mul_single]
     simp
+  map_zero' := by simp
   map_add' := by
     intro a b
-    rw [← sub_eq_zero]
-    simp only [← map_add (IsLocalRing.residue (Valued.integer (pAdicHahnSeries p))),
-      ← map_sub (IsLocalRing.residue (Valued.integer (pAdicHahnSeries p)))]
-    rw [IsLocalRing.residue_eq_zero_iff]
-    simp only [AddMemClass.mk_add_mk]
-    conv_lhs => simp [*]
+    change Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 (a + b)) =
+      Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 a + HahnSeries.single 0 b)
+    rw [HahnSeries.single_add]
 
+lemma ZpUn_embd_injective {p : ℕ} [Fact (Nat.Prime p)] :
+  Function.Injective (ZpUn_embd (p := p)) := by
+  intro a b hab
+  have hmem0 : IsNullSeries (HahnSeries.single (0 : ℚ) a - HahnSeries.single (0 : ℚ) b) := by
+    simpa [NullSeriesIdeal, ZpUn_embd, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk] using
+      (Ideal.Quotient.eq.mp hab)
+  have hsingle : HahnSeries.single (0 : ℚ) a - HahnSeries.single (0 : ℚ) b =
+    HahnSeries.single (0 : ℚ) (a - b) := by
+    ext q
+    by_cases hq : q = 0
+    · simp only [HahnSeries.coeff_sub', Pi.sub_apply, HahnSeries.single_sub]
+    · simp [HahnSeries.coeff_single_of_ne hq]
+  have hmem := hmem0
+  rw [hsingle] at hmem
+  let s : ℕ → Finset ℤ := fun M =>
+    Set.Finite.toFinset (finprop (HahnSeries.single (0 : ℚ) (a - b)) 0 M)
+  let f : ℕ → QpUn p := fun M =>
+    Finset.sum (s M).attach fun n =>
+      (p : QpUn p) ^ n.val *
+        algebraMap (OQpUn p) (QpUn p) ((HahnSeries.single (0 : ℚ) (a - b)).coeff (0 + n))
+  have h0 : Filter.Tendsto f Filter.atTop (nhds 0) := by
+    simpa [f, s] using hmem 0
+  have hconst : f = fun _ : ℕ => algebraMap (OQpUn p) (QpUn p) (a - b) := by
+    funext M
+    classical
+    unfold f
+    by_cases hsub : a - b = 0
+    · simp [hsub, s]
+    · have hset : {n : ℤ | (0 : ℚ) + n ≤ M ∧
+        (HahnSeries.single (0 : ℚ) (a - b)).coeff ((0 : ℚ) + n) ≠ 0} = {0} := by
+        ext n
+        constructor
+        · intro hn
+          have hz := HahnSeries.eq_of_mem_support_single <| (HahnSeries.mem_support _ _).2 hn.2
+          have hn0 : n = 0 := by exact_mod_cast (by simpa using hz : (n : ℚ) = 0)
+          simp [hn0]
+        · intro hn
+          rcases Set.mem_singleton_iff.mp hn with rfl
+          simp [hsub]
+      have hs : s M = ({0} : Finset ℤ) := by
+        have hs' := (Set.Finite.toFinset_inj (hs := finprop (HahnSeries.single (0 : ℚ) (a - b)) 0 M)
+          (ht := Set.finite_singleton (0 : ℤ))).2 hset
+        simpa [s] using hs'
+      rw [hs]
+      have hatt : ({0} : Finset ℤ).attach = {⟨0, by simp⟩} := by
+        ext x
+        rcases x with ⟨x, hx⟩
+        simp at hx
+        simp [hx]
+      simp [hatt]
+  have ht : Filter.Tendsto (fun _ : ℕ => algebraMap (OQpUn p) (QpUn p) (a - b))
+    Filter.atTop (nhds 0) := by
+    simpa [hconst] using h0
+  have hmap : algebraMap (OQpUn p) (QpUn p) (a - b) = 0 := by
+    simpa using (tendsto_const_nhds_iff.mp ht)
+  exact sub_eq_zero.mp <|
+    (IsFractionRing.injective (R := OQpUn p) (K := QpUn p)) (by simpa using hmap)
 
-    sorry
+noncomputable def QpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
+  IsFractionRing.map (j := ZpUn_embd (p := p)) ZpUn_embd_injective
 
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] 𝕃_[p] := QpUn_embd.toAlgebra
 
-theorem residue_field_iso_Fpbar (p : ℕ) [Fact (Nat.Prime p)] :
-  Function.Bijective (residue_RingEquiv p) := by admit
--/
+instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by admit
 
-theorem isAlgClosed (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by admit
+variable (p : ℕ) [Fact (Nat.Prime p)]
+
+noncomputable def alg_Cp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℂ_[p] →ₐ[ℚᵘⁿ_[p]] 𝕃_[p] :=
+  @IsAlgClosed.lift 𝕃_[p] _ _ ℚᵘⁿ_[p] _ _ ℂ_[p] _ _ _ _ _ _ _
+
+noncomputable def Cp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℂ_[p] →+* 𝕃_[p] :=
+  alg_Cp_embd.toRingHom
+
+open Classical in
+noncomputable def abs {p : ℕ} [Fact (Nat.Prime p)] : AbsoluteValue 𝕃_[p] ℝ := {
+  toFun a :=
+    if h : a = 0 then 0
+    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0) (Valued.v a)
+  map_mul' := sorry
+  nonneg' := sorry
+  eq_zero' := sorry
+  add_le' := sorry
+}
+
+open Classical in
+lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : 𝕃_[p]) :
+  abs a =
+    if h : a = 0 then 0
+    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0)
+      (Valued.v a) := by
+  unfold abs
+  aesop
+
+theorem QpUn_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ x : ℚᵘⁿ_[p],
+    WithZero.map' (AddMonoidHom.toMultiplicative (Int.castAddHom ℚ)) (Valued.v x) =
+      Valued.v (QpUn_embd x) := by
+  admit
+
+/-
+theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ y : ℂ_[p],
+    Valued.v y =
+      Valued.v (Cp_embd y) := by
+  sorry
+  -/
 
 end pAdicHahnSeries
 

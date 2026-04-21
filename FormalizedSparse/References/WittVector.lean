@@ -16,6 +16,7 @@ import Mathlib.RingTheory.Ideal.Quotient.Defs
 import Mathlib.RingTheory.Valuation.ValuationSubring
 import Mathlib.RingTheory.WittVector.Compare
 import Mathlib.NumberTheory.Padics.Complex
+import Mathlib.Analysis.Normed.Field.WithAbs
 
 open WittVector
 
@@ -33,9 +34,6 @@ abbrev QpUn (p : ℕ) [Fact (Nat.Prime p)] :=
   WithVal ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation ((FractionRing (ℤᵘⁿ_[p]))))
 notation "ℚᵘⁿ_[" p "]" => QpUn p
 
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
-  Valued (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ)) := inferInstance
-
 -- The Teichmuller lift is injective.
 theorem injective_teichmuller (p : ℕ) [Fact (Nat.Prime p)] :
   Function.Injective (teichmuller p : 𝔽ᵃ_[p] → ℤᵘⁿ_[p]) := by
@@ -45,6 +43,33 @@ theorem injective_teichmuller (p : ℕ) [Fact (Nat.Prime p)] :
   simpa
 
 namespace QpUn
+
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
+  Valued (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ)) := inferInstance
+
+open Classical in
+noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[p] ℝ := {
+  toFun a :=
+    if h : a = 0 then 0
+    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0) (Valued.v a)
+  map_mul' := sorry
+  nonneg' := sorry
+  eq_zero' := sorry
+  add_le' := sorry
+}
+
+open Classical in
+lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
+  abs p a =
+    if h : a = 0 then 0
+    else WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1 / (p : NNReal) ≠ 0)
+      (Valued.v a) := by
+  unfold abs
+  aesop
+
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
+  WithAbs.normedField (abs p)
+
 -- ℚᵘⁿ_[p] is complete with respect to the p-adic valuation defined above.
 instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by admit
 
@@ -68,11 +93,12 @@ lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚ_[p], Padic.mulValuation x = Valued.v (Qp_embd x) := by
   sorry
 
+lemma Qp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ x : ℚ_[p], ‖x‖ = ‖(Qp_embd x)‖ := by
+  admit
+
 -- View ℚᵘⁿ_[p] as an algebra over ℚ_[p] via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘⁿ_[p]) := (Qp_embd).toAlgebra
-
-private lemma ph (p : ℕ) [Fact (Nat.Prime p)] : 1/ (p : NNReal) ≠ 0 := by
-  simpa using NeZero.ne p
 
 -- There exists ℚ_[p]-embeddings from ℚᵘⁿ_[p] to ℂ_[p], which is defined as the morphism of
 -- ℚ_[p]-algebras.
@@ -80,6 +106,12 @@ def alg_embd_Cp (p : ℕ) [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →ₐ[ℚ_[p]] �
 
 -- The embedding from ℚᵘⁿ_[p] to ℂ_[p] as a field homomorphism.
 abbrev embd_Cp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* ℂ_[p] := (alg_embd_Cp p).toRingHom
+
+-- ℂ_[p] as ℚᵘⁿ_[p]-algebra via the embedding defined above.
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] ℂ_[p] := (embd_Cp).toAlgebra
+
+-- ℂ_[p] is an algebraic closure of ℚᵘⁿ_[p].
+instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosure ℚᵘⁿ_[p] ℂ_[p] := by admit
 
 -- The composition of the embedding from ℚ_[p] to ℚᵘⁿ_[p] and that from ℚᵘⁿ_[p] to ℂ_[p] is
 -- exactly the embedding from ℚ_[p] to ℂ_[p] that defined in `Mathlib.NumberTheory.Padics.Complex`
@@ -90,5 +122,8 @@ theorem embd_compatible (p : ℕ) [Fact (Nat.Prime p)] :
 lemma embd_Cp_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℚᵘⁿ_[p], WithZeroMulInt.toNNReal (by simpa using NeZero.ne p : 1/ (p : NNReal) ≠ 0)
     (Valued.v y) = Valued.v (embd_Cp y) := by admit
+
+lemma embd_Cp_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ y : ℚᵘⁿ_[p], ‖y‖ = ‖(embd_Cp y)‖ := by admit
 
 end QpUn
