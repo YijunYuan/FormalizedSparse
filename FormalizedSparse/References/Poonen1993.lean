@@ -21,7 +21,7 @@ open WittVector
 
 namespace Poonen1993
 -- W(𝔽ₚ^⁻)((t^ℚ))
-abbrev LiftedPAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] := HahnSeries ℚ (OQpUn p)
+abbrev LiftedPAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] := HahnSeries ℚ (ℤᵘⁿ_[p])
 
 namespace LiftedPAdicHahnSeries
 -- Define an element of W(𝔽ₚ^⁻)((t^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support
@@ -133,34 +133,36 @@ noncomputable def val
 
 def pAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] : Type _ := WithVal (val p)
 
+notation "𝕃_[" p "]" => pAdicHahnSeries p
+
 namespace pAdicHahnSeries
 -- Given a p-adic Hahn series x, write x = ∑ₖ [aₖ] pᵏ where aₖ ∈ 𝔽ₚ^⁻, then the `coefficients` of x
 -- is defined to be the function k ↦ aₖ, where k∈ 𝔽ₚ^-.
-noncomputable def coeff {p : ℕ} [Fact (Nat.Prime p)] (x : pAdicHahnSeries p) :
+noncomputable def coeff {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
   ℚ → Fpbar p := (exists_canonical_expansion x).choose.val
 
 -- The `support` of a p-adic Hahn series x is defined to be the support of the coefficients function
 -- of x.
-noncomputable def support {p : ℕ} [Fact (Nat.Prime p)] (x : pAdicHahnSeries p) : Set ℚ :=
+noncomputable def support {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Set ℚ :=
   (exists_canonical_expansion x).choose.val.support
 
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Field (pAdicHahnSeries p) := by
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Field (𝕃_[p]) := by
   apply Ideal.Quotient.field
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
-  Valued (pAdicHahnSeries p) (Multiplicative (WithTop ℚ)ᵒᵈ) := by
+  Valued (𝕃_[p]) (Multiplicative (WithTop ℚ)ᵒᵈ) := by
   unfold pAdicHahnSeries
   infer_instance
 
 -- The field of p-adic Hahn series is complete with respect to the valuation defined above.
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
-    CompleteSpace (pAdicHahnSeries p) := by admit
+    CompleteSpace (𝕃_[p]) := by admit
 
 -- Define an element of W(𝔽ₚ^⁻)((p^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support by the
 -- formula f ↦ ∑ₖ [f(k)]pᵏ
 noncomputable def from_coeff {p : ℕ} [Fact (Nat.Prime p)]
     (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO) :
-    (pAdicHahnSeries p) :=
+    (𝕃_[p]) :=
   Ideal.Quotient.mk (NullSeriesIdeal p) (LiftedPAdicHahnSeries.from_coeff s hspwo)
 
 -- The `coefficients` of the p-adic Hahn series obtained from a function ℚ → 𝔽ₚ^⁻ by
@@ -177,7 +179,7 @@ theorem coeff_of_from_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
 
 -- The converse of the above theorem.
 theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
-    (x : pAdicHahnSeries p) :
+    (x : 𝕃_[p]) :
     from_coeff x.coeff (support_IsPWO x) = x := by
   simp only [from_coeff, coeff]
   set s := (exists_canonical_expansion x).choose
@@ -193,15 +195,16 @@ theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     exact ⟨-y, by dsimp; rw [neg_vadd_eq_iff]; dsimp at hy; exact hy.symm⟩
   rw [this]; exact Quotient.out_eq x
 
-def QpUn_emd_pAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] : QpUn p →+* pAdicHahnSeries p where
+def QpUn_embd (p : ℕ) [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] where
   toFun a := sorry
   map_one' := sorry
   map_mul' := sorry
   map_zero' := sorry
   map_add' := sorry
 
+/-
 noncomputable def residue_RingEquiv (p : ℕ) [Fact (Nat.Prime p)] :
-    Fpbar p →+* Valued.ResidueField (pAdicHahnSeries p) where
+    Fpbar p →+* Valued.ResidueField (𝕃_[p]) where
   toFun a := by
     let atei : pAdicHahnSeries p :=
       Ideal.Quotient.mk (NullSeriesIdeal p) <|
@@ -237,10 +240,12 @@ noncomputable def residue_RingEquiv (p : ℕ) [Fact (Nat.Prime p)] :
 
     sorry
 
+
 theorem residue_field_iso_Fpbar (p : ℕ) [Fact (Nat.Prime p)] :
   Function.Bijective (residue_RingEquiv p) := by admit
+-/
 
-theorem isAlgClosed (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (pAdicHahnSeries p) := by admit
+theorem isAlgClosed (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by admit
 
 end pAdicHahnSeries
 
