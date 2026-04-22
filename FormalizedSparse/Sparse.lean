@@ -1,5 +1,7 @@
 import Mathlib
+namespace Sparse
 
+@[ext]
 structure AdmissibleFun where
   toFun : ℕ+ → ℕ
   fin_supp : toFun.support.Finite
@@ -26,11 +28,114 @@ instance {p : ℕ} [Fact (Nat.Prime p)] : FunLike (PAdmissibleFun p) ℕ+ ℕ wh
 instance (p : ℕ) [Fact (Nat.Prime p)] : CoeOut (PAdmissibleFun p) AdmissibleFun where
   coe := PAdmissibleFun.toAdmissibleFun
 
-
+instance : AddCommMonoid AdmissibleFun where
+  add a b := {
+    toFun := fun n => a n + b n
+    fin_supp := by
+      refine Set.Finite.subset (a.fin_supp.union b.fin_supp) ?_
+      intro n hn
+      simp only [Function.mem_support, Set.mem_union] at hn ⊢
+      by_cases han : a n = 0
+      · right
+        intro hbn
+        exact hn <| by simpa [han, hbn]
+      · exact Or.inl han
+  }
+  add_assoc := by
+    intro a b c
+    ext n
+    exact Nat.add_assoc (a n) (b n) (c n)
+  zero := {
+    toFun := fun _ => 0
+    fin_supp := by simp }
+  zero_add := by
+    intro a
+    ext n
+    apply Nat.zero_add
+  add_zero := by
+    intro a
+    ext n
+    apply Nat.add_zero
+  nsmul n f := {
+    toFun := fun m => n * f m
+    fin_supp := by
+      refine Set.Finite.subset f.fin_supp ?_
+      intro m hm
+      simp only [Function.mem_support] at hm ⊢
+      by_cases hnm : n = 0
+      · simp [hnm] at hm
+      · simpa [hnm] using hm }
+  add_comm a b := by
+    ext n
+    exact Nat.add_comm (a n) (b n)
+  nsmul_zero f := by
+    ext n
+    simp only [zero_mul]
+    rfl
+  nsmul_succ n f := by
+    ext s
+    exact Nat.succ_mul n (f s)
 
 namespace AdmissibleFun
-noncomputable def Sigma (f : AdmissibleFun) : ℕ :=
-  ∑ i ∈ f.fin_supp.toFinset, f i
+
+noncomputable def Sigma : AdmissibleFun →+ ℕ where
+  toFun f := ∑ i ∈ f.fin_supp.toFinset, f i
+  map_zero' := by
+    classical
+    change Finset.sum ((0 : AdmissibleFun).fin_supp.toFinset) (fun _ : ℕ+ => 0) = 0
+    simp
+  map_add' a b := by
+    classical
+  let s : Finset ℕ+ := (a.fin_supp.union b.fin_supp).toFinset
+  have hsum_add :
+      ∑ i ∈ (a + b).fin_supp.toFinset, (a + b) i = Finset.sum s (fun i => (a + b) i) := by
+    unfold s
+    refine Finset.sum_subset ?_ ?_
+    · intro i hi
+      have hi' : (a + b) i ≠ 0 := by
+        simpa [Function.mem_support] using hi
+      have hi_union : i ∈ Function.support a ∪ Function.support b := by
+        simp only [Function.mem_support, Set.mem_union]
+        by_cases hai : a i = 0
+        · right
+          intro hbi
+          have habi : (a + b) i = 0 := by
+            change a i + b i = 0
+            simp [hai, hbi]
+          exact hi' habi
+        · exact Or.inl hai
+      simpa using hi_union
+    · intro i _ hi
+      simpa [Function.mem_support] using hi
+  have hsum_a : ∑ i ∈ a.fin_supp.toFinset, a i = Finset.sum s (fun i => a i) := by
+    unfold s
+    refine Finset.sum_subset ?_ ?_
+    · intro i hi
+      have hi' : a i ≠ 0 := by
+        simpa [Function.mem_support] using hi
+      have hi_union : i ∈ Function.support a ∪ Function.support b := by
+        simp [Function.mem_support, Set.mem_union, hi']
+      simpa using hi_union
+    · intro i _ hi
+      simpa [Function.mem_support] using hi
+  have hsum_b : ∑ i ∈ b.fin_supp.toFinset, b i = Finset.sum s (fun i => b i) := by
+    unfold s
+    refine Finset.sum_subset ?_ ?_
+    · intro i hi
+      have hi' : b i ≠ 0 := by
+        simpa [Function.mem_support] using hi
+      have hi_union : i ∈ Function.support a ∪ Function.support b := by
+        simp [Function.mem_support, Set.mem_union, hi']
+      simpa using hi_union
+    · intro i _ hi
+      simpa [Function.mem_support] using hi
+  calc
+    ∑ i ∈ (a + b).fin_supp.toFinset, (a + b) i = Finset.sum s (fun i => (a + b) i) := hsum_add
+    _ = Finset.sum s (fun i => a i + b i) := by rfl
+    _ = Finset.sum s (fun i => a i) + Finset.sum s (fun i => b i) := by
+      rw [Finset.sum_add_distrib]
+    _ = (∑ i ∈ a.fin_supp.toFinset, a i) + ∑ i ∈ b.fin_supp.toFinset, b i := by
+      rw [← hsum_a, ← hsum_b]
 
 noncomputable def maxIndex (f : AdmissibleFun) : ℕ :=
   f.fin_supp.toFinset.sup fun i => (i : ℕ)
@@ -88,8 +193,96 @@ lemma cast_pow_mul_zpow_neg (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
   rw [zpow_neg, zpow_natCast]
   field_simp [hp0]
 
-noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] (f : AdmissibleFun) : ℚ :=
-  ∑ i ∈ f.fin_supp.toFinset, (f i) * p ^ (- i : ℤ)
+noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : AdmissibleFun →+ ℚ where
+  toFun f := ∑ i ∈ f.fin_supp.toFinset, (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))
+  map_zero' := by
+    classical
+    simp
+  map_add' a b := by
+    classical
+    have hp0 : p ≠ 0 := (Fact.out : Nat.Prime p).ne_zero
+    let s : Finset ℕ+ := (a.fin_supp.union b.fin_supp).toFinset
+    have hsum_add :
+        ∑ i ∈ (a + b).fin_supp.toFinset, ((a + b) i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) =
+          Finset.sum s (fun i => ((a + b) i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) := by
+      unfold s
+      refine Finset.sum_subset ?_ ?_
+      · intro i hi
+        have hi' : (a + b) i ≠ 0 := by
+          simpa [Function.mem_support] using hi
+        have hi_union : i ∈ Function.support a ∪ Function.support b := by
+          simp only [Function.mem_support, Set.mem_union]
+          by_cases hai : a i = 0
+          · right
+            intro hbi
+            have habi : (a + b) i = 0 := by
+              change a i + b i = 0
+              simp [hai, hbi]
+            exact hi' habi
+          · exact Or.inl hai
+        simpa using hi_union
+      · intro i _ hi
+        have hi' : (a + b) i = 0 := by
+          simpa [Function.mem_support] using hi
+        rw [hi']
+        simp
+    have hsum_a :
+        ∑ i ∈ a.fin_supp.toFinset, (a i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) =
+          Finset.sum s (fun i => (a i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) := by
+      unfold s
+      refine Finset.sum_subset ?_ ?_
+      · intro i hi
+        have hi' : a i ≠ 0 := by
+          simpa [Function.mem_support] using hi
+        have hi_union : i ∈ Function.support a ∪ Function.support b := by
+          simp [Function.mem_support, Set.mem_union, hi']
+        simpa using hi_union
+      · intro i _ hi
+        have hi' : a i = 0 := by
+          simpa [Function.mem_support] using hi
+        rw [hi']
+        simp
+    have hsum_b :
+        ∑ i ∈ b.fin_supp.toFinset, (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) =
+          Finset.sum s (fun i => (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) := by
+      unfold s
+      refine Finset.sum_subset ?_ ?_
+      · intro i hi
+        have hi' : b i ≠ 0 := by
+          simpa [Function.mem_support] using hi
+        have hi_union : i ∈ Function.support a ∪ Function.support b := by
+          simp [Function.mem_support, Set.mem_union, hi']
+        simpa using hi_union
+      · intro i _ hi
+        have hi' : b i = 0 := by
+          simpa [Function.mem_support] using hi
+        rw [hi']
+        simp
+    calc
+      ∑ i ∈ (a + b).fin_supp.toFinset, ((a + b) i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) =
+          Finset.sum s (fun i => ((a + b) i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) := hsum_add
+      _ = Finset.sum s (fun i =>
+            (((a i : ℚ) + (b i : ℚ)) * (p : ℚ) ^ (-(i : ℤ)))) := by
+          congr with i
+          change (((a i + b i : ℕ) : ℚ) * (p : ℚ) ^ (-(i : ℤ)) =
+            ((a i : ℚ) + (b i : ℚ)) * (p : ℚ) ^ (-(i : ℤ)))
+          congr 1
+          norm_num
+      _ = Finset.sum s (fun i => (a i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) +
+            ((b i : ℚ) * (p : ℚ) ^ (-(i : ℤ)))) := by
+          refine Finset.sum_congr rfl ?_
+          intro i hi
+          ring
+      _ = Finset.sum s (fun i => (a i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) +
+            Finset.sum s (fun i => (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) := by
+          rw [Finset.sum_add_distrib]
+      _ = (∑ i ∈ a.fin_supp.toFinset, (a i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) +
+            ∑ i ∈ b.fin_supp.toFinset, (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
+          rw [← hsum_a, ← hsum_b]
+
+lemma norm_additive (p : ℕ) [Fact (Nat.Prime p)] (a b : AdmissibleFun) :
+    (a + b).norm p = a.norm p + b.norm p := by
+  exact (norm p).map_add a b
 
 lemma value_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] :
     ∀ n,
@@ -116,7 +309,8 @@ lemma norm_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] {n 
     (hn : f.maxIndex < n) :
     f.norm p = Finset.sum (indices n) fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
   classical
-  unfold AdmissibleFun.norm
+  change ∑ i ∈ f.fin_supp.toFinset, (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) =
+      Finset.sum (indices n) (fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ)))
   refine Finset.sum_subset ?_ ?_
   · intro i hi
     have hne : f i ≠ 0 := by simpa using hi
@@ -410,3 +604,5 @@ lemma lem_1_2 (d : AdmissibleFun) :
     rw [hgf_eq, hcast, Rat.isInt]
     simp [Rat.den_intCast]
   exact PAdmissibleFun.eq_of_norm_sub_isInt hgf
+
+end Sparse
