@@ -78,8 +78,7 @@ lemma cast_mul_zpow_neg_succ (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
   rw [zpow_neg, zpow_neg]
   norm_num
   field_simp [hp0]
-  have hpow : (p : ℚ) ^ (↑n + 1) = (p : ℚ) * (p : ℚ) ^ n := by
-    simpa using (pow_succ' (p : ℚ) n)
+  have hpow : (p : ℚ) ^ (↑n + 1) = (p : ℚ) * (p : ℚ) ^ n := by simpa using (pow_succ' (p : ℚ) n)
   exact hpow.symm
 
 lemma cast_pow_mul_zpow_neg (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
@@ -103,9 +102,7 @@ lemma value_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] :
       · calc
           (((f (Nat.succPNat n) + p * f.value p n : ℕ) : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ)))
               = (f (Nat.succPNat n) : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))
-                + ((f.value p n : ℚ) * (p : ℚ)) * (p : ℚ) ^ (-(n + 1 : ℤ)) := by
-                  norm_num
-                  ring
+                + ((f.value p n : ℚ) * (p : ℚ)) * (p : ℚ) ^ (-(n + 1 : ℤ)) := by norm_num; ring
           _ = (f (Nat.succPNat n) : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))
                 + (f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
                   rw [mul_assoc, AdmissibleFun.cast_mul_zpow_neg_succ]
@@ -122,12 +119,10 @@ lemma norm_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] {n 
   unfold AdmissibleFun.norm
   refine Finset.sum_subset ?_ ?_
   · intro i hi
-    have hne : f i ≠ 0 := by
-      simpa using hi
+    have hne : f i ≠ 0 := by simpa using hi
     have hi_lt : (i.natPred : ℕ) < n := by
       have hi_lt' : (i : ℕ) < n := lt_of_le_of_lt (f.le_maxIndex_of_mem_support hne) hn
-      have hi_succ : i.natPred + 1 < n := by
-        simpa [PNat.natPred_add_one] using hi_lt'
+      have hi_succ : i.natPred + 1 < n := by simpa [PNat.natPred_add_one] using hi_lt'
       exact Nat.lt_trans (Nat.lt_succ_self _) hi_succ
     simpa [PNat.succPNat_natPred] using (AdmissibleFun.mem_indices n i.natPred).2 hi_lt
   · intro i hi his
@@ -148,8 +143,7 @@ lemma coeffs_update_above (f : ℕ+ → ℕ) (n m : ℕ) (hm : m ≤ n) (a : ℕ
   | succ m ih =>
       have hm' : m ≤ n := Nat.le_trans (Nat.le_succ m) hm
       have hne : Nat.succPNat m ≠ Nat.succPNat n := by
-        have hm_lt : m < n := Nat.lt_of_succ_le hm
-        exact fun h => hm_lt.ne (Nat.succPNat_injective h)
+        exact fun h => (Nat.lt_of_succ_le hm).ne (Nat.succPNat_injective h)
       simp [coeffs, Function.update, hne, ih hm']
 
 noncomputable def ofCoeffs : List ℕ → AdmissibleFun
@@ -165,8 +159,7 @@ noncomputable def ofCoeffs : List ℕ → AdmissibleFun
           intro i hi
           by_cases h : i = Nat.succPNat L.length
           · simp [h]
-          · right
-            simpa [Function.update, h] using hi }
+          · right; simpa [Function.update, h] using hi }
 
 @[simp] lemma coeffs_ofCoeffs : ∀ L : List ℕ, coeffs (ofCoeffs L) L.length = L
   | [] => rfl
@@ -265,82 +258,54 @@ lemma coeffs_lt {p : ℕ} [Fact (Nat.Prime p)] (f : PAdmissibleFun p) (n : ℕ) 
       · exact ih _ hx
 
 lemma value_lt_pow {p : ℕ} [Fact (Nat.Prime p)] (f : PAdmissibleFun p) (n : ℕ) :
-    f.toAdmissibleFun.value p n < p ^ n := by
+    f.value p n < p ^ n := by
   unfold AdmissibleFun.value
   simpa [AdmissibleFun.coeffs_length] using
     Nat.ofDigits_lt_base_pow_length ((Fact.out : Nat.Prime p).one_lt) (f.coeffs_lt n)
 
 lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : PAdmissibleFun p}
     (hfg : (f.norm - g.norm).isInt) : f = g := by
-  let n := max f.toAdmissibleFun.maxIndex g.toAdmissibleFun.maxIndex + 1
-  have hfN : f.toAdmissibleFun.maxIndex < n := by
-    simp [n]
-  have hgN : g.toAdmissibleFun.maxIndex < n := by
-    simp [n]
-  have hfnorm := f.toAdmissibleFun.norm_eq_value p hfN
-  have hgnorm := g.toAdmissibleFun.norm_eq_value p hgN
+  let n := max f.maxIndex g.maxIndex + 1
+  have hfN : f.maxIndex < n := by simp [n]
+  have hgN : g.maxIndex < n := by simp [n]
   let q : ℚ := f.norm - g.norm
-  have hq : q.isInt := by
-    simpa [q] using hfg
-  have hq_expr :
-      q = (((f.toAdmissibleFun.value p n : ℚ) - g.toAdmissibleFun.value p n) *
-        (p : ℚ) ^ (-(n : ℤ))) := by
-    unfold q
-    simp [PAdmissibleFun.norm, hfnorm, hgnorm]
+  have hq : q.isInt := by simpa [q] using hfg
+  have hq_expr : q = (((f.value p n : ℚ) - g.value p n) * (p : ℚ) ^ (-(n : ℤ))) := by
+    simp [q, PAdmissibleFun.norm, f.norm_eq_value p hfN, g.norm_eq_value p hgN]
     ring
   have hq_lt : q < 1 := by
     rw [hq_expr]
-    have hvf_nonneg : (0 : ℚ) ≤ f.toAdmissibleFun.value p n := by positivity
-    have hvg_nonneg : (0 : ℚ) ≤ g.toAdmissibleFun.value p n := by positivity
-    have hvf_lt : (f.toAdmissibleFun.value p n : ℚ) < (p : ℚ) ^ n := by
+    have hvf_lt : (f.value p n : ℚ) < (p : ℚ) ^ n := by
       exact_mod_cast f.value_lt_pow n
-    have hvg_lt : (g.toAdmissibleFun.value p n : ℚ) < (p : ℚ) ^ n := by
-      exact_mod_cast g.value_lt_pow n
-    have hp_pow_pos : 0 < (p : ℚ) ^ n := by
-      exact pow_pos (by exact_mod_cast (Fact.out : Nat.Prime p).pos) _
-    have hp_inv_pos : 0 < ((p : ℚ) ^ n)⁻¹ := by
-      exact inv_pos.mpr hp_pow_pos
-    have hdiff_lt :
-        (f.toAdmissibleFun.value p n : ℚ) - g.toAdmissibleFun.value p n < (p : ℚ) ^ n := by
-      nlinarith
+    have hp_pow_pos : 0 < (p : ℚ) ^ n := pow_pos (by exact_mod_cast (Fact.out : Nat.Prime p).pos) _
+    have hdiff_lt : (f.value p n : ℚ) - g.value p n < (p : ℚ) ^ n := by nlinarith
     rw [show (p : ℚ) ^ (-(n : ℤ)) = ((p : ℚ) ^ n)⁻¹ by rw [zpow_neg, zpow_natCast]]
-    have hmul := mul_lt_mul_of_pos_right hdiff_lt hp_inv_pos
-    simpa using hmul
+    simpa using mul_lt_mul_of_pos_right hdiff_lt (inv_pos.mpr hp_pow_pos)
   have hq_gt : (-1 : ℚ) < q := by
     rw [hq_expr]
-    have hvf_nonneg : (0 : ℚ) ≤ f.toAdmissibleFun.value p n := by positivity
-    have hvg_nonneg : (0 : ℚ) ≤ g.toAdmissibleFun.value p n := by positivity
-    have hvf_lt : (f.toAdmissibleFun.value p n : ℚ) < (p : ℚ) ^ n := by
-      exact_mod_cast f.value_lt_pow n
-    have hvg_lt : (g.toAdmissibleFun.value p n : ℚ) < (p : ℚ) ^ n := by
+    have hvg_lt : (g.value p n : ℚ) < (p : ℚ) ^ n := by
       exact_mod_cast g.value_lt_pow n
-    have hp_pow_pos : 0 < (p : ℚ) ^ n := by
-      exact pow_pos (by exact_mod_cast (Fact.out : Nat.Prime p).pos) _
-    have hp_inv_pos : 0 < ((p : ℚ) ^ n)⁻¹ := by
-      exact inv_pos.mpr hp_pow_pos
+    have hp_pow_pos : 0 < (p : ℚ) ^ n := pow_pos (by exact_mod_cast (Fact.out : Nat.Prime p).pos) _
     have hdiff_gt :
-        -((p : ℚ) ^ n) < (f.toAdmissibleFun.value p n : ℚ) - g.toAdmissibleFun.value p n := by
+        -((p : ℚ) ^ n) < (f.value p n : ℚ) - g.value p n := by
       nlinarith
     rw [show (p : ℚ) ^ (-(n : ℤ)) = ((p : ℚ) ^ n)⁻¹ by rw [zpow_neg, zpow_natCast]]
-    have hmul := mul_lt_mul_of_pos_right hdiff_gt hp_inv_pos
-    simpa using hmul
-  have hq_num : q = q.num := Rat.eq_num_of_isInt hq
-  rw [hq_num] at hq_gt hq_lt
+    simpa using mul_lt_mul_of_pos_right hdiff_gt (inv_pos.mpr hp_pow_pos)
+  rw [Rat.eq_num_of_isInt hq] at hq_gt hq_lt
   have hnum_zero : q.num = 0 := by
-    have : (-1 : ℤ) < q.num ∧ q.num < 1 := by
-      exact_mod_cast And.intro hq_gt hq_lt
+    have : (-1 : ℤ) < q.num ∧ q.num < 1 := by exact_mod_cast And.intro hq_gt hq_lt
     omega
   have hq_zero : q = 0 := by
-    rw [hq_num, hnum_zero]
+    rw [Rat.eq_num_of_isInt hq, hnum_zero]
     simp
   have hpz : (p : ℚ) ^ (-(n : ℤ)) ≠ 0 := by
     exact zpow_ne_zero _ (by exact_mod_cast (show p ≠ 0 from (Fact.out : Nat.Prime p).ne_zero))
-  have hval_eq : (f.toAdmissibleFun.value p n : ℚ) = g.toAdmissibleFun.value p n := by
+  have hval_eq : (f.value p n : ℚ) = g.value p n := by
     apply sub_eq_zero.mp
     apply mul_right_cancel₀ hpz
     simpa [hq_expr] using hq_zero
   have hcoeffs :
-      AdmissibleFun.coeffs f.toAdmissibleFun n = AdmissibleFun.coeffs g.toAdmissibleFun n := by
+      AdmissibleFun.coeffs f n = AdmissibleFun.coeffs g n := by
     apply Nat.ofDigits_inj_of_len_eq ((Fact.out : Nat.Prime p).one_lt)
     · simp [AdmissibleFun.coeffs_length]
     · exact f.coeffs_lt n
@@ -351,30 +316,25 @@ lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : PAdmissibleFun 
   · exact AdmissibleFun.eq_on_of_coeffs_eq hcoeffs i hi
   · have hfi : f i = 0 := by
       by_contra hne
-      exact hi (le_trans (f.toAdmissibleFun.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hfN))
+      exact hi (le_trans (f.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hfN))
     have hgi : g i = 0 := by
       by_contra hne
-      exact hi (le_trans (g.toAdmissibleFun.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hgN))
+      exact hi (le_trans (g.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hgN))
     simpa using hfi.trans hgi.symm
 end PAdmissibleFun
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
 lemma lem_1_2 (d : AdmissibleFun) :
-    ∃! f : PAdmissibleFun p,
-      (f.norm - d.norm p).isInt := by
+    ∃! f : PAdmissibleFun p, (f.norm - d.norm p).isInt := by
   let n := d.maxIndex + 1
   let a := d.value p n
   let r := a % p ^ n
   let L := Nat.digits p r ++ List.replicate (n - (Nat.digits p r).length) 0
-  have hdn : d.maxIndex < n := by
-    simp [n]
-  have hr_lt : r < p ^ n := by
-    exact Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
+  have hdn : d.maxIndex < n := by simp [n]
+  have hr_lt : r < p ^ n := Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
   have hLlen : L.length = n := by
-    have hdigits_len : (Nat.digits p r).length ≤ n := by
-      exact (Nat.digits_length_le_iff ((Fact.out : Nat.Prime p).one_lt) r).2 hr_lt
-    simp [L, hdigits_len]
+    simp [L, (Nat.digits_length_le_iff ((Fact.out : Nat.Prime p).one_lt) r).2 hr_lt]
   have hLdigits : Nat.ofDigits p L = r := by
     unfold L
     rw [Nat.ofDigits_append_replicate_zero, Nat.ofDigits_digits]
@@ -395,9 +355,9 @@ lemma lem_1_2 (d : AdmissibleFun) :
         · subst x
           simpa using (Fact.out : Nat.Prime p).pos
         · exact hLlt x hx) }
-  have hfmax : f.toAdmissibleFun.maxIndex < n + 1 := by
+  have hfmax : f.maxIndex < n + 1 := by
     simpa [f, fA, hLlen] using AdmissibleFun.maxIndex_ofCoeffs_zero_cons_lt (L := L)
-  have hfval : f.toAdmissibleFun.value p (n + 1) = p * r := by
+  have hfval : f.value p (n + 1) = p * r := by
     have htmp :
         Nat.ofDigits p
           (AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs (0 :: L)) ((0 :: L).length)) = p * r := by
@@ -405,31 +365,26 @@ lemma lem_1_2 (d : AdmissibleFun) :
       simp [Nat.ofDigits_cons, hLdigits]
     simpa [AdmissibleFun.value, f, fA, hLlen] using htmp
   have hfnorm : f.norm = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
-    rw [PAdmissibleFun.norm, f.toAdmissibleFun.norm_eq_value p hfmax, hfval, Nat.cast_mul]
+    rw [PAdmissibleFun.norm, f.norm_eq_value p hfmax, hfval, Nat.cast_mul]
     calc
       (↑p * ↑r) * (p : ℚ) ^ (-(n + 1 : ℤ)) = (↑r : ℚ) * ((p : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))) := by
           ring
       _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
           rw [AdmissibleFun.cast_mul_zpow_neg_succ]
-  have hdnorm : d.norm p = (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) :=
-    d.norm_eq_value p hdn
   have hfint : (f.norm - d.norm p).isInt := by
     let qn : ℕ := a / p ^ n
-    rw [hfnorm, hdnorm]
+    rw [hfnorm, d.norm_eq_value p hdn]
     have hmod_nat : r + p ^ n * qn = a := by
       simpa [r, qn] using Nat.mod_add_div a (p ^ n)
-    have hmod : (r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ) = a := by
-      exact_mod_cast hmod_nat
+    have hmod : (r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ) = a := by exact_mod_cast hmod_nat
     have hdiff :
-        (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) =
-          -(qn : ℚ) := by
+        (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) = -(qn : ℚ) := by
       calc
         (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) =
             (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) -
               ((r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by
             rw [hmod]
-        _ = -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by
-            ring
+        _ = -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by ring
         _ = -(qn : ℚ) := by
             calc
               -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) =
@@ -438,16 +393,9 @@ lemma lem_1_2 (d : AdmissibleFun) :
                   rw [AdmissibleFun.cast_pow_mul_zpow_neg]
                   ring
     rw [hdiff]
-    have hneg_eq : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ)) := by
-      norm_num
-    rw [hneg_eq]
-    unfold Rat.isInt
-    simp
-  refine ⟨f, hfint, ?_⟩
-  intro g hg
+    simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
+  refine ⟨f, hfint, fun g hg => ?_⟩
   have hgf : (g.norm - f.norm).isInt := by
-    have hgq : g.norm - d.norm p = (g.norm - d.norm p).num := Rat.eq_num_of_isInt hg
-    have hfq : f.norm - d.norm p = (f.norm - d.norm p).num := Rat.eq_num_of_isInt hfint
     have hcast :
         (((g.norm - d.norm p).num : ℚ) - ((f.norm - d.norm p).num : ℚ)) =
           (((g.norm - d.norm p).num - (f.norm - d.norm p).num : ℤ) : ℚ) := by
@@ -457,9 +405,8 @@ lemma lem_1_2 (d : AdmissibleFun) :
       calc
         g.norm - f.norm = (g.norm - d.norm p) - (f.norm - d.norm p) := by ring
         _ = (((g.norm - d.norm p).num : ℚ) - ((f.norm - d.norm p).num : ℚ)) := by
-              rw [hgq, hfq]
+              rw [Rat.eq_num_of_isInt hg, Rat.eq_num_of_isInt hfint]
               simp [Rat.num_intCast]
-    rw [hgf_eq, hcast]
-    unfold Rat.isInt
+    rw [hgf_eq, hcast, Rat.isInt]
     simp [Rat.den_intCast]
   exact PAdmissibleFun.eq_of_norm_sub_isInt hgf
