@@ -315,7 +315,7 @@ theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   admit
 
 def IsHyperAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Prop :=
-  (∃ T : ℕ, ∀ q ∈ x.support, ∃ k : ℕ, (T * (p ^ k) * q).den = 1) ∧
+  (∃ T : ℕ, ∀ q ∈ x.support, ∃ k : ℕ, (T * (p ^ k) * q).isInt) ∧
   (Set.image x.coeff x.support).Finite
 
 def HyperAlgebraicSubfield (p : ℕ) [Fact (Nat.Prime p)] : Subfield (𝕃_[p]) where
