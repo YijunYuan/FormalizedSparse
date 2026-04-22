@@ -519,7 +519,7 @@ end PAdmissibleFun
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
-lemma lem_1_2 (d : AdmissibleFun) :
+lemma lemma_1_2 (d : AdmissibleFun) :
     ∃! f : PAdmissibleFun p, (f.norm - d.norm p).isInt := by
   let n := d.maxIndex + 1
   let a := d.value p n
@@ -604,5 +604,50 @@ lemma lem_1_2 (d : AdmissibleFun) :
     rw [hgf_eq, hcast, Rat.isInt]
     simp [Rat.den_intCast]
   exact PAdmissibleFun.eq_of_norm_sub_isInt hgf
+
+namespace AdmissibleFun
+
+noncomputable def tau (p : ℕ) [Fact (Nat.Prime p)] (f : AdmissibleFun) : PAdmissibleFun p :=
+  (lemma_1_2 p f).choose
+
+end AdmissibleFun
+
+lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
+  f.tau p = g.tau p ↔ (f.norm p - g.norm p).isInt := by
+    constructor
+    · intro htau
+      have hf : ((f.tau p).norm - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1
+      have hg : ((g.tau p).norm - g.norm p).isInt := (lemma_1_2 p g).choose_spec.1
+      have hg' : ((f.tau p).norm - g.norm p).isInt := by
+        simpa [htau] using hg
+      have hEq :
+          f.norm p - g.norm p =
+            ((f.tau p).norm - g.norm p) - ((f.tau p).norm - f.norm p) := by
+        ring
+      rw [Rat.isInt, Nat.beq_eq_true_eq] at hf hg'
+      lift ((f.tau p).norm - g.norm p) to ℤ using hg' with a ha
+      lift ((f.tau p).norm - f.norm p) to ℤ using hf with b hb
+      have hmain : f.norm p - g.norm p = ((a - b : ℤ) : ℚ) := by
+        calc
+          f.norm p - g.norm p = (a : ℚ) - b := by simpa using hEq
+          _ = ((a - b : ℤ) : ℚ) := by norm_num
+      rw [hmain]
+      simp [Rat.isInt]
+    · intro hfg
+      apply ((lemma_1_2 p g).choose_spec.2 (f.tau p))
+      have hf : ((f.tau p).norm - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1
+      have hEq :
+          (f.tau p).norm - g.norm p =
+            ((f.tau p).norm - f.norm p) + (f.norm p - g.norm p) := by
+        ring
+      rw [Rat.isInt, Nat.beq_eq_true_eq] at hf hfg
+      lift ((f.tau p).norm - f.norm p) to ℤ using hf with a ha
+      lift (f.norm p - g.norm p) to ℤ using hfg with b hb
+      have hmain : (f.tau p).norm - g.norm p = ((a + b : ℤ) : ℚ) := by
+        calc
+          (f.tau p).norm - g.norm p = (a : ℚ) + b := by simpa using hEq
+          _ = ((a + b : ℤ) : ℚ) := by norm_num
+      rw [hmain]
+      simp [Rat.isInt]
 
 end Sparse
