@@ -710,8 +710,7 @@ lemma lemma_1_2 (d : AdmissibleFun) :
   have hfmax : f.maxIndex < n + 1 := by
     simpa [f, fA, hLlen] using AdmissibleFun.maxIndex_ofCoeffs_zero_cons_lt (L := L)
   have hfval : f.value p (n + 1) = p * r := by
-    have htmp :
-        Nat.ofDigits p
+    have htmp : Nat.ofDigits p
           (AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs (0 :: L)) ((0 :: L).length)) = p * r := by
       rw [AdmissibleFun.coeffs_ofCoeffs]
       simp [Nat.ofDigits_cons, hLdigits]
@@ -776,10 +775,8 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
     · intro htau
       have hf : ((f.tau p).norm - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1
       have hg : ((g.tau p).norm - g.norm p).isInt := (lemma_1_2 p g).choose_spec.1
-      have hg' : ((f.tau p).norm - g.norm p).isInt := by
-        simpa [htau] using hg
-      have hEq :
-          f.norm p - g.norm p =
+      have hg' : ((f.tau p).norm - g.norm p).isInt := by simpa [htau] using hg
+      have hEq : f.norm p - g.norm p =
             ((f.tau p).norm - g.norm p) - ((f.tau p).norm - f.norm p) := by
         ring
       rw [Rat.isInt, Nat.beq_eq_true_eq] at hf hg'
@@ -789,15 +786,12 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
         calc
           f.norm p - g.norm p = (a : ℚ) - b := by simpa using hEq
           _ = ((a - b : ℤ) : ℚ) := by norm_num
-      rw [hmain]
-      simp [Rat.isInt]
+      simp [hmain, Rat.isInt]
     · intro hfg
       apply ((lemma_1_2 p g).choose_spec.2 (f.tau p))
       have hf : ((f.tau p).norm - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1
-      have hEq :
-          (f.tau p).norm - g.norm p =
-            ((f.tau p).norm - f.norm p) + (f.norm p - g.norm p) := by
-        ring
+      have hEq : (f.tau p).norm - g.norm p =
+            ((f.tau p).norm - f.norm p) + (f.norm p - g.norm p) := by ring
       rw [Rat.isInt, Nat.beq_eq_true_eq] at hf hfg
       lift ((f.tau p).norm - f.norm p) to ℤ using hf with a ha
       lift (f.norm p - g.norm p) to ℤ using hfg with b hb
@@ -805,19 +799,15 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
         calc
           (f.tau p).norm - g.norm p = (a : ℚ) + b := by simpa using hEq
           _ = ((a + b : ℤ) : ℚ) := by norm_num
-      rw [hmain]
-      simp [Rat.isInt]
+      simp [hmain, Rat.isInt]
 
 lemma lemma_1_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
   (d.tau p) = d ↔ ∃ e : PAdmissibleFun p, d = e := by
-  constructor
-  · intro htau
-    exact ⟨d.tau p, htau.symm⟩
-  · rintro ⟨e, rfl⟩
-    simpa [AdmissibleFun.tau] using
-      (congrArg PAdmissibleFun.toAdmissibleFun
-        (((lemma_1_2 p e.toAdmissibleFun).choose_spec.2 e) (by
-          simp [PAdmissibleFun.norm, Rat.isInt]))).symm
+  refine ⟨fun htau => ⟨d.tau p, htau.symm⟩, ?_⟩
+  rintro ⟨e, rfl⟩
+  simpa [AdmissibleFun.tau] using
+    (congrArg PAdmissibleFun.toAdmissibleFun (((lemma_1_2 p e.toAdmissibleFun).choose_spec.2 e)
+      (by simp [PAdmissibleFun.norm, Rat.isInt]))).symm
 
 lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
   (d.tau p).Sigma ≤ d.Sigma ∧ (d.tau p).Sigma = d.Sigma ↔ ∃ e : PAdmissibleFun p, d = e := by
@@ -871,8 +861,7 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
       calc
         (↑p * ↑r) * (p : ℚ) ^ (-(n + 1 : ℤ)) =
             (↑r : ℚ) * ((p : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))) := by ring
-        _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
-            rw [AdmissibleFun.cast_mul_zpow_neg_succ]
+        _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by rw [AdmissibleFun.cast_mul_zpow_neg_succ]
     have hfint : (f.norm - d.norm p).isInt := by
       let qn : ℕ := a / p ^ n
       rw [hfnorm, d.norm_eq_value p hdn]
@@ -896,23 +885,18 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
                     ring
       rw [hdiff]
       simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
-    have htau : d.tau p = f := by
-      exact (((lemma_1_2 p d).choose_spec.2 f) hfint).symm
+    have htau : d.tau p = f := (((lemma_1_2 p d).choose_spec.2 f) hfint).symm
     have htauSigma : (d.tau p).Sigma = Lt.sum := by
       rw [htau]
       have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
         change (AdmissibleFun.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
         exact AdmissibleFun.Sigma_ofCoeffs (0 :: Lt)
-      rw [List.sum_cons, zero_add] at hSigmaCoeffs
-      exact hSigmaCoeffs
+      rwa [List.sum_cons, zero_add] at hSigmaCoeffs
     have hdigits_r : (Nat.digits p r).sum = ((Nat.digits p a).take n).sum := by
       rw [show r = Nat.ofDigits p ((Nat.digits p a).take n) by
         simpa [r] using (Nat.self_mod_pow_eq_ofDigits_take n a hp2)]
-      refine Nat.sum_digits_ofDigits_eq_sum hp1 (l := ((Nat.digits p a).take n).length) ?_
-      constructor
-      · rfl
-      · intro x hx
-        exact Nat.digits_lt_base hp1 (List.mem_of_mem_take hx)
+      refine Nat.sum_digits_ofDigits_eq_sum hp1 (l := ((Nat.digits p a).take n).length) ⟨rfl, ?_⟩
+      exact fun x hx => Nat.digits_lt_base hp1 (List.mem_of_mem_take hx)
     have htake_le : ((Nat.digits p a).take n).sum ≤ (Nat.digits p a).sum := by
       have := Nat.le_add_right ((Nat.digits p a).take n).sum ((Nat.digits p a).drop n).sum
       simpa [List.take_append_drop, List.sum_append] using this
@@ -923,8 +907,7 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
         ((Nat.digits p a).take n).sum = (Nat.digits p r).sum := by simpa using hdigits_r.symm
         _ = Lt.sum := by simp [Lt, List.sum_append]
         _ = (d.tau p).Sigma := by simpa using htauSigma.symm
-        _ = d.Sigma := hsigma
-        _ = Ld.sum := hLdSigma
+        _ = Ld.sum := hsigma ▸ hLdSigma
     have hdigits_eq : (Nat.digits p a).sum = Ld.sum := by
       apply le_antisymm hdigits_le
       calc
@@ -943,21 +926,14 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
           by_cases hi : (i : ℕ) ≤ n
           · have hdi : AdmissibleFun.ofCoeffs Ld i = d i :=
               AdmissibleFun.eq_on_of_coeffs_eq hcoeff_eq i hi
-            have hof_lt : AdmissibleFun.ofCoeffs Ld i < p := by
-              exact AdmissibleFun.ofCoeffs_lt (p := p) (L := Ld) hLdlt i
-            simpa [hdi] using hof_lt
+            simpa [hdi] using AdmissibleFun.ofCoeffs_lt (p := p) (L := Ld) hLdlt i
           · have hzero : d i = 0 := by
               by_contra hne
               exact hi (le_trans (d.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hdn))
             have hzero' : d.toFun i = 0 := hzero
-            rw [hzero']
-            exact (Fact.out : Nat.Prime p).pos }
+            simpa [hzero'] using (Fact.out : Nat.Prime p).pos }
     exact ⟨e, rfl⟩
   · rintro ⟨e, rfl⟩
-    have htau : (((e : AdmissibleFun).tau p : PAdmissibleFun p) : AdmissibleFun) = e := by
-      exact (lemma_1_3₃ p e.toAdmissibleFun).2 ⟨e, rfl⟩
-    constructor
-    · simp [htau]
-    · simp [htau]
+    repeat simp [(lemma_1_3₃ p e.toAdmissibleFun).2 ⟨e, rfl⟩]
 
 end Sparse
