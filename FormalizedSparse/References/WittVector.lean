@@ -38,9 +38,15 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
 open Classical in
 noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[p] ℝ := {
   toFun a := WithZeroMulInt.toNNReal (pInv_ne_zero p) (Valued.v a)
-  map_mul' := sorry
-  nonneg' := sorry
-  eq_zero' := sorry
+  map_mul' := by
+    intro a b
+    simp
+  nonneg' := by
+    intro a
+    positivity
+  eq_zero' := by
+    intro a
+    simp
   add_le' := sorry
 }
 
@@ -50,6 +56,27 @@ lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
       (Valued.v a) := by
   unfold abs
   aesop
+
+open Classical in
+lemma abs_p_eq_p (p : ℕ) [Fact (Nat.Prime p)] :
+  abs p (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p] (p : ℤᵘⁿ_[p])) = (p : ℝ) := by
+  let v : IsDedekindDomain.HeightOneSpectrum ℤᵘⁿ_[p] :=
+    IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])
+  have hirr : Irreducible (p : ℤᵘⁿ_[p]) := by
+    simpa using (WittVector.irreducible (p := p) (k := Fpbar p))
+  have hv : v.asIdeal = Ideal.span {(p : ℤᵘⁿ_[p])} := by
+    simpa [v] using hirr.maximalIdeal_eq
+  have hp0 : (p : ℤᵘⁿ_[p]) ≠ 0 := by
+    exact WittVector.p_nonzero p (Fpbar p)
+  have hval :
+      v.valuation (FractionRing (ℤᵘⁿ_[p]))
+        (algebraMap ℤᵘⁿ_[p] (FractionRing (ℤᵘⁿ_[p])) (p : ℤᵘⁿ_[p])) = WithZero.exp (-1 : ℤ) := by
+    rw [IsDedekindDomain.HeightOneSpectrum.valuation_of_algebraMap]
+    exact IsDedekindDomain.HeightOneSpectrum.intValuation_singleton (v := v) hp0 hv
+  rw [abs_def, show Valued.v (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p] (p : ℤᵘⁿ_[p])) =
+      v.valuation (FractionRing (ℤᵘⁿ_[p]))
+        (algebraMap ℤᵘⁿ_[p] (FractionRing (ℤᵘⁿ_[p])) (p : ℤᵘⁿ_[p])) by rfl, hval]
+  norm_num [WithZeroMulInt.toNNReal, pInv_ne_zero p]
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
   WithAbs.normedField (abs p)
