@@ -1,5 +1,6 @@
 import FormalizedSparse.References.WittVector
 import Mathlib.RingTheory.HahnSeries.Multiplication
+import Mathlib.RingTheory.HahnSeries.Summable
 
 open WittVector
 
@@ -56,6 +57,35 @@ open Topology Filter in
 def IsNullSeries {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) : Prop :=
   ∀ g : ℚ, Filter.Tendsto (fun M => (∑ n : Set.Finite.toFinset (finprop x g M),
       (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)))) atTop (𝓝 0)
+
+noncomputable def finpropInt {p : ℕ} [Fact (Nat.Prime p)]
+    (x : LiftedPAdicHahnSeries p) (g : ℚ) (K : ℤ) :
+    Finite {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} := by
+  by_cases hs : Set.Nonempty x.support
+  · let m : ℚ := x.isWF_support.min hs
+    have hsubset : {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} ⊆ Set.Icc (⌈m - g⌉ : ℤ) K := by
+      intro n hn
+      have hm_le : m ≤ g + n := by
+        exact x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
+      have hlower : (⌈m - g⌉ : ℤ) ≤ n := by
+        apply Int.ceil_le.mpr
+        rw [sub_le_iff_le_add]
+        simpa [add_comm, add_left_comm, add_assoc] using hm_le
+      exact ⟨hlower, hn.1⟩
+    exact ((Set.finite_Icc (⌈m - g⌉ : ℤ) K).subset hsubset).to_subtype
+  · have hcoeff : ∀ q : ℚ, x.coeff q = 0 := by
+      intro q
+      by_contra hq
+      exact hs ⟨q, (HahnSeries.mem_support x q).2 hq⟩
+    have hset : {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} = ∅ := by
+      ext n
+      simp [hcoeff (g + n)]
+    simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
+
+noncomputable def intPartial {p : ℕ} [Fact (Nat.Prime p)]
+    (x : LiftedPAdicHahnSeries p) (g : ℚ) (K : ℤ) : QpUn p :=
+  ∑ n : Set.Finite.toFinset (finpropInt x g K),
+    (p : QpUn p) ^ n.1 * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))
 
 -- [Proposition 3, Poonen1993] : The null series form an ideal of W(𝔽ₚ^⁻)((t^ℚ)).
 def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSeries p) where
