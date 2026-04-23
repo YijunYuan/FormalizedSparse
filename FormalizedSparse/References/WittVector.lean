@@ -32,12 +32,14 @@ theorem injective_teichmuller (p : ℕ) [Fact (Nat.Prime p)] :
 
 namespace QpUn
 
+open IsDedekindDomain IsDedekindDomain.HeightOneSpectrum IsDiscreteValuationRing
+
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
   Valued (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ)) := inferInstance
 
 open Classical in
 noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[p] ℝ := {
-  toFun a := WithZeroMulInt.toNNReal (pInv_ne_zero p) (Valued.v a)
+  toFun a := WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a)
   map_mul' := by
     intro a b
     simp
@@ -47,36 +49,25 @@ noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[
   eq_zero' := by
     intro a
     simp
-  add_le' := sorry
+  add_le' := by
+    intro a b
+    have hp1 : (1 : NNReal) < p := by
+      exact_mod_cast (Fact.out : Nat.Prime p).one_lt
+    have hmono : Monotone (fun x => ((WithZeroMulInt.toNNReal (p_ne_zero p) x : NNReal) : ℝ)) := by
+      intro x y hxy
+      exact_mod_cast (WithZeroMulInt.toNNReal_strictMono hp1).monotone hxy
+    refine le_trans ?_ (max_le_add_of_nonneg ?_ ?_)
+    · simpa [hmono.map_max] using hmono (Valued.v.map_add a b)
+    · positivity
+    · positivity
 }
 
 open Classical in
 lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
-  abs p a = WithZeroMulInt.toNNReal (pInv_ne_zero p)
+  abs p a = WithZeroMulInt.toNNReal (p_ne_zero p)
       (Valued.v a) := by
   unfold abs
   aesop
-
-open Classical in
-lemma abs_p_eq_p (p : ℕ) [Fact (Nat.Prime p)] :
-  abs p (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p] (p : ℤᵘⁿ_[p])) = (p : ℝ) := by
-  let v : IsDedekindDomain.HeightOneSpectrum ℤᵘⁿ_[p] :=
-    IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])
-  have hirr : Irreducible (p : ℤᵘⁿ_[p]) := by
-    simpa using (WittVector.irreducible (p := p) (k := Fpbar p))
-  have hv : v.asIdeal = Ideal.span {(p : ℤᵘⁿ_[p])} := by
-    simpa [v] using hirr.maximalIdeal_eq
-  have hp0 : (p : ℤᵘⁿ_[p]) ≠ 0 := by
-    exact WittVector.p_nonzero p (Fpbar p)
-  have hval :
-      v.valuation (FractionRing (ℤᵘⁿ_[p]))
-        (algebraMap ℤᵘⁿ_[p] (FractionRing (ℤᵘⁿ_[p])) (p : ℤᵘⁿ_[p])) = WithZero.exp (-1 : ℤ) := by
-    rw [IsDedekindDomain.HeightOneSpectrum.valuation_of_algebraMap]
-    exact IsDedekindDomain.HeightOneSpectrum.intValuation_singleton (v := v) hp0 hv
-  rw [abs_def, show Valued.v (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p] (p : ℤᵘⁿ_[p])) =
-      v.valuation (FractionRing (ℤᵘⁿ_[p]))
-        (algebraMap ℤᵘⁿ_[p] (FractionRing (ℤᵘⁿ_[p])) (p : ℤᵘⁿ_[p])) by rfl, hval]
-  norm_num [WithZeroMulInt.toNNReal, pInv_ne_zero p]
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
   WithAbs.normedField (abs p)
@@ -102,11 +93,21 @@ noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘ�
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p] keeps the valuation.
 lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚ_[p], Padic.mulValuation x = Valued.v (Qp_embd x) := by
+  intro x
   sorry
 
 lemma Qp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚ_[p], ‖x‖ = ‖(Qp_embd x)‖ := by
-  admit
+  intro x
+  have hnorm :
+      ‖x‖ = ((WithZeroMulInt.toNNReal (p_ne_zero p) (Padic.mulValuation x) : NNReal) : ℝ) := by
+    by_cases hx : x = 0
+    · simp [hx, Padic.mulValuation]
+    · rw [Padic.norm_eq_zpow_log_mulValuation (p := p) hx]
+      simp [Padic.mulValuation, hx, WithZeroMulInt.toNNReal_neg_apply]
+  rw [hnorm]
+  rw [show ‖(Qp_embd x : ℚᵘⁿ_[p])‖ = QpUn.abs p (Qp_embd x) by rfl]
+  simp [QpUn.abs_def, Qp_embd_keep_val p x]
 
 -- View ℚᵘⁿ_[p] as an algebra over ℚ_[p] via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘⁿ_[p]) := (Qp_embd).toAlgebra
@@ -116,26 +117,36 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘ�
 def alg_embd_Cp (p : ℕ) [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →ₐ[ℚ_[p]] ℂ_[p] := by admit
 
 -- The embedding from ℚᵘⁿ_[p] to ℂ_[p] as a field homomorphism.
-abbrev embd_Cp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* ℂ_[p] := (alg_embd_Cp p).toRingHom
+noncomputable abbrev embd_Cp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* ℂ_[p] :=
+  (alg_embd_Cp p).toRingHom
 
 -- ℂ_[p] as ℚᵘⁿ_[p]-algebra via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] ℂ_[p] := (embd_Cp).toAlgebra
 
 -- ℂ_[p] is an algebraic closure of ℚᵘⁿ_[p].
-instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosure ℚᵘⁿ_[p] ℂ_[p] := by admit
+instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosure ℚᵘⁿ_[p] ℂ_[p] := by
+  admit
 
 -- The composition of the embedding from ℚ_[p] to ℚᵘⁿ_[p] and that from ℚᵘⁿ_[p] to ℂ_[p] is
 -- exactly the embedding from ℚ_[p] to ℂ_[p] that defined in `Mathlib.NumberTheory.Padics.Complex`
 theorem embd_compatible (p : ℕ) [Fact (Nat.Prime p)] :
-  algebraMap ℚ_[p] ℂ_[p] = embd_Cp.comp Qp_embd := by admit
+  algebraMap ℚ_[p] ℂ_[p] = embd_Cp.comp Qp_embd := by
+  ext x
+  exact ((alg_embd_Cp p).commutes x).symm
 
 -- The embedding from ℚᵘⁿ_[p] to ℂ_[p] keeps the valuation.
 lemma embd_Cp_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℚᵘⁿ_[p], WithZeroMulInt.toNNReal (pInv_ne_zero p)
+  ∀ y : ℚᵘⁿ_[p], WithZeroMulInt.toNNReal (p_ne_zero p)
     (Valued.v y) = Valued.v (embd_Cp y) := by admit
 
 lemma embd_Cp_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℚᵘⁿ_[p], ‖y‖ = ‖(embd_Cp y)‖ := by admit
+  ∀ y : ℚᵘⁿ_[p], ‖y‖ = ‖(embd_Cp y)‖ := by
+  intro y
+  rw [show ‖y‖ = QpUn.abs p y by rfl]
+  rw [PadicComplex.norm_def, Valued.norm]
+  change ((WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v y) : NNReal) : ℝ) =
+    ((Valued.v (embd_Cp y) : NNReal) : ℝ)
+  exact congrArg (fun z : NNReal => (z : ℝ)) (embd_Cp_keep_val p y)
 
 end QpUn
 

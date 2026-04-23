@@ -60,7 +60,123 @@ def IsNullSeries {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) : 
 -- [Proposition 3, Poonen1993] : The null series form an ideal of W(𝔽ₚ^⁻)((t^ℚ)).
 def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSeries p) where
   carrier := {x | IsNullSeries x}
-  add_mem' := by admit
+  add_mem' := by
+    intro x y hx hy
+    change IsNullSeries x at hx
+    change IsNullSeries y at hy
+    change IsNullSeries (x + y)
+    intro g
+    let sx : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finprop x g M)
+    let sy : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finprop y g M)
+    let sxy : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finprop (x + y) g M)
+    let su : ℕ → Finset ℤ := fun M => sx M ∪ sy M
+    let fx : ℕ → ℤ → QpUn p := fun M n =>
+      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))
+    let fy : ℕ → ℤ → QpUn p := fun M n =>
+      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (y.coeff (g + n))
+    let fxy : ℕ → ℤ → QpUn p := fun M n =>
+      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) ((x + y).coeff (g + n))
+    have hsxy_sub : ∀ M, sxy M ⊆ su M := by
+      intro M n hn
+      have hn' : g + n ≤ M ∧ (x + y).coeff (g + n) ≠ 0 := by
+        exact (Set.Finite.mem_toFinset (hs := finprop (x + y) g M) (a := n)).1 hn
+      have hmem : g + n ∈ (x + y).support := by
+        exact (HahnSeries.mem_support (x + y) (g + n)).2 hn'.2
+      have hunion := HahnSeries.support_add_subset (x := x) (y := y) hmem
+      rcases hunion with hxmem | hymem
+      · exact Finset.mem_union_left _ <|
+          (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).2 ⟨hn'.1, hxmem⟩
+      · exact Finset.mem_union_right _ <|
+          (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).2 ⟨hn'.1, hymem⟩
+    have hsumx (M : ℕ) : Finset.sum (su M) (fx M) = Finset.sum (sx M) (fx M) := by
+      symm
+      apply Finset.sum_subset
+      · intro n hn
+        exact Finset.mem_union_left _ hn
+      · intro n hnu hnsx
+        have hny : n ∈ sy M := (Finset.mem_union.mp hnu).resolve_left hnsx
+        have hmem : g + n ≤ M ∧ y.coeff (g + n) ≠ 0 :=
+          (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).1 hny
+        have hxzero : x.coeff (g + n) = 0 := by
+          by_contra hxne
+          exact hnsx <|
+            (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).2 ⟨hmem.1, hxne⟩
+        simp [hxzero]
+    have hsumy (M : ℕ) : Finset.sum (su M) (fy M) = Finset.sum (sy M) (fy M) := by
+      symm
+      apply Finset.sum_subset
+      · intro n hn
+        exact Finset.mem_union_right _ hn
+      · intro n hnu hnsy
+        have hnx : n ∈ sx M := (Finset.mem_union.mp hnu).resolve_right hnsy
+        have hmem : g + n ≤ M ∧ x.coeff (g + n) ≠ 0 :=
+          (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).1 hnx
+        have hyzero : y.coeff (g + n) = 0 := by
+          by_contra hyne
+          exact hnsy <|
+            (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).2 ⟨hmem.1, hyne⟩
+        simp [hyzero]
+    have hsumxy (M : ℕ) : Finset.sum (su M) (fxy M) = Finset.sum (sxy M) (fxy M) := by
+      symm
+      apply Finset.sum_subset
+      · exact hsxy_sub M
+      · intro n hnu hnsxy
+        have hcoeff : (x + y).coeff (g + n) = 0 := by
+          by_contra hne
+          exact hnsxy <| (Set.Finite.mem_toFinset (hs := finprop (x + y) g M) (a := n)).2 ⟨by
+            rcases Finset.mem_union.mp hnu with hnx | hny
+            · exact (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).1 hnx |>.1
+            · exact (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).1 hny |>.1, hne⟩
+        simp [hcoeff]
+    have hfun :
+        (fun M => Finset.sum (sxy M) (fxy M)) =
+          fun M => Finset.sum (sx M) (fx M) + Finset.sum (sy M) (fy M) := by
+      funext M
+      rw [← hsumxy M]
+      calc
+        Finset.sum (su M) (fxy M) = Finset.sum (su M) (fun n => fx M n + fy M n) := by
+          apply Finset.sum_congr rfl
+          intro n hn
+          simp [fxy, fx, fy, HahnSeries.coeff_add', mul_add, map_add]
+        _ = Finset.sum (su M) (fx M) + Finset.sum (su M) (fy M) := by
+          rw [Finset.sum_add_distrib]
+        _ = Finset.sum (sx M) (fx M) + Finset.sum (sy M) (fy M) := by
+          rw [hsumx M, hsumy M]
+    have hxmain :
+        (fun M => ∑ n ∈ (Set.Finite.toFinset (finprop x g M)).attach,
+            (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))) =
+          fun M => Finset.sum (sx M) (fx M) := by
+      funext M
+      dsimp [sx, fx]
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finprop x g M))
+        (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))))
+    have hymain :
+        (fun M => ∑ n ∈ (Set.Finite.toFinset (finprop y g M)).attach,
+            (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (y.coeff (g + n))) =
+          fun M => Finset.sum (sy M) (fy M) := by
+      funext M
+      dsimp [sy, fy]
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finprop y g M))
+        (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (y.coeff (g + n))))
+    have hmain :
+        (fun M =>
+          ∑ n : Set.Finite.toFinset (finprop (x + y) g M),
+            (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) ((x + y).coeff (g + n))) =
+          fun M => Finset.sum (sxy M) (fxy M) := by
+      funext M
+      dsimp [sxy, fxy]
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finprop (x + y) g M))
+        (f := fun n : ℤ =>
+          (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) ((x + y).coeff (g + n))))
+    have hx' : Filter.Tendsto (fun M => Finset.sum (sx M) (fx M)) Filter.atTop (nhds 0) := by
+      rw [← hxmain]
+      exact hx g
+    have hy' : Filter.Tendsto (fun M => Finset.sum (sy M) (fy M)) Filter.atTop (nhds 0) := by
+      rw [← hymain]
+      exact hy g
+    rw [hmain]
+    rw [hfun]
+    simpa using hx'.add hy'
   zero_mem' := by simp [IsNullSeries]
   smul_mem' := by admit
 
@@ -103,9 +219,9 @@ theorem support_nonempty_of_nonzero
 open Classical in
 noncomputable def val
   (p : ℕ) [Fact (Nat.Prime p)] :
-  Valuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithZero (Multiplicative ℚ)) := {
+  AddValuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithTop ℚ) := {
   toFun x :=
-    if h : x = 0 then 0
+    if h : x = 0 then (⊤ : WithTop ℚ)
     else ((support_IsPWO x).isWF.min (support_nonempty_of_nonzero p x h) : WithTop ℚ)
   map_zero' := by admit
   map_one' := by admit
@@ -113,7 +229,7 @@ noncomputable def val
   map_add_le_max' := by admit
 }
 
-def pAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] : Type _ := WithVal (val p)
+abbrev pAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] : Type _ := WithVal (val p)
 
 notation "𝕃_[" p "]" => pAdicHahnSeries p
 
@@ -132,7 +248,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Field (𝕃_[p]) := by
   apply Ideal.Quotient.field
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
-  Valued (𝕃_[p]) (WithZero (Multiplicative ℚ)) := by
+  Valued (𝕃_[p]) (Multiplicative (WithTop ℚ)ᵒᵈ) := by
   unfold pAdicHahnSeries
   infer_instance
 

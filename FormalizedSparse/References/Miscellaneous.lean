@@ -41,3 +41,6 @@ end WithZeroRat
 @[simp]
 lemma pInv_ne_zero (p : ℕ) [Fact (Nat.Prime p)] : (1 / (p : NNReal)) ≠ 0 := by
   simpa using NeZero.ne p
+
+lemma p_ne_zero (p : ℕ) [Fact (Nat.Prime p)] : (p : NNReal) ≠ 0 := by
+  simpa using NeZero.ne p

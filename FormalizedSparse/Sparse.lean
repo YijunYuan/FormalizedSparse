@@ -156,6 +156,19 @@ def indices (n : ℕ) : Finset ℕ+ :=
   | zero => rfl
   | succ n ih => simp [coeffs, ih]
 
+@[simp] lemma coeffs_sum (f : ℕ+ → ℕ) (n : ℕ) :
+    (coeffs f n).sum = Finset.sum (indices n) f := by
+  induction n with
+  | zero => simp [coeffs, indices]
+  | succ n ih =>
+      rw [coeffs, List.sum_cons]
+      rw [show indices (n + 1) = insert (Nat.succPNat n) (indices n) by
+        ext i
+        simp [indices, Finset.range_add_one, eq_comm]]
+      rw [Finset.sum_insert]
+      · simp [ih]
+      · simp [indices]
+
 @[simp] lemma mem_indices (n k : ℕ) :
     Nat.succPNat k ∈ indices n ↔ k < n := by
   simp [indices]
@@ -330,6 +343,28 @@ lemma norm_eq_value (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
     f.norm p = ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) := by
   rw [f.norm_eq_sum_indices p hn, ← f.value_eq_sum_indices p n]
 
+lemma Sigma_eq_sum_indices (f : AdmissibleFun) {n : ℕ} (hn : f.maxIndex < n) :
+    f.Sigma = Finset.sum (indices n) f := by
+  classical
+  change ∑ i ∈ f.fin_supp.toFinset, f i = Finset.sum (indices n) f
+  refine Finset.sum_subset ?_ ?_
+  · intro i hi
+    have hne : f i ≠ 0 := by simpa using hi
+    have hi_lt : (i.natPred : ℕ) < n := by
+      have hi_lt' : (i : ℕ) < n := lt_of_le_of_lt (f.le_maxIndex_of_mem_support hne) hn
+      have hi_succ : i.natPred + 1 < n := by simpa [PNat.natPred_add_one] using hi_lt'
+      exact Nat.lt_trans (Nat.lt_succ_self _) hi_succ
+    simpa [PNat.succPNat_natPred] using (AdmissibleFun.mem_indices n i.natPred).2 hi_lt
+  · intro i hi his
+    have hzero : f i = 0 := by
+      by_contra hne
+      exact his (by simpa using hne)
+    simp [hzero]
+
+lemma Sigma_eq_coeffs_sum (f : AdmissibleFun) {n : ℕ} (hn : f.maxIndex < n) :
+    f.Sigma = (coeffs f n).sum := by
+  rw [Sigma_eq_sum_indices f hn, ← coeffs_sum f n]
+
 lemma coeffs_update_above (f : ℕ+ → ℕ) (n m : ℕ) (hm : m ≤ n) (a : ℕ) :
     coeffs (Function.update f (Nat.succPNat n) a) m = coeffs f m := by
   induction m with
@@ -434,7 +469,130 @@ lemma eq_on_of_coeffs_eq : ∀ {f g : ℕ+ → ℕ} {n : ℕ}, coeffs f n = coef
           apply Subtype.ext
           simpa using hi_eq
         simpa [this] using h'.1
+
+@[simp] lemma Sigma_ofCoeffs (L : List ℕ) : (ofCoeffs L).Sigma = L.sum := by
+  have hsigma : (ofCoeffs L).Sigma = (coeffs (ofCoeffs L) (L.length + 1)).sum := by
+    exact Sigma_eq_coeffs_sum (f := ofCoeffs L) (n := L.length + 1) (maxIndex_ofCoeffs_lt L)
+  have htop : ofCoeffs L (Nat.succPNat L.length) = 0 := by
+    exact eq_zero_of_maxIndex_lt (f := ofCoeffs L) (n := L.length) (maxIndex_ofCoeffs_lt L)
+  simpa [coeffs, htop, coeffs_ofCoeffs] using hsigma
 end AdmissibleFun
+
+lemma ofDigits_carry_last_eq (p x : ℕ) :
+    Nat.ofDigits p [x] = Nat.ofDigits p [x % p, x / p] := by
+  simp [Nat.ofDigits_cons, Nat.mod_add_div]
+
+lemma ofDigits_carry_eq (p x y : ℕ) (L : List ℕ) :
+    Nat.ofDigits p (x :: y :: L) = Nat.ofDigits p (x % p :: (x / p + y) :: L) := by
+  calc
+    Nat.ofDigits p (x :: y :: L) = x + p * y + p * (p * Nat.ofDigits p L) := by
+      simp [Nat.ofDigits_cons, Nat.mul_add, Nat.add_assoc]
+    _ = x % p + p * (x / p) + p * y + p * (p * Nat.ofDigits p L) := by
+      rw [Nat.mod_add_div]
+    _ = Nat.ofDigits p (x % p :: (x / p + y) :: L) := by
+      simp [Nat.ofDigits_cons, Nat.mul_add, Nat.add_assoc]
+
+lemma ofDigits_eq_zero_of_sum_eq_zero (p : ℕ) {L : List ℕ} (hsum : L.sum = 0) :
+    Nat.ofDigits p L = 0 := by
+  induction L with
+  | nil => rfl
+  | cons x xs ih =>
+      have hsum' : x + xs.sum = 0 := by simpa [List.sum_cons] using hsum
+      have hx : x = 0 := Nat.eq_zero_of_add_eq_zero_right hsum'
+      have hxs : xs.sum = 0 := Nat.eq_zero_of_add_eq_zero_left hsum'
+      simp [Nat.ofDigits_cons, hx, ih hxs]
+
+lemma exists_small_sum_ofDigits_eq_of_exists_ge (p : ℕ) (hp : 1 < p) :
+    ∀ {L : List ℕ}, (∃ x ∈ L, p ≤ x) →
+      ∃ E : List ℕ, Nat.ofDigits p E = Nat.ofDigits p L ∧ E.sum < L.sum
+  | [] => by
+      intro hbad
+      rcases hbad with ⟨x, hx, _⟩
+      cases hx
+  | x :: [] => by
+      intro hbad
+      rcases hbad with ⟨w, hw, hwge⟩
+      have hwx : w = x := by simpa using hw
+      subst w
+      have hx0 : 0 < x / p := Nat.div_pos hwge (Nat.zero_lt_of_lt hp)
+      have hdecrease : x % p + x / p < x := by
+        have hmul : x / p < p * (x / p) := by
+          simpa [one_mul] using Nat.mul_lt_mul_of_pos_right hp hx0
+        calc
+          x % p + (x / p) < x % p + p * (x / p) := by exact Nat.add_lt_add_left hmul _
+          _ = x := by simpa [Nat.add_comm] using (Nat.mod_add_div x p)
+      refine ⟨[x % p, x / p], (ofDigits_carry_last_eq p x).symm, ?_⟩
+      simp only [List.sum_cons, List.sum_nil]
+      exact hdecrease
+  | x :: y :: L => by
+      intro hbad
+      by_cases hx : p ≤ x
+      · have hx0 : 0 < x / p := Nat.div_pos hx (Nat.zero_lt_of_lt hp)
+        have hdecrease : x % p + x / p < x := by
+          have hmul : x / p < p * (x / p) := by
+            simpa [one_mul] using Nat.mul_lt_mul_of_pos_right hp hx0
+          calc
+            x % p + (x / p) < x % p + p * (x / p) := by exact Nat.add_lt_add_left hmul _
+            _ = x := by simpa [Nat.add_comm] using (Nat.mod_add_div x p)
+        refine ⟨x % p :: (x / p + y) :: L, (ofDigits_carry_eq p x y L).symm, ?_⟩
+        simpa [List.sum_cons, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using
+          Nat.add_lt_add_right hdecrease (y + L.sum)
+      · have hybad : ∃ z ∈ y :: L, p ≤ z := by
+          rcases hbad with ⟨z, hz, hzp⟩
+          have hz' : z = x ∨ z ∈ y :: L := by simpa [List.mem_cons] using hz
+          rcases hz' with rfl | hzL
+          · exact (hx hzp).elim
+          · exact ⟨z, hzL, hzp⟩
+        rcases exists_small_sum_ofDigits_eq_of_exists_ge (p := p) hp hybad with ⟨E, hEeq, hEsum⟩
+        refine ⟨x :: E, ?_, ?_⟩
+        · simp [Nat.ofDigits_cons, hEeq]
+        · simpa [List.sum_cons] using Nat.add_lt_add_left hEsum x
+
+lemma digit_sum_ofDigits_le_sum (p : ℕ) (hp : 1 < p) :
+    ∀ L : List ℕ, (Nat.digits p (Nat.ofDigits p L)).sum ≤ L.sum := by
+  intro L
+  suffices hmain :
+      ∀ n : ℕ, ∀ K : List ℕ, K.sum ≤ n → (Nat.digits p (Nat.ofDigits p K)).sum ≤ K.sum by
+    exact hmain L.sum L le_rfl
+  intro n
+  induction n with
+  | zero =>
+      intro K hK
+      have hsum0 : K.sum = 0 := Nat.eq_zero_of_le_zero hK
+      have hof0 : Nat.ofDigits p K = 0 := ofDigits_eq_zero_of_sum_eq_zero p hsum0
+      simp [hof0]
+  | succ n ih =>
+      intro K hK
+      by_cases hbad : ∃ x ∈ K, p ≤ x
+      · rcases exists_small_sum_ofDigits_eq_of_exists_ge p hp hbad with ⟨E, hEeq, hEsum⟩
+        have hEn : E.sum ≤ n := Nat.lt_succ_iff.mp (lt_of_lt_of_le hEsum hK)
+        have hEle : (Nat.digits p (Nat.ofDigits p E)).sum ≤ E.sum := ih E hEn
+        rw [hEeq] at hEle
+        exact le_trans hEle (Nat.le_of_lt hEsum)
+      · have hlt : ∀ x ∈ K, x < p := by
+          intro x hx
+          exact lt_of_not_ge fun hxp => hbad ⟨x, hx, hxp⟩
+        have hdigits : (Nat.digits p (Nat.ofDigits p K)).sum = K.sum := by
+          simpa using Nat.sum_digits_ofDigits_eq_sum hp ⟨rfl, hlt⟩
+        exact hdigits.le
+
+lemma digit_sum_ofDigits_lt_sum_of_exists_ge (p : ℕ) (hp : 1 < p) {L : List ℕ}
+    (hbad : ∃ x ∈ L, p ≤ x) :
+    (Nat.digits p (Nat.ofDigits p L)).sum < L.sum := by
+  rcases exists_small_sum_ofDigits_eq_of_exists_ge p hp hbad with ⟨E, hEeq, hEsum⟩
+  have hEle : (Nat.digits p (Nat.ofDigits p E)).sum ≤ E.sum := digit_sum_ofDigits_le_sum p hp E
+  rw [hEeq] at hEle
+  exact lt_of_le_of_lt hEle hEsum
+
+lemma forall_lt_of_digit_sum_ofDigits_eq_sum (p : ℕ) (hp : 1 < p) {L : List ℕ}
+    (hEq : (Nat.digits p (Nat.ofDigits p L)).sum = L.sum) :
+    ∀ x ∈ L, x < p := by
+  intro x hx
+  by_contra hxp
+  have hbad : ∃ y ∈ L, p ≤ y := ⟨x, hx, Nat.not_lt.mp hxp⟩
+  have hlt := digit_sum_ofDigits_lt_sum_of_exists_ge p hp hbad
+  rw [hEq] at hlt
+  exact Nat.lt_irrefl _ hlt
 
 namespace PAdmissibleFun
 noncomputable def norm {p : ℕ} [Fact (Nat.Prime p)] (f : PAdmissibleFun p) : ℚ :=
@@ -649,5 +807,157 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
           _ = ((a + b : ℤ) : ℚ) := by norm_num
       rw [hmain]
       simp [Rat.isInt]
+
+lemma lemma_1_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
+  (d.tau p) = d ↔ ∃ e : PAdmissibleFun p, d = e := by
+  constructor
+  · intro htau
+    exact ⟨d.tau p, htau.symm⟩
+  · rintro ⟨e, rfl⟩
+    simpa [AdmissibleFun.tau] using
+      (congrArg PAdmissibleFun.toAdmissibleFun
+        (((lemma_1_2 p e.toAdmissibleFun).choose_spec.2 e) (by
+          simp [PAdmissibleFun.norm, Rat.isInt]))).symm
+
+lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
+  (d.tau p).Sigma ≤ d.Sigma ∧ (d.tau p).Sigma = d.Sigma ↔ ∃ e : PAdmissibleFun p, d = e := by
+  constructor
+  · rintro ⟨_, hsigma⟩
+    let n := d.maxIndex + 1
+    let a := d.value p n
+    let r := a % p ^ n
+    let Ld := AdmissibleFun.coeffs d n
+    let Lt := Nat.digits p r ++ List.replicate (n - (Nat.digits p r).length) 0
+    have hp1 : 1 < p := (Fact.out : Nat.Prime p).one_lt
+    have hp2 : 2 ≤ p := Nat.succ_le_of_lt hp1
+    have hdn : d.maxIndex < n := by simp [n]
+    have hr_lt : r < p ^ n := Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
+    have hLdSigma : d.Sigma = Ld.sum := by
+      simpa [Ld, n] using AdmissibleFun.Sigma_eq_coeffs_sum (f := d) (n := n) hdn
+    have hLtlen : Lt.length = n := by
+      simp [Lt, (Nat.digits_length_le_iff hp1 r).2 hr_lt]
+    have hLdigits : Nat.ofDigits p Lt = r := by
+      unfold Lt
+      rw [Nat.ofDigits_append_replicate_zero, Nat.ofDigits_digits]
+    have hLlt : ∀ x ∈ Lt, x < p := by
+      intro x hx
+      unfold Lt at hx
+      rw [List.mem_append, List.mem_replicate] at hx
+      rcases hx with hx | hx
+      · exact Nat.digits_lt_base hp1 hx
+      · rcases hx with ⟨_, rfl⟩
+        simpa using (Fact.out : Nat.Prime p).pos
+    let fA := AdmissibleFun.ofCoeffs (0 :: Lt)
+    let f : PAdmissibleFun p :=
+      { toAdmissibleFun := fA
+        range_p := AdmissibleFun.ofCoeffs_lt (p := p) (L := 0 :: Lt) (by
+          intro x hx
+          simp only [List.mem_cons] at hx
+          rcases hx with rfl | hx
+          · simpa using (Fact.out : Nat.Prime p).pos
+          · exact hLlt x hx) }
+    have hfmax : f.maxIndex < n + 1 := by
+      simpa [f, fA, hLtlen] using AdmissibleFun.maxIndex_ofCoeffs_zero_cons_lt (L := Lt)
+    have hfval : f.value p (n + 1) = p * r := by
+      have htmp :
+          Nat.ofDigits p
+              (AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs (0 :: Lt)) ((0 :: Lt).length)) =
+            p * r := by
+        rw [AdmissibleFun.coeffs_ofCoeffs]
+        simp [Nat.ofDigits_cons, hLdigits]
+      simpa [AdmissibleFun.value, f, fA, hLtlen] using htmp
+    have hfnorm : f.norm = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
+      rw [PAdmissibleFun.norm, f.norm_eq_value p hfmax, hfval, Nat.cast_mul]
+      calc
+        (↑p * ↑r) * (p : ℚ) ^ (-(n + 1 : ℤ)) =
+            (↑r : ℚ) * ((p : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))) := by ring
+        _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
+            rw [AdmissibleFun.cast_mul_zpow_neg_succ]
+    have hfint : (f.norm - d.norm p).isInt := by
+      let qn : ℕ := a / p ^ n
+      rw [hfnorm, d.norm_eq_value p hdn]
+      have hmod_nat : r + p ^ n * qn = a := by
+        simpa [r, qn] using Nat.mod_add_div a (p ^ n)
+      have hmod : (r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ) = a := by exact_mod_cast hmod_nat
+      have hdiff :
+          (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) = -(qn : ℚ) := by
+        calc
+          (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) =
+              (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) -
+                ((r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by
+              rw [hmod]
+          _ = -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by ring
+          _ = -(qn : ℚ) := by
+              calc
+                -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) =
+                    -((qn : ℚ) * (((p : ℚ) ^ n) * (p : ℚ) ^ (-(n : ℤ)))) := by ring
+                _ = -(qn : ℚ) := by
+                    rw [AdmissibleFun.cast_pow_mul_zpow_neg]
+                    ring
+      rw [hdiff]
+      simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
+    have htau : d.tau p = f := by
+      exact (((lemma_1_2 p d).choose_spec.2 f) hfint).symm
+    have htauSigma : (d.tau p).Sigma = Lt.sum := by
+      rw [htau]
+      have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
+        change (AdmissibleFun.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
+        exact AdmissibleFun.Sigma_ofCoeffs (0 :: Lt)
+      rw [List.sum_cons, zero_add] at hSigmaCoeffs
+      exact hSigmaCoeffs
+    have hdigits_r : (Nat.digits p r).sum = ((Nat.digits p a).take n).sum := by
+      rw [show r = Nat.ofDigits p ((Nat.digits p a).take n) by
+        simpa [r] using (Nat.self_mod_pow_eq_ofDigits_take n a hp2)]
+      refine Nat.sum_digits_ofDigits_eq_sum hp1 (l := ((Nat.digits p a).take n).length) ?_
+      constructor
+      · rfl
+      · intro x hx
+        exact Nat.digits_lt_base hp1 (List.mem_of_mem_take hx)
+    have htake_le : ((Nat.digits p a).take n).sum ≤ (Nat.digits p a).sum := by
+      have := Nat.le_add_right ((Nat.digits p a).take n).sum ((Nat.digits p a).drop n).sum
+      simpa [List.take_append_drop, List.sum_append] using this
+    have hdigits_le : (Nat.digits p a).sum ≤ Ld.sum := by
+      simpa [a, Ld, n, AdmissibleFun.value] using digit_sum_ofDigits_le_sum p hp1 Ld
+    have htake_eq : ((Nat.digits p a).take n).sum = Ld.sum := by
+      calc
+        ((Nat.digits p a).take n).sum = (Nat.digits p r).sum := by simpa using hdigits_r.symm
+        _ = Lt.sum := by simp [Lt, List.sum_append]
+        _ = (d.tau p).Sigma := by simpa using htauSigma.symm
+        _ = d.Sigma := hsigma
+        _ = Ld.sum := hLdSigma
+    have hdigits_eq : (Nat.digits p a).sum = Ld.sum := by
+      apply le_antisymm hdigits_le
+      calc
+        Ld.sum = ((Nat.digits p a).take n).sum := htake_eq.symm
+        _ ≤ (Nat.digits p a).sum := htake_le
+    have hLdlt : ∀ x ∈ Ld, x < p := by
+      simpa [a, Ld, n, AdmissibleFun.value] using
+        forall_lt_of_digit_sum_ofDigits_eq_sum p hp1 hdigits_eq
+    have hcoeff_eq :
+        AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs Ld) n = AdmissibleFun.coeffs d n := by
+      simpa [Ld] using (AdmissibleFun.coeffs_ofCoeffs Ld)
+    let e : PAdmissibleFun p :=
+      { toAdmissibleFun := d
+        range_p := by
+          intro i
+          by_cases hi : (i : ℕ) ≤ n
+          · have hdi : AdmissibleFun.ofCoeffs Ld i = d i :=
+              AdmissibleFun.eq_on_of_coeffs_eq hcoeff_eq i hi
+            have hof_lt : AdmissibleFun.ofCoeffs Ld i < p := by
+              exact AdmissibleFun.ofCoeffs_lt (p := p) (L := Ld) hLdlt i
+            simpa [hdi] using hof_lt
+          · have hzero : d i = 0 := by
+              by_contra hne
+              exact hi (le_trans (d.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hdn))
+            have hzero' : d.toFun i = 0 := hzero
+            rw [hzero']
+            exact (Fact.out : Nat.Prime p).pos }
+    exact ⟨e, rfl⟩
+  · rintro ⟨e, rfl⟩
+    have htau : (((e : AdmissibleFun).tau p : PAdmissibleFun p) : AdmissibleFun) = e := by
+      exact (lemma_1_3₃ p e.toAdmissibleFun).2 ⟨e, rfl⟩
+    constructor
+    · simp [htau]
+    · simp [htau]
 
 end Sparse
