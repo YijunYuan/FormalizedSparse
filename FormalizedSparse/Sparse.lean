@@ -947,4 +947,25 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
   · intro hdIsP
     repeat simp [(lemma_1_3₃ p d).2 hdIsP]
 
+def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set (AdmissibleFun)) : Prop :=
+  (
+    ∀ f ∈ S, f.IsP p -- S is a subset of ℙ
+  ) ∧ (
+    ∃ c : ℕ+, (
+      ∀ d, d ∈ S → d.Sigma ≤ c
+    ) ∧ (
+      ∃ D : Set ℕ+, D.Infinite ∧ (
+        ∀ n ∈ D, ∃ d : Fin n → S,
+          (
+            ∀ i : Fin n, (d i).val.Sigma = c
+          ) ∧ (
+            (∑ i, (d i).val).IsP p
+          ) ∧ (
+            ∀ e : Fin n → S, ((∑ i, (d i).val).norm p - (∑ i, (e i).val).norm p).isInt →
+              ∃ perm : Equiv.Perm (Fin n), ∀ i, d i = e (perm i)
+          )
+      )
+    )
+  )
+
 end Sparse
