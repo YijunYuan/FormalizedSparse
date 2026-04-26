@@ -323,6 +323,25 @@ theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     exact ⟨-y, by dsimp; rw [neg_vadd_eq_iff]; dsimp at hy; exact hy.symm⟩
   rw [this]; exact Quotient.out_eq x
 
+theorem eq_zero_iff_coeff_zero {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
+  x = 0 ↔ ∀ q ∈ x.support, x.coeff q = 0 := by
+  have hfrom_zero : from_coeff (p := p) 0 (by simp) = (0 : 𝕃_[p]) := by
+    have hlift_zero : LiftedPAdicHahnSeries.from_coeff (p := p) 0 (by simp) = 0 := by
+      simpa [LiftedPAdicHahnSeries.from_coeff] using Eq.symm (Pi.zero_def : (0 : ℚ → ℤᵘⁿ_[p]) = 0)
+    simpa [from_coeff] using congrArg (Ideal.Quotient.mk (NullSeriesIdeal p)) hlift_zero
+  have hcoeff_zero : (0 : 𝕃_[p]).coeff = 0 := by
+    rw [← hfrom_zero]
+    exact coeff_of_from_coeff_eq_self 0 (by simp)
+  constructor
+  · intro hx q _
+    simpa [hx] using congrArg (fun f : ℚ → Fpbar p => f q) hcoeff_zero
+  · intro hx
+    by_contra hne
+    rcases support_nonempty_of_nonzero p x hne with ⟨q, hq⟩
+    have hq_ne : x.coeff q ≠ 0 := by
+      simpa [support, coeff, Function.mem_support] using hq
+    exact hq_ne (hx q hq)
+
 noncomputable def ZpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℤᵘⁿ_[p] →+* 𝕃_[p] where
   toFun a := Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 a)
   map_one' := by simp
@@ -410,6 +429,10 @@ namespace QpUn
 noncomputable abbrev to_Lp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
   Poonen1993.pAdicHahnSeries.QpUn_embd
 
+lemma mem_QpUn_iff_supp_int {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
+  ∀ q ∈ x.support, q.isInt ↔ ∃ y : ℚᵘⁿ_[p], y.to_Lp = x := by
+  sorry
+
 end QpUn
 
 namespace Poonen1993
@@ -450,15 +473,20 @@ theorem QpUn_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚᵘⁿ_[p], ‖x‖ = ‖(QpUn_embd x)‖ := by
   admit
 
+theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
+  ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
+  admit
+
 theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p],
     Valued.v y =
       WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v (Cp_embd y)) := by
-  sorry
-
-theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
-  admit
+  intro y
+  have h := Cp_embd_keep_norm p y
+  change ((Valued.v y : NNReal) : ℝ) = abs (Cp_embd y) at h
+  simp [abs_def] at h
+  convert h using 2
+  simp [one_div]
 
 def IsHyperAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Prop :=
   (∃ T : ℕ, ∀ q ∈ x.support, ∃ k : ℕ, (T * (p ^ k) * q).isInt) ∧

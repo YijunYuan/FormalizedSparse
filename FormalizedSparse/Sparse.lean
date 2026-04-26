@@ -1,19 +1,24 @@
-import Mathlib
+import Mathlib.Algebra.CharP.Invertible
+import Mathlib.Algebra.Order.Ring.Star
+import Mathlib.Analysis.Normed.Field.Lemmas
+import Mathlib.Data.Nat.Digits.Lemmas
+import Mathlib.Data.Rat.Star
+
 namespace Sparse
 
 @[ext]
-structure AdmissibleFun where
+structure DigitSeries where
   toFun : ℕ+ → ℕ
   fin_supp : toFun.support.Finite
 
-instance : FunLike (AdmissibleFun) ℕ+ ℕ where
-  coe := AdmissibleFun.toFun
+instance : FunLike (DigitSeries) ℕ+ ℕ where
+  coe := DigitSeries.toFun
   coe_injective' := by
     rintro ⟨f, _⟩ ⟨g, _⟩ hfg
     simp only at hfg
     congr
 
-instance : AddCommMonoid AdmissibleFun where
+instance : AddCommMonoid DigitSeries where
   add a b := {
     toFun := fun n => a n + b n
     fin_supp := by
@@ -61,13 +66,13 @@ instance : AddCommMonoid AdmissibleFun where
     ext s
     exact Nat.succ_mul n (f s)
 
-namespace AdmissibleFun
+namespace DigitSeries
 
-noncomputable def Sigma : AdmissibleFun →+ ℕ where
+noncomputable def Sigma : DigitSeries →+ ℕ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, f i
   map_zero' := by
     classical
-    change Finset.sum ((0 : AdmissibleFun).fin_supp.toFinset) (fun _ : ℕ+ => 0) = 0
+    change Finset.sum ((0 : DigitSeries).fin_supp.toFinset) (fun _ : ℕ+ => 0) = 0
     simp
   map_add' a b := by
     classical
@@ -122,14 +127,14 @@ noncomputable def Sigma : AdmissibleFun →+ ℕ where
     _ = (∑ i ∈ a.fin_supp.toFinset, a i) + ∑ i ∈ b.fin_supp.toFinset, b i := by
       rw [← hsum_a, ← hsum_b]
 
-noncomputable def maxIndex (f : AdmissibleFun) : ℕ :=
+noncomputable def maxIndex (f : DigitSeries) : ℕ :=
   f.fin_supp.toFinset.sup fun i => (i : ℕ)
 
 def coeffs (f : ℕ+ → ℕ) : ℕ → List ℕ
   | 0 => []
   | n + 1 => f (Nat.succPNat n) :: coeffs f n
 
-noncomputable def value (p : ℕ) (f : AdmissibleFun) (n : ℕ) : ℕ :=
+noncomputable def value (p : ℕ) (f : DigitSeries) (n : ℕ) : ℕ :=
   Nat.ofDigits p (coeffs f n)
 
 def indices (n : ℕ) : Finset ℕ+ :=
@@ -163,13 +168,13 @@ def indices (n : ℕ) : Finset ℕ+ :=
   ext i
   simp [indices, Finset.range_add_one, eq_comm]
 
-lemma le_maxIndex_of_mem_support (f : AdmissibleFun) {n : ℕ+} (hn : f n ≠ 0) :
+lemma le_maxIndex_of_mem_support (f : DigitSeries) {n : ℕ+} (hn : f n ≠ 0) :
     (n : ℕ) ≤ f.maxIndex := by
   classical
   refine Finset.le_sup ?_
   simpa using hn
 
-lemma eq_zero_of_maxIndex_lt (f : AdmissibleFun) {n : ℕ} (hn : f.maxIndex < n + 1) :
+lemma eq_zero_of_maxIndex_lt (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n + 1) :
     f (Nat.succPNat n) = 0 := by
   by_contra hne
   exact (not_lt_of_ge (f.le_maxIndex_of_mem_support hne)) hn
@@ -191,7 +196,7 @@ lemma cast_pow_mul_zpow_neg (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
   rw [zpow_neg, zpow_natCast]
   field_simp [hp0]
 
-noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : AdmissibleFun →+ ℚ where
+noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : DigitSeries →+ ℚ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))
   map_zero' := by
     classical
@@ -278,17 +283,17 @@ noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : AdmissibleFun →+ ℚ w
             ∑ i ∈ b.fin_supp.toFinset, (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
           rw [← hsum_a, ← hsum_b]
 
-lemma norm_additive (p : ℕ) [Fact (Nat.Prime p)] (a b : AdmissibleFun) :
+lemma norm_additive (p : ℕ) [Fact (Nat.Prime p)] (a b : DigitSeries) :
     (a + b).norm p = a.norm p + b.norm p := by
   exact (norm p).map_add a b
 
-lemma value_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] :
+lemma value_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] :
     ∀ n,
       ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) =
         Finset.sum (indices n) fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))
-  | 0 => by simp [AdmissibleFun.value, AdmissibleFun.indices]
+  | 0 => by simp [DigitSeries.value, DigitSeries.indices]
   | n + 1 => by
-      rw [AdmissibleFun.value, AdmissibleFun.coeffs, Nat.ofDigits_cons, AdmissibleFun.indices_succ,
+      rw [DigitSeries.value, DigitSeries.coeffs, Nat.ofDigits_cons, DigitSeries.indices_succ,
         Finset.sum_insert]
       · calc
           (((f (Nat.succPNat n) + p * f.value p n : ℕ) : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ)))
@@ -296,14 +301,14 @@ lemma value_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] :
                 + ((f.value p n : ℚ) * (p : ℚ)) * (p : ℚ) ^ (-(n + 1 : ℤ)) := by norm_num; ring
           _ = (f (Nat.succPNat n) : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))
                 + (f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
-                  rw [mul_assoc, AdmissibleFun.cast_mul_zpow_neg_succ]
+                  rw [mul_assoc, DigitSeries.cast_mul_zpow_neg_succ]
           _ = (f (Nat.succPNat n) : ℚ) * (p : ℚ) ^ (-(Nat.succPNat n : ℤ))
                 + Finset.sum (indices n) (fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))) := by
                   rw [value_eq_sum_indices (f := f) (p := p) n]
                   simp
       · simp
 
-lemma norm_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
+lemma norm_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
     (hn : f.maxIndex < n) :
     f.norm p = Finset.sum (indices n) fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
   classical
@@ -316,19 +321,19 @@ lemma norm_eq_sum_indices (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] {n 
       have hi_lt' : (i : ℕ) < n := lt_of_le_of_lt (f.le_maxIndex_of_mem_support hne) hn
       have hi_succ : i.natPred + 1 < n := by simpa [PNat.natPred_add_one] using hi_lt'
       exact Nat.lt_trans (Nat.lt_succ_self _) hi_succ
-    simpa [PNat.succPNat_natPred] using (AdmissibleFun.mem_indices n i.natPred).2 hi_lt
+    simpa [PNat.succPNat_natPred] using (DigitSeries.mem_indices n i.natPred).2 hi_lt
   · intro i hi his
     have hzero : f i = 0 := by
       by_contra hne
       exact his (by simpa using hne)
     simp [hzero]
 
-lemma norm_eq_value (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
+lemma norm_eq_value (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
     (hn : f.maxIndex < n) :
     f.norm p = ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) := by
   rw [f.norm_eq_sum_indices p hn, ← f.value_eq_sum_indices p n]
 
-lemma Sigma_eq_sum_indices (f : AdmissibleFun) {n : ℕ} (hn : f.maxIndex < n) :
+lemma Sigma_eq_sum_indices (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
     f.Sigma = Finset.sum (indices n) f := by
   classical
   change ∑ i ∈ f.fin_supp.toFinset, f i = Finset.sum (indices n) f
@@ -339,14 +344,14 @@ lemma Sigma_eq_sum_indices (f : AdmissibleFun) {n : ℕ} (hn : f.maxIndex < n) :
       have hi_lt' : (i : ℕ) < n := lt_of_le_of_lt (f.le_maxIndex_of_mem_support hne) hn
       have hi_succ : i.natPred + 1 < n := by simpa [PNat.natPred_add_one] using hi_lt'
       exact Nat.lt_trans (Nat.lt_succ_self _) hi_succ
-    simpa [PNat.succPNat_natPred] using (AdmissibleFun.mem_indices n i.natPred).2 hi_lt
+    simpa [PNat.succPNat_natPred] using (DigitSeries.mem_indices n i.natPred).2 hi_lt
   · intro i hi his
     have hzero : f i = 0 := by
       by_contra hne
       exact his (by simpa using hne)
     simp [hzero]
 
-lemma Sigma_eq_coeffs_sum (f : AdmissibleFun) {n : ℕ} (hn : f.maxIndex < n) :
+lemma Sigma_eq_coeffs_sum (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
     f.Sigma = (coeffs f n).sum := by
   rw [Sigma_eq_sum_indices f hn, ← coeffs_sum f n]
 
@@ -360,7 +365,7 @@ lemma coeffs_update_above (f : ℕ+ → ℕ) (n m : ℕ) (hm : m ≤ n) (a : ℕ
         exact fun h => (Nat.lt_of_succ_le hm).ne (Nat.succPNat_injective h)
       simp [coeffs, Function.update, hne, ih hm']
 
-noncomputable def ofCoeffs : List ℕ → AdmissibleFun
+noncomputable def ofCoeffs : List ℕ → DigitSeries
   | [] =>
       { toFun := 0
         fin_supp := by simp }
@@ -461,14 +466,14 @@ lemma eq_on_of_coeffs_eq : ∀ {f g : ℕ+ → ℕ} {n : ℕ}, coeffs f n = coef
   have htop : ofCoeffs L (Nat.succPNat L.length) = 0 := by
     exact eq_zero_of_maxIndex_lt (f := ofCoeffs L) (n := L.length) (maxIndex_ofCoeffs_lt L)
   simpa [coeffs, htop, coeffs_ofCoeffs] using hsigma
-end AdmissibleFun
+end DigitSeries
 
-namespace AdmissibleFun
+namespace DigitSeries
 
-def IsP (f : AdmissibleFun) (p : ℕ) [Fact (Nat.Prime p)] : Prop :=
+def IsP (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] : Prop :=
   ∀ n, f n < p
 
-end AdmissibleFun
+end DigitSeries
 
 lemma ofDigits_carry_last_eq (p x : ℕ) :
     Nat.ofDigits p [x] = Nat.ofDigits p [x % p, x / p] := by
@@ -586,26 +591,26 @@ lemma forall_lt_of_digit_sum_ofDigits_eq_sum (p : ℕ) (hp : 1 < p) {L : List �
   rw [hEq] at hlt
   exact Nat.lt_irrefl _ hlt
 
-namespace AdmissibleFun
+namespace DigitSeries
 
-lemma coeffs_lt {p : ℕ} [Fact (Nat.Prime p)] (f : AdmissibleFun) (hf : f.IsP p) (n : ℕ) :
-    ∀ x ∈ AdmissibleFun.coeffs f n, x < p := by
+lemma coeffs_lt {p : ℕ} [Fact (Nat.Prime p)] (f : DigitSeries) (hf : f.IsP p) (n : ℕ) :
+    ∀ x ∈ DigitSeries.coeffs f n, x < p := by
   intro x hx
   induction n generalizing x with
   | zero => cases hx
   | succ n ih =>
-      simp only [AdmissibleFun.coeffs, List.mem_cons] at hx
+      simp only [DigitSeries.coeffs, List.mem_cons] at hx
       rcases hx with rfl | hx
       · simpa using hf (Nat.succPNat n)
       · exact ih _ hx
 
-lemma value_lt_pow {p : ℕ} [Fact (Nat.Prime p)] (f : AdmissibleFun) (hf : f.IsP p) (n : ℕ) :
+lemma value_lt_pow {p : ℕ} [Fact (Nat.Prime p)] (f : DigitSeries) (hf : f.IsP p) (n : ℕ) :
     f.value p n < p ^ n := by
-  unfold AdmissibleFun.value
-  simpa [AdmissibleFun.coeffs_length] using
+  unfold DigitSeries.value
+  simpa [DigitSeries.coeffs_length] using
     Nat.ofDigits_lt_base_pow_length ((Fact.out : Nat.Prime p).one_lt) (f.coeffs_lt hf n)
 
-lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : AdmissibleFun}
+lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : DigitSeries}
     (hf : f.IsP p) (hg : g.IsP p) (hfg : (f.norm p - g.norm p).isInt) : f = g := by
   let n := max f.maxIndex g.maxIndex + 1
   have hfN : f.maxIndex < n := by simp [n]
@@ -647,15 +652,15 @@ lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : AdmissibleFun}
     apply mul_right_cancel₀ hpz
     simpa [hq_expr] using hq_zero
   have hcoeffs :
-      AdmissibleFun.coeffs f n = AdmissibleFun.coeffs g n := by
+      DigitSeries.coeffs f n = DigitSeries.coeffs g n := by
     apply Nat.ofDigits_inj_of_len_eq ((Fact.out : Nat.Prime p).one_lt)
-    · simp [AdmissibleFun.coeffs_length]
+    · simp [DigitSeries.coeffs_length]
     · exact f.coeffs_lt hf n
     · exact g.coeffs_lt hg n
     · exact_mod_cast hval_eq
   ext i
   by_cases hi : (i : ℕ) ≤ n
-  · exact AdmissibleFun.eq_on_of_coeffs_eq hcoeffs i hi
+  · exact DigitSeries.eq_on_of_coeffs_eq hcoeffs i hi
   · have hfi : f i = 0 := by
       by_contra hne
       exact hi (le_trans (f.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hfN))
@@ -664,12 +669,12 @@ lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : AdmissibleFun}
       exact hi (le_trans (g.le_maxIndex_of_mem_support hne) (Nat.le_of_lt hgN))
     simpa using hfi.trans hgi.symm
 
-end AdmissibleFun
+end DigitSeries
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
-lemma lemma_1_2 (d : AdmissibleFun) :
-    ∃! f : AdmissibleFun, f.IsP p ∧ (f.norm p - d.norm p).isInt := by
+lemma lemma_1_2 (d : DigitSeries) :
+    ∃! f : DigitSeries, f.IsP p ∧ (f.norm p - d.norm p).isInt := by
   let n := d.maxIndex + 1
   let a := d.value p n
   let r := a % p ^ n
@@ -688,10 +693,10 @@ lemma lemma_1_2 (d : AdmissibleFun) :
     · exact Nat.digits_lt_base ((Fact.out : Nat.Prime p).one_lt) hx
     · rcases List.mem_replicate.mp hx with ⟨_, rfl⟩
       simpa using (Fact.out : Nat.Prime p).pos
-  let f := AdmissibleFun.ofCoeffs (0 :: L)
+  let f := DigitSeries.ofCoeffs (0 :: L)
   have hfIsP : f.IsP p := by
     intro i
-    exact AdmissibleFun.ofCoeffs_lt (p := p) (L := 0 :: L) (by
+    exact DigitSeries.ofCoeffs_lt (p := p) (L := 0 :: L) (by
       intro x hx
       simp only [List.mem_cons] at hx
       rcases hx with hx | hx
@@ -699,21 +704,21 @@ lemma lemma_1_2 (d : AdmissibleFun) :
         simpa using (Fact.out : Nat.Prime p).pos
       · exact hLlt x hx) i
   have hfmax : f.maxIndex < n + 1 := by
-    simpa [f, hLlen] using AdmissibleFun.maxIndex_ofCoeffs_zero_cons_lt (L := L)
+    simpa [f, hLlen] using DigitSeries.maxIndex_ofCoeffs_zero_cons_lt (L := L)
   have hfval : f.value p (n + 1) = p * r := by
     have htmp :
         Nat.ofDigits p
-          (AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs (0 :: L)) ((0 :: L).length)) = p * r := by
-      rw [AdmissibleFun.coeffs_ofCoeffs]
+          (DigitSeries.coeffs (DigitSeries.ofCoeffs (0 :: L)) ((0 :: L).length)) = p * r := by
+      rw [DigitSeries.coeffs_ofCoeffs]
       simp [Nat.ofDigits_cons, hLdigits]
-    simpa [AdmissibleFun.value, f, hLlen] using htmp
+    simpa [DigitSeries.value, f, hLlen] using htmp
   have hfnorm : f.norm p = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
     rw [f.norm_eq_value p hfmax, hfval, Nat.cast_mul]
     calc
       (↑p * ↑r) * (p : ℚ) ^ (-(n + 1 : ℤ)) = (↑r : ℚ) * ((p : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))) := by
           ring
       _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
-          rw [AdmissibleFun.cast_mul_zpow_neg_succ]
+          rw [DigitSeries.cast_mul_zpow_neg_succ]
   have hfint : (f.norm p - d.norm p).isInt := by
     let qn : ℕ := a / p ^ n
     rw [hfnorm, d.norm_eq_value p hdn]
@@ -733,7 +738,7 @@ lemma lemma_1_2 (d : AdmissibleFun) :
               -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) =
                   -((qn : ℚ) * (((p : ℚ) ^ n) * (p : ℚ) ^ (-(n : ℤ)))) := by ring
               _ = -(qn : ℚ) := by
-                  rw [AdmissibleFun.cast_pow_mul_zpow_neg]
+                  rw [DigitSeries.cast_pow_mul_zpow_neg]
                   ring
     rw [hdiff]
     simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
@@ -754,19 +759,19 @@ lemma lemma_1_2 (d : AdmissibleFun) :
               simp [Rat.num_intCast]
     rw [hgf_eq, hcast, Rat.isInt]
     simp [Rat.den_intCast]
-  exact AdmissibleFun.eq_of_norm_sub_isInt hgIsP hfIsP hgf
+  exact DigitSeries.eq_of_norm_sub_isInt hgIsP hfIsP hgf
 
-namespace AdmissibleFun
+namespace DigitSeries
 
-noncomputable def tau (p : ℕ) [Fact (Nat.Prime p)] (f : AdmissibleFun) : AdmissibleFun :=
+noncomputable def tau (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries) : DigitSeries :=
   (lemma_1_2 p f).choose
 
-lemma tau_isP (p : ℕ) [Fact (Nat.Prime p)] (f : AdmissibleFun) : (f.tau p).IsP p :=
+lemma tau_isP (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries) : (f.tau p).IsP p :=
   (lemma_1_2 p f).choose_spec.1.1
 
-end AdmissibleFun
+end DigitSeries
 
-lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
+lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : DigitSeries) :
   f.tau p = g.tau p ↔ (f.norm p - g.norm p).isInt := by
     constructor
     · intro htau
@@ -789,7 +794,7 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
       simp [Rat.isInt]
     · intro hfg
       apply ((lemma_1_2 p g).choose_spec.2 (f.tau p))
-      refine ⟨AdmissibleFun.tau_isP p f, ?_⟩
+      refine ⟨DigitSeries.tau_isP p f, ?_⟩
       have hf : ((f.tau p).norm p - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1.2
       have hEq :
           (f.tau p).norm p - g.norm p =
@@ -805,16 +810,16 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : AdmissibleFun) :
       rw [hmain]
       simp [Rat.isInt]
 
-lemma lemma_1_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
+lemma lemma_1_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   (d.tau p) = d ↔ d.IsP p := by
   constructor
   · intro htau
-    simpa [htau] using AdmissibleFun.tau_isP p d
+    simpa [htau] using DigitSeries.tau_isP p d
   · intro hdIsP
-    simpa [AdmissibleFun.tau] using
+    simpa [DigitSeries.tau] using
       (((lemma_1_2 p d).choose_spec.2 d) ⟨hdIsP, by simp [Rat.isInt]⟩).symm
 
-lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
+lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   (d.tau p).Sigma ≤ d.Sigma ∧ (d.tau p).Sigma = d.Sigma ↔
       d.IsP p := by
   constructor
@@ -822,14 +827,14 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
     let n := d.maxIndex + 1
     let a := d.value p n
     let r := a % p ^ n
-    let Ld := AdmissibleFun.coeffs d n
+    let Ld := DigitSeries.coeffs d n
     let Lt := Nat.digits p r ++ List.replicate (n - (Nat.digits p r).length) 0
     have hp1 : 1 < p := (Fact.out : Nat.Prime p).one_lt
     have hp2 : 2 ≤ p := Nat.succ_le_of_lt hp1
     have hdn : d.maxIndex < n := by simp [n]
     have hr_lt : r < p ^ n := Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
     have hLdSigma : d.Sigma = Ld.sum := by
-      simpa [Ld, n] using AdmissibleFun.Sigma_eq_coeffs_sum (f := d) (n := n) hdn
+      simpa [Ld, n] using DigitSeries.Sigma_eq_coeffs_sum (f := d) (n := n) hdn
     have hLtlen : Lt.length = n := by
       simp [Lt, (Nat.digits_length_le_iff hp1 r).2 hr_lt]
     have hLdigits : Nat.ofDigits p Lt = r := by
@@ -843,32 +848,32 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
       · exact Nat.digits_lt_base hp1 hx
       · rcases hx with ⟨_, rfl⟩
         simpa using (Fact.out : Nat.Prime p).pos
-    let f := AdmissibleFun.ofCoeffs (0 :: Lt)
+    let f := DigitSeries.ofCoeffs (0 :: Lt)
     have hfIsP : f.IsP p := by
       intro i
-      exact AdmissibleFun.ofCoeffs_lt (p := p) (L := 0 :: Lt) (by
+      exact DigitSeries.ofCoeffs_lt (p := p) (L := 0 :: Lt) (by
         intro x hx
         simp only [List.mem_cons] at hx
         rcases hx with rfl | hx
         · simpa using (Fact.out : Nat.Prime p).pos
         · exact hLlt x hx) i
     have hfmax : f.maxIndex < n + 1 := by
-      simpa [f, hLtlen] using AdmissibleFun.maxIndex_ofCoeffs_zero_cons_lt (L := Lt)
+      simpa [f, hLtlen] using DigitSeries.maxIndex_ofCoeffs_zero_cons_lt (L := Lt)
     have hfval : f.value p (n + 1) = p * r := by
       have htmp :
           Nat.ofDigits p
-              (AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs (0 :: Lt)) ((0 :: Lt).length)) =
+              (DigitSeries.coeffs (DigitSeries.ofCoeffs (0 :: Lt)) ((0 :: Lt).length)) =
             p * r := by
-        rw [AdmissibleFun.coeffs_ofCoeffs]
+        rw [DigitSeries.coeffs_ofCoeffs]
         simp [Nat.ofDigits_cons, hLdigits]
-      simpa [AdmissibleFun.value, f, hLtlen] using htmp
+      simpa [DigitSeries.value, f, hLtlen] using htmp
     have hfnorm : f.norm p = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
       rw [f.norm_eq_value p hfmax, hfval, Nat.cast_mul]
       calc
         (↑p * ↑r) * (p : ℚ) ^ (-(n + 1 : ℤ)) =
             (↑r : ℚ) * ((p : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))) := by ring
         _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
-            rw [AdmissibleFun.cast_mul_zpow_neg_succ]
+            rw [DigitSeries.cast_mul_zpow_neg_succ]
     have hfint : (f.norm p - d.norm p).isInt := by
       let qn : ℕ := a / p ^ n
       rw [hfnorm, d.norm_eq_value p hdn]
@@ -888,7 +893,7 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
                 -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) =
                     -((qn : ℚ) * (((p : ℚ) ^ n) * (p : ℚ) ^ (-(n : ℤ)))) := by ring
                 _ = -(qn : ℚ) := by
-                    rw [AdmissibleFun.cast_pow_mul_zpow_neg]
+                    rw [DigitSeries.cast_pow_mul_zpow_neg]
                     ring
       rw [hdiff]
       simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
@@ -897,8 +902,8 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
     have htauSigma : (d.tau p).Sigma = Lt.sum := by
       rw [htau]
       have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
-        change (AdmissibleFun.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
-        exact AdmissibleFun.Sigma_ofCoeffs (0 :: Lt)
+        change (DigitSeries.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
+        exact DigitSeries.Sigma_ofCoeffs (0 :: Lt)
       rw [List.sum_cons, zero_add] at hSigmaCoeffs
       exact hSigmaCoeffs
     have hdigits_r : (Nat.digits p r).sum = ((Nat.digits p a).take n).sum := by
@@ -913,7 +918,7 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
       have := Nat.le_add_right ((Nat.digits p a).take n).sum ((Nat.digits p a).drop n).sum
       simpa [List.take_append_drop, List.sum_append] using this
     have hdigits_le : (Nat.digits p a).sum ≤ Ld.sum := by
-      simpa [a, Ld, n, AdmissibleFun.value] using digit_sum_ofDigits_le_sum p hp1 Ld
+      simpa [a, Ld, n, DigitSeries.value] using digit_sum_ofDigits_le_sum p hp1 Ld
     have htake_eq : ((Nat.digits p a).take n).sum = Ld.sum := by
       calc
         ((Nat.digits p a).take n).sum = (Nat.digits p r).sum := by simpa using hdigits_r.symm
@@ -927,17 +932,17 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
         Ld.sum = ((Nat.digits p a).take n).sum := htake_eq.symm
         _ ≤ (Nat.digits p a).sum := htake_le
     have hLdlt : ∀ x ∈ Ld, x < p := by
-      simpa [a, Ld, n, AdmissibleFun.value] using
+      simpa [a, Ld, n, DigitSeries.value] using
         forall_lt_of_digit_sum_ofDigits_eq_sum p hp1 hdigits_eq
     have hcoeff_eq :
-        AdmissibleFun.coeffs (AdmissibleFun.ofCoeffs Ld) n = AdmissibleFun.coeffs d n := by
-      simpa [Ld] using (AdmissibleFun.coeffs_ofCoeffs Ld)
+        DigitSeries.coeffs (DigitSeries.ofCoeffs Ld) n = DigitSeries.coeffs d n := by
+      simpa [Ld] using (DigitSeries.coeffs_ofCoeffs Ld)
     intro i
     by_cases hi : (i : ℕ) ≤ n
-    · have hdi : AdmissibleFun.ofCoeffs Ld i = d i :=
-        AdmissibleFun.eq_on_of_coeffs_eq hcoeff_eq i hi
-      have hof_lt : AdmissibleFun.ofCoeffs Ld i < p := by
-        exact AdmissibleFun.ofCoeffs_lt (p := p) (L := Ld) hLdlt i
+    · have hdi : DigitSeries.ofCoeffs Ld i = d i :=
+        DigitSeries.eq_on_of_coeffs_eq hcoeff_eq i hi
+      have hof_lt : DigitSeries.ofCoeffs Ld i < p := by
+        exact DigitSeries.ofCoeffs_lt (p := p) (L := Ld) hLdlt i
       simpa [hdi] using hof_lt
     · have hzero : d i = 0 := by
         by_contra hne
@@ -947,7 +952,7 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : AdmissibleFun) :
   · intro hdIsP
     repeat simp [(lemma_1_3₃ p d).2 hdIsP]
 
-def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set (AdmissibleFun)) : Prop :=
+def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set (DigitSeries)) : Prop :=
   (
     ∀ f ∈ S, f.IsP p -- S is a subset of ℙ
   ) ∧ (
