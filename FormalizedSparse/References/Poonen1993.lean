@@ -520,7 +520,7 @@ lemma exists_lim_intPartial (α : LiftedPAdicHahnSeries p) (g : ℚ) :
       rw [show ((WithZeroMulInt.toNNReal (p_ne_zero p)) (γ : WithZero (Multiplicative ℤ)) =
         if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
         else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl]
-      simp [hγ_ne]
+      simp only [Units.ne_zero, ↓reduceDIte]
       exact zpow_pos hp_pos _
     obtain ⟨K₀, hK₀⟩ := intPartial_isCauchy α g ε hε_pos
     -- The set M = `intPartial α g` applied to integers ≥ K₀
@@ -645,7 +645,7 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
     · -- ∀ k < m₀, b k = 0
       intro k hk
       have hneg : ¬ (0 ≤ k - m₀) := by linarith
-      show (if h : 0 ≤ k - m₀ then a (k - m₀).toNat else 0) = 0
+      change (if h : 0 ≤ k - m₀ then a (k - m₀).toNat else 0) = 0
       rw [dif_neg hneg]
     · -- Filter.Tendsto (partial sums) atTop (nhds y)
       have hp_ne : (p : QpUn p) ≠ 0 := by
@@ -700,7 +700,7 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
           simp only [Function.Embedding.trans_apply, Nat.castEmbedding_apply,
             addLeftEmbedding_apply]
           have hbi : b (m₀ + (i : ℤ)) = a i := by
-            show (if h : 0 ≤ (m₀ + (i : ℤ)) - m₀ then a ((m₀ + (i : ℤ)) - m₀).toNat else 0) = a i
+            change (if h : 0 ≤ (m₀ + (i : ℤ)) - m₀ then a ((m₀ + (i : ℤ)) - m₀).toNat else 0) = a i
             have h_nn : (0 : ℤ) ≤ (m₀ + (i : ℤ)) - m₀ := by omega
             rw [dif_pos h_nn]
             congr 1
@@ -728,7 +728,8 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
           _ = ((Multiplicative.ofAdd (-m₀ : ℤ) : Multiplicative ℤ) : WithZero _) *
               (((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _)) := by
               rw [mul_one]
-          _ = ((Multiplicative.ofAdd ((-m₀) + (-((n : ℤ) + 1))) : Multiplicative ℤ) : WithZero _) := by
+          _ = ((Multiplicative.ofAdd ((-m₀) + (-((n : ℤ) + 1))) : Multiplicative ℤ) :
+                WithZero _) := by
               rw [← WithZero.coe_mul, ← ofAdd_add]
           _ = ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := by
               congr 2; omega
@@ -766,7 +767,7 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
       have hK_ge_N : (N : ℤ) - 1 ≤ K := le_of_max_le_right hK
       have hK_plus_1 : (N : ℤ) ≤ K + 1 := by linarith
       apply hγ
-      show Valued.v ((∑ k ∈ Finset.Icc m₀ K,
+      change Valued.v ((∑ k ∈ Finset.Icc m₀ K,
         (p : QpUn p) ^ k * algebraMap (OQpUn p) (QpUn p) (teichmuller p (b k))) - y) < γ
       rw [Valuation.map_sub_swap]
       -- h1 : Valued.v (y - partial_sum K) ≤ ofAdd(-(K+1))
@@ -801,6 +802,7 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
       exact hsm.lt_iff_lt.mp h_chain
 
 set_option maxHeartbeats 1000000 in
+-- maxHeartbeats: heavy elaboration in the multi-phase proof body
 /--
 **Per-coset Teichmuller digit uniqueness** (sub-claim of uniqueness). Two
 digit-decompositions `b, b' : ℤ → Fpbar p` of the same element of `ℚᵘⁿ_[p]`
@@ -964,7 +966,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
       Filter.tendsto_atTop_add_const_left _ m tendsto_natCast_atTop_atTop
     have h_comp := h_mul.comp h_compose
     -- Rewrite using hreindex
-    show Filter.Tendsto (fun N : ℕ => algebraMap (OQpUn p) (QpUn p) (Spart d N)) _ _
+    change Filter.Tendsto (fun N : ℕ => algebraMap (OQpUn p) (QpUn p) (Spart d N)) _ _
     apply h_comp.congr
     intro N
     simp only [Function.comp_apply]
@@ -1009,7 +1011,8 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
       (fun N : ℕ => algebraMap (OQpUn p) (QpUn p) (Spart c N))
       Filter.atTop (nhds z) := by
     apply h_natTendsto c
-    -- Need: Tendsto (fun K => ∑ k ∈ Icc m K, p^k * algebraMap (teichmuller p (c (k-m).toNat))) atTop (nhds y)
+    -- Need: Tendsto (fun K => ∑ k ∈ Icc m K, p^k * algebraMap (teichmuller p (c (k-m).toNat)))
+    --       atTop (nhds y)
     -- Note c (k-m).toNat = b (m + (k-m).toNat).
     -- For k ≥ m, this equals b k. For k < m, b k = 0.
     -- So this is the original sum, just with different indexing.
@@ -1030,7 +1033,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
         rw [Finset.mem_Icc] at hk
         have h_toNat_eq : (k - m).toNat = (k - m).toNat := rfl
         have h_c_eq : c (k - m).toNat = b k := by
-          show b (m + ((k - m).toNat : ℤ)) = b k
+          change b (m + ((k - m).toNat : ℤ)) = b k
           have hkm : (0 : ℤ) ≤ k - m := by linarith
           rw [Int.toNat_of_nonneg hkm]
           ring_nf
@@ -1055,7 +1058,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
         intro k hk
         rw [Finset.mem_Icc] at hk
         have h_c'_eq : c' (k - m).toNat = b' k := by
-          show b' (m + ((k - m).toNat : ℤ)) = b' k
+          change b' (m + ((k - m).toNat : ℤ)) = b' k
           have hkm : (0 : ℤ) ≤ k - m := by linarith
           rw [Int.toNat_of_nonneg hkm]
           ring_nf
@@ -1083,7 +1086,8 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
       with hγ_def
     have hγ_coe : (γ : WithZero (Multiplicative ℤ)) =
         ((Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) : WithZero _) := rfl
-    have h_nhds : {a : QpUn p | Valued.v a < (γ : WithZero (Multiplicative ℤ))} ∈ nhds (0 : QpUn p) := by
+    have h_nhds :
+        {a : QpUn p | Valued.v a < (γ : WithZero (Multiplicative ℤ))} ∈ nhds (0 : QpUn p) := by
       rw [Valued.mem_nhds]
       exact ⟨γ, by intro a ha; simpa using ha⟩
     have h_eventual : ∀ᶠ N : ℕ in Filter.atTop,
@@ -1100,7 +1104,8 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
     -- From v(...) < ofAdd(-i), deduce v(...) ≤ ofAdd(-(i+1)).
     have h_le : Valued.v (algebraMap (OQpUn p) (QpUn p) (Spart c N - Spart c' N)) ≤
         ((Multiplicative.ofAdd (-((i : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) := by
-      rcases eq_or_ne (Valued.v (algebraMap (OQpUn p) (QpUn p) (Spart c N - Spart c' N))) 0 with h0 | h0
+      rcases eq_or_ne (Valued.v (algebraMap (OQpUn p) (QpUn p) (Spart c N - Spart c' N))) 0
+        with h0 | h0
       · rw [h0]; exact bot_le
       · rw [← WithZero.coe_unzero h0]
         rw [← WithZero.coe_unzero h0] at h_lt
@@ -1123,7 +1128,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
           ((Multiplicative.ofAdd ((i : ℤ)+1) : Multiplicative ℤ) : WithZero _) ≤
           ((Multiplicative.ofAdd (-((i : ℤ)+1)) : Multiplicative ℤ) : WithZero _) *
           ((Multiplicative.ofAdd ((i : ℤ)+1) : Multiplicative ℤ) : WithZero _) :=
-        mul_le_mul_right' h_le _
+        mul_le_mul_left h_le _
       have h_one : ((Multiplicative.ofAdd (-((i : ℤ)+1)) : Multiplicative ℤ) : WithZero _) *
           ((Multiplicative.ofAdd ((i : ℤ)+1) : Multiplicative ℤ) : WithZero _) =
           (1 : WithZero (Multiplicative ℤ)) := by
@@ -1167,12 +1172,13 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
       -- Get N ≥ i with (p : OQpUn p)^(i+1) ∣ Spart c N - Spart c' N.
       obtain ⟨N, hNi, hN_dvd⟩ := h_eventual_div i
       -- Decompose Spart c N - Spart c' N.
-      -- Each summand: (p : OQpUn p)^k * teichmuller p (c k) - (p : OQpUn p)^k * teichmuller p (c' k)
+      -- Each summand: (p : OQpUn p)^k * teichmuller p (c k)
+      --             - (p : OQpUn p)^k * teichmuller p (c' k)
       --             = (p : OQpUn p)^k * (teichmuller p (c k) - teichmuller p (c' k))
       have h_diff_expand : Spart c N - Spart c' N =
           ∑ k ∈ Finset.Iic N, (p : OQpUn p)^k *
             (teichmuller p (c k) - teichmuller p (c' k)) := by
-        show (∑ k ∈ Finset.Iic N, (p : OQpUn p)^k * teichmuller p (c k)) -
+        change (∑ k ∈ Finset.Iic N, (p : OQpUn p)^k * teichmuller p (c k)) -
               (∑ k ∈ Finset.Iic N, (p : OQpUn p)^k * teichmuller p (c' k)) = _
         rw [← Finset.sum_sub_distrib]
         apply Finset.sum_congr rfl
@@ -1288,7 +1294,8 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
       -- Use `le_coeff_eq_iff_le_sub_coeff_eq_zero` to translate:
       -- (teichmuller(c i) - teichmuller(c' i)).coeff 0 = 0
       --   ↔ (teichmuller(c i)).coeff 0 = (teichmuller(c' i)).coeff 0
-      have h_coeffs_eq : ∀ j < 1, (teichmuller p (c i)).coeff j = (teichmuller p (c' i)).coeff j := by
+      have h_coeffs_eq :
+          ∀ j < 1, (teichmuller p (c i)).coeff j = (teichmuller p (c' i)).coeff j := by
         rw [WittVector.le_coeff_eq_iff_le_sub_coeff_eq_zero]
         intro j hj
         interval_cases j
@@ -1305,10 +1312,10 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
       rw [Int.toNat_of_nonneg (by linarith)]
       ring
     have h_c_eq : c (k - m).toNat = b k := by
-      show b (m + ((k - m).toNat : ℤ)) = b k
+      change b (m + ((k - m).toNat : ℤ)) = b k
       rw [← hk_eq]
     have h_c'_eq : c' (k - m).toNat = b' k := by
-      show b' (m + ((k - m).toNat : ℤ)) = b' k
+      change b' (m + ((k - m).toNat : ℤ)) = b' k
       rw [← hk_eq]
     rw [← h_c_eq, ← h_c'_eq]
     exact h_induction (k - m).toNat
@@ -1316,6 +1323,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
 end existsCanonicalExpansionAux
 
 set_option maxHeartbeats 4000000 in
+-- maxHeartbeats: heavy elaboration in the multi-phase proof body
 /--
 **Existence of a Teichmuller-style canonical expansion**.
 
@@ -1491,7 +1499,8 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       have hγ_unit_eq : (γ_unit : WithZero (Multiplicative ℤ)) =
           ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := rfl
       have h_nhds :
-          {x : QpUn p | Valued.v x < (γ_unit : WithZero (Multiplicative ℤ))} ∈ nhds (0 : QpUn p) := by
+          {x : QpUn p | Valued.v x < (γ_unit : WithZero (Multiplicative ℤ))} ∈
+            nhds (0 : QpUn p) := by
         rw [Valued.mem_nhds]
         exact ⟨γ_unit, fun x ha => by simpa using ha⟩
       have h_evtl_close : ∀ᶠ K : ℤ in Filter.atTop,
@@ -1681,7 +1690,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
         push_cast
         ring
       have hf := Int.fract_add_floor q
-      show Int.fract q + (n_α : ℚ) + ((⌊q⌋ - n_α).toNat : ℚ) = q
+      change Int.fract q + (n_α : ℚ) + ((⌊q⌋ - n_α).toNat : ℚ) = q
       rw [h_cast]
       linarith
   -- ============================================================
@@ -1700,7 +1709,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   set n₀ : ℤ := ⌊g⌋ with hn₀_def
   have hg_eq : g = γ + (n₀ : ℚ) := by
     have h := Int.fract_add_floor g
-    show g = Int.fract g + (⌊g⌋ : ℚ)
+    change g = Int.fract g + (⌊g⌋ : ℚ)
     linarith
   have hγ_in_Ico : 0 ≤ γ ∧ γ < 1 := ⟨Int.fract_nonneg g, Int.fract_lt_one g⟩
   have hγ_self : Int.fract γ = γ := Int.fract_eq_self.mpr hγ_in_Ico
@@ -1760,7 +1769,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   -- ============================================================
   have hs_eq_b : ∀ k : ℤ, s (γ + (k : ℚ)) = b γ k := by
     intro k
-    show b (Int.fract (γ + (k : ℚ))) ⌊(γ : ℚ) + (k : ℚ)⌋ = b γ k
+    change b (Int.fract (γ + (k : ℚ))) ⌊(γ : ℚ) + (k : ℚ)⌋ = b γ k
     have h_fract : Int.fract ((γ : ℚ) + (k : ℚ)) = γ := by
       rw [Int.fract_add_intCast γ k]
       exact hγ_self
@@ -2053,6 +2062,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   exact h_intPartial_zero.comp h_φ
 
 set_option maxHeartbeats 1000000 in
+-- maxHeartbeats: heavy elaboration in the multi-phase proof body
 /--
 **Uniqueness of the Teichmuller-style canonical expansion**.
 
@@ -2099,7 +2109,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   rw [hq_eq]
   set Bs : ℤ → Fpbar p := fun k => s (γ + k) with hBs_def
   set Bs' : ℤ → Fpbar p := fun k => s' (γ + k) with hBs'_def
-  show s (γ + (n₀ : ℚ)) = s' (γ + (n₀ : ℚ))
+  change s (γ + (n₀ : ℚ)) = s' (γ + (n₀ : ℚ))
   suffices h_Bs_eq : ∀ k : ℤ, Bs k = Bs' k by
     exact h_Bs_eq n₀
   -- ============================================================
@@ -2109,7 +2119,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     by_cases hsp : (Function.support s).Nonempty
     · refine ⟨⌈(hspwo.isWF.min hsp - γ : ℚ)⌉, ?_⟩
       intro k hk
-      show s (γ + k) = 0
+      change s (γ + k) = 0
       by_contra hne
       have hmem : (γ + (k : ℚ)) ∈ Function.support s := hne
       have hmin_le : hspwo.isWF.min hsp ≤ γ + k := hspwo.isWF.min_le hsp hmem
@@ -2118,7 +2128,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       linarith
     · refine ⟨0, ?_⟩
       intro k _
-      show s (γ + k) = 0
+      change s (γ + k) = 0
       have hs_zero : s = 0 := Function.support_eq_empty_iff.mp
         (Set.not_nonempty_iff_eq_empty.mp hsp)
       simp [hs_zero]
@@ -2126,7 +2136,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     by_cases hsp : (Function.support s').Nonempty
     · refine ⟨⌈(hspwo'.isWF.min hsp - γ : ℚ)⌉, ?_⟩
       intro k hk
-      show s' (γ + k) = 0
+      change s' (γ + k) = 0
       by_contra hne
       have hmem : (γ + (k : ℚ)) ∈ Function.support s' := hne
       have hmin_le : hspwo'.isWF.min hsp ≤ γ + k := hspwo'.isWF.min_le hsp hmem
@@ -2135,7 +2145,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       linarith
     · refine ⟨0, ?_⟩
       intro k _
-      show s' (γ + k) = 0
+      change s' (γ + k) = 0
       have hs'_zero : s' = 0 := Function.support_eq_empty_iff.mp
         (Set.not_nonempty_iff_eq_empty.mp hsp)
       simp [hs'_zero]
@@ -2207,7 +2217,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     rw [Filter.EventuallyEq]
     filter_upwards [Filter.eventually_ge_atTop m_s] with K hK
     have := h_intPartial_eq_Icc α s m_s hα_coeff hm_s K hK
-    show intPartial α γ K = _
+    change intPartial α γ K = _
     rw [this]
   have htendsto_s' :
       Filter.Tendsto
@@ -2218,7 +2228,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     rw [Filter.EventuallyEq]
     filter_upwards [Filter.eventually_ge_atTop m_s'] with K hK
     have := h_intPartial_eq_Icc α' s' m_s' hα'_coeff hm_s' K hK
-    show intPartial α' γ K = _
+    change intPartial α' γ K = _
     rw [this]
   -- ============================================================
   -- Show y_d = y_s - y_s' (via intPartial of difference)
