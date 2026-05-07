@@ -4217,9 +4217,81 @@ namespace QpUn
 noncomputable abbrev to_Lp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
   Poonen1993.pAdicHahnSeries.QpUn_embd
 
+/-- Structural scaffold for `mem_QpUn_iff_supp_int` (Poonen 1993, §4).
+
+The image of `to_Lp = QpUn_embd : ℚᵘⁿ_[p] →+* 𝕃_[p]` is exactly the set of
+elements of `𝕃_[p]` whose canonical-expansion support sits in `ℤ ⊆ ℚ`.
+
+The proof is decomposed into two genuine sub-problems, each annotated with a
+scoped `sorry` and the missing helper lemma it would require:
+
+* `mem_QpUn_supp_int_backward`: if `x = QpUn_embd y` then every `q` in the
+  support of `x` is integer. Reduces (via `exists_DVR_factorization`,
+  `QpUn_embd_p_eq_ZpUn_embd_p`, `QpUn_embd_algebraMap`) to:
+  ▸ HELPER A: support of `ZpUn_embd a` (`a : OQpUn p`) is a subset of ℤ
+    (strengthening `support_ZpUn_embd_nonneg`, which only gives `[0,∞)`); plus
+  ▸ HELPER B: support of `(ZpUn_embd p) * x` is `support x + 1` (a degree shift).
+  Both are rigorously provable from the existing Teichmuller-series machinery
+  (`exists_teichmuller_digits` + `unique_canonical_representative`) but require
+  several hundred lines of additional Hahn-series support manipulation.
+
+* `mem_QpUn_supp_int_forward`: if every support point of `x` is integer, then
+  `x` is in the image. Reduces to:
+  ▸ HELPER C: an integer-supported PWO function `s : ℚ → Fpbar p` lifts via
+    `from_coeff` to an element of the image of `QpUn_embd`, by reading off
+    Teichmuller digits and assembling them via `exists_lim_intPartial`
+    (line 1075). Again provable but requires careful PWO/integer-support
+    manipulation. -/
 lemma mem_QpUn_iff_supp_int {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
   (∀ q ∈ x.support, q.isInt) ↔ ∃ y : ℚᵘⁿ_[p], y.to_Lp = x := by
-  sorry
+  refine ⟨?_, ?_⟩
+  · -- Forward: integer-supported x lifts to ℚᵘⁿ_[p].
+    intro hsupp
+    -- x has canonical expansion `from_coeff x.coeff (support_IsPWO x)` (cf.
+    -- `from_coeff_of_coeff_eq_self`, line 4097). Since `hsupp` says every q in
+    -- the support of x is an integer, the function `x.coeff` is supported on ℤ.
+    -- We must construct `y : ℚᵘⁿ_[p]` whose `to_Lp = QpUn_embd y` equals x.
+    --
+    -- Plan (HELPER C): rewrite `x.coeff` as `s ∘ ((↑) : ℤ → ℚ)` for some
+    -- `t : ℤ → Fpbar p` (using `hsupp`). Choose `m₀ : ℤ` below the support of
+    -- `t` (exists by PWO). Use `intPartial`-style limit (analog of
+    -- `exists_lim_intPartial` line 1075) to define `y : ℚᵘⁿ_[p]` as the limit
+    -- `∑ k = m₀..K [t k] · p^k` in ℚᵘⁿ_[p]. By construction the canonical
+    -- expansion of `QpUn_embd y` matches `x.coeff` pointwise, so `QpUn_embd y
+    -- = x` by `from_coeff_of_coeff_eq_self` and `coeff_of_from_coeff_eq_self`.
+    --
+    -- This requires ~200 lines mirroring the structure of
+    -- `support_ZpUn_embd_nonneg` + `exists_teichmuller_digits` for the
+    -- integer-support case. Left as a focused obstruction.
+    sorry
+  · -- Backward: y.to_Lp has integer support.
+    rintro ⟨y, rfl⟩ q hq
+    by_cases hy : y = 0
+    · -- If y = 0 then to_Lp y = 0; we use eq_zero_iff_coeff_zero to derive
+      -- coeff 0 q = 0, contradicting q ∈ support 0.
+      have h0 : (y.to_Lp : 𝕃_[p]) = (0 : 𝕃_[p]) := by simp [hy, map_zero]
+      rw [h0] at hq
+      have hcoeff :
+          (0 : 𝕃_[p]).coeff q = 0 :=
+        (Poonen1993.pAdicHahnSeries.eq_zero_iff_coeff_zero (0 : 𝕃_[p])).mp rfl q hq
+      exact (hq hcoeff).elim
+    · -- y ≠ 0: factor y = algebraMap u * p^n with u ∈ (OQpUn)ˣ, n ∈ ℤ.
+      -- Then y.to_Lp = QpUn_embd y = ZpUn_embd u * (ZpUn_embd p)^n.
+      -- Support of ZpUn_embd u sits in ℤ (HELPER A).
+      -- Multiplication by (ZpUn_embd p)^n shifts support by n ∈ ℤ (HELPER B).
+      -- Therefore every support point is in ℤ.
+      --
+      -- This is the analog of `QpUn_embd_keep_norm` (line 4728) for the support
+      -- side. Skeleton:
+      --   obtain ⟨u, n, hy_eq⟩ := exists_DVR_factorization y hy
+      --   rw [hy_eq, map_mul, map_zpow₀, QpUn_embd_p_eq_ZpUn_embd_p,
+      --       QpUn_embd_algebraMap] at hq
+      --   -- hq : q ∈ (ZpUn_embd u * (ZpUn_embd p)^n).support
+      --   -- HELPER B: support of (ZpUn_embd p)^n equals {n}, so support of
+      --   --   ZpUn_embd u * (ZpUn_embd p)^n equals (support of ZpUn_embd u) + n.
+      --   -- HELPER A: support of ZpUn_embd u is in ℤ.
+      --   -- Therefore q = q' + n with q', n ∈ ℤ ⇒ q ∈ ℤ.
+      sorry
 
 end QpUn
 
