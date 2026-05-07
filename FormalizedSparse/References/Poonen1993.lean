@@ -4218,7 +4218,7 @@ noncomputable abbrev to_Lp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 
   Poonen1993.pAdicHahnSeries.QpUn_embd
 
 lemma mem_QpUn_iff_supp_int {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
-  ∀ q ∈ x.support, q.isInt ↔ ∃ y : ℚᵘⁿ_[p], y.to_Lp = x := by
+  (∀ q ∈ x.support, q.isInt) ↔ ∃ y : ℚᵘⁿ_[p], y.to_Lp = x := by
   sorry
 
 end QpUn
