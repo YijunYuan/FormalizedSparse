@@ -3869,6 +3869,207 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
   unfold pAdicHahnSeries
   infer_instance
 
+/-- Helper: in `WittVector p (Fpbar p) = ℤᵘⁿ_[p]`, the Teichmüller lifts of two distinct
+elements differ by a unit. The argument uses the residue-field map (the `0`-th coefficient
+in characteristic `p`) and `WittVector.isUnit_of_coeff_zero_ne_zero`. -/
+private lemma teich_sub_isUnit {p : ℕ} [Fact (Nat.Prime p)]
+    {a b : Fpbar p} (h : a ≠ b) :
+    IsUnit (teichmuller p a - teichmuller p b) := by
+  apply WittVector.isUnit_of_coeff_zero_ne_zero
+  intro h0
+  have h_imp : ∀ i < 1, ((teichmuller p) a - (teichmuller p) b).coeff i = 0 := by
+    intro i hi; interval_cases i; exact h0
+  have h_eq : ((teichmuller p) a).coeff 0 = ((teichmuller p) b).coeff 0 :=
+    (WittVector.le_coeff_eq_iff_le_sub_coeff_eq_zero (n := 1)).mpr h_imp 0 (by omega)
+  rw [WittVector.teichmuller_coeff_zero, WittVector.teichmuller_coeff_zero] at h_eq
+  exact h h_eq
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 1600000 in
+-- Heartbeat ceilings raised: the proof contains many `set` bindings over the canonical-expansion
+-- choose_spec apparatus and exercises typeclass synthesis through the WithVal alias when calling
+-- `Quotient.sound` on the choose_spec relation; the default budgets fall short.
+/-- The canonical-section map `x ↦ LPHS.from_coeff x.coeff (support_IsPWO x)` is an
+isometry from the val-topology on 𝕃_[p] to the orderTop-topology on LPHS p:
+`HahnSeries.orderTop (canonical(x) - canonical(y)) = val(x - y)` for all `x, y ∈ 𝕃_[p]`.
+
+This is the strategic linchpin for the LaurentSeries-style proof of `CompleteSpace 𝕃_[p]`:
+a Cauchy filter in 𝕃_[p] lifts to a Cauchy filter in LPHS via this section. The proof uses
+`null_series_no_unit_leading` twice: once to show that `Δ := f_x - f_y - f_z` (a null series)
+cannot have its leading coefficient strictly below `q_z := val(x - y)` (via `teich_sub_isUnit`
+applied to differing s_x, s_y values at q_Δ), and once to show that `(f_x - f_y).coeff q_z ≠ 0`
+(else `Δ.coeff q_z = -teich(s_z q_z)` is a unit, contradicting `null_series_no_unit_leading`). -/
+private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p]) :
+    HahnSeries.orderTop
+      (LiftedPAdicHahnSeries.from_coeff (coeff x) (support_IsPWO x) -
+       LiftedPAdicHahnSeries.from_coeff (coeff y) (support_IsPWO y)) =
+    (val p) (x - y) := by
+  -- Setup canonical reps in LPHS.
+  set s_x : ℚ → Fpbar p := coeff x with hs_x_def
+  set s_y : ℚ → Fpbar p := coeff y with hs_y_def
+  set s_z : ℚ → Fpbar p := coeff (x - y) with hs_z_def
+  have hs_x_pwo : (Function.support s_x).IsPWO := support_IsPWO x
+  have hs_y_pwo : (Function.support s_y).IsPWO := support_IsPWO y
+  have hs_z_pwo : (Function.support s_z).IsPWO := support_IsPWO (x - y)
+  set f_x : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_x hs_x_pwo
+    with hf_x_def
+  set f_y : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_y hs_y_pwo
+    with hf_y_def
+  set f_z : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_z hs_z_pwo
+    with hf_z_def
+  -- f_x, f_y, f_z represent x, y, x - y in the quotient.
+  have hf_x_repr : (Ideal.Quotient.mk (NullSeriesIdeal p)) f_x = x := by
+    have h := (exists_canonical_expansion x).choose_spec.1
+    have h_eq : (Ideal.Quotient.mk (NullSeriesIdeal p)) x.out =
+        (Ideal.Quotient.mk (NullSeriesIdeal p)) f_x := Quotient.sound h
+    exact h_eq.symm.trans (Quotient.out_eq x)
+  have hf_y_repr : (Ideal.Quotient.mk (NullSeriesIdeal p)) f_y = y := by
+    have h := (exists_canonical_expansion y).choose_spec.1
+    have h_eq : (Ideal.Quotient.mk (NullSeriesIdeal p)) y.out =
+        (Ideal.Quotient.mk (NullSeriesIdeal p)) f_y := Quotient.sound h
+    exact h_eq.symm.trans (Quotient.out_eq y)
+  have hf_z_repr : (Ideal.Quotient.mk (NullSeriesIdeal p)) f_z = x - y := by
+    have h := (exists_canonical_expansion (x - y)).choose_spec.1
+    have h_eq : (Ideal.Quotient.mk (NullSeriesIdeal p)) (x - y).out =
+        (Ideal.Quotient.mk (NullSeriesIdeal p)) f_z := Quotient.sound h
+    exact h_eq.symm.trans (Quotient.out_eq (x - y))
+  -- Δ := f_x - f_y - f_z is a null series.
+  set Δ : LiftedPAdicHahnSeries p := f_x - f_y - f_z with hΔ_def
+  have hΔ_mem : Δ ∈ NullSeriesIdeal p := by
+    have h_mk_zero : (Ideal.Quotient.mk (NullSeriesIdeal p)) Δ = 0 := by
+      rw [hΔ_def]
+      simp only [map_sub, hf_x_repr, hf_y_repr, hf_z_repr]
+      ring
+    exact (Ideal.Quotient.eq_zero_iff_mem).mp h_mk_zero
+  -- Coefficient-level computations (def-eq via LPHS.from_coeff).
+  have hcoeff_fx : ∀ q, f_x.coeff q = teichmuller p (s_x q) := fun q => rfl
+  have hcoeff_fy : ∀ q, f_y.coeff q = teichmuller p (s_y q) := fun q => rfl
+  have hcoeff_fz : ∀ q, f_z.coeff q = teichmuller p (s_z q) := fun q => rfl
+  have hcoeff_Δ : ∀ q, Δ.coeff q =
+      teichmuller p (s_x q) - teichmuller p (s_y q) - teichmuller p (s_z q) := by
+    intro q
+    show (f_x - f_y - f_z).coeff q = _
+    simp only [HahnSeries.coeff_sub, hcoeff_fx, hcoeff_fy, hcoeff_fz]
+  -- Case split: x = y (trivial) vs x ≠ y (main case).
+  by_cases hxy : x = y
+  · -- Case x = y. Then s_x = s_y, hence f_x = f_y; LHS = orderTop 0 = ⊤. RHS = val 0 = ⊤.
+    have h_s_eq : s_x = s_y := by simp [hs_x_def, hs_y_def, hxy]
+    have h_f_eq : f_x = f_y := by
+      apply HahnSeries.ext
+      ext q
+      rw [hcoeff_fx, hcoeff_fy, h_s_eq]
+    rw [h_f_eq, sub_self]
+    rw [HahnSeries.orderTop_zero, hxy, sub_self]
+    rw [(val p).map_zero]
+  · -- Case x ≠ y, so x - y ≠ 0, and val(x - y) = ↑q_z.
+    have hxy_ne : x - y ≠ 0 := sub_ne_zero.mpr hxy
+    have hsz_ne : (Function.support s_z).Nonempty :=
+      support_nonempty_of_nonzero p (x - y) hxy_ne
+    set q_z : ℚ := hs_z_pwo.isWF.min hsz_ne with hq_z_def
+    have hsz_qz_ne : s_z q_z ≠ 0 := hs_z_pwo.isWF.min_mem hsz_ne
+    have hsz_below : ∀ q' < q_z, s_z q' = 0 := by
+      intro q' hq'
+      by_contra hne
+      have hmem : q' ∈ Function.support s_z := hne
+      exact absurd (hs_z_pwo.isWF.min_le hsz_ne hmem) (not_le.mpr hq')
+    -- val(x - y) = ↑q_z.
+    have hval_xy : (val p) (x - y) = ((q_z : ℚ) : WithTop ℚ) := by
+      classical
+      show (if h : (x - y) = 0 then (⊤ : WithTop ℚ)
+           else ((support_IsPWO (x - y)).isWF.min
+              (support_nonempty_of_nonzero p (x - y) h) : WithTop ℚ))
+        = ((q_z : ℚ) : WithTop ℚ)
+      rw [dif_neg hxy_ne]
+    rw [hval_xy]
+    -- Direction 1: For q' < q_z, Δ.coeff q' = 0.
+    have h_Δ_below_qz : ∀ q' < q_z, Δ.coeff q' = 0 := by
+      intro q' hq'
+      by_contra hne
+      -- q' ∈ supp Δ, and Δ ≠ 0.
+      have hΔ_ne : Δ ≠ 0 := fun hΔ0 => hne (by rw [hΔ0]; exact rfl)
+      have hΔ_supp_ne : Δ.support.Nonempty :=
+        ⟨q', (HahnSeries.mem_support Δ q').mpr hne⟩
+      set q_Δ : ℚ := Δ.isWF_support.min hΔ_supp_ne with hq_Δ_def
+      have hqΔ_le_q' : q_Δ ≤ q' :=
+        Δ.isWF_support.min_le hΔ_supp_ne ((HahnSeries.mem_support Δ q').mpr hne)
+      have hqΔ_lt_qz : q_Δ < q_z := lt_of_le_of_lt hqΔ_le_q' hq'
+      -- Δ.coeff q_Δ ≠ 0 (q_Δ in supp Δ).
+      have hΔ_qΔ_ne : Δ.coeff q_Δ ≠ 0 :=
+        (HahnSeries.mem_support Δ q_Δ).mp (Δ.isWF_support.min_mem hΔ_supp_ne)
+      -- Below q_Δ, Δ.coeff = 0.
+      have hΔ_below_qΔ : ∀ q'' < q_Δ, Δ.coeff q'' = 0 := by
+        intro q'' hq''
+        by_contra hne'
+        have hmem : q'' ∈ Δ.support := (HahnSeries.mem_support Δ q'').mpr hne'
+        exact absurd (Δ.isWF_support.min_le hΔ_supp_ne hmem) (not_le.mpr hq'')
+      -- s_z q_Δ = 0 (q_Δ < q_z).
+      have hsz_qΔ : s_z q_Δ = 0 := hsz_below q_Δ hqΔ_lt_qz
+      -- Δ.coeff q_Δ = teich(s_x q_Δ) - teich(s_y q_Δ).
+      have hΔ_at_qΔ : Δ.coeff q_Δ = teichmuller p (s_x q_Δ) - teichmuller p (s_y q_Δ) := by
+        rw [hcoeff_Δ q_Δ, hsz_qΔ, WittVector.teichmuller_zero p, sub_zero]
+      -- s_x q_Δ ≠ s_y q_Δ (else Δ.coeff q_Δ = 0).
+      have h_sxy_diff : s_x q_Δ ≠ s_y q_Δ := by
+        intro h_eq
+        apply hΔ_qΔ_ne
+        rw [hΔ_at_qΔ, h_eq, sub_self]
+      -- Δ.coeff q_Δ is a unit (teich_sub_isUnit).
+      have hΔ_qΔ_unit : IsUnit (Δ.coeff q_Δ) := by
+        rw [hΔ_at_qΔ]
+        exact teich_sub_isUnit h_sxy_diff
+      -- Apply null_series_no_unit_leading.
+      exact null_series_no_unit_leading hΔ_mem hΔ_qΔ_unit hΔ_below_qΔ
+    -- Direction 2: (f_x - f_y).coeff q_z ≠ 0.
+    have h_fxy_at_qz : (f_x - f_y).coeff q_z ≠ 0 := by
+      intro h0
+      -- Δ.coeff q_z = -f_z.coeff q_z = -teich(s_z q_z), a unit.
+      have hΔ_at_qz : Δ.coeff q_z = -teichmuller p (s_z q_z) := by
+        show (f_x - f_y - f_z).coeff q_z = _
+        rw [HahnSeries.coeff_sub']
+        show (f_x - f_y).coeff q_z - f_z.coeff q_z = _
+        rw [h0, hcoeff_fz, zero_sub]
+      have h_teich_unit : IsUnit (teichmuller p (s_z q_z)) :=
+        (isUnit_iff_ne_zero.mpr hsz_qz_ne).map (teichmuller p)
+      have hΔ_qz_unit : IsUnit (Δ.coeff q_z) := by
+        rw [hΔ_at_qz]
+        exact h_teich_unit.neg
+      exact null_series_no_unit_leading hΔ_mem hΔ_qz_unit h_Δ_below_qz
+    -- Direction 1 → for q' < q_z, (f_x - f_y).coeff q' = 0.
+    have h_fxy_below_qz : ∀ q' < q_z, (f_x - f_y).coeff q' = 0 := by
+      intro q' hq'
+      have hΔq' : Δ.coeff q' = 0 := h_Δ_below_qz q' hq'
+      have hfzq' : f_z.coeff q' = 0 := by
+        rw [hcoeff_fz, hsz_below q' hq', WittVector.teichmuller_zero p]
+      have : (f_x - f_y).coeff q' = Δ.coeff q' + f_z.coeff q' := by
+        simp only [hΔ_def, HahnSeries.coeff_sub]
+        ring
+      rw [this, hΔq', hfzq', add_zero]
+    -- Now combine: orderTop(f_x - f_y) = ↑q_z.
+    have hfxy_ne : f_x - f_y ≠ 0 := by
+      intro h0
+      apply h_fxy_at_qz
+      rw [h0]; rfl
+    rw [HahnSeries.orderTop_of_ne_zero hfxy_ne]
+    -- (f_x - f_y).isWF_support.min _ = q_z.
+    have hfxy_supp_ne : (f_x - f_y).support.Nonempty :=
+      ⟨q_z, (HahnSeries.mem_support _ q_z).mpr h_fxy_at_qz⟩
+    -- Show (f_x - f_y).isWF_support.min hfxy_supp_ne = q_z by antisymmetry.
+    have h_min_le_qz : (f_x - f_y).isWF_support.min hfxy_supp_ne ≤ q_z :=
+      (f_x - f_y).isWF_support.min_le hfxy_supp_ne
+        ((HahnSeries.mem_support _ q_z).mpr h_fxy_at_qz)
+    have h_qz_le_min : q_z ≤ (f_x - f_y).isWF_support.min hfxy_supp_ne := by
+      by_contra hlt
+      push_neg at hlt
+      have hcoeff0 : (f_x - f_y).coeff
+          ((f_x - f_y).isWF_support.min hfxy_supp_ne) = 0 :=
+        h_fxy_below_qz _ hlt
+      have hmem : (f_x - f_y).isWF_support.min hfxy_supp_ne ∈ (f_x - f_y).support :=
+        (f_x - f_y).isWF_support.min_mem hfxy_supp_ne
+      exact (HahnSeries.mem_support _ _).mp hmem hcoeff0
+    have h_min_eq : (f_x - f_y).isWF_support.min hfxy_supp_ne = q_z :=
+      le_antisymm h_min_le_qz h_qz_le_min
+    -- Conclude.
+    congr 1
+
 -- The field of p-adic Hahn series is complete with respect to the valuation defined above.
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
     CompleteSpace (𝕃_[p]) := by admit
