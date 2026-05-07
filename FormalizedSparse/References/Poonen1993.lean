@@ -1070,7 +1070,7 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
 **Limit of partial sums** (sub-claim of existence). The partial sums of `α` at
 coset `g` converge in the complete DVR `ℚᵘⁿ_[p]` to a limit `f_g`.
 Uses `intPartial_isCauchy` and `CompleteSpace ℚᵘⁿ_[p]` (which itself is an
-admit in `WittVector.lean`, line 76). **Sub-task for next session.**
+sorry in `WittVector.lean`, line 76). **Sub-task for next session.**
 -/
 lemma exists_lim_intPartial (α : LiftedPAdicHahnSeries p) (g : ℚ) :
     ∃ y : ℚᵘⁿ_[p], Filter.Tendsto (intPartial α g) Filter.atTop (nhds y) := by
@@ -4072,7 +4072,7 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
 
 -- The field of p-adic Hahn series is complete with respect to the valuation defined above.
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
-    CompleteSpace (𝕃_[p]) := by admit
+    CompleteSpace (𝕃_[p]) := by sorry
 
 -- Define an element of W(𝔽ₚ^⁻)((p^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support by the
 -- formula f ↦ ∑ₖ [f(k)]pᵏ
@@ -4226,7 +4226,7 @@ end QpUn
 namespace Poonen1993
 namespace pAdicHahnSeries
 
-instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by admit
+instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by sorry
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
@@ -4311,11 +4311,46 @@ lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : 𝕃_[p]) :
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField 𝕃_[p] :=
   WithAbs.normedField abs
 
-theorem QpUn_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ x : ℚᵘⁿ_[p],
-    WithZero.map' (AddMonoidHom.toMultiplicative (Int.castAddHom ℚ)) (Valued.v x) =
-      Valued.v (QpUn_embd x) := by
-  admit
+-- ──────────────────────────────────────────────────────────────────────────
+-- REMOVED (orchestrator, iter-002, 2026-05-07): `QpUn_embd_keep_val`
+--
+-- The original statement (preserved verbatim below) had a sign-convention bug:
+-- the cast `Int.castAddHom ℚ` lifted through `WithZero.map'` does NOT negate,
+-- but the LHS „valuation of x in ℚᵘⁿ“ uses Mathlib's exponent convention
+-- where `Valued.v p = ofAdd(-1)`, while the RHS uses the Hahn-series convention
+-- where the support of `ZpUn_embd p` is `{+1}`.  Concretely at `x = p`:
+--   LHS = WithZero.map' (Int.castAddHom ℚ) (ofAdd(-1)) = ((-1 : ℚ) : …)
+--   RHS = Valued.v (ZpUn_embd p) = ((+1 : ℚ) : …)
+-- So the equation reduces to `some (-1) = some (+1)` at the underlying `Option ℚ`
+-- level — a literal contradiction.  Verified by `lean_multi_attempt`: `rfl`
+-- closes `LHS_at_p = -1` but fails `LHS_at_p = +1`.
+--
+-- The natural fix is either:
+--   (i)  negate before casting, e.g. use `(Int.castAddHom ℚ).comp (-AddMonoidHom.id ℤ)`
+--        in place of `Int.castAddHom ℚ`; or
+--   (ii) replace the RHS `Valued.v (QpUn_embd x)` by an inverse on the unit group.
+--
+-- Since this lemma is **unused elsewhere** in the project (grep verified) and
+-- the only downstream result that would have depended on it,
+-- `QpUn_embd_keep_norm` (line ~4733), was reproved via DVR factorisation that
+-- bypasses this lemma entirely (see the comment at L4774 — “Avoids the
+-- blocked QpUn_embd_keep_val”), removing it has no effect on the dependency
+-- graph.  Full `lake build` after removal succeeded with 0 errors.
+--
+-- If a future iteration needs the valuation-level statement, restate it with
+-- the corrected sign convention and place it BELOW `QpUn_embd_keep_norm` so
+-- the DVR helpers are in scope.
+--
+-- Original (broken) statement preserved here for reference:
+--
+-- /-
+-- theorem QpUn_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
+--   ∀ x : ℚᵘⁿ_[p],
+--     WithZero.map' (AddMonoidHom.toMultiplicative (Int.castAddHom ℚ)) (Valued.v x) =
+--       Valued.v (QpUn_embd x) := by
+--   sorry
+-- -/
+-- ────────────────────────────────────────────────────────────────────────────
 
 -- Session 6 helpers for `QpUn_embd_keep_norm` (Tier 2 sub-lemmas).
 -- Route: "Factor over DVR" (per `informal/QpUn_embd_keep_norm.md`). Avoids the
@@ -4797,7 +4832,7 @@ theorem QpUn_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
 
 theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
-  admit
+  sorry
 
 theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p],
@@ -4816,24 +4851,24 @@ def IsHyperAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Prop :=
 
 def HyperAlgebraicSubfield (p : ℕ) [Fact (Nat.Prime p)] : Subfield (𝕃_[p]) where
   carrier := {x | IsHyperAlgebraic x}
-  zero_mem' := by admit
-  one_mem' := by admit
-  add_mem' := by admit
-  mul_mem' := by admit
-  neg_mem' := by admit
-  inv_mem' := by admit
+  zero_mem' := by sorry
+  one_mem' := by sorry
+  add_mem' := by sorry
+  mul_mem' := by sorry
+  neg_mem' := by sorry
+  inv_mem' := by sorry
 
 theorem HyperAlgebraicSubfield_isAlgClosed (p : ℕ) [Fact (Nat.Prime p)] :
   IsAlgClosed (HyperAlgebraicSubfield p) := by
-  admit
+  sorry
 
 theorem HyperAlgebraicSubfield_include_Qp (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚ_[p], IsHyperAlgebraic x.to_QpUn.to_Lp := by
-  admit
+  sorry
 
 theorem HyperAlgebraicSubfield_include_PadicAlgCl (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : (PadicAlgCl p), IsHyperAlgebraic (Cp_embd (p := p) x) := by
-  admit
+  sorry
 -/
 end pAdicHahnSeries
 end Poonen1993
