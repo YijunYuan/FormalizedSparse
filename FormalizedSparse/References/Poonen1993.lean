@@ -32,8 +32,7 @@ def finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : �
         {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} ⊆
           Set.Icc (⌈m - g⌉ : ℤ) ⌊(N : ℚ) - g⌋ := by
       intro n hn
-      have hm_le : m ≤ g + n := by
-        exact x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
+      have hm_le : m ≤ g + n := x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
       have hlower : (⌈m - g⌉ : ℤ) ≤ n := by
         apply Int.ceil_le.mpr
         rw [sub_le_iff_le_add]
@@ -66,8 +65,7 @@ noncomputable def finpropInt {p : ℕ} [Fact (Nat.Prime p)]
   · let m : ℚ := x.isWF_support.min hs
     have hsubset : {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} ⊆ Set.Icc (⌈m - g⌉ : ℤ) K := by
       intro n hn
-      have hm_le : m ≤ g + n := by
-        exact x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
+      have hm_le : m ≤ g + n := x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
       have hlower : (⌈m - g⌉ : ℤ) ≤ n := by
         apply Int.ceil_le.mpr
         rw [sub_le_iff_le_add]
@@ -129,6 +127,54 @@ private lemma valued_v_term_le {p : ℕ} [Fact (Nat.Prime p)] (a : OQpUn p) (n :
         mul_le_mul' (le_refl _) h_alg
     _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
 
+-- For a unit `u : (OQpUn p)ˣ`, `Valued.v (algebraMap ... u.val) = 1`.
+private lemma valued_v_algebraMap_unit_one {p : ℕ} [Fact (Nat.Prime p)] (u : (OQpUn p)ˣ) :
+    Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) = 1 := by
+  have h1 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) ≤ 1 :=
+    (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.val
+  have h2 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤ 1 :=
+    (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.inv
+  have h3 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
+            Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) = 1 := by
+    rw [← Valuation.map_mul, ← map_mul, u.val_inv]; simp
+  by_contra h_ne_one
+  have h1_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) < 1 :=
+    lt_of_le_of_ne h1 h_ne_one
+  have h_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
+            Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) < 1 := by
+    calc
+      Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
+          Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤
+          Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) * 1 := mul_le_mul' (le_refl _) h2
+      _ = Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) := mul_one _
+      _ < 1 := h1_lt
+  rw [h3] at h_lt
+  exact lt_irrefl _ h_lt
+
+-- For `K ≤ K'`, the difference `intPartial K' - intPartial K` equals the sum over the
+-- set-difference of the finpropInt index sets.
+private lemma intPartial_diff_eq_sdiff_sum {p : ℕ} [Fact (Nat.Prime p)]
+    (x : LiftedPAdicHahnSeries p) (g : ℚ) (K K' : ℤ) (h : K ≤ K') :
+    intPartial x g K' - intPartial x g K =
+      ∑ n ∈ (Set.Finite.toFinset (finpropInt x g K') \
+              Set.Finite.toFinset (finpropInt x g K)),
+        (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) := by
+  have hsub : Set.Finite.toFinset (finpropInt x g K) ⊆
+      Set.Finite.toFinset (finpropInt x g K') := by
+    intro n hn
+    have hn_mem : n ∈ {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} :=
+      (Set.Finite.mem_toFinset _).mp hn
+    exact (Set.Finite.mem_toFinset _).mpr ⟨le_trans hn_mem.1 h, hn_mem.2⟩
+  have e1 : intPartial x g K' = ∑ n ∈ Set.Finite.toFinset (finpropInt x g K'),
+      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) :=
+    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g K'))
+      (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + m)))
+  have e2 : intPartial x g K = ∑ n ∈ Set.Finite.toFinset (finpropInt x g K),
+      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) :=
+    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g K))
+      (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + m)))
+  rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
+
 -- **Helper 1** (partial_sum_cauchy): For `K₁ ≤ K₂`, the difference
 -- `intPartial x g' K₂ - intPartial x g' K₁` has valuation `≤ ofAdd(-(K₁ + 1))`.
 -- This is the "tail below K₁ is small" strict-ultrametric bound.
@@ -136,26 +182,7 @@ private lemma partial_sum_valuation_cauchy {p : ℕ} [Fact (Nat.Prime p)]
     (x : LiftedPAdicHahnSeries p) (g' : ℚ) (K₁ K₂ : ℤ) (h : K₁ ≤ K₂) :
     Valued.v (intPartial x g' K₂ - intPartial x g' K₁) ≤
       ((Multiplicative.ofAdd (-(K₁ + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := by
-  have hsub : Set.Finite.toFinset (finpropInt x g' K₁) ⊆
-      Set.Finite.toFinset (finpropInt x g' K₂) := by
-    intro n hn
-    have hn_mem : n ∈ {n : ℤ | n ≤ K₁ ∧ x.coeff (g' + n) ≠ 0} :=
-      (Set.Finite.mem_toFinset _).mp hn
-    exact (Set.Finite.mem_toFinset _).mpr ⟨le_trans hn_mem.1 h, hn_mem.2⟩
-  have e1 : intPartial x g' K₂ = ∑ n ∈ Set.Finite.toFinset (finpropInt x g' K₂),
-      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g' + n)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g' K₂))
-      (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (x.coeff (g' + m)))
-  have e2 : intPartial x g' K₁ = ∑ n ∈ Set.Finite.toFinset (finpropInt x g' K₁),
-      (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g' + n)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g' K₁))
-      (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (x.coeff (g' + m)))
-  have hdiff_eq : intPartial x g' K₂ - intPartial x g' K₁ =
-      ∑ n ∈ (Set.Finite.toFinset (finpropInt x g' K₂) \
-              Set.Finite.toFinset (finpropInt x g' K₁)),
-        (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g' + n)) := by
-    rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
-  rw [hdiff_eq]
+  rw [intPartial_diff_eq_sdiff_sum x g' K₁ K₂ h]
   apply Valuation.map_sum_le
   intro n hn
   have hn_mem : n ∈ Set.Finite.toFinset (finpropInt x g' K₂) ∧
@@ -529,10 +556,9 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
       (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) ((x + y).coeff (g + n))
     have hsxy_sub : ∀ M, sxy M ⊆ su M := by
       intro M n hn
-      have hn' : g + n ≤ M ∧ (x + y).coeff (g + n) ≠ 0 := by
-        exact (Set.Finite.mem_toFinset (hs := finprop (x + y) g M) (a := n)).1 hn
-      have hmem : g + n ∈ (x + y).support := by
-        exact (HahnSeries.mem_support (x + y) (g + n)).2 hn'.2
+      have hn' : g + n ≤ M ∧ (x + y).coeff (g + n) ≠ 0 :=
+        (Set.Finite.mem_toFinset (hs := finprop (x + y) g M) (a := n)).1 hn
+      have hmem : g + n ∈ (x + y).support := (HahnSeries.mem_support (x + y) (g + n)).2 hn'.2
       have hunion := HahnSeries.support_add_subset (x := x) (y := y) hmem
       rcases hunion with hxmem | hymem
       · exact Finset.mem_union_left _ <|
@@ -854,64 +880,6 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
   -- a "tail" sum whose entries each have valuation `≤ ofAdd(-(min K K' + 1))`,
   -- then convert to norm via `WithZeroMulInt.toNNReal_strictMono`.
   intro ε hε
-  -- Preliminaries: `Valued.v (p : QpUn p) = ofAdd(-1)` (uniformizer in WittVector DVR)
-  have hp_val : Valued.v ((p : QpUn p)) =
-      ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [show ((p : QpUn p)) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by push_cast; rfl]
-    rw [show (Valued.v : QpUn p → _) =
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation _ from rfl]
-    rw [(IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_of_algebraMap]
-    have hirr : Irreducible (p : OQpUn p) := WittVector.irreducible p
-    have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        Ideal.span {(p : OQpUn p)} := hirr.maximalIdeal_eq
-    rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-      (WittVector.p_nonzero p _) hpe]
-    rfl
-  -- Per-summand bound: `Valued.v (p^n · algebraMap a) ≤ ofAdd(-n)` for `a : OQpUn p`.
-  have hterm_bound : ∀ (a : OQpUn p) (n : ℤ),
-      Valued.v ((p : QpUn p)^n * algebraMap (OQpUn p) (QpUn p) a) ≤
-        ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    intro a n
-    rw [Valuation.map_mul]
-    have hpn_val : Valued.v ((p : QpUn p)^n) =
-        ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      have hzpow : Valued.v ((p : QpUn p)^n) = (Valued.v ((p : QpUn p)))^n :=
-        map_zpow₀ Valued.v _ _
-      rw [hzpow, hp_val, ← WithZero.coe_zpow]
-      congr 1
-      rw [← ofAdd_zsmul n (-1 : ℤ)]
-      congr 1
-      ring
-    rw [hpn_val]
-    have h_alg : Valued.v (algebraMap (OQpUn p) (QpUn p) a) ≤ 1 :=
-      (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one a
-    calc ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) *
-            Valued.v (algebraMap (OQpUn p) (QpUn p) a)
-        ≤ ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) * 1 :=
-          mul_le_mul' (le_refl _) h_alg
-      _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
-  -- Difference of intPartials at K ≤ K' is a sum over a Finset of `n > K, n ≤ K'`.
-  have hdiff_eq : ∀ K K' : ℤ, K ≤ K' →
-      intPartial α g K' - intPartial α g K =
-        ∑ n ∈ (Set.Finite.toFinset (finpropInt α g K') \
-                Set.Finite.toFinset (finpropInt α g K)),
-          (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)) := by
-    intro K K' hKK'
-    have hsub : Set.Finite.toFinset (finpropInt α g K) ⊆
-        Set.Finite.toFinset (finpropInt α g K') := by
-      intro n hn
-      have hn_mem : n ∈ {n : ℤ | n ≤ K ∧ α.coeff (g + n) ≠ 0} :=
-        (Set.Finite.mem_toFinset _).mp hn
-      exact (Set.Finite.mem_toFinset _).mpr ⟨le_trans hn_mem.1 hKK', hn_mem.2⟩
-    have e1 : intPartial α g K' = ∑ n ∈ Set.Finite.toFinset (finpropInt α g K'),
-        (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)) :=
-      Finset.sum_attach (s := Set.Finite.toFinset (finpropInt α g K'))
-        (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + m)))
-    have e2 : intPartial α g K = ∑ n ∈ Set.Finite.toFinset (finpropInt α g K),
-        (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)) :=
-      Finset.sum_attach (s := Set.Finite.toFinset (finpropInt α g K))
-        (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + m)))
-    rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
   -- Norm conversion: `‖a‖ = ↑(toNNReal (Valued.v a))`
   have hnorm_eq : ∀ a : QpUn p, ‖a‖ =
       ((WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a) : NNReal) : ℝ) := fun a => rfl
@@ -942,7 +910,7 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
   -- Reduce to K ≤ K' case
   rcases le_total K K' with hKK' | hKK'
   · -- K ≤ K' case: ‖intPartial K - intPartial K'‖ = ‖intPartial K' - intPartial K‖
-    rw [norm_sub_rev, hdiff_eq K K' hKK']
+    rw [norm_sub_rev, intPartial_diff_eq_sdiff_sum α g K K' hKK']
     -- Show valuation bound
     have hval_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K') \
             Set.Finite.toFinset (finpropInt α g K)),
@@ -963,7 +931,7 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
         exact hn2 ⟨hle, hn1.2⟩
       have hn_ge : K + 1 ≤ n := hn_gt
       -- Apply per-summand bound
-      have h1 := hterm_bound (α.coeff (g + n)) n
+      have h1 := valued_v_term_le (α.coeff (g + n)) n
       -- Bound by ofAdd(-(K+1)) using monotonicity
       have h2 : ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) :
             WithZero (Multiplicative ℤ)) ≤
@@ -1007,7 +975,7 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
       h_nnreal_le.trans_lt h_pow_lt
     exact_mod_cast h_combined
   · -- K' ≤ K case: diff is over T(K) \ T(K'), bound at K' + 1
-    rw [hdiff_eq K' K hKK']
+    rw [intPartial_diff_eq_sdiff_sum α g K' K hKK']
     have hval_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K) \
             Set.Finite.toFinset (finpropInt α g K')),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n))) ≤
@@ -1026,7 +994,7 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
         push_neg at hle
         exact hn2 ⟨hle, hn1.2⟩
       have hn_ge : K' + 1 ≤ n := hn_gt
-      have h1 := hterm_bound (α.coeff (g + n)) n
+      have h1 := valued_v_term_le (α.coeff (g + n)) n
       have h2 : ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) :
             WithZero (Multiplicative ℤ)) ≤
           ((Multiplicative.ofAdd (-(K' + 1) : ℤ) : Multiplicative ℤ) :
@@ -1175,31 +1143,7 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
         ((Multiplicative.ofAdd (-m₀ : ℤ) : Multiplicative ℤ) : WithZero _) := by
       rw [hm₀_def, neg_neg]
       congr
-    -- Pattern G: Valued.v ((p : QpUn p)) = ofAdd(-1)
-    have hp_val : Valued.v ((p : QpUn p)) =
-        ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      rw [show ((p : QpUn p)) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
-        push_cast; rfl]
-      rw [show (Valued.v : QpUn p → _) =
-          (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_of_algebraMap]
-      have hirr : Irreducible (p : OQpUn p) := WittVector.irreducible p
-      have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-          Ideal.span {(p : OQpUn p)} := hirr.maximalIdeal_eq
-      rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-        (WittVector.p_nonzero p _) hpe]
-      rfl
-    -- Valued.v ((p : QpUn p)^n) = ofAdd(-n) for n : ℤ
-    have hpn_val : ∀ n : ℤ, Valued.v ((p : QpUn p)^n) =
-        ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      intro n
-      have hzpow : Valued.v ((p : QpUn p)^n) = (Valued.v ((p : QpUn p)))^n :=
-        map_zpow₀ Valued.v _ _
-      rw [hzpow, hp_val, ← WithZero.coe_zpow]
-      congr 1
-      rw [← ofAdd_zsmul n (-1 : ℤ)]
-      congr 1
-      ring
+    have hpn_val := valued_v_p_zpow (p := p)
     -- z := (p : QpUn p)^(-m₀) * y, Valued.v z = 1
     set z : QpUn p := (p : QpUn p)^(-m₀) * y with hz_def
     have hvz : Valued.v z = 1 := by
@@ -1445,30 +1389,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
     exact fun h => WittVector.p_nonzero p _
       ((IsFractionRing.injective (OQpUn p) (QpUn p))
         (by simpa using h))
-  -- Pattern G — `Valued.v ((p : QpUn p)) = ofAdd(-1)` and zpow version.
-  have hp_val : Valued.v ((p : QpUn p)) =
-      ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [show ((p : QpUn p)) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
-      push_cast; rfl]
-    rw [show (Valued.v : QpUn p → _) =
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation _ from rfl]
-    rw [(IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_of_algebraMap]
-    have hirr : Irreducible (p : OQpUn p) := WittVector.irreducible p
-    have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        Ideal.span {(p : OQpUn p)} := hirr.maximalIdeal_eq
-    rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-      (WittVector.p_nonzero p _) hpe]
-    rfl
-  have hpn_val : ∀ n : ℤ, Valued.v ((p : QpUn p)^n) =
-      ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    intro n
-    have hzpow : Valued.v ((p : QpUn p)^n) = (Valued.v ((p : QpUn p)))^n :=
-      map_zpow₀ Valued.v _ _
-    rw [hzpow, hp_val, ← WithZero.coe_zpow]
-    congr 1
-    rw [← ofAdd_zsmul n (-1 : ℤ)]
-    congr 1
-    ring
+  have hpn_val := valued_v_p_zpow (p := p)
   -- Step 4. Replace `Icc m₀ K`-sum with `Icc m K`-sum (extending b by 0).
   have hsum_eq_b : ∀ K : ℤ, ∑ k ∈ Finset.Icc m₀ K,
         (p : QpUn p)^k * algebraMap (OQpUn p) (QpUn p) (teichmuller p (b k)) =
@@ -1923,7 +1844,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       α - LiftedPAdicHahnSeries.from_coeff s hspwo ∈ NullSeriesIdeal p := by
   classical
   -- ============================================================
-  -- SETUP: hp_ne, hp_val, hpn_val
+  -- SETUP: hp_ne, hpn_val
   -- ============================================================
   have hp_ne : (p : QpUn p) ≠ 0 := by
     rw [show (p : QpUn p) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
@@ -1931,29 +1852,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     exact fun h_zero => WittVector.p_nonzero p _
       ((IsFractionRing.injective (OQpUn p) (QpUn p))
         (by simpa using h_zero))
-  have hp_val : Valued.v ((p : QpUn p)) =
-      ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [show ((p : QpUn p)) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
-      push_cast; rfl]
-    rw [show (Valued.v : QpUn p → _) =
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation _ from rfl]
-    rw [(IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_of_algebraMap]
-    have hirr : Irreducible (p : OQpUn p) := WittVector.irreducible p
-    have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        Ideal.span {(p : OQpUn p)} := hirr.maximalIdeal_eq
-    rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-      (WittVector.p_nonzero p _) hpe]
-    rfl
-  have hpn_val : ∀ n : ℤ, Valued.v ((p : QpUn p)^n) =
-      ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    intro n
-    have hzpow : Valued.v ((p : QpUn p)^n) = (Valued.v ((p : QpUn p)))^n :=
-      map_zpow₀ Valued.v _ _
-    rw [hzpow, hp_val, ← WithZero.coe_zpow]
-    congr 1
-    rw [← ofAdd_zsmul n (-1 : ℤ)]
-    congr 1
-    ring
+  have hpn_val := valued_v_p_zpow (p := p)
   have hp_term_val : ∀ (a : Fpbar p) (n : ℤ), a ≠ 0 →
       Valued.v ((p : QpUn p)^n * algebraMap (OQpUn p) (QpUn p) (teichmuller p a)) =
         ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
@@ -1965,29 +1864,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     -- For a unit u in OQpUn p, Valued.v(algMap u) = 1
     have h_val_one : Valued.v (algebraMap (OQpUn p) (QpUn p) (teichmuller p a)) = 1 := by
       rcases h_teich_unit with ⟨u, hu⟩
-      rw [← hu]
-      have h1 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.val
-      have h2 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.inv
-      have h3 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) = 1 := by
-        rw [← Valuation.map_mul, ← map_mul]
-        rw [u.val_inv]
-        simp
-      by_contra h_ne_one
-      have h1_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) < 1 :=
-        lt_of_le_of_ne h1 h_ne_one
-      have h_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) < 1 := by
-        calc Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤
-            Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) * 1 := by
-              apply mul_le_mul' (le_refl _) h2
-          _ = Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) := mul_one _
-          _ < 1 := h1_lt
-      rw [h3] at h_lt
-      exact lt_irrefl _ h_lt
+      rw [← hu, valued_v_algebraMap_unit_one u]
     rw [h_val_one, mul_one]
   -- ============================================================
   -- Per-γ data: f γ, b γ, m_b γ
@@ -2435,8 +2312,8 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   -- ============================================================
   have h_α_g : Filter.Tendsto (intPartial α g) Filter.atTop (nhds (f g)) := hf_spec g
   have h_α_γ : Filter.Tendsto (intPartial α γ) Filter.atTop (nhds (f γ)) := hf_spec γ
-  have h_shift_atTop : Filter.Tendsto (fun K : ℤ => K + n₀) Filter.atTop Filter.atTop := by
-    exact Filter.tendsto_atTop_add_const_right _ _ Filter.tendsto_id
+  have h_shift_atTop : Filter.Tendsto (fun K : ℤ => K + n₀) Filter.atTop Filter.atTop :=
+    Filter.tendsto_atTop_add_const_right _ _ Filter.tendsto_id
   have h_α_γ_shift : Filter.Tendsto (fun K : ℤ => intPartial α γ (K + n₀)) Filter.atTop
       (nhds (f γ)) := h_α_γ.comp h_shift_atTop
   have h_α_γ_mul : Filter.Tendsto
@@ -3139,32 +3016,9 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
     (hq_lead : ∀ q' < q, Δ.coeff q' = 0) : False := by
   change IsNullSeries Δ at hΔ
   have htend := hΔ q
-  -- Step A: p has valuation ofAdd(-1) in QpUn p.
-  have hp_val : Valued.v ((p : QpUn p)) =
-      ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [show ((p : QpUn p)) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
-      push_cast; rfl]
-    rw [show (Valued.v : QpUn p → _) =
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation _ from rfl]
-    rw [(IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_of_algebraMap]
-    have hirr : Irreducible (p : OQpUn p) := WittVector.irreducible p
-    have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        Ideal.span {(p : OQpUn p)} := hirr.maximalIdeal_eq
-    rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-      (WittVector.p_nonzero p _) hpe]
-    rfl
-  -- Step B: generalize to (p)^n.
-  have hpn_val : ∀ n : ℤ, Valued.v ((p : QpUn p)^n) =
-      ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    intro n
-    have hzpow : Valued.v ((p : QpUn p)^n) = (Valued.v ((p : QpUn p)))^n :=
-      map_zpow₀ Valued.v _ _
-    rw [hzpow, hp_val, ← WithZero.coe_zpow]
-    congr 1
-    rw [← ofAdd_zsmul n (-1 : ℤ)]
-    congr 1
-    ring
-  -- Step C: the n=0 term has valuation = ofAdd(0).
+  -- Step A: p has valuation ofAdd(-1) in QpUn p, generalised to (p)^n by valued_v_p_zpow.
+  have hpn_val := valued_v_p_zpow (p := p)
+  -- Step B: the n=0 term has valuation = ofAdd(0).
   have h_lead_val : Valued.v ((p : QpUn p)^(0 : ℤ) *
       algebraMap (OQpUn p) (QpUn p) (Δ.coeff q)) =
       ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
@@ -3172,27 +3026,7 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
     rw [hpn_val 0]
     have hval : Valued.v (algebraMap (OQpUn p) (QpUn p) (Δ.coeff q)) = 1 := by
       rcases hq_unit with ⟨u, hu⟩
-      rw [← hu]
-      have h1 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.val
-      have h2 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.inv
-      have h3 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) = 1 := by
-        rw [← Valuation.map_mul, ← map_mul]; rw [u.val_inv]; simp
-      by_contra h_ne
-      have h1_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) < 1 :=
-        lt_of_le_of_ne h1 h_ne
-      have h_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) < 1 := by
-        calc Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤
-            Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) * 1 :=
-              mul_le_mul' (le_refl _) h2
-          _ = Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) := mul_one _
-          _ < 1 := h1_lt
-      rw [h3] at h_lt
-      exact lt_irrefl _ h_lt
+      rw [← hu, valued_v_algebraMap_unit_one u]
     rw [hval, mul_one]
     rfl
   -- Step D: derive contradiction. For M ≥ ⌈q⌉, the partial sum equals (n=0 term) + (sum over n ≠ 0).
