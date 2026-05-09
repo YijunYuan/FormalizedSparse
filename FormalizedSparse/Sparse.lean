@@ -3,6 +3,9 @@ import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.Data.Nat.Digits.Lemmas
 import Mathlib.Data.Rat.Star
+import Mathlib.Data.Finsupp.Multiset
+import Mathlib.Data.Fintype.Fin
+import Mathlib.SetTheory.Cardinal.Finite
 
 namespace Sparse
 
@@ -952,6 +955,123 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   · intro hdIsP
     repeat simp [(lemma_1_3₃ p d).2 hdIsP]
 
+-- Unconditional version of the inequality from `lemma_1_3₄`.
+-- Mirrors the construction in `lemma_1_3₄`'s forward direction but stops at the
+-- ≤ chain (without requiring Sigma equality / IsP).
+lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
+    (d.tau p).Sigma ≤ d.Sigma := by
+  let n := d.maxIndex + 1
+  let a := d.value p n
+  let r := a % p ^ n
+  let Ld := DigitSeries.coeffs d n
+  let Lt := Nat.digits p r ++ List.replicate (n - (Nat.digits p r).length) 0
+  have hp1 : 1 < p := (Fact.out : Nat.Prime p).one_lt
+  have hp2 : 2 ≤ p := Nat.succ_le_of_lt hp1
+  have hdn : d.maxIndex < n := by simp [n]
+  have hr_lt : r < p ^ n := Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
+  have hLdSigma : d.Sigma = Ld.sum := by
+    simpa [Ld, n] using DigitSeries.Sigma_eq_coeffs_sum (f := d) (n := n) hdn
+  have hLtlen : Lt.length = n := by
+    simp [Lt, (Nat.digits_length_le_iff hp1 r).2 hr_lt]
+  have hLdigits : Nat.ofDigits p Lt = r := by
+    unfold Lt
+    rw [Nat.ofDigits_append_replicate_zero, Nat.ofDigits_digits]
+  have hLlt : ∀ x ∈ Lt, x < p := by
+    intro x hx
+    unfold Lt at hx
+    rw [List.mem_append, List.mem_replicate] at hx
+    rcases hx with hx | hx
+    · exact Nat.digits_lt_base hp1 hx
+    · rcases hx with ⟨_, rfl⟩
+      simpa using (Fact.out : Nat.Prime p).pos
+  let f := DigitSeries.ofCoeffs (0 :: Lt)
+  have hfIsP : f.IsP p := by
+    intro i
+    exact DigitSeries.ofCoeffs_lt (p := p) (L := 0 :: Lt) (by
+      intro x hx
+      simp only [List.mem_cons] at hx
+      rcases hx with rfl | hx
+      · simpa using (Fact.out : Nat.Prime p).pos
+      · exact hLlt x hx) i
+  have hfmax : f.maxIndex < n + 1 := by
+    simpa [f, hLtlen] using DigitSeries.maxIndex_ofCoeffs_zero_cons_lt (L := Lt)
+  have hfval : f.value p (n + 1) = p * r := by
+    have htmp :
+        Nat.ofDigits p
+            (DigitSeries.coeffs (DigitSeries.ofCoeffs (0 :: Lt)) ((0 :: Lt).length)) =
+          p * r := by
+      rw [DigitSeries.coeffs_ofCoeffs]
+      simp [Nat.ofDigits_cons, hLdigits]
+    simpa [DigitSeries.value, f, hLtlen] using htmp
+  have hfnorm : f.norm p = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
+    rw [f.norm_eq_value p hfmax, hfval, Nat.cast_mul]
+    calc
+      (↑p * ↑r) * (p : ℚ) ^ (-(n + 1 : ℤ)) =
+          (↑r : ℚ) * ((p : ℚ) * (p : ℚ) ^ (-(n + 1 : ℤ))) := by ring
+      _ = (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) := by
+          rw [DigitSeries.cast_mul_zpow_neg_succ]
+  have hfint : (f.norm p - d.norm p).isInt := by
+    let qn : ℕ := a / p ^ n
+    rw [hfnorm, d.norm_eq_value p hdn]
+    have hmod_nat : r + p ^ n * qn = a := by
+      simpa [r, qn] using Nat.mod_add_div a (p ^ n)
+    have hmod : (r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ) = a := by exact_mod_cast hmod_nat
+    have hdiff :
+        (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) = -(qn : ℚ) := by
+      calc
+        (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) - (a : ℚ) * (p : ℚ) ^ (-(n : ℤ)) =
+            (r : ℚ) * (p : ℚ) ^ (-(n : ℤ)) -
+              ((r : ℚ) + ((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by
+            rw [hmod]
+        _ = -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) := by ring
+        _ = -(qn : ℚ) := by
+            calc
+              -(((p : ℚ) ^ n) * (qn : ℚ)) * (p : ℚ) ^ (-(n : ℤ)) =
+                  -((qn : ℚ) * (((p : ℚ) ^ n) * (p : ℚ) ^ (-(n : ℤ)))) := by ring
+              _ = -(qn : ℚ) := by
+                  rw [DigitSeries.cast_pow_mul_zpow_neg]
+                  ring
+    rw [hdiff]
+    simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
+  have htau : d.tau p = f := by
+    exact (((lemma_1_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
+  have htauSigma : (d.tau p).Sigma = Lt.sum := by
+    rw [htau]
+    have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
+      change (DigitSeries.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
+      exact DigitSeries.Sigma_ofCoeffs (0 :: Lt)
+    rw [List.sum_cons, zero_add] at hSigmaCoeffs
+    exact hSigmaCoeffs
+  have hdigits_r : (Nat.digits p r).sum = ((Nat.digits p a).take n).sum := by
+    rw [show r = Nat.ofDigits p ((Nat.digits p a).take n) by
+      simpa [r] using (Nat.self_mod_pow_eq_ofDigits_take n a hp2)]
+    refine Nat.sum_digits_ofDigits_eq_sum hp1 (l := ((Nat.digits p a).take n).length) ?_
+    constructor
+    · rfl
+    · intro x hx
+      exact Nat.digits_lt_base hp1 (List.mem_of_mem_take hx)
+  have htake_le : ((Nat.digits p a).take n).sum ≤ (Nat.digits p a).sum := by
+    have := Nat.le_add_right ((Nat.digits p a).take n).sum ((Nat.digits p a).drop n).sum
+    simpa [List.take_append_drop, List.sum_append] using this
+  have hdigits_le : (Nat.digits p a).sum ≤ Ld.sum := by
+    simpa [a, Ld, n, DigitSeries.value] using digit_sum_ofDigits_le_sum p hp1 Ld
+  have hLt_sum : Lt.sum = (Nat.digits p r).sum := by
+    simp [Lt, List.sum_append]
+  calc
+    (d.tau p).Sigma = Lt.sum := htauSigma
+    _ = (Nat.digits p r).sum := hLt_sum
+    _ = ((Nat.digits p a).take n).sum := hdigits_r
+    _ ≤ (Nat.digits p a).sum := htake_le
+    _ ≤ Ld.sum := hdigits_le
+    _ = d.Sigma := hLdSigma.symm
+
+lemma lemma_1_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
+    (hd : d.IsP p) (he : e.IsP p) (h : d.norm p = e.norm p) : d = e := by
+  have hsub : (d.norm p - e.norm p).isInt := by
+    rw [h, sub_self]
+    simp [Rat.isInt]
+  exact DigitSeries.eq_of_norm_sub_isInt hd he hsub
+
 set_option linter.unusedVariables false in
 def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
 (c n : PNat) (S : Set (DigitSeries)) (hS : ∀ f ∈ S, f.IsP p) : Prop :=
@@ -971,5 +1091,392 @@ def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
 
 def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set (DigitSeries)) (hS : ∀ f ∈ S, f.IsP p) : Prop :=
   ∃ c : PNat, ∃ D : Set ℕ+, D.Infinite ∧ ∀ n ∈ D, IsCNSparse p c n S hS
+
+noncomputable def φ₀ {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)} {hS : ∀ f ∈ S, f.IsP p}
+  {c n : ℕ+} (hSparse : IsCNSparse p c n S hS) : S → ℕ :=
+  fun d => Nat.card <| hSparse.2.choose⁻¹' {d}
+
+/- USER: You need to formalize Lemma 1.5 of Sparse.pdf here.
+   I have already formalized φ₀ above. You can use that.
+-/
+
+lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
+    {hS : ∀ f ∈ S, f.IsP p} {c n : ℕ+} (hSparse : IsCNSparse p c n S hS)
+    (φ : S → ℕ)
+    (hφ_finite : (Function.support φ).Finite)
+    (hφ_sum : ∑ᶠ d : S, φ d ≤ n)
+    (hφ_norm : ((∑ᶠ d : S, (d.val.norm p) * (φ d : ℚ)) -
+                (∑ᶠ d : S, (d.val.norm p) * (φ₀ hSparse d : ℚ))).isInt) :
+    φ = φ₀ hSparse := by
+  -- Goal: prove φ = φ₀ hSparse
+  -- Strategy: Use uniqueness property of IsCNSparse
+
+  -- Step 1: Establish that φ₀ has finite support
+  have hφ₀_finite : (Function.support (φ₀ hSparse)).Finite := by
+    -- φ₀ is non-zero only on the range of the witness sequence
+    refine Set.Finite.subset (Set.finite_range hSparse.2.choose) ?_
+    intro d hd
+    simp only [Function.mem_support, φ₀, Set.mem_range] at hd ⊢
+    by_contra h
+    have : hSparse.2.choose ⁻¹' {d} = ∅ := by
+      ext i
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_empty_iff_false, iff_false]
+      intro hi
+      exact h ⟨i, hi⟩
+    rw [this] at hd
+    simp at hd
+  -- Step 2: Extract the witness sequence and its properties
+  -- Note: We use hSparse.2.choose directly to keep the definitional link with φ₀
+  set witness := hSparse.2.choose with hwitness_def
+  have hwitness_prop := hSparse.2.choose_spec
+  have hwitness_IsP : (∑ i : Fin n, (witness i).val).IsP p := hwitness_prop.2.1
+  have hwitness_unique := hwitness_prop.2.2
+  -- Step 3: Bridge φ₀ finsum to witness sequence sum
+  -- This uses the fact that φ₀ counts preimages: φ₀(d) = |witness⁻¹({d})|
+  -- So ∑ᶠ d, norm(d) * φ₀(d) = ∑ᶠ d, norm(d) * |witness⁻¹({d})|
+  --                           = ∑ i, norm(witness(i))  (by regrouping)
+  --                           = norm(∑ i, witness(i))  (by norm additivity)
+  have hφ₀_norm_eq : (∑ᶠ d : S, (d.val.norm p) * (φ₀ hSparse d : ℚ)) =
+                      (∑ i : Fin n, (witness i).val).norm p := by
+    -- Step 1: Convert finsum to finset sum
+    have h_support_subset : Function.support (fun d : S => (d.val.norm p) * (φ₀ hSparse d : ℚ)) ⊆
+                            ↑hφ₀_finite.toFinset := by
+      intro d hd
+      simp only [Function.mem_support] at hd
+      simp only [Set.Finite.coe_toFinset, Function.mem_support]
+      intro h_eq
+      apply hd
+      rw [show (φ₀ hSparse d : ℚ) = ((φ₀ hSparse d : ℕ) : ℚ) from rfl, h_eq]
+      simp
+    rw [finsum_eq_sum_of_support_subset _ h_support_subset]
+    -- Step 2: Unfold φ₀ definition and regroup
+    simp only [φ₀]
+    -- Step 3: Regroup sum from "sum over d" to "sum over i"
+    -- Key: ∑ d, norm(d) * |witness⁻¹({d})| = ∑ i, norm(witness(i))
+    -- We'll show both sides equal ∑ i : Fin n, norm(witness(i))
+    have h_regroup : ∑ x ∈ hφ₀_finite.toFinset, (DigitSeries.norm p) ↑x *
+                       ↑(Nat.card ↑(witness ⁻¹' {x})) =
+                     ∑ i : Fin n, (witness i).val.norm p := by
+      classical
+      -- For each x : S, witness⁻¹({x}) viewed as a subtype of Fin n has card
+      -- equal to the filter {i : Fin n | witness i = x}.card
+      have h_card_eq : ∀ x : S,
+          Nat.card ↑(witness ⁻¹' {x}) =
+          (Finset.univ.filter (fun i : Fin n => witness i = x)).card := by
+        intro x
+        rw [show ↑(witness ⁻¹' {x}) = {i : Fin n // witness i = x} from rfl]
+        exact Nat.subtype_card _ (fun i => by simp)
+      -- Rewrite each term: norm(x) * |fiber| = ∑ i in fiber, norm(witness i)
+      have h_term : ∀ x ∈ hφ₀_finite.toFinset,
+          (DigitSeries.norm p) ↑x * ↑(Nat.card ↑(witness ⁻¹' {x})) =
+          ∑ i ∈ Finset.univ.filter (fun i : Fin n => witness i = x),
+            (witness i).val.norm p := by
+        intro x _
+        rw [h_card_eq x]
+        rw [Finset.sum_filter]
+        -- Goal: norm(x) * (filter card : ℚ) = ∑ i, if witness i = x then norm(witness i) else 0
+        rw [Finset.card_filter]
+        push_cast
+        rw [Finset.mul_sum]
+        apply Finset.sum_congr rfl
+        intro i _
+        by_cases hi : witness i = x
+        · simp [hi]
+        · simp [hi]
+      rw [Finset.sum_congr rfl h_term]
+      -- Apply sum_fiberwise: need ∀ i, witness i ∈ hφ₀_finite.toFinset
+      have h_maps_to : ∀ i ∈ (Finset.univ : Finset (Fin n)),
+          witness i ∈ hφ₀_finite.toFinset := by
+        intro i _
+        simp only [Set.Finite.mem_toFinset, Function.mem_support, φ₀, ne_eq]
+        rw [← hwitness_def]
+        intro h_card_zero
+        -- witness i is in the preimage of {witness i}, so the preimage is nonempty
+        have hmem : i ∈ (witness ⁻¹' ({witness i} : Set ↑S)) := by
+          simp only [Set.mem_preimage, Set.mem_singleton_iff]
+        have h_nonempty : (witness ⁻¹' ({witness i} : Set ↑S)).Nonempty := ⟨i, hmem⟩
+        -- But Nat.card = 0 means either empty or infinite
+        rw [Nat.card_eq_zero] at h_card_zero
+        cases h_card_zero with
+        | inl h_empty =>
+          -- If empty, contradiction with nonempty
+          have : Nonempty ↑(witness ⁻¹' ({witness i} : Set ↑S)) := h_nonempty.to_subtype
+          exact not_nonempty_iff.mpr h_empty this
+        | inr h_inf =>
+          -- If infinite, contradiction with finiteness (Fin n is finite)
+          have : Finite ↑(witness ⁻¹' ({witness i} : Set ↑S)) :=
+            Set.Finite.to_subtype (Set.toFinite _)
+          exact Finite.not_infinite this h_inf
+      exact Finset.sum_fiberwise_of_maps_to h_maps_to (fun i => (witness i).val.norm p)
+    rw [h_regroup]
+    -- Step 4: Apply norm additivity (norm p is an AddMonoidHom)
+    rw [map_sum (DigitSeries.norm p) (fun i => (witness i).val) Finset.univ]
+  -- Step 3b: Strengthen the hypothesis ∑ᶠ φ d ≤ n to equality
+  -- This is needed to construct a clean sequence e : Fin n → S from φ
+  -- Idea: if ∑ᶠ φ d < n, we could pad to a sequence and use hwitness_unique
+  -- to reach a contradiction with the cardinality of witness
+  have hφ_sum_eq_n : ∑ᶠ d : S, φ d = n := by
+    classical
+    apply le_antisymm hφ_sum
+    -- Strategy: prove (n : ℕ) * c.val ≤ (∑ᶠ d, φ d) * c.val, then cancel.
+    -- Define T := hφ_finite.toFinset and convert finsums to Finset.sums.
+    set T : Finset S := hφ_finite.toFinset with hT_def
+    have hsupp_φ_subset : Function.support φ ⊆ ↑T := by
+      intro d hd
+      simpa [T, hT_def] using hd
+    have hsum_φ_eq : ∑ᶠ d : S, φ d = ∑ d ∈ T, φ d :=
+      finsum_eq_sum_of_support_subset _ hsupp_φ_subset
+    have hsupp_smul_subset : Function.support (fun d : S => φ d • d.val) ⊆ ↑T := by
+      intro d hd
+      simp only [Function.mem_support] at hd
+      apply hsupp_φ_subset
+      intro hφd
+      apply hd
+      simp [hφd]
+    -- (∑ d ∈ T, φ d • d.val).norm p = ∑ d ∈ T, (d.val.norm p) * (φ d : ℚ)
+    have hLHS_φ_norm :
+        (∑ d ∈ T, (φ d) • d.val).norm p = ∑ d ∈ T, (d.val.norm p) * (φ d : ℚ) := by
+      rw [map_sum (DigitSeries.norm p) (fun d : S => φ d • d.val) T]
+      refine Finset.sum_congr rfl (fun d _ => ?_)
+      rw [(DigitSeries.norm p).map_nsmul]
+      ring
+    -- ∑ᶠ d, (d.val.norm p) * (φ d : ℚ) = ∑ d ∈ T, ...
+    have hsupp_norm_subset :
+        Function.support (fun d : S => (d.val.norm p) * (φ d : ℚ)) ⊆ ↑T := by
+      intro d hd
+      simp only [Function.mem_support] at hd
+      apply hsupp_φ_subset
+      intro hφd
+      apply hd
+      rw [show (φ d : ℚ) = ((φ d : ℕ) : ℚ) from rfl, hφd]
+      simp
+    have hfinsum_norm_eq_sum :
+        ∑ᶠ d : S, (d.val.norm p) * (φ d : ℚ) = ∑ d ∈ T, (d.val.norm p) * (φ d : ℚ) :=
+      finsum_eq_sum_of_support_subset _ hsupp_norm_subset
+    -- Σ(witness sum) = (n : ℕ) * c.val
+    have hwit_sigma : (∑ i : Fin n, (witness i).val).Sigma = (n : ℕ) * c.val := by
+      rw [map_sum DigitSeries.Sigma (fun i : Fin n => (witness i).val) Finset.univ]
+      simp_rw [show ∀ i : Fin n, DigitSeries.Sigma (witness i).val = c.val from
+        fun i => hwitness_prop.1 i]
+      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
+      rfl
+    -- ((LHS_φ).norm p - (Σwitness).norm p).isInt
+    have hisInt : ((∑ d ∈ T, (φ d) • d.val).norm p -
+                   (∑ i : Fin n, (witness i).val).norm p).isInt := by
+      rw [hLHS_φ_norm, ← hfinsum_norm_eq_sum, ← hφ₀_norm_eq]
+      exact hφ_norm
+    -- (LHS_φ).tau p = ∑ i, (witness i).val
+    have htau_eq :
+        (∑ d ∈ T, (φ d) • d.val).tau p = ∑ i : Fin n, (witness i).val := by
+      have h1 : (∑ d ∈ T, (φ d) • d.val).tau p =
+                  (∑ i : Fin n, (witness i).val).tau p :=
+        (lemma_1_3₂ p _ _).mpr hisInt
+      have h2 : (∑ i : Fin n, (witness i).val).tau p = ∑ i : Fin n, (witness i).val :=
+        (lemma_1_3₃ p _).mpr hwitness_IsP
+      rw [h1, h2]
+    -- Σ(LHS_φ) ≤ (∑ d ∈ T, φ d) * c.val
+    have hSigma_bound :
+        (∑ d ∈ T, (φ d) • d.val).Sigma ≤ (∑ d ∈ T, φ d) * c.val := by
+      rw [map_sum DigitSeries.Sigma (fun d : S => (φ d) • d.val) T]
+      have hstep : ∀ d : S,
+          DigitSeries.Sigma ((φ d) • d.val) = (φ d) * DigitSeries.Sigma d.val := by
+        intro d
+        rw [DigitSeries.Sigma.map_nsmul]
+        rfl
+      simp_rw [hstep]
+      calc
+        ∑ d ∈ T, φ d * DigitSeries.Sigma d.val
+            ≤ ∑ d ∈ T, φ d * c.val :=
+              Finset.sum_le_sum (fun d _ =>
+                Nat.mul_le_mul_left _ (hSparse.1 d.val d.property))
+        _ = (∑ d ∈ T, φ d) * c.val := by rw [← Finset.sum_mul]
+    -- Chain inequalities to get n * c.val ≤ (∑ᶠ φ d) * c.val
+    have hchain : (n : ℕ) * c.val ≤ (∑ᶠ d : S, φ d) * c.val := by
+      calc
+        (n : ℕ) * c.val
+            = (∑ i : Fin n, (witness i).val).Sigma := hwit_sigma.symm
+        _ = ((∑ d ∈ T, (φ d) • d.val).tau p).Sigma := by rw [htau_eq]
+        _ ≤ (∑ d ∈ T, (φ d) • d.val).Sigma :=
+              Sigma_tau_le_Sigma p _
+        _ ≤ (∑ d ∈ T, φ d) * c.val := hSigma_bound
+        _ = (∑ᶠ d : S, φ d) * c.val := by rw [hsum_φ_eq]
+    exact Nat.le_of_mul_le_mul_right hchain c.pos
+  -- Step 4: Main uniqueness argument (Stage 2 of informal proof)
+  classical
+  -- Reuse the support-set T from Step 3b
+  set T : Finset S := hφ_finite.toFinset with hT_def
+  have hsupp_φ_subset : Function.support φ ⊆ ↑T := by
+    intro d hd; simpa [T, hT_def] using hd
+  have hsum_φ_eq : ∑ᶠ d : S, φ d = ∑ d ∈ T, φ d :=
+    finsum_eq_sum_of_support_subset _ hsupp_φ_subset
+  -- A1: Define f : S →₀ ℕ
+  have hf_mem : ∀ d, φ d ≠ 0 → d ∈ T := by
+    intro d hd; exact hsupp_φ_subset hd
+  let f : S →₀ ℕ := Finsupp.onFinset T φ hf_mem
+  have hf_apply : ∀ d, f d = φ d := fun d => rfl
+  -- A2: m : Multiset S; show m.card = n
+  let m : Multiset S := f.toMultiset
+  have hm_card : m.card = n := by
+    have h1 : m.card = f.sum (fun _ x => x) := Finsupp.card_toMultiset f
+    have h2 : f.sum (fun _ x => x) = ∑ d ∈ T, φ d := by
+      unfold Finsupp.sum
+      apply Finset.sum_subset (Finsupp.support_onFinset_subset)
+      intro d _hdT hdsupp
+      simp only [Finsupp.mem_support_iff, not_not] at hdsupp
+      change f d = 0 at hdsupp
+      exact hdsupp
+    rw [h1, h2, ← hsum_φ_eq, hφ_sum_eq_n]
+  -- A3: Build e : Fin n → S
+  have hlen : m.toList.length = n := by
+    rw [Multiset.length_toList]; exact hm_card
+  let e : Fin n → S := fun i => m.toList.get (Fin.cast hlen.symm i)
+  -- A4: count_eq_φ : Multiset.count d m = φ d
+  have hA4 : ∀ d : S, Multiset.count d m = φ d := by
+    intro d
+    rw [Finsupp.count_toMultiset]
+    rfl
+  -- A5: Nat.card (e ⁻¹' {d}) = φ d
+  have hA5 : ∀ d : S, Nat.card ↑(e ⁻¹' {d}) = φ d := by
+    intro d
+    have hcardEq : Nat.card ↑(e ⁻¹' {d}) =
+        (Finset.univ.filter (fun i : Fin n => e i = d)).card := by
+      rw [show ↑(e ⁻¹' {d}) = {i : Fin n // e i = d} from rfl]
+      exact Nat.subtype_card _ (fun i => by
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and])
+    rw [hcardEq]
+    -- Reindex via Fin.cast
+    have hperm_filter :
+        (Finset.univ.filter (fun i : Fin n => e i = d)).card =
+        (Finset.univ.filter
+          (fun j : Fin m.toList.length => m.toList.get j = d)).card := by
+      apply Finset.card_bij (fun (i : Fin n) _ => Fin.cast hlen.symm i)
+      · intro i hi
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hi ⊢
+        exact hi
+      · intros _ _ _ _; intro h; exact Fin.cast_injective _ h
+      · intro j hj
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
+        refine ⟨Fin.cast hlen j, ?_, ?_⟩
+        · simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+          change m.toList.get (Fin.cast hlen.symm (Fin.cast hlen j)) = d
+          have : Fin.cast hlen.symm (Fin.cast hlen j) = j := by ext; rfl
+          rw [this]; exact hj
+        · ext; rfl
+    rw [hperm_filter]
+    -- Connect filter card to multiset count via List.Vector
+    have hcount_eq : (Finset.univ.filter (fun j : Fin m.toList.length => m.toList.get j = d)).card =
+                     Multiset.count d m := by
+      let hv : List.Vector S m.toList.length := ⟨m.toList, rfl⟩
+      have key := Fin.card_filter_univ_eq_vector_get_eq_count d hv
+      have hvtoList : hv.toList = m.toList := rfl
+      -- Both BEq instances on Subtype S agree (both reduce to underlying decidable equality)
+      have hBEq_inst : (Subtype.instBEq : BEq S) = (instBEqOfDecidableEq : BEq S) := by
+        ext x y
+        rcases x with ⟨xv, hx⟩
+        rcases y with ⟨yv, hy⟩
+        simp [Subtype.instBEq, instBEqOfDecidableEq]
+      have hbridge : @List.count S Subtype.instBEq d m.toList = Multiset.count d m := by
+        rw [hBEq_inst, ← Multiset.coe_count, Multiset.coe_toList]
+      rw [← hbridge, ← hvtoList]
+      convert key using 2
+    rw [hcount_eq]
+    exact hA4 d
+  -- B: ∑ i, (e i).val = (something) — but actually we need norm version directly
+  -- C: Compute (∑ i, (e i).val).norm p via fiberwise reorganisation
+  --    Mirror the hφ₀_norm_eq pattern with e/φ instead of witness/φ₀
+  have hsupp_norm_subset :
+      Function.support (fun d : S => (d.val.norm p) * (φ d : ℚ)) ⊆ ↑T := by
+    intro d hd
+    simp only [Function.mem_support] at hd
+    apply hsupp_φ_subset
+    intro hφd
+    apply hd
+    rw [show (φ d : ℚ) = ((φ d : ℕ) : ℚ) from rfl, hφd]
+    simp
+  have hφ_norm_eq : (∑ᶠ d : S, (d.val.norm p) * (φ d : ℚ)) =
+                    (∑ i : Fin n, (e i).val).norm p := by
+    rw [finsum_eq_sum_of_support_subset _ hsupp_norm_subset]
+    -- Substitute φ d = Nat.card (e ⁻¹' {d}) via hA5
+    have h_rewrite : ∀ d ∈ T,
+        (d.val.norm p) * (φ d : ℚ) =
+        (d.val.norm p) * ((Nat.card ↑(e ⁻¹' {d}) : ℕ) : ℚ) := by
+      intro d _; rw [hA5 d]
+    rw [Finset.sum_congr rfl h_rewrite]
+    -- Now mirror the hφ₀_norm_eq pattern: regroup via fiberwise
+    have h_card_eq : ∀ x : S,
+        Nat.card ↑(e ⁻¹' {x}) =
+        (Finset.univ.filter (fun i : Fin n => e i = x)).card := by
+      intro x
+      rw [show ↑(e ⁻¹' {x}) = {i : Fin n // e i = x} from rfl]
+      exact Nat.subtype_card _ (fun i => by simp)
+    have h_term : ∀ x ∈ T,
+        (DigitSeries.norm p) ↑x * ((Nat.card ↑(e ⁻¹' {x}) : ℕ) : ℚ) =
+        ∑ i ∈ Finset.univ.filter (fun i : Fin n => e i = x),
+          (e i).val.norm p := by
+      intro x _
+      rw [h_card_eq x]
+      rw [Finset.sum_filter, Finset.card_filter]
+      push_cast
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro i _
+      by_cases hi : e i = x
+      · simp [hi]
+      · simp [hi]
+    rw [Finset.sum_congr rfl h_term]
+    -- Apply sum_fiberwise: need ∀ i, e i ∈ T
+    have h_maps_to : ∀ i ∈ (Finset.univ : Finset (Fin n)), e i ∈ T := by
+      intro i _
+      -- Show φ (e i) ≠ 0 using hA5: Nat.card (e ⁻¹' {e i}) = φ (e i),
+      -- and that preimage contains i.
+      simp only [T, Set.Finite.mem_toFinset, Function.mem_support, ne_eq]
+      intro hφei
+      have hcard_zero : Nat.card ↑(e ⁻¹' ({e i} : Set ↑S)) = 0 := by
+        rw [hA5]; exact hφei
+      have hmem : i ∈ (e ⁻¹' ({e i} : Set ↑S)) := by
+        simp only [Set.mem_preimage, Set.mem_singleton_iff]
+      have h_nonempty : (e ⁻¹' ({e i} : Set ↑S)).Nonempty := ⟨i, hmem⟩
+      rw [Nat.card_eq_zero] at hcard_zero
+      cases hcard_zero with
+      | inl h_empty =>
+        have : Nonempty ↑(e ⁻¹' ({e i} : Set ↑S)) := h_nonempty.to_subtype
+        exact not_nonempty_iff.mpr h_empty this
+      | inr h_inf =>
+        have : Finite ↑(e ⁻¹' ({e i} : Set ↑S)) :=
+          Set.Finite.to_subtype (Set.toFinite _)
+        exact Finite.not_infinite this h_inf
+    rw [Finset.sum_fiberwise_of_maps_to h_maps_to (fun i => (e i).val.norm p)]
+    -- Apply norm additivity
+    rw [map_sum (DigitSeries.norm p) (fun i => (e i).val) Finset.univ]
+  -- C: derive (∑ witness).norm p − (∑ e).norm p .isInt
+  have hediff : ((∑ i : Fin n, (witness i).val).norm p -
+                 (∑ i : Fin n, (e i).val).norm p).isInt := by
+    rw [← hφ₀_norm_eq, ← hφ_norm_eq]
+    -- hφ_norm: (∑ᶠ φ - ∑ᶠ φ₀).isInt; we need (∑ᶠ φ₀ - ∑ᶠ φ).isInt
+    -- Actually hφ_norm has form (φ-finsum - φ₀-finsum).isInt
+    -- We need (φ₀-finsum - φ-finsum).isInt; by symmetry of isInt under negation
+    have h := hφ_norm
+    -- hφ_norm: ((∑ᶠ d, norm d * φ d) - (∑ᶠ d, norm d * φ₀ d)).isInt
+    -- We want: ((∑ᶠ d, norm d * φ₀ d) - (∑ᶠ d, norm d * φ d)).isInt
+    have hneg : ∀ x : ℚ, x.isInt → (-x).isInt := fun x hx => by
+      rw [Rat.isInt] at hx ⊢; rw [Rat.neg_den]; exact hx
+    have := hneg _ h
+    rw [neg_sub] at this
+    exact this
+  -- D: Apply hwitness_unique
+  obtain ⟨perm, hperm⟩ := hwitness_unique e hediff
+  -- E: Conclude φ = φ₀ hSparse
+  funext d
+  -- φ₀ hSparse d = Nat.card (witness ⁻¹' {d})
+  change φ d = Nat.card (witness ⁻¹' {d})
+  -- witness = e ∘ perm  ⇒  witness ⁻¹' {d} = perm ⁻¹' (e ⁻¹' {d})
+  have hwit_eq : witness = e ∘ perm := by
+    funext i; exact hperm i
+  rw [hwit_eq, Set.preimage_comp]
+  -- Nat.card (perm ⁻¹' (e ⁻¹' {d})) = Nat.card (e ⁻¹' {d})
+  have hperm_card : Nat.card ↑(⇑perm ⁻¹' (e ⁻¹' {d})) = Nat.card ↑(e ⁻¹' {d}) :=
+    Nat.card_preimage_of_injective perm.injective (by
+      intro x _; exact ⟨perm.symm x, by simp⟩)
+  rw [hperm_card, hA5]
 
 end Sparse
