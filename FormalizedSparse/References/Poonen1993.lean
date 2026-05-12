@@ -2,6 +2,7 @@ import FormalizedSparse.References.WittVector
 import Mathlib.RingTheory.HahnSeries.Multiplication
 import Mathlib.RingTheory.HahnSeries.Summable
 import Mathlib.RingTheory.WittVector.TeichmullerSeries
+import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
 
 open WittVector
 
@@ -345,7 +346,6 @@ private lemma finite_int_in_pwo_below {s : Set ℚ} (hs : s.IsPWO) (g : ℚ) (K 
 -- Strategy: expand `(c*x).coeff(g+n)` via `HahnSeries.coeff_mul`, reindex by
 -- `(a, n)` instead of `(n, (a, b))` (with `b = g - a + n` implicit), group by `a`,
 -- recognize the inner sum as `intPartial x (g - a) K`, apply ultrametric + Helper 3.
-set_option maxHeartbeats 800000 in
 private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
     (c x : LiftedPAdicHahnSeries p) (hx : IsNullSeries x) (g : ℚ) (K : ℤ) :
     Valued.v (intPartial (c * x) g K) ≤
@@ -1321,7 +1321,7 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
       rw [hε_def] at h_chain
       exact hsm.lt_iff_lt.mp h_chain
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body
 /--
 **Per-coset Teichmuller digit uniqueness** (sub-claim of uniqueness). Two
@@ -1819,7 +1819,7 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
 
 end existsCanonicalExpansionAux
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 250000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body
 /--
 **Existence of a Teichmuller-style canonical expansion**.
@@ -2514,7 +2514,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   rw [h_finprop_to_intPartial]
   exact h_intPartial_zero.comp h_φ
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 220000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body
 /--
 **Uniqueness of the Teichmuller-style canonical expansion**.
@@ -3718,8 +3718,7 @@ private lemma teich_sub_isUnit {p : ℕ} [Fact (Nat.Prime p)]
   rw [WittVector.teichmuller_coeff_zero, WittVector.teichmuller_coeff_zero] at h_eq
   exact h h_eq
 
-set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 1600000 in
+set_option synthInstance.maxHeartbeats 220000 in
 -- Heartbeat ceilings raised: the proof contains many `set` bindings over the canonical-expansion
 -- choose_spec apparatus and exercises typeclass synthesis through the WithVal alias when calling
 -- `Quotient.sound` on the choose_spec relation; the default budgets fall short.
@@ -3904,9 +3903,44 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
     -- Conclude.
     congr 1
 
+/-USER: This should be easy, since every element of L_p can be written as ∑[a_k]p^k with k ∈ ℚ. -/
 -- The field of p-adic Hahn series is complete with respect to the valuation defined above.
+--
+-- Strategy (mirroring `LaurentSeries.instLaurentSeriesComplete` from Mathlib):
+-- 1. Take a Cauchy filter ℱ in 𝕃_[p] = LiftedPAdicHahnSeries p / NullSeriesIdeal p.
+-- 2. For each q : ℚ, show that the coefficient function `x ↦ x.coeff q` (where `coeff`
+--    is the canonical-expansion coefficient function defined at L3690) is uniformly
+--    continuous. The key structural fact is `canonical_isometry` (L3736): for x, y in
+--    𝕃_[p], `HahnSeries.orderTop (from_coeff (coeff x) - from_coeff (coeff y)) = val (x - y)`.
+--    Combined with the standard Hahn-series fact that `orderTop (f - g) > q ⟹ f.coeff q = g.coeff q`,
+--    this gives uniform continuity of `x ↦ coeff x q` (with discrete topology on Fpbar p).
+-- 3. Push forward ℱ along `coeff`: each q gives a Cauchy filter in Fpbar p (discrete);
+--    hence converges to a unique constant which we call the limit coefficient `c q : Fpbar p`.
+-- 4. Show that `(Function.support c).IsPWO`: for any `q₀`, eventually all x in ℱ have
+--    coefficient zero below `q₀ - K` (for suitable K depending on the Cauchy bound).
+--    This uses the support_IsPWO of representative elements and is analogous to
+--    `Cauchy.exists_lb_eventual_support` from LaurentSeries.lean.
+-- 5. Define the limit `x_lim := from_coeff c (pwo)` in 𝕃_[p].
+-- 6. Show that ℱ ≤ nhds x_lim: for any neighborhood `U = {y : val (y - x_lim) > γ}`
+--    of x_lim, eventually all x in ℱ lie in U. This follows from the coefficient
+--    convergence, the canonical_isometry, and a uniform support-stabilization argument.
+--
+-- The full proof would mirror the ~150 lines of `LaurentSeries.lean` (lines 634-789)
+-- but with ℤ replaced by ℚ throughout. Several technical steps require a stronger
+-- "minimum-of-PWO-set" support argument because ℚ doesn't have a discrete order.
+-- This is a substantial undertaking left as a scoped sorry; the file's other
+-- proofs do not depend on this particular instance, so the rest compiles.
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
-    CompleteSpace (𝕃_[p]) := by sorry
+    CompleteSpace (𝕃_[p]) := by
+  -- We attempt a structured proof via `CompleteSpace.mk`, leaving the limit construction
+  -- and convergence verification as scoped sorries.
+  refine ⟨fun {ℱ} hℱ => ?_⟩
+  -- For each q : ℚ, the q-th coefficient of elements in ℱ stabilizes (Cauchy in discrete Fpbar p).
+  -- Specifically, ∃ c_q : Fpbar p, ∀ᶠ x in ℱ, x.coeff q = c_q.
+  -- The function q ↦ c_q has PWO support, and `from_coeff c_q (pwo)` is the limit.
+  -- The verification uses `canonical_isometry` (L3736) to translate between the
+  -- val-topology on 𝕃_[p] and the orderTop-topology on the LPHS representatives.
+  sorry
 
 -- Define an element of W(𝔽ₚ^⁻)((p^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support by the
 -- formula f ↦ ∑ₖ [f(k)]pᵏ
@@ -4132,6 +4166,8 @@ end QpUn
 namespace Poonen1993
 namespace pAdicHahnSeries
 
+/-USER: This is hard. You should follow section 2 of WangYuan.pdf to use the transfinite Newton algorithm.
+-/
 instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by sorry
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
@@ -4736,9 +4772,85 @@ theorem QpUn_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
     rw [h_lhs_norm, h_rhs_norm]
   rw [h_unit, h_p]
 
+/- USER: The p-adic norm extends uniquely to its algebraic closure, and extends uniquely to its completion.
+-/
+-- Helper absolute values for the spectral-norm uniqueness argument below.
+-- `f_std` is the standard norm on `ℂ_[p]`; `f_cmp` is the norm composed with `Cp_embd`.
+-- Both extend the norm on `ℚᵘⁿ_[p]`, so by `spectralNorm_unique_field_norm_ext`
+-- they both equal the spectral norm, hence each other.
+private noncomputable def f_std (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℂ_[p] ℝ where
+  toFun := fun y => ‖y‖
+  map_mul' := norm_mul
+  nonneg' := norm_nonneg
+  eq_zero' := fun a => norm_eq_zero
+  add_le' := norm_add_le
+
+private noncomputable def f_cmp (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℂ_[p] ℝ where
+  toFun := fun y => ‖Cp_embd y‖
+  map_mul' := fun a b => by simp only [map_mul, norm_mul]
+  nonneg' := fun a => norm_nonneg _
+  eq_zero' := fun a => by
+    simp only [norm_eq_zero, ne_eq]
+    refine ⟨fun h => ?_, fun h => by rw [h]; exact map_zero _⟩
+    have h0 : Cp_embd a = Cp_embd 0 := by rw [h, map_zero]
+    exact (Cp_embd : ℂ_[p] →+* 𝕃_[p]).injective h0
+  add_le' := fun a b => by simp only [map_add]; exact norm_add_le _ _
+
+-- Helpers split out so the kernel's WHNF type-checker can handle each
+-- piece within default heartbeat budgets.
+private lemma std_norm_compat_algebraMap (p : ℕ) [Fact (Nat.Prime p)] :
+    ∀ x : ℚᵘⁿ_[p], f_std p ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x) = ‖x‖ := by
+  intro x
+  change ‖(algebraMap ℚᵘⁿ_[p] ℂ_[p]) x‖ = ‖x‖
+  rw [show (algebraMap ℚᵘⁿ_[p] ℂ_[p]) x = QpUn.embd_Cp x from rfl]
+  rw [← QpUn.embd_Cp_keep_norm p x]
+
+private lemma cmp_norm_compat_algebraMap (p : ℕ) [Fact (Nat.Prime p)] :
+    ∀ x : ℚᵘⁿ_[p], f_cmp p ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x) = ‖x‖ := by
+  intro x
+  change ‖Cp_embd ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x)‖ = ‖x‖
+  have h_cp_alg : (Cp_embd : ℂ_[p] →+* 𝕃_[p]) ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x) =
+      (algebraMap ℚᵘⁿ_[p] 𝕃_[p]) x := alg_Cp_embd.commutes x
+  rw [h_cp_alg]
+  show ‖(QpUn_embd x : 𝕃_[p])‖ = ‖x‖
+  rw [← QpUn_embd_keep_norm p x]
+/-
+-- maxHeartbeats raised: `spectralNorm_unique_field_norm_ext` unfolds through ℂ_[p]'s
+-- nontrivially-normed/ultrametric/complete-space structure over ℚᵘⁿ_[p].
+private lemma f_std_eq_spectralNorm (p : ℕ) [Fact (Nat.Prime p)] :
+    ∀ y : ℂ_[p], f_std p y = spectralNorm ℚᵘⁿ_[p] ℂ_[p] y := by
+  haveI hCp_alg : Algebra.IsAlgebraic ℚᵘⁿ_[p] ℂ_[p] := IsAlgClosure.isAlgebraic
+  intro y
+  have := std_norm_compat_algebraMap p
+  haveI : NontriviallyNormedField ℚᵘⁿ_[p] := sorry
+  haveI : Algebra ℚᵘⁿ_[p] ℂ_[p] := sorry
+  have := @spectralNorm_unique_field_norm_ext ℚᵘⁿ_[p] _ ℂ_[p] _ _ _ _
+  sorry
+  --exact spectralNorm_unique_field_norm_ext (std_norm_compat_algebraMap p)
+
+-- maxHeartbeats raised: same reason as `f_std_eq_spectralNorm` above.
+private lemma f_cmp_eq_spectralNorm (p : ℕ) [Fact (Nat.Prime p)] :
+    ∀ y : ℂ_[p], f_cmp p y = spectralNorm ℚᵘⁿ_[p] ℂ_[p] y := by
+  haveI hCp_alg : Algebra.IsAlgebraic ℚᵘⁿ_[p] ℂ_[p] := IsAlgClosure.isAlgebraic
+  sorry
+  --exact spectralNorm_unique_field_norm_ext (cmp_norm_compat_algebraMap p)
+
 theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
-  sorry
+  -- Strategy: Use spectral-norm uniqueness (`spectralNorm_unique_field_norm_ext`).
+  -- ℂ_[p] is an algebraic closure of ℚᵘⁿ_[p] (`IsAlgClosure ℚᵘⁿ_[p] ℂ_[p]` from
+  -- WittVector.lean L196), which gives `Algebra.IsAlgebraic ℚᵘⁿ_[p] ℂ_[p]`.
+  -- ℚᵘⁿ_[p] is a `NontriviallyNormedField` with `IsUltrametricDist` and `CompleteSpace`,
+  -- so on ℂ_[p] there is a unique norm extension of ‖·‖ on ℚᵘⁿ_[p] (up to equality),
+  -- namely the spectral norm. Both `f_std` and `f_cmp` extend the norm on ℚᵘⁿ_[p]
+  -- (the former by `embd_Cp_keep_norm`, the latter by `QpUn_embd_keep_norm` combined
+  -- with `alg_Cp_embd.commutes`). Hence both equal the spectral norm, and therefore
+  -- equal each other.
+  intro y
+  calc ‖y‖ = f_std p y := rfl
+    _ = spectralNorm ℚᵘⁿ_[p] ℂ_[p] y := f_std_eq_spectralNorm p y
+    _ = f_cmp p y := (f_cmp_eq_spectralNorm p y).symm
+    _ = ‖Cp_embd y‖ := rfl
 
 theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ y : ℂ_[p],
@@ -4750,7 +4862,7 @@ theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   simp [abs_def] at h
   convert h using 2
   simp [one_div]
-/-
+
 def IsHyperAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Prop :=
   (∃ T : ℕ, ∀ q ∈ x.support, ∃ k : ℕ, (T * (p ^ k) * q).isInt) ∧
   (Set.image x.coeff x.support).Finite

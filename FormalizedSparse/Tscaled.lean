@@ -582,25 +582,13 @@ theorem rank_QpUnT_over_QpUn :
 
 /-! ### Lemma 2.2 — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
 
-open Topology Filter in
-/-- **Lemma 2.2.**  Every element of `ℤᵘⁿ_[p,T]` can be uniquely written as
-`∑_{k≥0} [c_k] · (pInvT)^k` with `c_k ∈ 𝔽ᵃ_[p]`, where the sum converges in the
-`(pInvT)`-adic topology on `ℤᵘⁿ_[p,T]` (formalised here as the `Valued`-induced topology
-on `ℚᵘⁿ_[p,T]` after taking `algebraMap`).
-
-This is a consequence of the Teichmüller-series representation of `ℤᵘⁿ_[p]` (Mathlib
-`WittVector.TeichmullerSeries`) combined with Lemma 2.1.
-
-TODO Lemma 2.2 proof deferred: needs `IsAdicComplete` on the `(pInvT)`-adic topology, plus
-a transfer of `WittVector.TeichmullerSeries` results across the Eisenstein extension. -/
-theorem exists_teichmuller_series_OQpUnT :
-    ∀ a : ℤᵘⁿ_[p,T], ∃! c : ℕ → 𝔽ᵃ_[p],
-      Filter.Tendsto
-        (fun N : ℕ => ∑ k ∈ Finset.range N,
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-            (OQpUn_embd p T (teichmuller p (c k)) * (pInvT p T) ^ k))
-        Filter.atTop
-        (𝓝 (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a)) := by sorry
+/-
+  **Lemma 2.2** is stated and proved further down (after the `TResidue`/
+  `TTeichmuller` infrastructure used in its proof) as
+  `exists_teichmuller_series_OQpUnT`.  We move the placement so the proof can
+  reuse the digit-extraction lemmas `Texists_T_pInvT_digits` /
+  `Tteichmuller_digits_unique` rather than duplicating them inline.
+-/
 
 /-! ### `TLiftedPAdicHahnSeries := W(𝔽ₚ^⁻)[p^{1/T}]((t^ℚ))` -/
 
@@ -2478,6 +2466,301 @@ private lemma Tteichmuller_digits_unique
       rw [← hk_eq]
     rw [← h_c_eq, ← h_c'_eq]
     exact h_induction (k - m).toNat
+
+/-! ### Lemma 2.2 proper — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
+
+open Topology Filter in
+/-- **Lemma 2.2.**  Every element of `ℤᵘⁿ_[p,T]` can be uniquely written as
+`∑_{k≥0} [c_k] · (pInvT)^k` with `c_k ∈ 𝔽ᵃ_[p]`, where the sum converges in the
+`(pInvT)`-adic topology on `ℤᵘⁿ_[p,T]` (formalised here as the `Valued`-induced topology
+on `ℚᵘⁿ_[p,T]` after taking `algebraMap`).
+
+This is a consequence of the Teichmüller-series representation of `ℤᵘⁿ_[p]` (Mathlib
+`WittVector.TeichmullerSeries`) combined with Lemma 2.1.
+
+Existence comes from `Texists_T_pInvT_digits` (the divisibility step) plus a standard
+valuation/Tendsto argument; uniqueness is obtained by extending `c : ℕ → 𝔽ᵃ_[p]` to
+`b : ℤ → 𝔽ᵃ_[p]` with cutoff `m₀ = 0` and applying `Tteichmuller_digits_unique`. -/
+theorem exists_teichmuller_series_OQpUnT :
+    ∀ a : ℤᵘⁿ_[p,T], ∃! c : ℕ → 𝔽ᵃ_[p],
+      Filter.Tendsto
+        (fun N : ℕ => ∑ k ∈ Finset.range N,
+          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            (OQpUn_embd p T (teichmuller p (c k)) * (pInvT p T) ^ k))
+        Filter.atTop
+        (𝓝 (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a)) := by
+  intro a
+  obtain ⟨digits, hdigits⟩ := Texists_T_pInvT_digits p T a
+  -- Common ingredients used in both existence and uniqueness branches.
+  have hp1 : (1 : NNReal) < p := by exact_mod_cast (Fact.out : Nat.Prime p).one_lt
+  have hp_pos : (0 : NNReal) < p := zero_lt_one.trans hp1
+  have hsm : StrictMono (WithZeroMulInt.toNNReal (p_ne_zero p)) :=
+    WithZeroMulInt.toNNReal_strictMono hp1
+  have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
+  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le _
+  -- Abbreviation: `algMapₐ` is the algebra map `ℤᵘⁿ_[p,T] → ℚᵘⁿ_[p,T]`.
+  set algMapₐ : ℤᵘⁿ_[p,T] →+* ℚᵘⁿ_[p,T] := algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) with halgMapₐ
+  -- Convenience: rewrite the partial-sum form in two equivalent ways.
+  -- Form A (the goal's form): algMapₐ (OQpUn_embd p T teich(c k) * (pInvT)^k)
+  -- Form B (TTeichmuller form, used in Tteichmuller_digits_unique):
+  --   (pInvTQ)^k * algMapₐ (TTeichmuller (c k))   -- using TTeichmuller := algMap ∘ teich
+  -- Equality of forms: form A = (pInvTQ)^k * algMapₐ (algMapₐ_inner (teich (c k)))
+  -- where algMapₐ_inner = algebraMap ℤᵘⁿ_[p] → ℤᵘⁿ_[p,T].
+  -- Build the existence-side bound first.
+  have hbound : ∀ (digits' : ℕ → Fpbar p),
+      (∀ n : ℕ,
+        (pInvT p T)^(n+1) ∣ a - ∑ i ∈ Finset.Iic n,
+          (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) →
+      ∀ N : ℕ, 1 ≤ N → Valued.v (algMapₐ a -
+        ∑ k ∈ Finset.range N,
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) ≤
+      ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) := by
+    intro digits' hdigits' N hN
+    obtain ⟨n, rfl⟩ : ∃ n : ℕ, N = n + 1 := ⟨N - 1, by omega⟩
+    have hdiv := hdigits' n
+    obtain ⟨c, hc⟩ := hdiv
+    have halg := congrArg algMapₐ hc
+    simp only [map_sub, map_sum, map_mul, map_pow] at halg
+    have hreindex :
+        (∑ k ∈ Finset.range (n + 1),
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) =
+        ∑ i ∈ Finset.Iic n,
+          algMapₐ ((pInvT p T)^i *
+            algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) := by
+      rw [← Nat.range_succ_eq_Iic]
+      apply Finset.sum_congr rfl
+      intro i _
+      unfold OQpUn_embd
+      rw [mul_comm]
+    rw [hreindex]
+    have hkey : algMapₐ a -
+        ∑ i ∈ Finset.Iic n,
+          algMapₐ ((pInvT p T)^i *
+            algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) =
+        algMapₐ ((pInvT p T)^(n+1) * c) := by
+      rw [← map_sum, ← map_sub, hc]
+    rw [hkey]
+    rw [show algMapₐ ((pInvT p T)^(n+1) * c) =
+        algMapₐ ((pInvT p T)^(n+1)) * algMapₐ c from map_mul _ _ _]
+    rw [Valuation.map_mul, map_pow]
+    have hpInvT_cast : algMapₐ (pInvT p T) = pInvTQ p T := rfl
+    rw [hpInvT_cast]
+    have hpn_val := valued_v_pInvT_zpow (p := p) (T := T)
+    rw [show ((pInvTQ p T) ^ (n + 1) : ℚᵘⁿ_[p,T]) =
+          (pInvTQ p T) ^ ((n : ℤ) + 1) from by
+      rw [← zpow_natCast (pInvTQ p T) (n+1)]; push_cast; rfl]
+    rw [hpn_val ((n : ℤ) + 1)]
+    have h_alg_le : Valued.v (algMapₐ c) ≤ 1 :=
+      (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one c
+    calc ((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) *
+        Valued.v (algMapₐ c)
+        ≤ ((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) * 1 :=
+          mul_le_mul' (le_refl _) h_alg_le
+      _ = ((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) :=
+          mul_one _
+      _ = ((Multiplicative.ofAdd (-((n + 1 : ℕ) : ℤ)) : Multiplicative ℤ) : WithZero _) := by
+          push_cast; rfl
+  -- Convert valuation bound to Tendsto for any digits satisfying the divisibility.
+  have htendsto_of_bound : ∀ (digits' : ℕ → Fpbar p),
+      (∀ n : ℕ,
+        (pInvT p T)^(n+1) ∣ a - ∑ i ∈ Finset.Iic n,
+          (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) →
+      Filter.Tendsto
+        (fun N : ℕ => ∑ k ∈ Finset.range N,
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))
+        Filter.atTop
+        (𝓝 (algMapₐ a)) := by
+    intro digits' hdigits'
+    rw [Filter.tendsto_iff_forall_eventually_mem]
+    intro U hU
+    rw [Valued.mem_nhds] at hU
+    obtain ⟨γ, hγ⟩ := hU
+    have hγ_ne : (γ : WithZero (Multiplicative ℤ)) ≠ 0 := γ.ne_zero
+    set ε : NNReal :=
+      WithZeroMulInt.toNNReal (p_ne_zero p) (γ : WithZero (Multiplicative ℤ)) with hε_def
+    have hε_pos : (0 : NNReal) < ε := by
+      rw [hε_def]
+      rw [show ((WithZeroMulInt.toNNReal (p_ne_zero p))
+            (γ : WithZero (Multiplicative ℤ)) =
+          if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
+          else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl]
+      rw [dif_neg hγ_ne]
+      exact zpow_pos hp_pos _
+    have htendsto_pow : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹)^n)
+        Filter.atTop (nhds 0) :=
+      tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
+    obtain ⟨N₀, hN₀⟩ : ∃ N₀ : ℕ, ((p : NNReal)⁻¹)^N₀ < ε := by
+      have h_eventually : ∀ᶠ n : ℕ in Filter.atTop, ((p : NNReal)⁻¹)^n < ε :=
+        htendsto_pow.eventually (eventually_lt_nhds hε_pos)
+      exact h_eventually.exists
+    rw [Filter.eventually_atTop]
+    refine ⟨max 1 N₀, ?_⟩
+    intro N hN
+    have hN_ge_1 : 1 ≤ N := le_of_max_le_left hN
+    have hN_ge_N₀ : N₀ ≤ N := le_of_max_le_right hN
+    apply hγ
+    change Valued.v ((∑ k ∈ Finset.range N,
+        algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) -
+          algMapₐ a) < γ
+    rw [Valuation.map_sub_swap]
+    have h1 := hbound digits' hdigits' N hN_ge_1
+    have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p)
+        (Valued.v (algMapₐ a - ∑ k ∈ Finset.range N,
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))) ≤
+        WithZeroMulInt.toNNReal (p_ne_zero p)
+          (((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _)) :=
+      hsm.monotone h1
+    have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
+        (((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _)) =
+        (p : NNReal)^(-(N : ℤ)) := by
+      simp [WithZeroMulInt.toNNReal]
+    rw [htoNN] at h_nnreal_le
+    have h_pow_le : (p : NNReal)^(-(N : ℤ)) ≤ ((p : NNReal)⁻¹)^N₀ := by
+      rw [show (p : NNReal)^(-(N : ℤ)) = ((p : NNReal)⁻¹)^(N : ℤ) from by
+        rw [zpow_neg, ← inv_zpow]]
+      rw [show ((p : NNReal)⁻¹)^(N : ℤ) = ((p : NNReal)⁻¹)^N from by
+        rw [zpow_natCast]]
+      apply pow_le_pow_of_le_one hpinv_nn (le_of_lt hpinv_lt)
+      exact hN_ge_N₀
+    have h_chain : WithZeroMulInt.toNNReal (p_ne_zero p)
+        (Valued.v (algMapₐ a - ∑ k ∈ Finset.range N,
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))) < ε :=
+      (h_nnreal_le.trans h_pow_le).trans_lt hN₀
+    rw [hε_def] at h_chain
+    exact hsm.lt_iff_lt.mp h_chain
+  refine ⟨digits, htendsto_of_bound digits hdigits, ?_⟩
+  -- Uniqueness.
+  intro c' hc'
+  -- We show that any `c'` satisfying the convergence statement must coincide with `digits`.
+  -- The strategy: extend each function `f : ℕ → Fpbar p` to `b : ℤ → Fpbar p` by 0 on
+  -- negatives, and verify the convergence in the form expected by `Tteichmuller_digits_unique`.
+  -- Then `Tteichmuller_digits_unique` forces the two extensions to agree.
+  -- We then transport equality back to `ℕ`.
+  set b  : ℤ → Fpbar p := fun k => if h : 0 ≤ k then digits k.toNat else 0 with hb_def
+  set b' : ℤ → Fpbar p := fun k => if h : 0 ≤ k then c' k.toNat else 0 with hb'_def
+  have hb_below : ∀ k : ℤ, k < 0 → b k = 0 := by
+    intro k hk
+    show (if h : 0 ≤ k then digits k.toNat else 0) = 0
+    rw [dif_neg (by linarith)]
+  have hb'_below : ∀ k : ℤ, k < 0 → b' k = 0 := by
+    intro k hk
+    show (if h : 0 ≤ k then c' k.toNat else 0) = 0
+    rw [dif_neg (by linarith)]
+  -- Connection: for `f : ℕ → Fpbar p`, the partial sums in the goal's `Finset.range N` form
+  -- equal the partial sums in `Tteichmuller_digits_unique`'s `Finset.Icc 0 K` form when
+  -- `K = N - 1` (and `0 ≤ K`).
+  have hsum_eq : ∀ (f : ℕ → Fpbar p) (b'' : ℤ → Fpbar p)
+      (hb'' : ∀ k : ℕ, b'' (k : ℤ) = f k) (N : ℕ),
+      (∑ k ∈ Finset.range N,
+        algMapₐ (OQpUn_embd p T (teichmuller p (f k)) * (pInvT p T) ^ k)) =
+      (∑ k ∈ Finset.Icc (0 : ℤ) (N - 1 : ℤ),
+        (pInvTQ p T) ^ k *
+        algMapₐ (TTeichmuller p T (b'' k))) := by
+    intro f b'' hb'' N
+    induction N with
+    | zero =>
+      simp [Finset.Icc_eq_empty_iff.mpr (by decide : ¬ ((0 : ℤ) ≤ -1))]
+    | succ N ih =>
+      have hcast : ((N + 1 : ℕ) : ℤ) - 1 = (N : ℤ) := by push_cast; ring
+      rw [Finset.sum_range_succ, ih]
+      rw [hcast]
+      have hIcc_split : Finset.Icc (0 : ℤ) (N : ℤ) =
+          insert (N : ℤ) (Finset.Icc (0 : ℤ) (N - 1 : ℤ)) := by
+        ext x
+        simp only [Finset.mem_insert, Finset.mem_Icc]
+        constructor
+        · rintro ⟨h1, h2⟩
+          rcases eq_or_lt_of_le h2 with rfl | hlt
+          · exact Or.inl rfl
+          · exact Or.inr ⟨h1, by omega⟩
+        · rintro (rfl | ⟨h1, h2⟩)
+          · exact ⟨by exact_mod_cast Nat.zero_le N, le_refl _⟩
+          · exact ⟨h1, by omega⟩
+      have hN_not_mem : (N : ℤ) ∉ Finset.Icc (0 : ℤ) (N - 1 : ℤ) := by
+        simp only [Finset.mem_Icc]
+        omega
+      rw [hIcc_split, Finset.sum_insert hN_not_mem]
+      -- Identify the new term and reorder.
+      have hbN : b'' (N : ℤ) = f N := hb'' N
+      have hTT_eq :
+          algMapₐ (OQpUn_embd p T (teichmuller p (f N)) * (pInvT p T) ^ N) =
+          (pInvTQ p T) ^ ((N : ℤ)) * algMapₐ (TTeichmuller p T (b'' (N : ℤ))) := by
+        rw [hbN, map_mul, map_pow]
+        have hpInvT_cast : algMapₐ (pInvT p T) = pInvTQ p T := rfl
+        rw [hpInvT_cast]
+        unfold OQpUn_embd TTeichmuller
+        rw [zpow_natCast, mul_comm]
+        rfl
+      rw [hTT_eq]
+      ring
+  -- For `digits` and `c'`, the extensions `b`, `b'` satisfy `b k = digits k` and
+  -- `b' k = c' k` on naturals.
+  have hb_nat : ∀ k : ℕ, b (k : ℤ) = digits k := by
+    intro k
+    show (if h : 0 ≤ (k : ℤ) then digits ((k : ℤ).toNat) else 0) = digits k
+    rw [dif_pos (by exact_mod_cast Nat.zero_le k)]
+    simp
+  have hb'_nat : ∀ k : ℕ, b' (k : ℤ) = c' k := by
+    intro k
+    show (if h : 0 ≤ (k : ℤ) then c' ((k : ℤ).toNat) else 0) = c' k
+    rw [dif_pos (by exact_mod_cast Nat.zero_le k)]
+    simp
+  -- Get the Tendsto in the Tteichmuller_digits_unique form for both `b` and `b'`.
+  -- Strategy: compose Tendsto over ℕ with the cofinal map `K : ℤ ↦ (K + 1).toNat` (atTop → atTop).
+  -- Set `g(K) := (K+1).toNat` so that `Finset.Icc 0 K = Finset.range (g K)` (when `0 ≤ K`).
+  have h_tendsto_Z_form : ∀ (digits' : ℕ → Fpbar p) (b'' : ℤ → Fpbar p)
+      (hb_eq : ∀ k : ℕ, b'' (k : ℤ) = digits' k)
+      (hb_below'' : ∀ k : ℤ, k < 0 → b'' k = 0)
+      (h_orig_tendsto : Filter.Tendsto
+        (fun N : ℕ => ∑ k ∈ Finset.range N,
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))
+        Filter.atTop (𝓝 (algMapₐ a))),
+      Filter.Tendsto
+        (fun K : ℤ => ∑ k ∈ Finset.Icc (0 : ℤ) K,
+          (pInvTQ p T) ^ k * algMapₐ (TTeichmuller p T (b'' k)))
+        Filter.atTop (𝓝 (algMapₐ a)) := by
+    intro digits' b'' hb_eq hb_below'' h_orig_tendsto
+    -- The map K : ℤ ↦ (K + 1).toNat sends atTop to atTop.
+    have hcofinal : Filter.Tendsto (fun K : ℤ => (K + 1).toNat) Filter.atTop Filter.atTop := by
+      rw [Filter.tendsto_atTop_atTop]
+      intro M
+      refine ⟨(M : ℤ) - 1, ?_⟩
+      intro K hK
+      have hM_le : (M : ℤ) ≤ K + 1 := by linarith
+      have hM_nn : (0 : ℤ) ≤ (M : ℤ) := Int.natCast_nonneg M
+      have h_pos : 0 ≤ K + 1 := le_trans hM_nn hM_le
+      have h_toN : ((K + 1).toNat : ℤ) = K + 1 := Int.toNat_of_nonneg h_pos
+      have hM_le_toN : (M : ℤ) ≤ ((K + 1).toNat : ℤ) := by rw [h_toN]; exact hM_le
+      exact_mod_cast hM_le_toN
+    have h_comp := h_orig_tendsto.comp hcofinal
+    -- Now show `comp ≡ Z-form` eventually for K ≥ 0.
+    apply h_comp.congr'
+    rw [Filter.EventuallyEq, Filter.eventually_atTop]
+    refine ⟨0, ?_⟩
+    intro K hK
+    -- For K ≥ 0, `(K + 1).toNat - 1 = K` so `Finset.Icc 0 K = Finset.Icc 0 ((K+1).toNat - 1)`.
+    have h_toNat : ((K + 1).toNat : ℤ) = K + 1 := Int.toNat_of_nonneg (by linarith)
+    have hK_eq : (((K + 1).toNat : ℕ) : ℤ) - 1 = K := by
+      push_cast
+      omega
+    show (∑ k ∈ Finset.range (K + 1).toNat,
+          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) =
+        ∑ k ∈ Finset.Icc (0 : ℤ) K, (pInvTQ p T) ^ k * algMapₐ (TTeichmuller p T (b'' k))
+    rw [hsum_eq digits' b'' hb_eq (K + 1).toNat]
+    rw [hK_eq]
+  have ht_digits := h_tendsto_Z_form digits b hb_nat hb_below
+    (htendsto_of_bound digits hdigits)
+  have ht_c' := h_tendsto_Z_form c' b' hb'_nat hb'_below hc'
+  -- Apply Tteichmuller_digits_unique with m₀ = m₀' = 0.
+  have h_b_eq_b' : ∀ k : ℤ, b k = b' k :=
+    Tteichmuller_digits_unique (p := p) (T := T) b b' 0 0
+      (fun k hk => hb_below k hk)
+      (fun k hk => hb'_below k hk) ht_digits ht_c'
+  -- Transport equality back to ℕ.
+  funext k
+  have h_eq_at_k : b (k : ℤ) = b' (k : ℤ) := h_b_eq_b' (k : ℤ)
+  rw [hb_nat, hb'_nat] at h_eq_at_k
+  exact h_eq_at_k.symm
 
 /-! ### Phase 3A: existence of canonical T-representative -/
 
