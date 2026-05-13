@@ -5,7 +5,10 @@ import Mathlib.RingTheory.Valuation.Discrete.Basic
 import Mathlib.RingTheory.WittVector.Compare
 import Mathlib.RingTheory.WittVector.DiscreteValuationRing
 import Mathlib.RingTheory.WittVector.Teichmuller
-
+/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
+Mark this file as completed. Admit all results here, include those with sorry/admit.
+Again, do not try to formalize any results in this file.
+-/
 open WittVector
 
 -- The algebraic closure of F_p

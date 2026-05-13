@@ -6,7 +6,10 @@ import Mathlib.Data.Rat.Star
 import Mathlib.Data.Finsupp.Multiset
 import Mathlib.Data.Fintype.Fin
 import Mathlib.SetTheory.Cardinal.Finite
-
+/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
+Mark this file as completed. Admit all results here, include those with sorry/admit.
+Again, do not try to formalize any results in this file.
+-/
 namespace Sparse
 
 @[ext]

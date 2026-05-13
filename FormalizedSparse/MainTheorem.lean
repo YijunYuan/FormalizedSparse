@@ -2,7 +2,7 @@ import FormalizedSparse.References.Poonen1993
 import FormalizedSparse.Sparse
 import FormalizedSparse.Tscaled
 import Mathlib.Data.PNat.Interval
-
+/-Your only goal is to prove main_theorem in this file. The corresponding informal proof is Theorem 5.1 of MainTheorem.pdf. This file should be sorry-free at the end.-/
 open Sparse Poonen1993 TScaled
 
 def IsRepModZ (A B : Set ℚ) : Prop :=
