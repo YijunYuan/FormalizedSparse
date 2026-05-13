@@ -3905,42 +3905,87 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
 
 /-USER: This should be easy, since every element of L_p can be written as ∑[a_k]p^k with k ∈ ℚ. -/
 -- The field of p-adic Hahn series is complete with respect to the valuation defined above.
---
--- Strategy (mirroring `LaurentSeries.instLaurentSeriesComplete` from Mathlib):
--- 1. Take a Cauchy filter ℱ in 𝕃_[p] = LiftedPAdicHahnSeries p / NullSeriesIdeal p.
--- 2. For each q : ℚ, show that the coefficient function `x ↦ x.coeff q` (where `coeff`
---    is the canonical-expansion coefficient function defined at L3690) is uniformly
---    continuous. The key structural fact is `canonical_isometry` (L3736): for x, y in
---    𝕃_[p], `HahnSeries.orderTop (from_coeff (coeff x) - from_coeff (coeff y)) = val (x - y)`.
---    Combined with the standard Hahn-series fact that `orderTop (f - g) > q ⟹ f.coeff q = g.coeff q`,
---    this gives uniform continuity of `x ↦ coeff x q` (with discrete topology on Fpbar p).
--- 3. Push forward ℱ along `coeff`: each q gives a Cauchy filter in Fpbar p (discrete);
---    hence converges to a unique constant which we call the limit coefficient `c q : Fpbar p`.
--- 4. Show that `(Function.support c).IsPWO`: for any `q₀`, eventually all x in ℱ have
---    coefficient zero below `q₀ - K` (for suitable K depending on the Cauchy bound).
---    This uses the support_IsPWO of representative elements and is analogous to
---    `Cauchy.exists_lb_eventual_support` from LaurentSeries.lean.
--- 5. Define the limit `x_lim := from_coeff c (pwo)` in 𝕃_[p].
--- 6. Show that ℱ ≤ nhds x_lim: for any neighborhood `U = {y : val (y - x_lim) > γ}`
---    of x_lim, eventually all x in ℱ lie in U. This follows from the coefficient
---    convergence, the canonical_isometry, and a uniform support-stabilization argument.
---
--- The full proof would mirror the ~150 lines of `LaurentSeries.lean` (lines 634-789)
--- but with ℤ replaced by ℚ throughout. Several technical steps require a stronger
--- "minimum-of-PWO-set" support argument because ℚ doesn't have a discrete order.
--- This is a substantial undertaking left as a scoped sorry; the file's other
--- proofs do not depend on this particular instance, so the rest compiles.
+
+/-
+Decomposition of `instCompleteSpace` (mirroring `LaurentSeries.instLaurentSeriesComplete`,
+adapted for ℚ-indexed Hahn series via the `canonical_isometry` linchpin from L588):
+
+  Step A. (`coeff_stable`) For every Cauchy filter `ℱ` in `𝕃_[p]` and every `q : ℚ`,
+    there is a unique `c_q : Fpbar p` with `∀ᶠ x in ℱ, (coeff x) q = c_q`.
+
+  Step B. (`limit_coeff_pwo`) The function `c : ℚ → Fpbar p` produced in Step A has
+    PWO support: pick a base element `x₀ ∈ ℱ`; for every `q ∉ x₀.support`, eventually
+    `coeff x q = c_q`, and a careful choice of "small ε" forces `c_q = x₀.coeff q = 0`
+    once `q` is bigger than every support point of `x₀` plus the chosen tail bound.
+    More carefully, `support c ⊆ ⋃_{n} support (xₙ)` for a sequence of choices; each
+    `support xₙ` is PWO, and a ω-style cofinal union of PWO sets in ℚ is again PWO.
+
+  Step C. (`limit_construction`) Define `x_lim := from_coeff c (limit_coeff_pwo)`.
+
+  Step D. (`limit_convergence`) Show `ℱ ≤ 𝓝 x_lim`. Given a basic open `U` of `x_lim`,
+    use `canonical_isometry` to translate the val-distance between `x` and `x_lim`
+    into `HahnSeries.orderTop` of the difference of canonical reps; combined with
+    Step A and a uniform support-stabilization, eventually all `x ∈ ℱ` lie in `U`.
+
+We isolate Steps A, B, C, D as named scoped lemmas so subsequent rounds can attack
+them individually.
+-/
+
+-- Step A: coefficient stabilization. For each q, `(fun x => (coeff x) q)` pushes a
+-- Cauchy filter forward to a Cauchy filter in the discrete space `Fpbar p`, which
+-- (being discrete and nonempty) converges to a unique constant.
+private lemma coeff_stable_of_cauchy {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) (q : ℚ) :
+    ∃ c : Fpbar p, ∀ᶠ x in ℱ, (pAdicHahnSeries.coeff x) q = c := by
+  -- The coefficient map `pAdicHahnSeries.coeff (·) q : 𝕃_[p] → Fpbar p` is uniformly
+  -- continuous via `canonical_isometry`: when `val (x - y) > q`, the canonical reps
+  -- agree at `q`, hence `coeff x q = coeff y q`. So `Filter.map (coeff · q) ℱ` is a
+  -- Cauchy filter on the discrete space `Fpbar p`, which converges to a unique value.
+  sorry
+
+-- Step B: PWO support of the limit coefficient function. Bundles the existence claim
+-- of Step A with the PWO conclusion via classical choice.
+private noncomputable def limit_coeff {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) : ℚ → Fpbar p :=
+  fun q => (coeff_stable_of_cauchy hℱ q).choose
+
+private lemma limit_coeff_pwo {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) :
+    (Function.support (limit_coeff hℱ)).IsPWO := by
+  -- For any `q` with `limit_coeff hℱ q ≠ 0`, eventually `coeff x q = limit_coeff hℱ q ≠ 0`,
+  -- so `q ∈ support (coeff x)` for some `x ∈ ℱ`. Choose, for each ε, a `xε ∈ ℱ` with
+  -- `val (x - y) ≥ ε` for all `x, y ∈ ℱ`-eventually; the support of `xε.coeff` is PWO.
+  -- A uniform-Cauchy argument shows `support (limit_coeff hℱ) ⊆ ⋃_n support (xn.coeff)`
+  -- for a countable chain; the countable union of PWO sets in ℚ controlled by an
+  -- ascending Cauchy structure is PWO.
+  sorry
+
+-- Step C: construct the limit element of 𝕃_[p].
+private noncomputable def limit_elt {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) : 𝕃_[p] :=
+  Ideal.Quotient.mk (NullSeriesIdeal p)
+    (LiftedPAdicHahnSeries.from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ))
+
+-- Step D: convergence. Use `canonical_isometry` to translate val-distance to
+-- `HahnSeries.orderTop` and conclude `ℱ ≤ 𝓝 (limit_elt hℱ)`.
+open Topology Filter in
+private lemma limit_elt_isLimit {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) :
+    ℱ ≤ 𝓝 (limit_elt hℱ) := by
+  -- For each ε, the open ball `{y | val (y - limit_elt hℱ) > ε}` (in additive terms,
+  -- via `Multiplicative` / `WithTop ℚ`) is generated by the val-uniformity. Apply
+  -- `canonical_isometry`: `val (y - limit_elt hℱ) = HahnSeries.orderTop (canon y - canon (limit_elt hℱ))`.
+  -- Since `canon (limit_elt hℱ) = from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ)` (up to
+  -- the section being canonical), the orderTop is large iff the two canonical reps agree
+  -- at all q ≤ ε. By Step A, eventually `coeff x q = limit_coeff hℱ q` for each fixed q;
+  -- a uniform argument over a finite "low-q" set (using PWO of `support (limit_coeff hℱ)
+  -- ∪ support (coeff x)` for some witness `x`) closes the ball.
+  sorry
+
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
     CompleteSpace (𝕃_[p]) := by
-  -- We attempt a structured proof via `CompleteSpace.mk`, leaving the limit construction
-  -- and convergence verification as scoped sorries.
   refine ⟨fun {ℱ} hℱ => ?_⟩
-  -- For each q : ℚ, the q-th coefficient of elements in ℱ stabilizes (Cauchy in discrete Fpbar p).
-  -- Specifically, ∃ c_q : Fpbar p, ∀ᶠ x in ℱ, x.coeff q = c_q.
-  -- The function q ↦ c_q has PWO support, and `from_coeff c_q (pwo)` is the limit.
-  -- The verification uses `canonical_isometry` (L3736) to translate between the
-  -- val-topology on 𝕃_[p] and the orderTop-topology on the LPHS representatives.
-  sorry
+  exact ⟨limit_elt hℱ, limit_elt_isLimit hℱ⟩
 
 -- Define an element of W(𝔽ₚ^⁻)((p^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support by the
 -- formula f ↦ ∑ₖ [f(k)]pᵏ
