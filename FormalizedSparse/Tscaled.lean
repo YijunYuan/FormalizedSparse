@@ -39,50 +39,6 @@ development with the prime `p` replaced by its formal `T`-th root `p^{1/T}` adjo
 * `σ`, `σ_coeff_compat`                : Proposition 2.10 and Remark 2.11.
 -/
 
-/- USER:
-This file corresponds to the full formalization of Section 2 of the file Tscaled.pdf in the same folder.
-
-As you can see, formalization of Section 1 of Tscaled.pdf (p-adic Hahn series) is contained in the file Poonen1993.lean (the detained informal proof is contained in Poonen1003.pdf in References subfolder), and Section 2 (T-scaled variant) is a generalization of the results in Section 1. So it is expected that the (formalized proof) of this section will be similar to the one in Poonen1993.lean, but with some modifications to accommodate the T-scaling.
-
-Let me tell you what should be formalized and the hint.
-
-1. You should first think about how to define the ring W(F_p^bar)[p^(1/T)] and its fraction field. You should know that p^(1/T) is a root of the polynomial X^T-p. The ring W(F_p^bar) is already defined in WittVector.lean as `ℤᵘⁿ_[p]`. You should use the notation `ℤᵘⁿ_[p,T]` for the ring W(F_p^bar)[p^(1/T)] and `ℚᵘⁿ_[p,T]` for its fraction field.
-
-2. You should prove Lemma 2.1. I'm not sure if you have Eisenstein criterion for general discrete valuation fields in the Mathlib. If not, you should try to formalize it in this file.
-
-3. You should prove Lemma 2.2. This depends on Lemma 2.1 and the `TODO` result in Mathlib that every element in the ring of Witt vectors can be written as a series in p with coefficients be the Teichmüller representatives. There might already some related efforts in Poonen1993.lean. You should take a look .
-
-4. Now you should be readly to define the equal-characteristic Hahn series in this setting.
-In Poonen1993.lean, W(𝔽ₚ^⁻)((t^ℚ)) is called `LiftedPAdicHahnSeries`. In our Tscaled variant W(𝔽ₚ^⁻)(p^(1/T))((t^ℚ)), it should be called `TLiftedPAdicHahnSeries`.
-Notice that W(𝔽ₚ^⁻)((t^ℚ)) is a subring of W(𝔽ₚ^⁻)(p^(1/T))((t^ℚ)). This should be reflected in the code (maybe as an inclusion ring morphism)
-
-5. Now you need to define the T-null-series (Definition 2.4) and the related results.
-
-In Poonen1993.lean, the null-series are defined via the predicate `IsNullSeries`. In our T-scaled variant, the T-null-series should be defined via the predicate `IsTNullSeries`.
-
-You need to show that the T-null-series form an ideal ((1) of Lemma 2.6). This is an analogue of the definition `NullSeriesIdeal` in Poonen1993.lean, and the proof strategy should be similar to the one in Poonen1993.lean. In current T-scaled setting, the ideal should be called `TNullSeriesIdeal`.
-
-Lemma 2.6 (2) is an analogue of `exists_canonical_expansion` in Poonen1993.lean. You should state and prove this result. The proof strategy should be similar to the one in Poonen1993.lean.
-
-Lemma 2.6 (3) is to show that `TNullSeriesIdeal` is a maximal ideal, which is an analogue of the instance
-`instance (p : ℕ) [Fact (Nat.Prime p)] : (NullSeriesIdeal p).IsMaximal`
-in Poonen1993.lean. You should state and prove this result as well. The proof strategy should be similar to the one in Poonen1993.lean.
-
-6. With these results, we define the T-scaled p-adic Hahn series as the quotient of `TLiftedPAdicHahnSeries` by `TNullSeriesIdeal`. This should be defined as `TScaledPAdicHahnSeries`, which is an analogue of `pAdicHahnSeries` in Poonen1993.lean. Its notation should be `𝕃_[p,T]`. The support and the coefficients should be defined correspondingly. See Poonen1993.lean for the details.
-
-7. Now you need to prove Lemma 2.8 and Lemma 2.9. There is not much I want to say about the proof strategy, you should just follow the informal proof in Tscaled.pdf and be aware of the fact that in the informal proof, the embedding from W(𝔽ₚ^⁻)((t^ℚ)) to W(𝔽ₚ^⁻)(p^(1/T))((t^ℚ)) is implicitly used.
-
-8. Finally, you need to prove Proposition 2.10. The isomorphism `σ` between `𝕃_[p]` and `𝕃_[p,T]` should not be hard to prove, just follows the informal proof in Tscaled.pdf.
-
-You will see a commutative diagram in Proposition 2.10, which basically says the same thing as remark 2.11:
-If `(f : 𝕃_[p])`, then `f.coeff` is a function `ℚ → (Fpbar p)`.
-Similarly, if `(g : 𝕃_[p,T])`, then `g.coeff`, which you should have formalized above, is also a function `ℚ → (Fpbar p)`. Then the remark just says that `(σ f).coeff` and `f.coeff` are the same function.
-
-I want to emphasize that you may find Poonen1993.lean and the corresponding informal proof in Poonen1993.pdf very helpful for this formalization.
-
-WARNING: There are some results in Poonen1993.lean that I dont't mention in the above list, you do not need to prove the analogue of these results, unless they are used in the proof of the results I mentioned above. Foe example, you do not need to prove that `𝕃_[p,T]` is complete.
- -/
-
 open WittVector
 
 namespace TScaled
@@ -426,7 +382,7 @@ noncomputable def pInvTQ : ℚᵘⁿ_[p,T] :=
   algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T)
 
 -- The valuation of `pInvTQ p T` is `ofAdd(-1)` — the analogue of `Poonen1993.valued_v_p`.
-private lemma valued_v_pInvT :
+lemma valued_v_pInvT :
     Valued.v (pInvTQ p T) =
       ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
   unfold pInvTQ
@@ -441,7 +397,7 @@ private lemma valued_v_pInvT :
   rfl
 
 -- The valuation of `(pInvTQ)^n` is `ofAdd(-n)` for integer `n`.
-private lemma valued_v_pInvT_zpow (n : ℤ) :
+lemma valued_v_pInvT_zpow (n : ℤ) :
     Valued.v ((pInvTQ p T) ^ n) =
       ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
   have hzpow : Valued.v ((pInvTQ p T) ^ n) = (Valued.v (pInvTQ p T)) ^ n :=
@@ -1642,17 +1598,185 @@ private lemma TintPartial_isCauchy
       rw [hneg, Valuation.map_neg]
       exact h_convert K' hK' _ hbound
 
+set_option synthInstance.maxHeartbeats 1000000 in
+set_option maxHeartbeats 1000000 in
+/-- Algebra-map square commutativity: viewing `OQpUn_embd` followed by `algebraMap` to `K`
+agrees with `algebraMap` to `K₀` followed by the field inclusion `K₀ ↪ K`. -/
+private lemma algebraMap_OQpUn_embd_compat_early (a : ℤᵘⁿ_[p]) :
+    algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (OQpUn_embd p T a) =
+      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a) := by
+  show algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) a) =
+    QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)
+  unfold QpUn_embd
+  exact (IsFractionRing.lift_algebraMap (g :=
+    (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T)) _ a).symm
+
+/-- The integer-side valuation identity for the totally ramified extension `K₀ ↪ K`. -/
+private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)) =
+      (Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a))^T := by
+  rw [← algebraMap_OQpUn_embd_compat_early]
+  by_cases ha : a = 0
+  · subst ha; simp [map_zero, zero_pow (NeZero.ne T)]
+  · obtain ⟨n, h⟩ := IsDiscreteValuationRing.associated_pow_irreducible ha
+      (WittVector.irreducible p)
+    obtain ⟨u, hu⟩ := h.symm
+    rw [← hu]
+    rw [map_mul (OQpUn_embd p T), map_pow (OQpUn_embd p T)]
+    rw [map_mul, map_pow]
+    rw [Valuation.map_mul, Valuation.map_pow]
+    rw [show algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (((p : ℕ) : ℤᵘⁿ_[p]) ^ n * u.val) =
+          algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (((p : ℕ) : ℤᵘⁿ_[p])) ^ n *
+          algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val from by
+      rw [map_mul, map_pow]]
+    rw [Valuation.map_mul, Valuation.map_pow]
+    have h_unit_K : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        (OQpUn_embd p T u.val)) = 1 := by
+      have hunit : IsUnit (OQpUn_embd p T u.val) :=
+        (OQpUn_embd p T).isUnit_map u.isUnit
+      obtain ⟨v, hv⟩ := hunit
+      rw [← hv]
+      exact Tvalued_v_algebraMap_unit_one (p := p) (T := T) v
+    have h_unit_K0 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) = 1 := by
+      have h1 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) ≤ 1 :=
+        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_le_one u.val
+      have h2 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) ≤ 1 :=
+        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_le_one u.inv
+      have h3 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) *
+          Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) = 1 := by
+        rw [← Valuation.map_mul, ← map_mul, u.val_inv, map_one, Valuation.map_one]
+      have hpos : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) ≠ 0 := by
+        intro hz
+        rw [hz, zero_mul] at h3
+        exact zero_ne_one h3
+      exact le_antisymm h1 (by
+        rcases (eq_or_lt_of_le h1) with hEq | hLt
+        · exact le_of_eq hEq.symm
+        · exfalso
+          have hprod : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) *
+              Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) < 1 :=
+            mul_lt_one_of_lt_of_le hLt h2
+          rw [h3] at hprod
+          exact lt_irrefl _ hprod)
+    rw [h_unit_K, h_unit_K0, mul_one, mul_pow, one_pow, mul_one, ← pow_mul]
+    have hLHS : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (OQpUn_embd p T ((p : ℕ) : ℤᵘⁿ_[p]))) =
+        ((Multiplicative.ofAdd (-(T : ℤ)) : Multiplicative ℤ) : WithZero _) := by
+      rw [show OQpUn_embd p T ((p : ℕ) : ℤᵘⁿ_[p]) = (pInvT p T) ^ T from
+            (pInvT_pow_T p T).symm]
+      rw [map_pow]
+      rw [show algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T from rfl]
+      rw [show ((pInvTQ p T) ^ T) = ((pInvTQ p T) ^ ((T : ℤ))) by push_cast; rfl]
+      exact valued_v_pInvT_zpow (p := p) (T := T) (T : ℤ)
+    have hRHS : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
+        ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
+      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
+          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
+      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
+      have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
+          Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
+      rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
+        (WittVector.p_nonzero p _) hpe]
+      rfl
+    rw [hLHS, hRHS, ← WithZero.coe_pow, ← WithZero.coe_pow]
+    congr 1
+    rw [← ofAdd_nsmul, ← ofAdd_nsmul]
+    congr 1
+    push_cast
+    ring_nf
+    rw [mul_comm]
+
+/-- The ramification-index valuation identity `v_K(ι̃ z) = (v_{K₀}(z))^T`. -/
+private lemma valued_v_algebraMap_K₀_K_early (z : ℚᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
+  obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᵘⁿ_[p]) z
+  rw [← hz, map_div₀, Valued.v.map_div, Valued.v.map_div, div_pow]
+  rw [valued_v_algebraMap_K₀_K_int_early, valued_v_algebraMap_K₀_K_int_early]
+
+/-- The algebra map `K₀ ↪ K` is continuous at `0`. -/
+private lemma tendsto_algebraMap_K₀_K_zero_early :
+    Filter.Tendsto (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
+  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p,T]) _).tendsto_right_iff]
+  intro γ _
+  set γ_m : Multiplicative ℤ := WithZero.unzero γ.ne_zero with hγ_m_def
+  set n : ℤ := Multiplicative.toAdd γ_m with hn_def
+  set k : ℤ := min (n - 1) (-1) with hk_def
+  have hk_lt_n : k ≤ n - 1 := min_le_left _ _
+  have hT_pos : 0 < (T : ℤ) := by exact_mod_cast Nat.pos_of_neZero T
+  have hkT : k * T < n := by
+    have h1 : k * T ≤ k * 1 := by
+      apply mul_le_mul_of_nonpos_left
+      · exact_mod_cast hT_pos
+      · linarith [min_le_right (n - 1) (-1)]
+    have h2 : k * 1 = k := mul_one _
+    linarith
+  set γ' : (WithZero (Multiplicative ℤ))ˣ :=
+    Units.mk0 ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _) (by simp) with hγ'_def
+  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p]) _).eventually_iff]
+  refine ⟨γ', trivial, ?_⟩
+  intro z hz
+  simp only [Set.mem_setOf_eq] at hz ⊢
+  rw [valued_v_algebraMap_K₀_K_early]
+  have hγ_eq : γ.val = ((γ_m : Multiplicative ℤ) : WithZero _) :=
+    (WithZero.coe_unzero γ.ne_zero).symm
+  have hγm_eq : γ_m = Multiplicative.ofAdd n := rfl
+  calc (Valued.v z)^T
+      ≤ (γ'.val : WithZero _)^T := by
+        apply pow_le_pow_left₀ _ (le_of_lt hz)
+        exact zero_le' (a := Valued.v z)
+    _ < γ.val := by
+        show (((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _))^T < γ.val
+        rw [← WithZero.coe_pow]
+        rw [show ((Multiplicative.ofAdd k : Multiplicative ℤ)^T : Multiplicative ℤ) =
+              Multiplicative.ofAdd (k * T) from by
+          rw [← ofAdd_nsmul]; congr 1; push_cast; ring]
+        rw [hγ_eq, hγm_eq, WithZero.coe_lt_coe]
+        exact Multiplicative.ofAdd_lt.mpr hkT
+
+/-- Continuity of `algebraMap K₀ → K`. -/
+private lemma continuous_algebraMap_K₀_K_early :
+    Continuous (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) := by
+  have h0 : ContinuousAt (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) 0 := by
+    rw [ContinuousAt, map_zero]
+    exact tendsto_algebraMap_K₀_K_zero_early p T
+  exact continuous_of_continuousAt_zero
+    (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])).toAddMonoidHom h0
+
+noncomputable instance : Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) := {
+    hom := WithZeroMulInt.toNNReal (p_ne_zero p)
+    strictMono' := by
+      have hp1 : (1 : NNReal) < p := by
+        exact_mod_cast (Fact.out : Nat.Prime p).one_lt
+      exact WithZeroMulInt.toNNReal_strictMono hp1
+    exists_val_nontrivial := by
+      refine ⟨pInvTQ p T, ?_, ?_⟩
+      · rw [valued_v_pInvT]
+        simp
+      · have hneq : ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero
+            (Multiplicative ℤ)) ≠ 1 := by
+          intro h
+          have h' : (Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) = 1 := by
+            exact WithZero.coe_injective h
+          have : (-1 : ℤ) = 0 := by simpa using congrArg Multiplicative.toAdd h'
+          norm_num at this
+        rw [valued_v_pInvT]
+        exact hneq
+    }
+
+noncomputable instance : NontriviallyNormedField ℚᵘⁿ_[p,T] := Valued.toNontriviallyNormedField
+
+instance : ContinuousSMul (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) :=
+    continuousSMul_of_algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (continuous_algebraMap_K₀_K_early p T)
+
 /-- The `Valued`-induced topology on `ℚᵘⁿ_[p,T]` is complete.
 
-This mirrors the `CompleteSpace ℚᵘⁿ_[p]` admit at `WittVector.lean:76`; both are
-known polish-stage gaps.  Establishing completeness for a finite separable
-extension of a complete DVF (here, `ℚᵘⁿ_[p,T] / ℚᵘⁿ_[p]` of degree `T` via
-`rank_QpUnT_over_QpUn`) is standard, but the Mathlib infrastructure connecting
-`UniformAddGroup` of a finite-dim vector space over a complete normed field to
-`CompleteSpace` requires a metric/norm structure compatibility that the
-`WithVal`-based setup does not currently expose without further glue.  Authorized
-admit per Round 6 PROGRESS.md. -/
-instance instCompleteSpaceQpUnT : CompleteSpace (ℚᵘⁿ_[p,T]) := by admit
+Discharged via `FiniteDimensional.complete` over the finite extension
+`ℚᵘⁿ_[p,T] / ℚᵘⁿ_[p]`.  We first view both fields as rank-one nonarchimedean
+normed fields using their `Valued` structures, then obtain `ContinuousSMul`
+from `isModuleTopologyOfFiniteDimensional`. -/
+instance instCompleteSpaceQpUnT : CompleteSpace (ℚᵘⁿ_[p,T]) :=
+  FiniteDimensional.complete (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
 
 /-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.exists_lim_intPartial`
 (Poonen line 1043).  The integer-cutoff partial sums converge to a limit in the

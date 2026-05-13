@@ -178,6 +178,26 @@ lemma Qp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   rw [show ‖(Qp_embd x : ℚᵘⁿ_[p])‖ = QpUn.abs p (Qp_embd x) by rfl]
   simp [QpUn.abs_def, Qp_embd_keep_val p x]
 
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
+    hom := WithZeroMulInt.toNNReal (p_ne_zero p)
+    strictMono' := by
+      have hp1 : (1 : NNReal) < p := by
+        exact_mod_cast (Fact.out : Nat.Prime p).one_lt
+      exact WithZeroMulInt.toNNReal_strictMono hp1
+    exists_val_nontrivial := by
+      refine ⟨QpUn.Qp_embd (p : ℚ_[p]), ?_, ?_⟩
+      · rw [← QpUn.Qp_embd_keep_val p (p : ℚ_[p])]
+        have hp_ne : (p : ℚ_[p]) ≠ 0 := by
+          exact_mod_cast (Fact.out : Nat.Prime p).ne_zero
+        simp [Padic.mulValuation_toFun, hp_ne]
+      · rw [← QpUn.Qp_embd_keep_val p (p : ℚ_[p])]
+        have hp_ne : (p : ℚ_[p]) ≠ 0 := by
+          exact_mod_cast (Fact.out : Nat.Prime p).ne_zero
+        simp [Padic.mulValuation_toFun, hp_ne]
+    }
+
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NontriviallyNormedField ℚᵘⁿ_[p] := Valued.toNontriviallyNormedField
+
 -- View ℚᵘⁿ_[p] as an algebra over ℚ_[p] via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘⁿ_[p]) := (Qp_embd).toAlgebra
 

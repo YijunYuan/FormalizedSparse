@@ -1096,10 +1096,6 @@ noncomputable def φ₀ {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)} {
   {c n : ℕ+} (hSparse : IsCNSparse p c n S hS) : S → ℕ :=
   fun d => Nat.card <| hSparse.2.choose⁻¹' {d}
 
-/- USER: You need to formalize Lemma 1.5 of Sparse.pdf here.
-   I have already formalized φ₀ above. You can use that.
--/
-
 lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
     {hS : ∀ f ∈ S, f.IsP p} {c n : ℕ+} (hSparse : IsCNSparse p c n S hS)
     (φ : S → ℕ)

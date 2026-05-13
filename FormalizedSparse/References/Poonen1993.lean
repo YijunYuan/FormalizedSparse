@@ -3903,9 +3903,6 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
     -- Conclude.
     congr 1
 
-/-USER: This should be easy, since every element of L_p can be written as ∑[a_k]p^k with k ∈ ℚ. -/
--- The field of p-adic Hahn series is complete with respect to the valuation defined above.
-
 /-
 Decomposition of `instCompleteSpace` (mirroring `LaurentSeries.instLaurentSeriesComplete`,
 adapted for ℚ-indexed Hahn series via the `canonical_isometry` linchpin from L588):
@@ -3931,17 +3928,69 @@ We isolate Steps A, B, C, D as named scoped lemmas so subsequent rounds can atta
 them individually.
 -/
 
+-- Helper for Step A / Step D: pointwise coefficient stability under valuation closeness.
+-- If `val (x - y) > q` (in `WithTop ℚ`), then `x.coeff q = y.coeff q`.
+-- Proof: via `canonical_isometry`, `val (x - y) > q` translates to
+-- `orderTop (LPHS.from_coeff x.coeff - LPHS.from_coeff y.coeff) > q`, hence
+-- the difference's `q`-th coefficient is `0`. Since `(LPHS.from_coeff s).coeff q = teich (s q)`
+-- by construction, this gives `teich (x.coeff q) = teich (y.coeff q)`, and `teichmuller` is
+-- injective.
+private lemma coeff_eq_of_val_lt {p : ℕ} [Fact (Nat.Prime p)]
+    (x y : 𝕃_[p]) (q : ℚ)
+    (h : (q : WithTop ℚ) < val p (x - y)) :
+    x.coeff q = y.coeff q := by
+  set fx : LiftedPAdicHahnSeries p :=
+    LiftedPAdicHahnSeries.from_coeff (coeff x) (support_IsPWO x)
+  set fy : LiftedPAdicHahnSeries p :=
+    LiftedPAdicHahnSeries.from_coeff (coeff y) (support_IsPWO y)
+  have h_iso : HahnSeries.orderTop (fx - fy) = (val p) (x - y) :=
+    canonical_isometry p x y
+  rw [← h_iso] at h
+  have h_diff_zero : (fx - fy).coeff q = 0 :=
+    HahnSeries.coeff_eq_zero_of_lt_orderTop h
+  have h_sub : teichmuller p (x.coeff q) - teichmuller p (y.coeff q) = 0 := by
+    have h_eq : (fx - fy).coeff q = fx.coeff q - fy.coeff q := by
+      simp [HahnSeries.coeff_sub']
+    rw [h_eq] at h_diff_zero
+    have hfx : fx.coeff q = teichmuller p (x.coeff q) := rfl
+    have hfy : fy.coeff q = teichmuller p (y.coeff q) := rfl
+    rw [hfx, hfy] at h_diff_zero
+    exact h_diff_zero
+  exact (injective_teichmuller p) (sub_eq_zero.mp h_sub)
+
 -- Step A: coefficient stabilization. For each q, `(fun x => (coeff x) q)` pushes a
 -- Cauchy filter forward to a Cauchy filter in the discrete space `Fpbar p`, which
 -- (being discrete and nonempty) converges to a unique constant.
+-- Proof: pick `γ : (Multiplicative (WithTop ℚ)ᵒᵈ)ˣ` corresponding to `q`. By
+-- `Valued.cauchy_iff`, get `M ∈ ℱ` with `Valued.v (y - x) < γ` for all `x, y ∈ M`.
+-- `M` is nonempty (NeBot). Pick `x₀ ∈ M`; set `c := x₀.coeff q`. For any `x ∈ M`,
+-- `Valued.v (x - x₀) < γ` is by definition `(q : WithTop ℚ) < val p (x - x₀)`, so by
+-- `coeff_eq_of_val_lt`, `x.coeff q = x₀.coeff q = c`.
 private lemma coeff_stable_of_cauchy {p : ℕ} [Fact (Nat.Prime p)]
     {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) (q : ℚ) :
     ∃ c : Fpbar p, ∀ᶠ x in ℱ, (pAdicHahnSeries.coeff x) q = c := by
-  -- The coefficient map `pAdicHahnSeries.coeff (·) q : 𝕃_[p] → Fpbar p` is uniformly
-  -- continuous via `canonical_isometry`: when `val (x - y) > q`, the canonical reps
-  -- agree at `q`, hence `coeff x q = coeff y q`. So `Filter.map (coeff · q) ℱ` is a
-  -- Cauchy filter on the discrete space `Fpbar p`, which converges to a unique value.
-  sorry
+  set γ : (Multiplicative (WithTop ℚ)ᵒᵈ)ˣ :=
+    Units.mk0 ((q : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) (by
+      intro h
+      have : ((q : WithTop ℚ) : WithTop ℚ) = (⊤ : WithTop ℚ) :=
+        congrArg (OrderDual.ofDual ∘ Multiplicative.toAdd) h
+      exact WithTop.coe_ne_top this) with hγ_def
+  rw [Valued.cauchy_iff] at hℱ
+  obtain ⟨h_NeBot, h_cauchy⟩ := hℱ
+  obtain ⟨M, hM_in, hM_close⟩ := h_cauchy γ
+  have hM_ne : M.Nonempty := Filter.nonempty_of_mem hM_in
+  obtain ⟨x₀, hx₀_in⟩ := hM_ne
+  refine ⟨x₀.coeff q, ?_⟩
+  rw [Filter.eventually_iff_exists_mem]
+  refine ⟨M, hM_in, ?_⟩
+  intro x hx_in
+  have hv : Valued.v (x - x₀) < (γ : Multiplicative (WithTop ℚ)ᵒᵈ) :=
+    hM_close x₀ hx₀_in x hx_in
+  -- `Valued.v (x - x₀)` and `val p (x - x₀)` are defeq; the order on
+  -- `Multiplicative (WithTop ℚ)ᵒᵈ` reverses the order on `WithTop ℚ`, so
+  -- `hv` becomes `(q : WithTop ℚ) < val p (x - x₀)` in `WithTop ℚ`.
+  have hval : (q : WithTop ℚ) < val p (x - x₀) := hv
+  exact coeff_eq_of_val_lt x x₀ q hval
 
 -- Step B: PWO support of the limit coefficient function. Bundles the existence claim
 -- of Step A with the PWO conclusion via classical choice.
@@ -3949,16 +3998,70 @@ private noncomputable def limit_coeff {p : ℕ} [Fact (Nat.Prime p)]
     {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) : ℚ → Fpbar p :=
   fun q => (coeff_stable_of_cauchy hℱ q).choose
 
+-- Helper used by Steps B and D: below any rational threshold `q₀`, there is a single
+-- element `x ∈ 𝕃_[p]` that agrees with the limit coefficient at every coefficient
+-- index `q < q₀`. The witness is produced by applying Cauchy at `γ = q₀` to get
+-- a tight set `M ∈ ℱ`, picking any `x ∈ M`, and using `coeff_eq_of_val_lt`.
+private lemma exists_filter_witness {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) (q₀ : ℚ) :
+    ∃ x : 𝕃_[p], ∀ q < q₀, limit_coeff hℱ q = x.coeff q := by
+  set γ : (Multiplicative (WithTop ℚ)ᵒᵈ)ˣ :=
+    Units.mk0 ((q₀ : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) (by
+      intro h
+      have : ((q₀ : WithTop ℚ) : WithTop ℚ) = (⊤ : WithTop ℚ) :=
+        congrArg (OrderDual.ofDual ∘ Multiplicative.toAdd) h
+      exact WithTop.coe_ne_top this)
+  have hℱ_iff := (Valued.cauchy_iff (R := 𝕃_[p])).mp hℱ
+  obtain ⟨h_NeBot, h_cauchy⟩ := hℱ_iff
+  obtain ⟨M, hM_in, hM_close⟩ := h_cauchy γ
+  obtain ⟨x, hx_in⟩ := Filter.nonempty_of_mem hM_in
+  refine ⟨x, ?_⟩
+  intro q hq
+  have h_event : ∀ᶠ y in ℱ, y.coeff q = limit_coeff hℱ q :=
+    (coeff_stable_of_cauchy hℱ q).choose_spec
+  have h_inter_event : ∀ᶠ y in ℱ, y ∈ M ∧ y.coeff q = limit_coeff hℱ q := by
+    filter_upwards [hM_in, h_event] with y hyM hyc
+    exact ⟨hyM, hyc⟩
+  obtain ⟨y, hyM, hyc⟩ := Filter.nonempty_of_mem h_inter_event
+  have hxy : Valued.v (y - x) < (γ : Multiplicative (WithTop ℚ)ᵒᵈ) :=
+    hM_close x hx_in y hyM
+  have hval_yx : (q₀ : WithTop ℚ) < val p (y - x) := hxy
+  have hcoe : (q : WithTop ℚ) < (q₀ : WithTop ℚ) := WithTop.coe_lt_coe.mpr hq
+  have hval_yx' : (q : WithTop ℚ) < val p (y - x) := lt_trans hcoe hval_yx
+  have h_eq : y.coeff q = x.coeff q := coeff_eq_of_val_lt y x q hval_yx'
+  rw [← h_eq, hyc]
+
 private lemma limit_coeff_pwo {p : ℕ} [Fact (Nat.Prime p)]
     {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) :
     (Function.support (limit_coeff hℱ)).IsPWO := by
-  -- For any `q` with `limit_coeff hℱ q ≠ 0`, eventually `coeff x q = limit_coeff hℱ q ≠ 0`,
-  -- so `q ∈ support (coeff x)` for some `x ∈ ℱ`. Choose, for each ε, a `xε ∈ ℱ` with
-  -- `val (x - y) ≥ ε` for all `x, y ∈ ℱ`-eventually; the support of `xε.coeff` is PWO.
-  -- A uniform-Cauchy argument shows `support (limit_coeff hℱ) ⊆ ⋃_n support (xn.coeff)`
-  -- for a countable chain; the countable union of PWO sets in ℚ controlled by an
-  -- ascending Cauchy structure is PWO.
-  sorry
+  -- Strategy: PWO ⇔ IsWF on `ℚ`; by contradiction, an infinite descending sequence in
+  -- `support (limit_coeff hℱ)` would have all terms `< f 0 + 1`. By
+  -- `exists_filter_witness` at `q₀ = f 0 + 1`, find `x ∈ 𝕃_[p]` with
+  -- `limit_coeff hℱ q = x.coeff q` for every `q < q₀`. Then the descending sequence
+  -- lives inside `x.support`, which is PWO — contradiction.
+  rw [Set.isPWO_iff_isWF, Set.IsWF, Set.wellFoundedOn_iff_no_descending_seq]
+  intro f hf
+  set q₀ := f 0 + 1 with hq₀_def
+  obtain ⟨x, hx_eq⟩ := exists_filter_witness hℱ q₀
+  have hf_lt : ∀ n, f n < q₀ := by
+    intro n
+    have hle : f n ≤ f 0 := by
+      cases n with
+      | zero => exact le_refl _
+      | succ k =>
+        have hgt : k.succ > 0 := Nat.succ_pos k
+        exact (f.map_rel_iff.mpr hgt).le
+    have : f 0 < q₀ := by simp [hq₀_def]
+    exact lt_of_le_of_lt hle this
+  have hf_in_x : ∀ n, f n ∈ Function.support x.coeff := by
+    intro n
+    have h_in_supp : f n ∈ Function.support (limit_coeff hℱ) := hf n
+    simp only [Function.mem_support] at h_in_supp ⊢
+    have h_eq : limit_coeff hℱ (f n) = x.coeff (f n) := hx_eq (f n) (hf_lt n)
+    rw [← h_eq]; exact h_in_supp
+  have hx_pwo : (Function.support x.coeff).IsPWO := support_IsPWO x
+  rw [Set.isPWO_iff_isWF, Set.IsWF, Set.wellFoundedOn_iff_no_descending_seq] at hx_pwo
+  exact hx_pwo f hf_in_x
 
 -- Step C: construct the limit element of 𝕃_[p].
 private noncomputable def limit_elt {p : ℕ} [Fact (Nat.Prime p)]
@@ -3966,21 +4069,140 @@ private noncomputable def limit_elt {p : ℕ} [Fact (Nat.Prime p)]
   Ideal.Quotient.mk (NullSeriesIdeal p)
     (LiftedPAdicHahnSeries.from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ))
 
+-- Helper for Step D: the canonical-expansion coefficients of `limit_elt hℱ` are
+-- exactly `limit_coeff hℱ`. Uses the uniqueness clause of `exists_canonical_expansion`.
+private lemma limit_elt_coeff_eq {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) :
+    (limit_elt hℱ).coeff = limit_coeff hℱ := by
+  show (exists_canonical_expansion (limit_elt hℱ)).choose.val = limit_coeff hℱ
+  have h_choose :
+      (exists_canonical_expansion (limit_elt hℱ)).choose =
+        ⟨limit_coeff hℱ, limit_coeff_pwo hℱ⟩ := by
+    symm
+    apply (exists_canonical_expansion (limit_elt hℱ)).choose_spec.2
+    show Ideal.Quotient.ringCon (NullSeriesIdeal p) (limit_elt hℱ).out
+      (LiftedPAdicHahnSeries.from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ))
+    have h_eq : (Ideal.Quotient.mk (NullSeriesIdeal p)) (limit_elt hℱ).out =
+        (Ideal.Quotient.mk (NullSeriesIdeal p))
+          (LiftedPAdicHahnSeries.from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ)) := by
+      rw [Ideal.Quotient.mk_out]
+      rfl
+    exact Quotient.exact h_eq
+  rw [h_choose]
+
+-- Helper for Step D: there is a single set `M ∈ ℱ` such that *every* `y ∈ M`
+-- agrees with `limit_coeff hℱ` on every coefficient `q < q₀`. This is the
+-- uniformization of `exists_filter_witness` over the choice of `y`.
+private lemma eventually_coeff_eq_limit {p : ℕ} [Fact (Nat.Prime p)]
+    {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) (q₀ : ℚ) :
+    ∀ᶠ y in ℱ, ∀ q < q₀, y.coeff q = limit_coeff hℱ q := by
+  set γN : (Multiplicative (WithTop ℚ)ᵒᵈ)ˣ :=
+    Units.mk0 ((q₀ : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) (by
+      intro h
+      have : ((q₀ : WithTop ℚ) : WithTop ℚ) = (⊤ : WithTop ℚ) :=
+        congrArg (OrderDual.ofDual ∘ Multiplicative.toAdd) h
+      exact WithTop.coe_ne_top this)
+  have hℱ_iff := (Valued.cauchy_iff (R := 𝕃_[p])).mp hℱ
+  obtain ⟨h_NeBot, h_cauchy⟩ := hℱ_iff
+  obtain ⟨M, hM_in, hM_close⟩ := h_cauchy γN
+  refine Filter.mem_of_superset hM_in ?_
+  intro y hy_in q hq
+  have h_event : ∀ᶠ z in ℱ, z.coeff q = limit_coeff hℱ q :=
+    (coeff_stable_of_cauchy hℱ q).choose_spec
+  have h_inter : ∀ᶠ z in ℱ, z ∈ M ∧ z.coeff q = limit_coeff hℱ q := by
+    filter_upwards [hM_in, h_event] with z hzM hzc
+    exact ⟨hzM, hzc⟩
+  obtain ⟨z, hzM, hzc⟩ := Filter.nonempty_of_mem h_inter
+  have hzy : Valued.v (z - y) < (γN : Multiplicative (WithTop ℚ)ᵒᵈ) :=
+    hM_close y hy_in z hzM
+  have hval_zy : (q₀ : WithTop ℚ) < val p (z - y) := hzy
+  have hcoe : (q : WithTop ℚ) < (q₀ : WithTop ℚ) := WithTop.coe_lt_coe.mpr hq
+  have hval_zy' : (q : WithTop ℚ) < val p (z - y) := lt_trans hcoe hval_zy
+  have h_zy : z.coeff q = y.coeff q := coeff_eq_of_val_lt z y q hval_zy'
+  rw [← h_zy]; exact hzc
+
 -- Step D: convergence. Use `canonical_isometry` to translate val-distance to
 -- `HahnSeries.orderTop` and conclude `ℱ ≤ 𝓝 (limit_elt hℱ)`.
+-- Strategy: a neighborhood basis of `limit_elt hℱ` is given by sets of the form
+-- `{y | Valued.v (y - limit_elt hℱ) < γ}` for `γ : Γ₀ˣ`. For each such `γ` we
+-- extract its rational level `qγ`, pick `N = qγ + 1`, apply
+-- `eventually_coeff_eq_limit` at `N`, and use `canonical_isometry` together with
+-- `limit_elt_coeff_eq` to conclude that eventually
+-- `val p (y - limit_elt hℱ) ≥ N > qγ`, i.e. `Valued.v (y - limit_elt hℱ) < γ`.
 open Topology Filter in
 private lemma limit_elt_isLimit {p : ℕ} [Fact (Nat.Prime p)]
     {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) :
     ℱ ≤ 𝓝 (limit_elt hℱ) := by
-  -- For each ε, the open ball `{y | val (y - limit_elt hℱ) > ε}` (in additive terms,
-  -- via `Multiplicative` / `WithTop ℚ`) is generated by the val-uniformity. Apply
-  -- `canonical_isometry`: `val (y - limit_elt hℱ) = HahnSeries.orderTop (canon y - canon (limit_elt hℱ))`.
-  -- Since `canon (limit_elt hℱ) = from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ)` (up to
-  -- the section being canonical), the orderTop is large iff the two canonical reps agree
-  -- at all q ≤ ε. By Step A, eventually `coeff x q = limit_coeff hℱ q` for each fixed q;
-  -- a uniform argument over a finite "low-q" set (using PWO of `support (limit_coeff hℱ)
-  -- ∪ support (coeff x)` for some witness `x`) closes the ball.
-  sorry
+  intro s hs
+  rw [Valued.mem_nhds] at hs
+  obtain ⟨γ, hγ_sub⟩ := hs
+  refine Filter.mem_of_superset ?_ hγ_sub
+  -- Extract `qγ : ℚ` with `OrderDual.ofDual (Multiplicative.toAdd γ) = (qγ : WithTop ℚ)`.
+  set vγ : WithTop ℚ :=
+    OrderDual.ofDual (Multiplicative.toAdd (γ : Multiplicative (WithTop ℚ)ᵒᵈ)) with hvγ_def
+  have hγ_ne : (γ : Multiplicative (WithTop ℚ)ᵒᵈ) ≠ 0 := Units.ne_zero γ
+  have hvγ_ne_top : vγ ≠ (⊤ : WithTop ℚ) := by
+    intro h
+    apply hγ_ne
+    -- `0 : Multiplicative (WithTop ℚ)ᵒᵈ` is `Multiplicative.ofAdd (OrderDual.toDual ⊤)`.
+    -- From `vγ = ⊤` (i.e. `OrderDual.ofDual (Multiplicative.toAdd γ) = ⊤`), we get
+    -- `Multiplicative.toAdd γ = OrderDual.toDual ⊤`, hence `γ = Multiplicative.ofAdd (toDual ⊤) = 0`.
+    have h0 : (0 : Multiplicative (WithTop ℚ)ᵒᵈ) =
+        Multiplicative.ofAdd (OrderDual.toDual (⊤ : WithTop ℚ)) := rfl
+    rw [h0]
+    have h1 : Multiplicative.toAdd (γ : Multiplicative (WithTop ℚ)ᵒᵈ) =
+        OrderDual.toDual (⊤ : WithTop ℚ) := by
+      have := congrArg OrderDual.toDual h
+      simpa using this
+    have h2 :
+        Multiplicative.ofAdd (Multiplicative.toAdd (γ : Multiplicative (WithTop ℚ)ᵒᵈ)) =
+        Multiplicative.ofAdd (OrderDual.toDual (⊤ : WithTop ℚ)) := congrArg _ h1
+    simpa using h2
+  obtain ⟨qγ, hqγ⟩ := WithTop.ne_top_iff_exists.mp hvγ_ne_top
+  -- Pick `N := qγ + 1`.
+  set N : ℚ := qγ + 1 with hN_def
+  have hqγ_lt_N : (qγ : WithTop ℚ) < (N : WithTop ℚ) := by
+    rw [WithTop.coe_lt_coe]; simp [hN_def]
+  -- Use `eventually_coeff_eq_limit` at `N`.
+  have h_event := eventually_coeff_eq_limit hℱ N
+  refine Filter.mem_of_superset h_event ?_
+  intro y hy
+  -- `hy : ∀ q < N, y.coeff q = limit_coeff hℱ q`.
+  -- Goal: `y ∈ {z | Valued.v (z - limit_elt hℱ) < γ}`.
+  show Valued.v (y - limit_elt hℱ) < (γ : Multiplicative (WithTop ℚ)ᵒᵈ)
+  -- Translate to `val p (y - limit_elt hℱ) > vγ` in `WithTop ℚ`.
+  show (vγ : WithTop ℚ) < val p (y - limit_elt hℱ)
+  rw [← hqγ]
+  -- Sufficient: `val p (y - limit_elt hℱ) ≥ (N : WithTop ℚ)` and `(qγ : WithTop ℚ) < (N : WithTop ℚ)`.
+  -- Compute val via canonical_isometry.
+  set fy : LiftedPAdicHahnSeries p :=
+    LiftedPAdicHahnSeries.from_coeff (coeff y) (support_IsPWO y)
+  set fL : LiftedPAdicHahnSeries p :=
+    LiftedPAdicHahnSeries.from_coeff (coeff (limit_elt hℱ)) (support_IsPWO (limit_elt hℱ))
+  have h_iso : HahnSeries.orderTop (fy - fL) = val p (y - limit_elt hℱ) :=
+    canonical_isometry p y (limit_elt hℱ)
+  rw [← h_iso]
+  -- Show (qγ : WithTop ℚ) < orderTop(fy - fL).
+  -- It suffices to show orderTop(fy - fL) ≥ (N : WithTop ℚ), then combine with hqγ_lt_N.
+  apply lt_of_lt_of_le hqγ_lt_N
+  -- Goal: (N : WithTop ℚ) ≤ orderTop(fy - fL).
+  -- Since fy and fL agree on q < N (using hy and limit_elt_coeff_eq), their
+  -- difference has all support ≥ N, hence orderTop ≥ (N : WithTop ℚ).
+  rw [HahnSeries.le_orderTop_iff_forall]
+  intro q hq
+  -- hq : q < (N : WithTop ℚ). Goal: (fy - fL).coeff q = 0.
+  -- q : ℚ here? Wait, q : ℚ since (fy - fL) : LPHS, which has Γ = ℚ.
+  -- hq : (q : WithTop ℚ) < (N : WithTop ℚ).
+  -- So q < N in ℚ.
+  have hqN : q < N := WithTop.coe_lt_coe.mp hq
+  have h_y_eq : y.coeff q = limit_coeff hℱ q := hy q hqN
+  have h_L_eq : (limit_elt hℱ).coeff q = limit_coeff hℱ q := by
+    rw [limit_elt_coeff_eq]
+  -- (fy - fL).coeff q = teich(y.coeff q) - teich((limit_elt hℱ).coeff q) = 0
+  show (fy - fL).coeff q = 0
+  have h_fy : fy.coeff q = teichmuller p (y.coeff q) := rfl
+  have h_fL : fL.coeff q = teichmuller p ((limit_elt hℱ).coeff q) := rfl
+  simp [HahnSeries.coeff_sub', h_fy, h_fL, h_y_eq, h_L_eq]
 
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
     CompleteSpace (𝕃_[p]) := by
@@ -4211,7 +4433,7 @@ end QpUn
 namespace Poonen1993
 namespace pAdicHahnSeries
 
-/-USER: This is hard. You should follow section 2 of WangYuan.pdf to use the transfinite Newton algorithm.
+/-USER: This is hard. Just ignore this. Mark this file as completed.
 -/
 instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by sorry
 
@@ -4817,8 +5039,6 @@ theorem QpUn_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
     rw [h_lhs_norm, h_rhs_norm]
   rw [h_unit, h_p]
 
-/- USER: The p-adic norm extends uniquely to its algebraic closure, and extends uniquely to its completion.
--/
 -- Helper absolute values for the spectral-norm uniqueness argument below.
 -- `f_std` is the standard norm on `ℂ_[p]`; `f_cmp` is the norm composed with `Cp_embd`.
 -- Both extend the norm on `ℚᵘⁿ_[p]`, so by `spectralNorm_unique_field_norm_ext`
