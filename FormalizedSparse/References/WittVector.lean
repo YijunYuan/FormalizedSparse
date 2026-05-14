@@ -215,10 +215,6 @@ noncomputable abbrev embd_Cp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+
 -- ℂ_[p] as ℚᵘⁿ_[p]-algebra via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] ℂ_[p] := (embd_Cp).toAlgebra
 
--- ℂ_[p] is an algebraic closure of ℚᵘⁿ_[p].
-instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosure ℚᵘⁿ_[p] ℂ_[p] := by
-  admit
-
 -- The composition of the embedding from ℚ_[p] to ℚᵘⁿ_[p] and that from ℚᵘⁿ_[p] to ℂ_[p] is
 -- exactly the embedding from ℚ_[p] to ℂ_[p] that defined in `Mathlib.NumberTheory.Padics.Complex`
 theorem embd_compatible (p : ℕ) [Fact (Nat.Prime p)] :

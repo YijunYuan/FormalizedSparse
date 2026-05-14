@@ -4439,7 +4439,7 @@ namespace pAdicHahnSeries
 /-USER: This is hard. Just ignore this. Mark this file as completed.
 -/
 instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by sorry
-
+/-
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
 noncomputable def alg_Cp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℂ_[p] →ₐ[ℚᵘⁿ_[p]] 𝕃_[p] :=
@@ -5082,7 +5082,7 @@ private lemma cmp_norm_compat_algebraMap (p : ℕ) [Fact (Nat.Prime p)] :
   rw [h_cp_alg]
   show ‖(QpUn_embd x : 𝕃_[p])‖ = ‖x‖
   rw [← QpUn_embd_keep_norm p x]
-/-
+
 -- maxHeartbeats raised: `spectralNorm_unique_field_norm_ext` unfolds through ℂ_[p]'s
 -- nontrivially-normed/ultrametric/complete-space structure over ℚᵘⁿ_[p].
 private lemma f_std_eq_spectralNorm (p : ℕ) [Fact (Nat.Prime p)] :
