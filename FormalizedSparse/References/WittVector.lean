@@ -80,6 +80,32 @@ Another approach is to use `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`
 instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
   -- Strategy: reduce `CompleteSpace ℚᵘⁿ_[p]` to `IsComplete (Valued.v.integer)`, then
   -- use that this integer subring is isomorphic to the IsAdicComplete `ℤᵘⁿ_[p]`.
+  -- The `Valuation.RankOne` instance is built later in this file, so we replay it locally.
+  haveI rk1 : Valuation.RankOne
+      (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
+    hom := WithZeroMulInt.toNNReal (p_ne_zero p)
+    strictMono' := by
+      have hp1 : (1 : NNReal) < p := by
+        exact_mod_cast (Fact.out : Nat.Prime p).one_lt
+      exact WithZeroMulInt.toNNReal_strictMono hp1
+    exists_val_nontrivial := by
+      refine ⟨algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p]), ?_, ?_⟩ <;>
+      · have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
+        have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
+            Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
+        have hp_val : Valued.v
+            (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
+            ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) :
+              WithZero (Multiplicative ℤ)) := by
+          rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
+              (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
+          rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+          rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
+            (WittVector.p_nonzero p _) hpe]
+          rfl
+        first
+        | (rw [hp_val]; decide)
+        | (rw [hp_val]; decide) }
   -- Step 1: use `Valued.toNormedField` so that the NormedField's UniformSpace coincides
   -- with the Valued one (avoids the clash with the file-level `WithAbs.normedField (abs p)`).
   letI nfd : NormedField (ℚᵘⁿ_[p]) :=
