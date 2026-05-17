@@ -6,10 +6,8 @@ import Mathlib.Data.Rat.Star
 import Mathlib.Data.Finsupp.Multiset
 import Mathlib.Data.Fintype.Fin
 import Mathlib.SetTheory.Cardinal.Finite
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+import Mathlib.Topology.Algebra.InfiniteSum.Defs
+
 namespace Sparse
 
 @[ext]
@@ -1092,9 +1090,6 @@ def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
       )
   )
 
-def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set (DigitSeries)) (hS : ∀ f ∈ S, f.IsP p) : Prop :=
-  ∃ c : PNat, ∃ D : Set ℕ+, D.Infinite ∧ ∀ n ∈ D, IsCNSparse p c n S hS
-
 noncomputable def φ₀ {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)} {hS : ∀ f ∈ S, f.IsP p}
   {c n : ℕ+} (hSparse : IsCNSparse p c n S hS) : S → ℕ :=
   fun d => Nat.card <| hSparse.2.choose⁻¹' {d}
@@ -1478,4 +1473,68 @@ lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
       intro x _; exact ⟨perm.symm x, by simp⟩)
   rw [hperm_card, hA5]
 
+/- USER: You should formalize the following results. The corresponding informal proof is in Sparse.pdf.
+-/
+
+/- USER: Every rational number q can be written as w+0.a₁a₂a₃⋯ in base p, where w is an integer and each aᵢ is a digit in {0, 1, ⋯, p-1}. We additionally rule out the case where the expansion ends with infinitely many (p-1)s, to ensure uniqueness of the expansion. This is the content of the following lemma.
+
+Implicitly used in Definition 1.3 (1) of Sparse.pdf.
+-/
+lemma exists_unique_base_p_expansion (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) :
+  ∃! W : ℤ × (ℕ+ → Fin p),
+  { i : ℕ+ | W.2 i ≠ p - 1 }.Infinite -- This condition ensures the expansion is unique, by preventing trailing (p-1)s which could be "carried" to the left
+  ∧
+  q = W.1 + tsum (fun n : ℕ+ => ((W.2 n).val : ℚ) / (p : ℚ) ^ (n : ℕ)) := by
+  sorry
+
+noncomputable abbrev decDigits (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : ℕ+ → Fin p := (exists_unique_base_p_expansion p q).choose.2
+
+open Classical in
+/- USER: The p-digit sum, 𝔑ₚ(q) in Definition 1.3 (1) of Sparse.pdf-/
+noncomputable def pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : WithTop ℕ :=
+  if h : (Function.support (decDigits p q)).Infinite then ⊤
+  else ∑ n ∈ (Set.not_infinite.1 h).toFinset, (decDigits p q n).val
+
+/- USER: dominant p-digit sum of S, Definition 1.3 (2)-/
+noncomputable def dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : WithTop ℕ :=
+  sSup {pDigitSum p  q | q ∈ S}
+
+/- USER: p-digit dominant part of S, Definition 1.3 (2)-/
+noncomputable def Dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Set ℚ :=
+  {q ∈ S | pDigitSum p q = dom p S}
+
+/- USER: Definition 1.4 of Sparse.pdf-/
+def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Prop :=
+  S ⊆ Set.Ico 0 1 ∧ dom p S < ⊤ ∧
+  ∃ D : Set ℕ+, D.Infinite ∧ (
+    ∀ n ∈ D, ∃ d : Fin n → Dom p S,
+    (
+      ∀ i : ℕ+, ∑ (j : Fin n), (decDigits p (d j) i).val < p -- No carrying when adding d₁, d₂, ..., dₙ together.
+    )
+    ∧
+    (
+      ∀ e : Fin n → Dom p S,
+      (∑ i, (d i).val -∑ i, (e i).val).isInt →
+        ∃ perm : Equiv.Perm (Fin n), ∀ i, d i = e (perm i)
+    )
+  )
+
+/- USER: Lemma 3.6 of Sparse.pdf-/
+lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ) :
+  IsSparse p W ↔ ∃ S : Set (DigitSeries), ∃ hS : ∀ f ∈ S, f.IsP p,
+    (
+      Sparse.DigitSeries.norm p '' S = W
+    ) ∧ (
+      ∃ c : ℕ+, ∃ D : Set ℕ+, D.Infinite ∧ (∀ n ∈ D, IsCNSparse p c n S hS)
+    )
+  := sorry
+
+/- USER: The first assertion of Proposition 5.3 of Sparse.pdf-/
+lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ)
+(hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
+(hA3 : ∀ n, (A n).Finite) (hA4 : BddAbove {(hA3 n).toFinset.card | n : ℕ}) :
+  IsSparse p {∑ r ∈ (hA3 i).toFinset, (p : ℚ) ^ (-(r: ℤ)) | i : ℕ } := by
+  sorry
+
+/- USER: The aobve are your only goals. You do NOT need to autoformalize or proof anything else in Sparse.pdf.-/
 end Sparse

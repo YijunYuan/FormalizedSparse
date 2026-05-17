@@ -36,7 +36,8 @@ def finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : �
         {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} ⊆
           Set.Icc (⌈m - g⌉ : ℤ) ⌊(N : ℚ) - g⌋ := by
       intro n hn
-      have hm_le : m ≤ g + n := x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
+      have hm_le : m ≤ g + n :=
+        x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
       have hlower : (⌈m - g⌉ : ℤ) ≤ n := by
         apply Int.ceil_le.mpr
         rw [sub_le_iff_le_add]
@@ -69,7 +70,8 @@ noncomputable def finpropInt {p : ℕ} [Fact (Nat.Prime p)]
   · let m : ℚ := x.isWF_support.min hs
     have hsubset : {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} ⊆ Set.Icc (⌈m - g⌉ : ℤ) K := by
       intro n hn
-      have hm_le : m ≤ g + n := x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
+      have hm_le : m ≤ g + n :=
+        x.isWF_support.min_le hs <| (HahnSeries.mem_support x (g + n)).2 hn.2
       have hlower : (⌈m - g⌉ : ℤ) ≤ n := by
         apply Int.ceil_le.mpr
         rw [sub_le_iff_le_add]
@@ -660,7 +662,7 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
   zero_mem' := by simp [IsNullSeries]
   smul_mem' := by
     intro c x hx
-    show IsNullSeries (c * x)
+    change IsNullSeries (c * x)
     change IsNullSeries x at hx
     intro g
     -- Goal: Tendsto (fun M => partialSum (c*x) g M) atTop (𝓝 0).
@@ -3032,7 +3034,7 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
       rw [← hu, valued_v_algebraMap_unit_one u]
     rw [hval, mul_one]
     rfl
-  -- Step D: derive contradiction. For M ≥ ⌈q⌉, the partial sum equals (n=0 term) + (sum over n ≠ 0).
+  -- Step D: derive contradiction. For M ≥ ⌈q⌉, the partial sum equals (n=0 term) + (sum over n ≠ 0)
   -- The n=0 term has valuation ofAdd(0); the rest has valuation ≤ ofAdd(-1) < ofAdd(0).
   -- By strict ultrametric, the partial sum's valuation = ofAdd(0). But Tendsto ... → 0
   -- forces the valuation eventually < ofAdd(0). Contradiction.
@@ -3305,17 +3307,18 @@ noncomputable def val
         have hsy_qy_ne : s_y qy ≠ 0 := hs_y_pwo.isWF.min_mem hsy_ne
         -- The product (fx * fy).coeff (qx + qy) = teichmuller(s_x qx) * teichmuller(s_y qy).
         -- This uses HahnSeries.coeff_mul: the antidiagonal at qx + qy is precisely {(qx, qy)}.
-        -- fx.support = Function.support s_x, fy.support = Function.support s_y (def-eq via teichmuller).
+        -- fx.support = Function.support s_x, fy.support = Function.support s_y
+        -- (def-eq via teichmuller).
         have h_supp_fx : fx.support = Function.support s_x := by
           ext n
           simp only [HahnSeries.mem_support, Function.mem_support]
-          show teichmuller p (s_x n) ≠ 0 ↔ s_x n ≠ 0
+          change teichmuller p (s_x n) ≠ 0 ↔ s_x n ≠ 0
           refine ⟨fun h h' => h (by rw [h', WittVector.teichmuller_zero p]), fun h h' => h ?_⟩
           exact (injective_teichmuller p) (by rw [h', WittVector.teichmuller_zero p])
         have h_supp_fy : fy.support = Function.support s_y := by
           ext n
           simp only [HahnSeries.mem_support, Function.mem_support]
-          show teichmuller p (s_y n) ≠ 0 ↔ s_y n ≠ 0
+          change teichmuller p (s_y n) ≠ 0 ↔ s_y n ≠ 0
           refine ⟨fun h h' => h (by rw [h', WittVector.teichmuller_zero p]), fun h h' => h ?_⟩
           exact (injective_teichmuller p) (by rw [h', WittVector.teichmuller_zero p])
         have h_prod_coeff_q : (fx * fy).coeff (qx + qy) =
@@ -3340,7 +3343,7 @@ noncomputable def val
               · rw [h_supp_fx]; exact hsx_qx_ne
               · rw [h_supp_fy]; exact hsy_qy_ne
           rw [h_set, Finset.sum_singleton]
-          show teichmuller p (s_x qx) * teichmuller p (s_y qy) = _
+          change teichmuller p (s_x qx) * teichmuller p (s_y qy) = _
           rfl
         -- For q' < qx + qy, (fx * fy).coeff q' = 0.
         -- Use support_mul_subset: (fx * fy).support ⊆ supp fx + supp fy (sumset).
@@ -3405,12 +3408,11 @@ noncomputable def val
           -- For q' < qxy: similar (both 0).
           have hsxy_qxy_ne : s_xy qxy ≠ 0 := hs_xy_pwo.isWF.min_mem hsxy_ne
           have h_Δ_coeff_qxy : (fx * fy - fxy).coeff qxy = -teichmuller p (s_xy qxy) := by
-            show (fx * fy - fxy).coeff qxy = _
+            change (fx * fy - fxy).coeff qxy = _
             rw [HahnSeries.coeff_sub']
-            show (fx * fy).coeff qxy - fxy.coeff qxy = _
+            change (fx * fy).coeff qxy - fxy.coeff qxy = _
             rw [h_prod_coeff_lt qxy h_not]
-            show 0 - fxy.coeff qxy = _
-            show 0 - teichmuller p (s_xy qxy) = _
+            change 0 - teichmuller p (s_xy qxy) = _
             ring
           have h_Δ_unit : IsUnit ((fx * fy - fxy).coeff qxy) := by
             rw [h_Δ_coeff_qxy]
@@ -3420,16 +3422,16 @@ noncomputable def val
             have hq'_lt : q' < qx + qy := lt_trans hq' h_not
             have h_prod_q' : (fx * fy).coeff q' = 0 := h_prod_coeff_lt q' hq'_lt
             have h_fxy_q' : fxy.coeff q' = 0 := by
-              show teichmuller p (s_xy q') = 0
+              change teichmuller p (s_xy q') = 0
               have : s_xy q' = 0 := by
                 by_contra hne
                 have hmem : q' ∈ Function.support s_xy := hne
                 have h_le : qxy ≤ q' := hs_xy_pwo.isWF.min_le hsxy_ne hmem
                 exact absurd h_le (not_le.mpr hq')
               rw [this, WittVector.teichmuller_zero p]
-            show (fx * fy - fxy).coeff q' = 0
+            change (fx * fy - fxy).coeff q' = 0
             rw [HahnSeries.coeff_sub']
-            show (fx * fy).coeff q' - fxy.coeff q' = 0
+            change (fx * fy).coeff q' - fxy.coeff q' = 0
             rw [h_prod_q', h_fxy_q']
             ring
           exact (null_series_no_unit_leading hΔ_mem h_Δ_unit h_Δ_lead).elim
@@ -3447,13 +3449,13 @@ noncomputable def val
             exact absurd h_le (not_le.mpr h_not)
           have h_Δ_coeff_q : (fx * fy - fxy).coeff (qx + qy) =
               teichmuller p (s_x qx) * teichmuller p (s_y qy) := by
-            show (fx * fy - fxy).coeff (qx + qy) = _
+            change (fx * fy - fxy).coeff (qx + qy) = _
             rw [HahnSeries.coeff_sub']
-            show (fx * fy).coeff (qx + qy) - fxy.coeff (qx + qy) = _
+            change (fx * fy).coeff (qx + qy) - fxy.coeff (qx + qy) = _
             rw [h_prod_coeff_q]
-            show teichmuller p (s_x qx) * teichmuller p (s_y qy) -
+            change teichmuller p (s_x qx) * teichmuller p (s_y qy) -
                 fxy.coeff (qx + qy) = _
-            show teichmuller p (s_x qx) * teichmuller p (s_y qy) -
+            change teichmuller p (s_x qx) * teichmuller p (s_y qy) -
                 teichmuller p (s_xy (qx + qy)) = _
             rw [hsxy_zero_q, WittVector.teichmuller_zero p]
             ring
@@ -3466,16 +3468,16 @@ noncomputable def val
             have hq'_lt_qxy : q' < qxy := lt_trans hq' h_not
             have h_prod_q' : (fx * fy).coeff q' = 0 := h_prod_coeff_lt q' hq'
             have h_fxy_q' : fxy.coeff q' = 0 := by
-              show teichmuller p (s_xy q') = 0
+              change teichmuller p (s_xy q') = 0
               have : s_xy q' = 0 := by
                 by_contra hne
                 have hmem : q' ∈ Function.support s_xy := hne
                 have h_le : qxy ≤ q' := hs_xy_pwo.isWF.min_le hsxy_ne hmem
                 exact absurd h_le (not_le.mpr hq'_lt_qxy)
               rw [this, WittVector.teichmuller_zero p]
-            show (fx * fy - fxy).coeff q' = 0
+            change (fx * fy - fxy).coeff q' = 0
             rw [HahnSeries.coeff_sub']
-            show (fx * fy).coeff q' - fxy.coeff q' = 0
+            change (fx * fy).coeff q' - fxy.coeff q' = 0
             rw [h_prod_q', h_fxy_q']
             ring
           exact (null_series_no_unit_leading hΔ_mem h_Δ_unit h_Δ_lead).elim
@@ -3486,7 +3488,7 @@ noncomputable def val
         rw [show
             ((hs_xy_pwo.isWF.min hsxy_ne : ℚ) : WithTop ℚ) =
             (((qx + qy : ℚ) : WithTop ℚ)) from by
-            show ((qxy : ℚ) : WithTop ℚ) = _
+            change ((qxy : ℚ) : WithTop ℚ) = _
             rw [h_eq]]
         -- Now goal is: ↑(qx + qy) = ↑qx * ↑qy in dual carrier.
         push_cast
@@ -3525,8 +3527,9 @@ noncomputable def val
         --
         -- Strategy: use that
         --   `Δ := from_coeff s_x + from_coeff s_y - from_coeff s_{x+y}`
-        -- is a null series (since all three differ from x.out, y.out, (x+y).out by null series, plus
-        -- (x+y).out - x.out - y.out is also a null series, since both reduce to `x+y` in the quotient).
+        -- is a null series (since all three differ from x.out, y.out, (x+y).out by null series,
+        -- plus (x+y).out - x.out - y.out is also a null series, since both reduce to `x+y` in the
+        -- quotient).
         -- Suppose for contradiction val(x+y) < min(val x, val y). Set q := min(supp s_{x+y}).
         -- Then s_x.q = 0, s_y.q = 0, so Δ.coeff q = -teichmuller p (s_{x+y}.q).
         -- s_{x+y}.q is the value at the min of supp s_{x+y}, hence nonzero, so teichmuller of it
@@ -3632,12 +3635,12 @@ noncomputable def val
           · exact hout_null
         -- Compute Δ.coeff at qxy.
         have hΔ_coeff_qxy : Δ.coeff qxy = -teichmuller p (s_xy qxy) := by
-          show (fx + fy - fxy).coeff qxy = _
+          change (fx + fy - fxy).coeff qxy = _
           rw [HahnSeries.coeff_sub']
-          show (fx + fy).coeff qxy - fxy.coeff qxy = _
+          change (fx + fy).coeff qxy - fxy.coeff qxy = _
           rw [HahnSeries.coeff_add']
-          show fx.coeff qxy + fy.coeff qxy - fxy.coeff qxy = _
-          show teichmuller p (s_x qxy) + teichmuller p (s_y qxy) -
+          change fx.coeff qxy + fy.coeff qxy - fxy.coeff qxy = _
+          change teichmuller p (s_x qxy) + teichmuller p (s_y qxy) -
                 teichmuller p (s_xy qxy) = _
           rw [hsx_qxy, hsy_qxy]
           rw [WittVector.teichmuller_zero p]
@@ -3669,12 +3672,12 @@ noncomputable def val
             have hmem : q' ∈ Function.support s_xy := hne
             have h_le : qxy ≤ q' := hs_xy_pwo.isWF.min_le hsxy_ne hmem
             exact absurd h_le (not_le.mpr hq'_lt_qxy)
-          show (fx + fy - fxy).coeff q' = 0
+          change (fx + fy - fxy).coeff q' = 0
           rw [HahnSeries.coeff_sub']
-          show (fx + fy).coeff q' - fxy.coeff q' = 0
+          change (fx + fy).coeff q' - fxy.coeff q' = 0
           rw [HahnSeries.coeff_add']
-          show fx.coeff q' + fy.coeff q' - fxy.coeff q' = 0
-          show teichmuller p (s_x q') + teichmuller p (s_y q') -
+          change fx.coeff q' + fy.coeff q' - fxy.coeff q' = 0
+          change teichmuller p (s_x q') + teichmuller p (s_y q') -
                 teichmuller p (s_xy q') = 0
           rw [hsx_q', hsy_q', hsxy_q']
           rw [WittVector.teichmuller_zero p]
@@ -3784,7 +3787,7 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
   have hcoeff_Δ : ∀ q, Δ.coeff q =
       teichmuller p (s_x q) - teichmuller p (s_y q) - teichmuller p (s_z q) := by
     intro q
-    show (f_x - f_y - f_z).coeff q = _
+    change (f_x - f_y - f_z).coeff q = _
     simp only [HahnSeries.coeff_sub, hcoeff_fx, hcoeff_fy, hcoeff_fz]
   -- Case split: x = y (trivial) vs x ≠ y (main case).
   by_cases hxy : x = y
@@ -3811,7 +3814,7 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
     -- val(x - y) = ↑q_z.
     have hval_xy : (val p) (x - y) = ((q_z : ℚ) : WithTop ℚ) := by
       classical
-      show (if h : (x - y) = 0 then (⊤ : WithTop ℚ)
+      change (if h : (x - y) = 0 then (⊤ : WithTop ℚ)
            else ((support_IsPWO (x - y)).isWF.min
               (support_nonempty_of_nonzero p (x - y) h) : WithTop ℚ))
         = ((q_z : ℚ) : WithTop ℚ)
@@ -3859,9 +3862,9 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
       intro h0
       -- Δ.coeff q_z = -f_z.coeff q_z = -teich(s_z q_z), a unit.
       have hΔ_at_qz : Δ.coeff q_z = -teichmuller p (s_z q_z) := by
-        show (f_x - f_y - f_z).coeff q_z = _
+        change (f_x - f_y - f_z).coeff q_z = _
         rw [HahnSeries.coeff_sub']
-        show (f_x - f_y).coeff q_z - f_z.coeff q_z = _
+        change (f_x - f_y).coeff q_z - f_z.coeff q_z = _
         rw [h0, hcoeff_fz, zero_sub]
       have h_teich_unit : IsUnit (teichmuller p (s_z q_z)) :=
         (isUnit_iff_ne_zero.mpr hsz_qz_ne).map (teichmuller p)
@@ -4077,13 +4080,13 @@ private noncomputable def limit_elt {p : ℕ} [Fact (Nat.Prime p)]
 private lemma limit_elt_coeff_eq {p : ℕ} [Fact (Nat.Prime p)]
     {ℱ : Filter (𝕃_[p])} (hℱ : Cauchy ℱ) :
     (limit_elt hℱ).coeff = limit_coeff hℱ := by
-  show (exists_canonical_expansion (limit_elt hℱ)).choose.val = limit_coeff hℱ
+  change (exists_canonical_expansion (limit_elt hℱ)).choose.val = limit_coeff hℱ
   have h_choose :
       (exists_canonical_expansion (limit_elt hℱ)).choose =
         ⟨limit_coeff hℱ, limit_coeff_pwo hℱ⟩ := by
     symm
     apply (exists_canonical_expansion (limit_elt hℱ)).choose_spec.2
-    show Ideal.Quotient.ringCon (NullSeriesIdeal p) (limit_elt hℱ).out
+    change Ideal.Quotient.ringCon (NullSeriesIdeal p) (limit_elt hℱ).out
       (LiftedPAdicHahnSeries.from_coeff (limit_coeff hℱ) (limit_coeff_pwo hℱ))
     have h_eq : (Ideal.Quotient.mk (NullSeriesIdeal p)) (limit_elt hℱ).out =
         (Ideal.Quotient.mk (NullSeriesIdeal p))
@@ -4149,7 +4152,8 @@ private lemma limit_elt_isLimit {p : ℕ} [Fact (Nat.Prime p)]
     apply hγ_ne
     -- `0 : Multiplicative (WithTop ℚ)ᵒᵈ` is `Multiplicative.ofAdd (OrderDual.toDual ⊤)`.
     -- From `vγ = ⊤` (i.e. `OrderDual.ofDual (Multiplicative.toAdd γ) = ⊤`), we get
-    -- `Multiplicative.toAdd γ = OrderDual.toDual ⊤`, hence `γ = Multiplicative.ofAdd (toDual ⊤) = 0`.
+    -- `Multiplicative.toAdd γ = OrderDual.toDual ⊤`,
+    -- hence `γ = Multiplicative.ofAdd (toDual ⊤) = 0`.
     have h0 : (0 : Multiplicative (WithTop ℚ)ᵒᵈ) =
         Multiplicative.ofAdd (OrderDual.toDual (⊤ : WithTop ℚ)) := rfl
     rw [h0]
@@ -4172,11 +4176,12 @@ private lemma limit_elt_isLimit {p : ℕ} [Fact (Nat.Prime p)]
   intro y hy
   -- `hy : ∀ q < N, y.coeff q = limit_coeff hℱ q`.
   -- Goal: `y ∈ {z | Valued.v (z - limit_elt hℱ) < γ}`.
-  show Valued.v (y - limit_elt hℱ) < (γ : Multiplicative (WithTop ℚ)ᵒᵈ)
+  change Valued.v (y - limit_elt hℱ) < (γ : Multiplicative (WithTop ℚ)ᵒᵈ)
   -- Translate to `val p (y - limit_elt hℱ) > vγ` in `WithTop ℚ`.
-  show (vγ : WithTop ℚ) < val p (y - limit_elt hℱ)
+  change (vγ : WithTop ℚ) < val p (y - limit_elt hℱ)
   rw [← hqγ]
-  -- Sufficient: `val p (y - limit_elt hℱ) ≥ (N : WithTop ℚ)` and `(qγ : WithTop ℚ) < (N : WithTop ℚ)`.
+  -- Sufficient: `val p (y - limit_elt hℱ) ≥ (N : WithTop ℚ)` and
+  -- `(qγ : WithTop ℚ) < (N : WithTop ℚ)`.
   -- Compute val via canonical_isometry.
   set fy : LiftedPAdicHahnSeries p :=
     LiftedPAdicHahnSeries.from_coeff (coeff y) (support_IsPWO y)
@@ -4202,7 +4207,7 @@ private lemma limit_elt_isLimit {p : ℕ} [Fact (Nat.Prime p)]
   have h_L_eq : (limit_elt hℱ).coeff q = limit_coeff hℱ q := by
     rw [limit_elt_coeff_eq]
   -- (fy - fL).coeff q = teich(y.coeff q) - teich((limit_elt hℱ).coeff q) = 0
-  show (fy - fL).coeff q = 0
+  change (fy - fL).coeff q = 0
   have h_fy : fy.coeff q = teichmuller p (y.coeff q) := rfl
   have h_fL : fL.coeff q = teichmuller p ((limit_elt hℱ).coeff q) := rfl
   simp [HahnSeries.coeff_sub', h_fy, h_fL, h_y_eq, h_L_eq]
@@ -4355,82 +4360,6 @@ namespace QpUn
 noncomputable abbrev to_Lp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
   Poonen1993.pAdicHahnSeries.QpUn_embd
 
-/-- Structural scaffold for `mem_QpUn_iff_supp_int` (Poonen 1993, §4).
-
-The image of `to_Lp = QpUn_embd : ℚᵘⁿ_[p] →+* 𝕃_[p]` is exactly the set of
-elements of `𝕃_[p]` whose canonical-expansion support sits in `ℤ ⊆ ℚ`.
-
-The proof is decomposed into two genuine sub-problems, each annotated with a
-scoped `sorry` and the missing helper lemma it would require:
-
-* `mem_QpUn_supp_int_backward`: if `x = QpUn_embd y` then every `q` in the
-  support of `x` is integer. Reduces (via `exists_DVR_factorization`,
-  `QpUn_embd_p_eq_ZpUn_embd_p`, `QpUn_embd_algebraMap`) to:
-  ▸ HELPER A: support of `ZpUn_embd a` (`a : OQpUn p`) is a subset of ℤ
-    (strengthening `support_ZpUn_embd_nonneg`, which only gives `[0,∞)`); plus
-  ▸ HELPER B: support of `(ZpUn_embd p) * x` is `support x + 1` (a degree shift).
-  Both are rigorously provable from the existing Teichmuller-series machinery
-  (`exists_teichmuller_digits` + `unique_canonical_representative`) but require
-  several hundred lines of additional Hahn-series support manipulation.
-
-* `mem_QpUn_supp_int_forward`: if every support point of `x` is integer, then
-  `x` is in the image. Reduces to:
-  ▸ HELPER C: an integer-supported PWO function `s : ℚ → Fpbar p` lifts via
-    `from_coeff` to an element of the image of `QpUn_embd`, by reading off
-    Teichmuller digits and assembling them via `exists_lim_intPartial`
-    (line 1075). Again provable but requires careful PWO/integer-support
-    manipulation. -/
-lemma mem_QpUn_iff_supp_int {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
-  (∀ q ∈ x.support, q.isInt) ↔ ∃ y : ℚᵘⁿ_[p], y.to_Lp = x := by
-  refine ⟨?_, ?_⟩
-  · -- Forward: integer-supported x lifts to ℚᵘⁿ_[p].
-    intro hsupp
-    -- x has canonical expansion `from_coeff x.coeff (support_IsPWO x)` (cf.
-    -- `from_coeff_of_coeff_eq_self`, line 4097). Since `hsupp` says every q in
-    -- the support of x is an integer, the function `x.coeff` is supported on ℤ.
-    -- We must construct `y : ℚᵘⁿ_[p]` whose `to_Lp = QpUn_embd y` equals x.
-    --
-    -- Plan (HELPER C): rewrite `x.coeff` as `s ∘ ((↑) : ℤ → ℚ)` for some
-    -- `t : ℤ → Fpbar p` (using `hsupp`). Choose `m₀ : ℤ` below the support of
-    -- `t` (exists by PWO). Use `intPartial`-style limit (analog of
-    -- `exists_lim_intPartial` line 1075) to define `y : ℚᵘⁿ_[p]` as the limit
-    -- `∑ k = m₀..K [t k] · p^k` in ℚᵘⁿ_[p]. By construction the canonical
-    -- expansion of `QpUn_embd y` matches `x.coeff` pointwise, so `QpUn_embd y
-    -- = x` by `from_coeff_of_coeff_eq_self` and `coeff_of_from_coeff_eq_self`.
-    --
-    -- This requires ~200 lines mirroring the structure of
-    -- `support_ZpUn_embd_nonneg` + `exists_teichmuller_digits` for the
-    -- integer-support case. Left as a focused obstruction.
-    sorry
-  · -- Backward: y.to_Lp has integer support.
-    rintro ⟨y, rfl⟩ q hq
-    by_cases hy : y = 0
-    · -- If y = 0 then to_Lp y = 0; we use eq_zero_iff_coeff_zero to derive
-      -- coeff 0 q = 0, contradicting q ∈ support 0.
-      have h0 : (y.to_Lp : 𝕃_[p]) = (0 : 𝕃_[p]) := by simp [hy, map_zero]
-      rw [h0] at hq
-      have hcoeff :
-          (0 : 𝕃_[p]).coeff q = 0 :=
-        (Poonen1993.pAdicHahnSeries.eq_zero_iff_coeff_zero (0 : 𝕃_[p])).mp rfl q hq
-      exact (hq hcoeff).elim
-    · -- y ≠ 0: factor y = algebraMap u * p^n with u ∈ (OQpUn)ˣ, n ∈ ℤ.
-      -- Then y.to_Lp = QpUn_embd y = ZpUn_embd u * (ZpUn_embd p)^n.
-      -- Support of ZpUn_embd u sits in ℤ (HELPER A).
-      -- Multiplication by (ZpUn_embd p)^n shifts support by n ∈ ℤ (HELPER B).
-      -- Therefore every support point is in ℤ.
-      --
-      -- This is the analog of `QpUn_embd_keep_norm` (line 4728) for the support
-      -- side. Skeleton:
-      --   obtain ⟨u, n, hy_eq⟩ := exists_DVR_factorization y hy
-      --   rw [hy_eq, map_mul, map_zpow₀, QpUn_embd_p_eq_ZpUn_embd_p,
-      --       QpUn_embd_algebraMap] at hq
-      --   -- hq : q ∈ (ZpUn_embd u * (ZpUn_embd p)^n).support
-      --   -- HELPER B: support of (ZpUn_embd p)^n equals {n}, so support of
-      --   --   ZpUn_embd u * (ZpUn_embd p)^n equals (support of ZpUn_embd u) + n.
-      --   -- HELPER A: support of ZpUn_embd u is in ℤ.
-      --   -- Therefore q = q' + n with q', n ∈ ℤ ⇒ q ∈ ℤ.
-      sorry
-
 end QpUn
 
 namespace Poonen1993
@@ -4439,722 +4368,6 @@ namespace pAdicHahnSeries
 /-USER: This is hard. Just ignore this. Mark this file as completed.
 -/
 instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by sorry
-/-
-variable (p : ℕ) [Fact (Nat.Prime p)]
 
-noncomputable def alg_Cp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℂ_[p] →ₐ[ℚᵘⁿ_[p]] 𝕃_[p] :=
-  @IsAlgClosed.lift 𝕃_[p] _ _ ℚᵘⁿ_[p] _ _ ℂ_[p] _ _ _ _ _ _ _
-
-noncomputable def Cp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℂ_[p] →+* 𝕃_[p] :=
-  alg_Cp_embd.toRingHom
-
-/-- Extract the rational value `q : ℚ` from a nonzero element of
-`Multiplicative (WithTop ℚ)ᵒᵈ` (the codomain of `Valued.v` on `𝕃_[p]`). -/
-noncomputable def qval (a : Multiplicative (WithTop ℚ)ᵒᵈ) (ha : a ≠ 0) : ℚ :=
-  (OrderDual.ofDual (Multiplicative.toAdd a) : WithTop ℚ).untop (fun h => ha h)
-
-/-- Closed form: `WithZeroRat.toNNReal he a = e ^ qval a` for nonzero `a`. -/
-lemma withZeroRat_toNNReal_eq_rpow_qval {e : NNReal} (he : e ≠ 0)
-    (a : Multiplicative (WithTop ℚ)ᵒᵈ) (ha : a ≠ 0) :
-    WithZeroRat.toNNReal he a = e ^ ((qval a ha : ℚ) : ℝ) := by
-  simp only [WithZeroRat.toNNReal, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk]
-  rw [dif_neg ha]
-  rfl
-
-/-- Auxiliary monotonicity: `WithZeroRat.toNNReal (pInv_ne_zero p)` is monotone with
-respect to the order on `Multiplicative (WithTop ℚ)ᵒᵈ` (the codomain of `Valued.v` on
-`𝕃_[p]`). With `e = 1/p < 1`, the map `q ↦ e^q` is anti-monotone in the standard
-additive order on ℚ; combined with the order-reversal of `(WithTop ℚ)ᵒᵈ`, the net
-direction is monotone. -/
-lemma toNNReal_dual_monotone (p : ℕ) [Fact (Nat.Prime p)] :
-    Monotone (fun x : Multiplicative (WithTop ℚ)ᵒᵈ =>
-      ((WithZeroRat.toNNReal (pInv_ne_zero p) x : NNReal) : ℝ)) := by
-  intro a b hab
-  simp only
-  by_cases ha : (a : Multiplicative (WithTop ℚ)ᵒᵈ) = 0
-  · simp [ha]
-  · by_cases hb : (b : Multiplicative (WithTop ℚ)ᵒᵈ) = 0
-    · exfalso; apply ha
-      exact le_antisymm (hb ▸ hab) (zero_le' (a := a))
-    · rw [NNReal.coe_le_coe,
-        withZeroRat_toNNReal_eq_rpow_qval (pInv_ne_zero p) a ha,
-        withZeroRat_toNNReal_eq_rpow_qval (pInv_ne_zero p) b hb]
-      have hp_pos : (0 : NNReal) < (1 / p) := pos_iff_ne_zero.mpr (pInv_ne_zero p)
-      have hp1 : (1 : NNReal) < p := by exact_mod_cast (Fact.out : Nat.Prime p).one_lt
-      have hp1le : (1 / (p : NNReal)) ≤ 1 := by
-        rw [one_div, ← inv_one]
-        exact_mod_cast inv_anti₀ zero_lt_one (le_of_lt hp1)
-      apply NNReal.rpow_le_rpow_of_exponent_ge hp_pos hp1le
-      have h_qval : qval b hb ≤ qval a ha := by
-        unfold qval
-        have h1 : Multiplicative.toAdd a ≤ Multiplicative.toAdd b :=
-          Multiplicative.ofAdd_le.mp hab
-        have h2 : (OrderDual.ofDual (Multiplicative.toAdd b) : WithTop ℚ) ≤
-                   OrderDual.ofDual (Multiplicative.toAdd a) := h1
-        exact (WithTop.untop_le_untop_iff _ _).mpr h2
-      exact_mod_cast h_qval
-
-open Classical in
-noncomputable def abs {p : ℕ} [Fact (Nat.Prime p)] : AbsoluteValue 𝕃_[p] ℝ where
-  toFun a := WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v a)
-  map_mul' := by
-    intro a b
-    simp only [Valued.v.map_mul, map_mul, NNReal.coe_mul]
-  nonneg' := fun a => NNReal.coe_nonneg _
-  eq_zero' := by
-    intro a
-    simp only [NNReal.coe_eq_zero, map_eq_zero, Valuation.zero_iff]
-  add_le' := by
-    intro a b
-    have hmono := toNNReal_dual_monotone p
-    refine le_trans ?_ (max_le_add_of_nonneg ?_ ?_)
-    · have h := hmono (Valued.v.map_add a b)
-      simp only at h
-      have hmax := hmono.map_max (a := Valued.v a) (b := Valued.v b)
-      rw [hmax] at h
-      exact h
-    · positivity
-    · positivity
-
-open Classical in
-lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : 𝕃_[p]) :
-  abs a = WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v a) := rfl
-
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField 𝕃_[p] :=
-  WithAbs.normedField abs
-
--- ──────────────────────────────────────────────────────────────────────────
--- REMOVED (orchestrator, iter-002, 2026-05-07): `QpUn_embd_keep_val`
---
--- The original statement (preserved verbatim below) had a sign-convention bug:
--- the cast `Int.castAddHom ℚ` lifted through `WithZero.map'` does NOT negate,
--- but the LHS „valuation of x in ℚᵘⁿ“ uses Mathlib's exponent convention
--- where `Valued.v p = ofAdd(-1)`, while the RHS uses the Hahn-series convention
--- where the support of `ZpUn_embd p` is `{+1}`.  Concretely at `x = p`:
---   LHS = WithZero.map' (Int.castAddHom ℚ) (ofAdd(-1)) = ((-1 : ℚ) : …)
---   RHS = Valued.v (ZpUn_embd p) = ((+1 : ℚ) : …)
--- So the equation reduces to `some (-1) = some (+1)` at the underlying `Option ℚ`
--- level — a literal contradiction.  Verified by `lean_multi_attempt`: `rfl`
--- closes `LHS_at_p = -1` but fails `LHS_at_p = +1`.
---
--- The natural fix is either:
---   (i)  negate before casting, e.g. use `(Int.castAddHom ℚ).comp (-AddMonoidHom.id ℤ)`
---        in place of `Int.castAddHom ℚ`; or
---   (ii) replace the RHS `Valued.v (QpUn_embd x)` by an inverse on the unit group.
---
--- Since this lemma is **unused elsewhere** in the project (grep verified) and
--- the only downstream result that would have depended on it,
--- `QpUn_embd_keep_norm` (line ~4733), was reproved via DVR factorisation that
--- bypasses this lemma entirely (see the comment at L4774 — “Avoids the
--- blocked QpUn_embd_keep_val”), removing it has no effect on the dependency
--- graph.  Full `lake build` after removal succeeded with 0 errors.
---
--- If a future iteration needs the valuation-level statement, restate it with
--- the corrected sign convention and place it BELOW `QpUn_embd_keep_norm` so
--- the DVR helpers are in scope.
---
--- Original (broken) statement preserved here for reference:
---
--- /-
--- theorem QpUn_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
---   ∀ x : ℚᵘⁿ_[p],
---     WithZero.map' (AddMonoidHom.toMultiplicative (Int.castAddHom ℚ)) (Valued.v x) =
---       Valued.v (QpUn_embd x) := by
---   sorry
--- -/
--- ────────────────────────────────────────────────────────────────────────────
-
--- Session 6 helpers for `QpUn_embd_keep_norm` (Tier 2 sub-lemmas).
--- Route: "Factor over DVR" (per `informal/QpUn_embd_keep_norm.md`). Avoids the
--- blocked `QpUn_embd_keep_val` (L3950) entirely — works at the real-valued norm
--- level via DVR factorization `x = algebraMap u * p^n`.
-
-/--
-Support of the canonical expansion of `ZpUn_embd a` is contained in `[0, ∞)`
-for `a : OQpUn p`, `a ≠ 0`. Proof: by contradiction using
-`null_series_no_unit_leading` applied at `q_min < 0` where the coefficient
-`teichmuller(s q_min)` is a unit in `OQpUn p` (since `s q_min ≠ 0` and
-`WittVector.isUnit_of_coeff_zero_ne_zero`). -/
-private lemma support_ZpUn_embd_nonneg {p : ℕ} [Fact (Nat.Prime p)]
-    {a : OQpUn p} (ha : a ≠ 0) :
-    ∀ q ∈ (ZpUn_embd a).support, 0 ≤ q := by
-  classical
-  have h_emb_ne : ZpUn_embd a ≠ 0 := fun h_zero => ha
-    (ZpUn_embd_injective (by simpa using h_zero))
-  set A : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p) := ZpUn_embd a with hA_def
-  set s : ℚ → Fpbar p := (exists_canonical_expansion A).choose.val with hs_def
-  set hspwo : (Function.support s).IsPWO :=
-    (exists_canonical_expansion A).choose.prop with hspwo_def
-  have h_supp : (ZpUn_embd a).support = Function.support s := rfl
-  rw [h_supp]
-  have hmk_eq : (Ideal.Quotient.mk (NullSeriesIdeal p))
-      (LiftedPAdicHahnSeries.from_coeff s hspwo) = A := by
-    have hrel := (exists_canonical_expansion A).choose_spec.1
-    have heq := (Quotient.sound hrel : (Ideal.Quotient.mk (NullSeriesIdeal p)) A.out =
-      (Ideal.Quotient.mk (NullSeriesIdeal p))
-        (LiftedPAdicHahnSeries.from_coeff s hspwo))
-    exact heq.symm.trans (Quotient.out_eq A)
-  have hA_eq : A = (Ideal.Quotient.mk (NullSeriesIdeal p))
-      (HahnSeries.single (0 : ℚ) a) := rfl
-  have h_diff_mem : LiftedPAdicHahnSeries.from_coeff s hspwo -
-      HahnSeries.single (0 : ℚ) a ∈ NullSeriesIdeal p := by
-    apply Ideal.Quotient.eq.mp; rw [hmk_eq, hA_eq]
-  intro q hq
-  by_contra h_neg
-  push_neg at h_neg
-  have hsne : (Function.support s).Nonempty := ⟨q, hq⟩
-  set q_min := hspwo.isWF.min hsne
-  have hq_min_in : q_min ∈ Function.support s := hspwo.isWF.min_mem hsne
-  have hq_min_le : q_min ≤ q := hspwo.isWF.min_le hsne hq
-  have hq_min_neg : q_min < 0 := lt_of_le_of_lt hq_min_le h_neg
-  have hq_min_ne : q_min ≠ 0 := ne_of_lt hq_min_neg
-  have hsq_ne : s q_min ≠ 0 := hq_min_in
-  have hΔ_ne_at_min : (LiftedPAdicHahnSeries.from_coeff s hspwo -
-      HahnSeries.single (0 : ℚ) a).coeff q_min = teichmuller p (s q_min) := by
-    show (LiftedPAdicHahnSeries.from_coeff s hspwo).coeff q_min -
-      (HahnSeries.single (0 : ℚ) a).coeff q_min = teichmuller p (s q_min)
-    rw [HahnSeries.coeff_single_of_ne hq_min_ne]
-    show teichmuller p (s q_min) - 0 = _
-    ring
-  have hΔ_unit : IsUnit ((LiftedPAdicHahnSeries.from_coeff s hspwo -
-      HahnSeries.single (0 : ℚ) a).coeff q_min) := by
-    rw [hΔ_ne_at_min]
-    apply WittVector.isUnit_of_coeff_zero_ne_zero
-    rw [WittVector.teichmuller_coeff_zero]; exact hsq_ne
-  have hΔ_lead : ∀ q' < q_min, (LiftedPAdicHahnSeries.from_coeff s hspwo -
-      HahnSeries.single (0 : ℚ) a).coeff q' = 0 := by
-    intro q' hq'
-    have hq'_neg : q' < 0 := lt_trans hq' hq_min_neg
-    have hq'_ne : q' ≠ 0 := ne_of_lt hq'_neg
-    show (LiftedPAdicHahnSeries.from_coeff s hspwo).coeff q' -
-      (HahnSeries.single (0 : ℚ) a).coeff q' = 0
-    rw [HahnSeries.coeff_single_of_ne hq'_ne]
-    show teichmuller p (s q') - 0 = 0
-    have hq'_not_in : q' ∉ Function.support s := fun hq'_in =>
-      absurd (hspwo.isWF.min_le hsne hq'_in) (not_le.mpr hq')
-    rw [show s q' = 0 from by simpa [Function.mem_support, not_not] using hq'_not_in]
-    rw [WittVector.teichmuller_zero p]; ring
-  exact null_series_no_unit_leading h_diff_mem hΔ_unit hΔ_lead
-
-/-- For `a : OQpUn p`, `Valued.v (ZpUn_embd a) ≤ 1` in
-`Multiplicative (WithTop ℚ)ᵒᵈ`. Direct corollary of `support_ZpUn_embd_nonneg`. -/
-private lemma valued_v_ZpUn_embd_le_one {p : ℕ} [Fact (Nat.Prime p)] (a : OQpUn p) :
-    Valued.v (ZpUn_embd a) ≤ (1 : Multiplicative (WithTop ℚ)ᵒᵈ) := by
-  classical
-  by_cases ha : a = 0
-  · simp [ha, map_zero]
-  have h_emb_ne : ZpUn_embd a ≠ 0 := fun h_zero => ha
-    (ZpUn_embd_injective (by simpa using h_zero))
-  set A := ZpUn_embd a with hA_def
-  have hval_ge : val p A ≥ ((0 : ℚ) : WithTop ℚ) := by
-    have hval_eq : val p A =
-        (((support_IsPWO A).isWF.min (support_nonempty_of_nonzero p A h_emb_ne)) : WithTop ℚ) := by
-      show (if h : A = 0 then (⊤ : WithTop ℚ)
-        else (((support_IsPWO A).isWF.min
-          (support_nonempty_of_nonzero p _ h)) : WithTop ℚ)) = _
-      rw [dif_neg h_emb_ne]
-    rw [hval_eq]
-    set q_min := (support_IsPWO A).isWF.min (support_nonempty_of_nonzero p A h_emb_ne)
-    have hq_min_in : q_min ∈ A.support :=
-      (support_IsPWO A).isWF.min_mem (support_nonempty_of_nonzero p A h_emb_ne)
-    have h_min_ge : 0 ≤ q_min := support_ZpUn_embd_nonneg ha q_min hq_min_in
-    exact_mod_cast h_min_ge
-  -- Goal: Valued.v A ≤ 1 in Multiplicative (WithTop ℚ)ᵒᵈ.
-  -- Valued.v A is def-eq to (val p A : WithTop ℚ) cast via ofAdd ∘ toDual.
-  -- Since (1 : Mult dual) = ofAdd (0 : (WithTop ℚ)ᵒᵈ), the goal reduces to 0 ≤ val p A.
-  have hVal_eq : Valued.v A = ((val p A : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) := rfl
-  rw [hVal_eq]
-  -- Now: ((val p A : WithTop ℚ) : Mult dual) ≤ 1
-  rw [show (1 : Multiplicative (WithTop ℚ)ᵒᵈ) =
-      Multiplicative.ofAdd (0 : (WithTop ℚ)ᵒᵈ) from rfl]
-  rw [show ((val p A : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) =
-      Multiplicative.ofAdd (OrderDual.toDual (val p A)) from rfl]
-  rw [Multiplicative.ofAdd_le]
-  exact hval_ge
-
-/-- The difference `single 1 1 - single 0 p` is a null series, witnessing that
-`(p : OQpUn p) ≡ single 1 (1 : OQpUn p) (mod NullSeriesIdeal p)`. Used to compute
-`val p (ZpUn_embd p) = 1`. -/
-private lemma single_1_1_sub_single_0_p_NullSeries {p : ℕ} [Fact (Nat.Prime p)] :
-    HahnSeries.single (1 : ℚ) (1 : OQpUn p) - HahnSeries.single (0 : ℚ) (p : OQpUn p)
-      ∈ NullSeriesIdeal p := by
-  classical
-  show IsNullSeries _
-  intro g
-  set Δ : LiftedPAdicHahnSeries p :=
-    HahnSeries.single (1 : ℚ) (1 : OQpUn p) - HahnSeries.single (0 : ℚ) (p : OQpUn p)
-    with hΔ_def
-  have hΔ_coeff : ∀ q : ℚ, Δ.coeff q =
-      (if q = 1 then (1 : OQpUn p) else 0) - (if q = 0 then (p : OQpUn p) else 0) := by
-    intro q
-    show (HahnSeries.single (1 : ℚ) (1 : OQpUn p)).coeff q -
-      (HahnSeries.single (0 : ℚ) (p : OQpUn p)).coeff q = _
-    by_cases h0 : q = 0
-    · subst h0
-      rw [HahnSeries.coeff_single_of_ne (show (0 : ℚ) ≠ 1 from by norm_num),
-        HahnSeries.coeff_single_same]
-      simp
-    · by_cases h1 : q = 1
-      · subst h1
-        rw [HahnSeries.coeff_single_same,
-          HahnSeries.coeff_single_of_ne (show (1 : ℚ) ≠ 0 from by norm_num)]
-        simp
-      · rw [HahnSeries.coeff_single_of_ne (by omega : q ≠ 1),
-          HahnSeries.coeff_single_of_ne h0]
-        simp [h0, h1]
-  apply Filter.Tendsto.congr' (f₁ := fun _ => 0) _ tendsto_const_nhds
-  rw [Filter.EventuallyEq]
-  filter_upwards [Filter.eventually_ge_atTop 1] with M hM
-  symm
-  by_cases hg : ∃ k : ℤ, (k : ℚ) = g
-  · obtain ⟨k, hk⟩ := hg
-    set S := Set.Finite.toFinset (finprop Δ g M) with hS_def
-    have hkp : (p : OQpUn p) ≠ 0 := WittVector.p_nonzero p _
-    have hcoeff_ne_0 : Δ.coeff (0 : ℚ) ≠ 0 := by rw [hΔ_coeff]; simp [hkp]
-    have hcoeff_ne_1 : Δ.coeff (1 : ℚ) ≠ 0 := by
-      rw [hΔ_coeff]; simp [show (1 : ℚ) ≠ 0 from by norm_num]
-    have hS_eq : S = ({-k, 1 - k} : Finset ℤ) := by
-      ext n
-      simp only [hS_def, Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.mem_insert,
-        Finset.mem_singleton]
-      constructor
-      · intro ⟨h_le, h_ne⟩
-        by_cases hq0 : (g + (n : ℚ)) = 0
-        · left
-          have : (n : ℚ) = -k := by rw [← hk] at hq0; linarith
-          exact_mod_cast this
-        · by_cases hq1 : (g + (n : ℚ)) = 1
-          · right
-            have : (n : ℚ) = 1 - k := by rw [← hk] at hq1; linarith
-            exact_mod_cast this
-          · rw [hΔ_coeff] at h_ne; simp [hq0, hq1] at h_ne
-      · rintro (hmn | hmn)
-        · refine ⟨?_, ?_⟩
-          · rw [← hk, hmn]; push_cast; linarith
-          · have : g + ((n : ℤ) : ℚ) = 0 := by rw [← hk, hmn]; push_cast; ring
-            rw [this]; exact hcoeff_ne_0
-        · refine ⟨?_, ?_⟩
-          · rw [← hk, hmn]; push_cast
-            have hMQ : (1 : ℚ) ≤ (M : ℚ) := by exact_mod_cast hM
-            linarith
-          · have : g + ((n : ℤ) : ℚ) = 1 := by rw [← hk, hmn]; push_cast; ring
-            rw [this]; exact hcoeff_ne_1
-    have hne : (-k : ℤ) ≠ 1 - k := by omega
-    rw [show (∑ n : S, (p : QpUn p) ^ n.val *
-        algebraMap (OQpUn p) (QpUn p) (Δ.coeff (g + ↑n.val))) =
-        ∑ n ∈ S, (p : QpUn p) ^ n *
-          algebraMap (OQpUn p) (QpUn p) (Δ.coeff (g + n)) from
-      Finset.sum_attach (s := S) (f := fun n : ℤ =>
-        (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (g + n)))]
-    rw [hS_eq, Finset.sum_insert (by simp [hne]), Finset.sum_singleton]
-    have h0 : g + ((-k : ℤ) : ℚ) = 0 := by rw [← hk]; push_cast; ring
-    have h1 : g + ((1 - k : ℤ) : ℚ) = 1 := by rw [← hk]; push_cast; ring
-    rw [h0, h1, hΔ_coeff, hΔ_coeff]
-    simp only [if_true, if_false, if_neg (show (0 : ℚ) ≠ 1 from by norm_num),
-      if_neg (show (1 : ℚ) ≠ 0 from by norm_num)]
-    rw [show ((0 : OQpUn p) - (p : OQpUn p)) = -(p : OQpUn p) from by ring]
-    rw [show ((1 : OQpUn p) - 0) = 1 from by ring, map_neg, map_one]
-    rw [show algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) = (p : QpUn p) from by
-      push_cast; rfl]
-    ring_nf
-    have hp_ne : (p : QpUn p) ≠ 0 := by
-      rw [show (p : QpUn p) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
-        push_cast; rfl]
-      exact fun h_zero => WittVector.p_nonzero p _
-        ((IsFractionRing.injective (OQpUn p) (QpUn p)) (by simpa using h_zero))
-    rw [show ((p : QpUn p) ^ (1 - k) : QpUn p) = (p : QpUn p) ^ (-k) * (p : QpUn p) from by
-      rw [← zpow_add_one₀ hp_ne]; ring_nf]
-    ring
-  · push_neg at hg
-    set S := Set.Finite.toFinset (finprop Δ g M) with hS_def
-    have hS_empty : S = (∅ : Finset ℤ) := by
-      ext n
-      simp only [hS_def, Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.notMem_empty, iff_false]
-      intro ⟨_, hne⟩
-      apply hne; rw [hΔ_coeff]
-      have h0 : g + (n : ℚ) ≠ 0 := fun h => hg (-n) (by push_cast; linarith)
-      have h1 : g + (n : ℚ) ≠ 1 := fun h => hg (1 - n) (by push_cast; linarith)
-      simp [h0, h1]
-    rw [show (∑ n : S, (p : QpUn p) ^ n.val *
-        algebraMap (OQpUn p) (QpUn p) (Δ.coeff (g + ↑n.val))) =
-        ∑ n ∈ S, (p : QpUn p) ^ n *
-          algebraMap (OQpUn p) (QpUn p) (Δ.coeff (g + n)) from
-      Finset.sum_attach (s := S) (f := fun n : ℤ =>
-        (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (g + n)))]
-    rw [hS_empty]; simp
-
-/-- Canonical expansion of `ZpUn_embd p` has support `{1}`, so `val p (ZpUn_embd p) = 1`. -/
-private lemma val_ZpUn_embd_p_eq_one {p : ℕ} [Fact (Nat.Prime p)] :
-    val p (ZpUn_embd (p : OQpUn p)) = ((1 : ℚ) : WithTop ℚ) := by
-  classical
-  set A : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p) := ZpUn_embd (p : OQpUn p) with hA_def
-  set s : ℚ → Fpbar p := Pi.single (1 : ℚ) (1 : Fpbar p) with hs_def
-  have h_one_ne_zero_F : (1 : Fpbar p) ≠ 0 := one_ne_zero
-  have hs_supp : Function.support s = ({(1 : ℚ)} : Set ℚ) :=
-    Pi.support_single_of_ne h_one_ne_zero_F
-  have hs_pwo : (Function.support s).IsPWO := by
-    rw [hs_supp]; exact Set.isPWO_singleton 1
-  have h_from_eq : LiftedPAdicHahnSeries.from_coeff s hs_pwo =
-      HahnSeries.single (1 : ℚ) (1 : OQpUn p) := by
-    apply HahnSeries.ext
-    funext n
-    change (teichmuller p) (s n) = (HahnSeries.single (1 : ℚ) (1 : OQpUn p)).coeff n
-    by_cases hn : n = 1
-    · subst hn
-      rw [hs_def, Pi.single_eq_same, HahnSeries.coeff_single_same]
-      exact map_one (teichmuller p)
-    · rw [hs_def, Pi.single_eq_of_ne (by omega : n ≠ 1),
-        HahnSeries.coeff_single_of_ne (by omega : n ≠ 1)]
-      exact WittVector.teichmuller_zero p
-  have hmk_eq : (Ideal.Quotient.mk (NullSeriesIdeal p))
-      (LiftedPAdicHahnSeries.from_coeff s hs_pwo) = A := by
-    rw [h_from_eq]
-    show (Ideal.Quotient.mk (NullSeriesIdeal p)) (HahnSeries.single (1 : ℚ) (1 : OQpUn p)) =
-      (Ideal.Quotient.mk (NullSeriesIdeal p)) (HahnSeries.single (0 : ℚ) (p : OQpUn p))
-    apply Ideal.Quotient.eq.mpr
-    exact single_1_1_sub_single_0_p_NullSeries
-  have hA_ne : A ≠ 0 := by
-    rw [hA_def]
-    intro h
-    have : (p : OQpUn p) = 0 := by
-      apply ZpUn_embd_injective; simpa [map_zero] using h
-    exact WittVector.p_nonzero p _ this
-  have h_rel : (Ideal.Quotient.ringCon (NullSeriesIdeal p)) A.out
-      (LiftedPAdicHahnSeries.from_coeff s hs_pwo) := by
-    have h_eq_mk : (Ideal.Quotient.mk (NullSeriesIdeal p)) A.out =
-        (Ideal.Quotient.mk (NullSeriesIdeal p))
-          (LiftedPAdicHahnSeries.from_coeff s hs_pwo) := by
-      rw [Ideal.Quotient.mk_out]; exact hmk_eq.symm
-    exact Quotient.exact h_eq_mk
-  have h_choose_eq : (exists_canonical_expansion A).choose = ⟨s, hs_pwo⟩ := by
-    have huniq := (exists_canonical_expansion A).choose_spec.2 ⟨s, hs_pwo⟩
-    exact (huniq h_rel).symm
-  show (if h : A = 0 then (⊤ : WithTop ℚ)
-    else (((support_IsPWO A).isWF.min (support_nonempty_of_nonzero p A h)) : WithTop ℚ)) = _
-  rw [dif_neg hA_ne]
-  have h_supp_A : support (A : 𝕃_[p]) = Function.support s := by
-    show (exists_canonical_expansion A).choose.val.support = Function.support s
-    rw [h_choose_eq]
-  have h_supp_eq : support (A : 𝕃_[p]) = ({(1 : ℚ)} : Set ℚ) := h_supp_A.trans hs_supp
-  suffices h : ∀ (S : Set ℚ) (hwf : S.IsWF) (hne : S.Nonempty), S = ({(1 : ℚ)} : Set ℚ) →
-      (((hwf.min hne) : ℚ) : WithTop ℚ) = ((1 : ℚ) : WithTop ℚ) by
-    apply h _ _ _; exact h_supp_eq
-  intro S hwf hne hS
-  subst hS
-  rw [Set.isWF_min_singleton 1]
-
-/-- For a unit `u : (OQpUn p)ˣ`, `Valued.v (ZpUn_embd u) = 1`. Uses `valued_v_ZpUn_embd_le_one`
-applied to both `u` and `u⁻¹`, together with `val(u) + val(u⁻¹) = val(1) = 0`. -/
-private lemma valued_v_ZpUn_embd_unit {p : ℕ} [Fact (Nat.Prime p)] (u : (OQpUn p)ˣ) :
-    Valued.v (ZpUn_embd (u : OQpUn p)) = (1 : Multiplicative (WithTop ℚ)ᵒᵈ) := by
-  have h1 : Valued.v (ZpUn_embd (u : OQpUn p)) ≤ 1 := valued_v_ZpUn_embd_le_one _
-  have h2 : Valued.v (ZpUn_embd ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)) ≤ 1 := valued_v_ZpUn_embd_le_one _
-  have hprod : Valued.v (ZpUn_embd (u : OQpUn p)) *
-      Valued.v (ZpUn_embd ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)) = 1 := by
-    rw [← Valuation.map_mul, ← map_mul,
-      show (u : OQpUn p) * ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p) = 1 from u.mul_inv,
-      map_one]
-    exact Valuation.map_one _
-  by_contra hne
-  have h1_lt : Valued.v (ZpUn_embd (u : OQpUn p)) < 1 := lt_of_le_of_ne h1 hne
-  have hlt : Valued.v (ZpUn_embd (u : OQpUn p)) *
-      Valued.v (ZpUn_embd ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)) < 1 := by
-    calc _ ≤ Valued.v (ZpUn_embd (u : OQpUn p)) * 1 := mul_le_mul_left' h2 _
-      _ = Valued.v (ZpUn_embd (u : OQpUn p)) := mul_one _
-      _ < 1 := h1_lt
-  exact absurd hprod (ne_of_lt hlt)
-
-/-- DVR factorization on `ℚᵘⁿ_[p]`: every nonzero `x` factors as
-`algebraMap u * p^n` with `u : (OQpUn p)ˣ`, `n : ℤ`. Construction: take
-`n := -((Valued.v x).unzero).toAdd`, `y := x * p^(-n)`, show `‖y‖ = 1`, lift
-via `IsDiscreteValuationRing.exists_lift_of_le_one`, recognize as a unit. -/
-private lemma exists_DVR_factorization {p : ℕ} [Fact (Nat.Prime p)]
-    (x : QpUn p) (hx : x ≠ 0) :
-    ∃ (u : (OQpUn p)ˣ) (n : ℤ),
-      x = algebraMap (OQpUn p) (QpUn p) (u : OQpUn p) * (p : QpUn p)^n := by
-  have hvx_ne : Valued.v x ≠ 0 := by
-    intro h
-    exact hx ((Valuation.zero_iff Valued.v).mp h)
-  set vx : ℤ := -((Valued.v x).unzero hvx_ne).toAdd with hvx_def
-  set y := x * (p : QpUn p)^(-vx) with hy_def
-  have hp_ne : (p : QpUn p) ≠ 0 := by
-    rw [show (p : QpUn p) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by
-      push_cast; rfl]
-    exact fun h_zero => WittVector.p_nonzero p _
-      ((IsFractionRing.injective (OQpUn p) (QpUn p)) (by simpa using h_zero))
-  have hp_val_pow : Valued.v ((p : QpUn p)^(-vx : ℤ)) =
-      ((Multiplicative.ofAdd (vx : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [valued_v_p_zpow]; push_cast; ring_nf
-  have hy_val : Valued.v y = 1 := by
-    rw [hy_def, Valuation.map_mul, hp_val_pow]
-    rw [show Valued.v x = ((Valued.v x).unzero hvx_ne : WithZero _) from
-      (WithZero.coe_unzero hvx_ne).symm]
-    rw [← WithZero.coe_mul]
-    apply congrArg WithZero.coe
-    rw [hvx_def]
-    rw [show Multiplicative.ofAdd (-((Valued.v x).unzero hvx_ne).toAdd : ℤ) =
-        ((Valued.v x).unzero hvx_ne)⁻¹ from by simp]
-    exact mul_inv_cancel _
-  have hy_le : Valued.v y ≤ 1 := le_of_eq hy_val
-  obtain ⟨a, ha_eq⟩ := IsDiscreteValuationRing.exists_lift_of_le_one hy_le
-  have hy_ne : y ≠ 0 := by
-    intro h_zero
-    have : (1 : WithZero (Multiplicative ℤ)) = 0 := by rw [← hy_val, h_zero]; simp
-    exact zero_ne_one this.symm
-  have ha_ne : a ≠ 0 := by
-    intro h_zero; apply hy_ne; rw [← ha_eq, h_zero, map_zero]
-  have ha_isUnit : IsUnit a := by
-    have h_val : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation _ y = 1 := hy_val
-    rw [← ha_eq] at h_val
-    rw [(IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_of_algebraMap] at h_val
-    have hirr : Irreducible (p : OQpUn p) := WittVector.irreducible p
-    have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        Ideal.span {(p : OQpUn p)} := hirr.maximalIdeal_eq
-    have h_int_one := IsDedekindDomain.HeightOneSpectrum.intValuation_eq_one_iff.mp h_val
-    rwa [show (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        IsLocalRing.maximalIdeal (OQpUn p) from rfl,
-      IsLocalRing.notMem_maximalIdeal] at h_int_one
-  obtain ⟨u, hu_eq⟩ := ha_isUnit
-  refine ⟨u, vx, ?_⟩
-  have hx_eq : x = y * (p : QpUn p)^vx := by
-    rw [hy_def, mul_assoc, ← zpow_add₀ hp_ne]; simp
-  rw [hx_eq, ← ha_eq, hu_eq]
-
-/-- The `ZpUn_embd p`-elevated uniformizer equals `QpUn_embd (p : ℚᵘⁿ_[p])` via
-`IsLocalization.map_eq`. -/
-private lemma QpUn_embd_p_eq_ZpUn_embd_p {p : ℕ} [Fact (Nat.Prime p)] :
-    QpUn_embd ((p : ℚᵘⁿ_[p])) = ZpUn_embd (p : OQpUn p) := by
-  rw [show ((p : ℚᵘⁿ_[p])) = algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (p : OQpUn p) from by
-    push_cast; rfl]
-  unfold QpUn_embd IsFractionRing.map
-  exact IsLocalization.map_eq _ _
-
-/-- Functoriality of `QpUn_embd` over integer-level elements: `QpUn_embd ∘ algebraMap
-= algebraMap ∘ ZpUn_embd`. Simplifies to `ZpUn_embd` since algebraMap to a field
-over itself is identity. -/
-private lemma QpUn_embd_algebraMap {p : ℕ} [Fact (Nat.Prime p)] (a : OQpUn p) :
-    QpUn_embd (algebraMap (OQpUn p) (QpUn p) a) = ZpUn_embd a := by
-  unfold QpUn_embd IsFractionRing.map
-  exact IsLocalization.map_eq _ a
-
-theorem QpUn_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ x : ℚᵘⁿ_[p], ‖x‖ = ‖(QpUn_embd x)‖ := by
-  -- Strategy ("Factor over DVR", per informal/QpUn_embd_keep_norm.md):
-  -- For x = 0: both sides = 0. For x ≠ 0: use exists_DVR_factorization to write
-  -- x = algMap u * p^n, push through QpUn_embd (map_mul + map_zpow₀ + algMap-functoriality),
-  -- compute factor-wise norms using valued_v_ZpUn_embd_unit (unit ↦ 1) and
-  -- val_ZpUn_embd_p_eq_one (p ↦ 1/p). Avoids the blocked QpUn_embd_keep_val.
-  intro x
-  by_cases hx : x = 0
-  · simp [hx, map_zero]
-  obtain ⟨u, n, hx_eq⟩ := exists_DVR_factorization x hx
-  have h_embed_unit : QpUn_embd (algebraMap (OQpUn p) (QpUn p) (u : OQpUn p)) =
-      ZpUn_embd (u : OQpUn p) := QpUn_embd_algebraMap _
-  -- Split the norms step by step.
-  have h_split_LHS : ‖x‖ =
-      ‖algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)‖ * ‖(p : ℚᵘⁿ_[p])‖ ^ n := by
-    rw [hx_eq, norm_mul, norm_zpow]
-  have h_split_RHS : ‖(QpUn_embd x)‖ =
-      ‖ZpUn_embd (u : OQpUn p)‖ * ‖ZpUn_embd (p : OQpUn p)‖ ^ n := by
-    rw [hx_eq, map_mul, map_zpow₀, norm_mul, norm_zpow, h_embed_unit,
-      QpUn_embd_p_eq_ZpUn_embd_p]
-  rw [h_split_LHS, h_split_RHS]
-  -- Reduce to two sub-equalities.
-  have h_unit : ‖algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)‖ =
-      ‖ZpUn_embd (u : OQpUn p)‖ := by
-    have h_alg_le : Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) ≤ 1 :=
-      (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one (u : OQpUn p)
-    have h_alg_inv_le : Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p])
-        ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)) ≤ 1 :=
-      (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one
-        ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)
-    have h_alg_prod : Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) *
-        Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)) = 1 := by
-      rw [← Valuation.map_mul, ← map_mul, u.mul_inv, map_one]
-      exact Valuation.map_one _
-    have hLHS : Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) = 1 := by
-      by_contra hne
-      have h_lt : Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) < 1 :=
-        lt_of_le_of_ne h_alg_le hne
-      have h_prod_lt : Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) *
-          Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) ((u⁻¹ : (OQpUn p)ˣ) : OQpUn p)) < 1 := by
-        calc _ ≤ Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) * 1 :=
-              mul_le_mul_left' h_alg_inv_le _
-          _ = Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)) := mul_one _
-          _ < 1 := h_lt
-      exact absurd h_alg_prod (ne_of_lt h_prod_lt)
-    have hRHS : Valued.v (ZpUn_embd (u : OQpUn p)) = 1 := valued_v_ZpUn_embd_unit u
-    have hlhs : ‖algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p)‖ = 1 := by
-      show ((WithZeroMulInt.toNNReal (p_ne_zero p)
-        (Valued.v (algebraMap (OQpUn p) (ℚᵘⁿ_[p]) (u : OQpUn p))) : NNReal) : ℝ) = 1
-      rw [hLHS]; simp
-    have hrhs : ‖ZpUn_embd (u : OQpUn p)‖ = 1 := by
-      have heq : ‖ZpUn_embd (u : OQpUn p)‖ =
-          ((WithZeroRat.toNNReal (pInv_ne_zero p)
-            (Valued.v (ZpUn_embd (u : OQpUn p))) : NNReal) : ℝ) := rfl
-      rw [heq]
-      have h_app : (WithZeroRat.toNNReal (pInv_ne_zero p)
-          (Valued.v (ZpUn_embd (u : OQpUn p))) : NNReal) = 1 := by
-        have := congrArg (WithZeroRat.toNNReal (pInv_ne_zero p)) hRHS
-        simpa using this
-      rw [h_app]; simp
-    rw [hlhs, hrhs]
-  have h_p : ‖(p : ℚᵘⁿ_[p])‖ = ‖ZpUn_embd (p : OQpUn p)‖ := by
-    have hLHS_val : Valued.v ((p : ℚᵘⁿ_[p])) =
-        ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := valued_v_p
-    have hRHS_val : Valued.v (ZpUn_embd (p : OQpUn p)) =
-        (((1 : ℚ) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) := by
-      show ((val p (ZpUn_embd (p : OQpUn p)) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) = _
-      rw [val_ZpUn_embd_p_eq_one]
-    have h_lhs_norm : ‖(p : ℚᵘⁿ_[p])‖ = ((1 : NNReal) / p : NNReal) := by
-      show ((WithZeroMulInt.toNNReal (p_ne_zero p)
-        (Valued.v ((p : ℚᵘⁿ_[p]))) : NNReal) : ℝ) = ((1 : NNReal) / p : NNReal)
-      rw [hLHS_val]
-      rw [show (WithZeroMulInt.toNNReal (p_ne_zero p)
-        (((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _))) =
-        ((p : NNReal)^(-1 : ℤ)) from by simp [WithZeroMulInt.toNNReal]]
-      push_cast; simp [one_div]
-    have h_rhs_norm : ‖ZpUn_embd (p : OQpUn p)‖ = ((1 : NNReal) / p : NNReal) := by
-      show ((WithZeroRat.toNNReal (pInv_ne_zero p)
-        (Valued.v (ZpUn_embd (p : OQpUn p))) : NNReal) : ℝ) = ((1 : NNReal) / p : NNReal)
-      have h_app : (WithZeroRat.toNNReal (pInv_ne_zero p)
-          (Valued.v (ZpUn_embd (p : OQpUn p))) : NNReal) =
-          WithZeroRat.toNNReal (pInv_ne_zero p)
-            ((((1 : ℚ) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ)) := by
-        have := congrArg (WithZeroRat.toNNReal (pInv_ne_zero p)) hRHS_val
-        simpa using this
-      rw [h_app]
-      have h_ne : (((1 : ℚ) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) ≠
-          (0 : Multiplicative (WithTop ℚ)ᵒᵈ) := by
-        intro h
-        have h1 : (((1 : ℚ) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) =
-            (((⊤ : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ)) := h
-        have : ((1 : ℚ) : WithTop ℚ) = ⊤ :=
-          congrArg (OrderDual.ofDual ∘ Multiplicative.toAdd) h1
-        exact WithTop.coe_ne_top this
-      rw [withZeroRat_toNNReal_eq_rpow_qval _ _ h_ne]
-      have hqval : qval (((1 : ℚ) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ) h_ne = 1 := by
-        unfold qval
-        show (OrderDual.ofDual (Multiplicative.toAdd
-          (((1 : ℚ) : WithTop ℚ) : Multiplicative (WithTop ℚ)ᵒᵈ)) : WithTop ℚ).untop _ = 1
-        rfl
-      rw [hqval]; push_cast; simp [one_div]
-    rw [h_lhs_norm, h_rhs_norm]
-  rw [h_unit, h_p]
-
--- Helper absolute values for the spectral-norm uniqueness argument below.
--- `f_std` is the standard norm on `ℂ_[p]`; `f_cmp` is the norm composed with `Cp_embd`.
--- Both extend the norm on `ℚᵘⁿ_[p]`, so by `spectralNorm_unique_field_norm_ext`
--- they both equal the spectral norm, hence each other.
-private noncomputable def f_std (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℂ_[p] ℝ where
-  toFun := fun y => ‖y‖
-  map_mul' := norm_mul
-  nonneg' := norm_nonneg
-  eq_zero' := fun a => norm_eq_zero
-  add_le' := norm_add_le
-
-private noncomputable def f_cmp (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℂ_[p] ℝ where
-  toFun := fun y => ‖Cp_embd y‖
-  map_mul' := fun a b => by simp only [map_mul, norm_mul]
-  nonneg' := fun a => norm_nonneg _
-  eq_zero' := fun a => by
-    simp only [norm_eq_zero, ne_eq]
-    refine ⟨fun h => ?_, fun h => by rw [h]; exact map_zero _⟩
-    have h0 : Cp_embd a = Cp_embd 0 := by rw [h, map_zero]
-    exact (Cp_embd : ℂ_[p] →+* 𝕃_[p]).injective h0
-  add_le' := fun a b => by simp only [map_add]; exact norm_add_le _ _
-
--- Helpers split out so the kernel's WHNF type-checker can handle each
--- piece within default heartbeat budgets.
-private lemma std_norm_compat_algebraMap (p : ℕ) [Fact (Nat.Prime p)] :
-    ∀ x : ℚᵘⁿ_[p], f_std p ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x) = ‖x‖ := by
-  intro x
-  change ‖(algebraMap ℚᵘⁿ_[p] ℂ_[p]) x‖ = ‖x‖
-  rw [show (algebraMap ℚᵘⁿ_[p] ℂ_[p]) x = QpUn.embd_Cp x from rfl]
-  rw [← QpUn.embd_Cp_keep_norm p x]
-
-private lemma cmp_norm_compat_algebraMap (p : ℕ) [Fact (Nat.Prime p)] :
-    ∀ x : ℚᵘⁿ_[p], f_cmp p ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x) = ‖x‖ := by
-  intro x
-  change ‖Cp_embd ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x)‖ = ‖x‖
-  have h_cp_alg : (Cp_embd : ℂ_[p] →+* 𝕃_[p]) ((algebraMap ℚᵘⁿ_[p] ℂ_[p]) x) =
-      (algebraMap ℚᵘⁿ_[p] 𝕃_[p]) x := alg_Cp_embd.commutes x
-  rw [h_cp_alg]
-  show ‖(QpUn_embd x : 𝕃_[p])‖ = ‖x‖
-  rw [← QpUn_embd_keep_norm p x]
-
--- maxHeartbeats raised: `spectralNorm_unique_field_norm_ext` unfolds through ℂ_[p]'s
--- nontrivially-normed/ultrametric/complete-space structure over ℚᵘⁿ_[p].
-private lemma f_std_eq_spectralNorm (p : ℕ) [Fact (Nat.Prime p)] :
-    ∀ y : ℂ_[p], f_std p y = spectralNorm ℚᵘⁿ_[p] ℂ_[p] y := by
-  haveI hCp_alg : Algebra.IsAlgebraic ℚᵘⁿ_[p] ℂ_[p] := IsAlgClosure.isAlgebraic
-  intro y
-  have := std_norm_compat_algebraMap p
-  haveI : NontriviallyNormedField ℚᵘⁿ_[p] := sorry
-  haveI : Algebra ℚᵘⁿ_[p] ℂ_[p] := sorry
-  have := @spectralNorm_unique_field_norm_ext ℚᵘⁿ_[p] _ ℂ_[p] _ _ _ _
-  sorry
-  --exact spectralNorm_unique_field_norm_ext (std_norm_compat_algebraMap p)
-
--- maxHeartbeats raised: same reason as `f_std_eq_spectralNorm` above.
-private lemma f_cmp_eq_spectralNorm (p : ℕ) [Fact (Nat.Prime p)] :
-    ∀ y : ℂ_[p], f_cmp p y = spectralNorm ℚᵘⁿ_[p] ℂ_[p] y := by
-  haveI hCp_alg : Algebra.IsAlgebraic ℚᵘⁿ_[p] ℂ_[p] := IsAlgClosure.isAlgebraic
-  sorry
-  --exact spectralNorm_unique_field_norm_ext (cmp_norm_compat_algebraMap p)
-
-theorem Cp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℂ_[p], ‖y‖ = ‖(Cp_embd y)‖ := by
-  -- Strategy: Use spectral-norm uniqueness (`spectralNorm_unique_field_norm_ext`).
-  -- ℂ_[p] is an algebraic closure of ℚᵘⁿ_[p] (`IsAlgClosure ℚᵘⁿ_[p] ℂ_[p]` from
-  -- WittVector.lean L196), which gives `Algebra.IsAlgebraic ℚᵘⁿ_[p] ℂ_[p]`.
-  -- ℚᵘⁿ_[p] is a `NontriviallyNormedField` with `IsUltrametricDist` and `CompleteSpace`,
-  -- so on ℂ_[p] there is a unique norm extension of ‖·‖ on ℚᵘⁿ_[p] (up to equality),
-  -- namely the spectral norm. Both `f_std` and `f_cmp` extend the norm on ℚᵘⁿ_[p]
-  -- (the former by `embd_Cp_keep_norm`, the latter by `QpUn_embd_keep_norm` combined
-  -- with `alg_Cp_embd.commutes`). Hence both equal the spectral norm, and therefore
-  -- equal each other.
-  intro y
-  calc ‖y‖ = f_std p y := rfl
-    _ = spectralNorm ℚᵘⁿ_[p] ℂ_[p] y := f_std_eq_spectralNorm p y
-    _ = f_cmp p y := (f_cmp_eq_spectralNorm p y).symm
-    _ = ‖Cp_embd y‖ := rfl
-
-theorem Cp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℂ_[p],
-    Valued.v y =
-      WithZeroRat.toNNReal (pInv_ne_zero p) (Valued.v (Cp_embd y)) := by
-  intro y
-  have h := Cp_embd_keep_norm p y
-  change ((Valued.v y : NNReal) : ℝ) = abs (Cp_embd y) at h
-  simp [abs_def] at h
-  convert h using 2
-  simp [one_div]
-
-def IsHyperAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Prop :=
-  (∃ T : ℕ, ∀ q ∈ x.support, ∃ k : ℕ, (T * (p ^ k) * q).isInt) ∧
-  (Set.image x.coeff x.support).Finite
-
-def HyperAlgebraicSubfield (p : ℕ) [Fact (Nat.Prime p)] : Subfield (𝕃_[p]) where
-  carrier := {x | IsHyperAlgebraic x}
-  zero_mem' := by sorry
-  one_mem' := by sorry
-  add_mem' := by sorry
-  mul_mem' := by sorry
-  neg_mem' := by sorry
-  inv_mem' := by sorry
-
-theorem HyperAlgebraicSubfield_isAlgClosed (p : ℕ) [Fact (Nat.Prime p)] :
-  IsAlgClosed (HyperAlgebraicSubfield p) := by
-  sorry
-
-theorem HyperAlgebraicSubfield_include_Qp (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ x : ℚ_[p], IsHyperAlgebraic x.to_QpUn.to_Lp := by
-  sorry
-
-theorem HyperAlgebraicSubfield_include_PadicAlgCl (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ x : (PadicAlgCl p), IsHyperAlgebraic (Cp_embd (p := p) x) := by
-  sorry
--/
 end pAdicHahnSeries
 end Poonen1993

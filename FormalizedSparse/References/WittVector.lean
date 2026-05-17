@@ -5,10 +5,7 @@ import Mathlib.RingTheory.Valuation.Discrete.Basic
 import Mathlib.RingTheory.WittVector.Compare
 import Mathlib.RingTheory.WittVector.DiscreteValuationRing
 import Mathlib.RingTheory.WittVector.Teichmuller
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+
 open WittVector
 
 -- The algebraic closure of F_p
@@ -75,8 +72,15 @@ lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
   WithAbs.normedField (abs p)
 
--- ℚᵘⁿ_[p] is complete with respect to the p-adic valuation defined above.
-instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by admit
+/- USER: This is a consequence of the general fact that the fraction field of of a complete discrete valuation ring is still complete. You should try this approach.
+
+Another approach is to use `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff` in Mathlib, which, roughly speaking, says that every element in the ring of Wiit vectors can be expanded into the form ∑_{i=0}^∞ [x_i]p^i. Although the uniqueness of such expansion is not available yet, but we do not nned it for the proof. Now, as the fraction field of the ring of Witt vectors, every element in ℚᵘⁿ_[p] can be written as ∑_{i=N}^∞[x_i]p^i for some N ∈ ℤ. Then the Cauchy sequence of partial sums of this series converges to the element, which shows that ℚᵘⁿ_[p] is complete. This proof shold be similar to the proof of completeness of the field of formal laurent series k((T)) with respect to the T-adic valuation.
+
+-/
+instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
+  unfold QpUn OQpUn
+
+  admit
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p].
 noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] :=
@@ -118,7 +122,7 @@ lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
         rw [PadicInt.val_mkUnits]
       rw [h1, hy_def, mul_assoc, ← zpow_add₀ hp_ne]; simp
     set vx := x.valuation with hvx
-    show ((Multiplicative.ofAdd (-vx : ℤ) : Multiplicative ℤ) :
+    change ((Multiplicative.ofAdd (-vx : ℤ) : Multiplicative ℤ) :
         WithZero (Multiplicative ℤ)) = _
     rw [hu_eq, map_mul, map_zpow₀, Valuation.map_mul, map_zpow₀]
     have hQp : Qp_embd ((p : ℚ_[p])) = ((p : ℕ) : ℚᵘⁿ_[p]) := by simp [Qp_embd]
@@ -181,7 +185,8 @@ lemma Qp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   rw [show ‖(Qp_embd x : ℚᵘⁿ_[p])‖ = QpUn.abs p (Qp_embd x) by rfl]
   simp [QpUn.abs_def, Qp_embd_keep_val p x]
 
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
+  Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
     hom := WithZeroMulInt.toNNReal (p_ne_zero p)
     strictMono' := by
       have hp1 : (1 : NNReal) < p := by
@@ -199,42 +204,11 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne (Value
         simp [Padic.mulValuation_toFun, hp_ne]
     }
 
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NontriviallyNormedField ℚᵘⁿ_[p] := Valued.toNontriviallyNormedField
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NontriviallyNormedField ℚᵘⁿ_[p] :=
+  Valued.toNontriviallyNormedField
 
 -- View ℚᵘⁿ_[p] as an algebra over ℚ_[p] via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘⁿ_[p]) := (Qp_embd).toAlgebra
-
--- There exists ℚ_[p]-embeddings from ℚᵘⁿ_[p] to ℂ_[p], which is defined as the morphism of
--- ℚ_[p]-algebras.
-def alg_embd_Cp (p : ℕ) [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →ₐ[ℚ_[p]] ℂ_[p] := by admit
-
--- The embedding from ℚᵘⁿ_[p] to ℂ_[p] as a field homomorphism.
-noncomputable abbrev embd_Cp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* ℂ_[p] :=
-  (alg_embd_Cp p).toRingHom
-
--- ℂ_[p] as ℚᵘⁿ_[p]-algebra via the embedding defined above.
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] ℂ_[p] := (embd_Cp).toAlgebra
-
--- The composition of the embedding from ℚ_[p] to ℚᵘⁿ_[p] and that from ℚᵘⁿ_[p] to ℂ_[p] is
--- exactly the embedding from ℚ_[p] to ℂ_[p] that defined in `Mathlib.NumberTheory.Padics.Complex`
-theorem embd_compatible (p : ℕ) [Fact (Nat.Prime p)] :
-  algebraMap ℚ_[p] ℂ_[p] = embd_Cp.comp Qp_embd := by
-  ext x
-  exact ((alg_embd_Cp p).commutes x).symm
-
--- The embedding from ℚᵘⁿ_[p] to ℂ_[p] keeps the valuation.
-lemma embd_Cp_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℚᵘⁿ_[p], WithZeroMulInt.toNNReal (p_ne_zero p)
-    (Valued.v y) = Valued.v (embd_Cp y) := by admit
-
-lemma embd_Cp_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ y : ℚᵘⁿ_[p], ‖y‖ = ‖(embd_Cp y)‖ := by
-  intro y
-  rw [show ‖y‖ = QpUn.abs p y by rfl]
-  rw [PadicComplex.norm_def, Valued.norm]
-  change ((WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v y) : NNReal) : ℝ) =
-    ((Valued.v (embd_Cp y) : NNReal) : ℝ)
-  exact congrArg (fun z : NNReal => (z : ℝ)) (embd_Cp_keep_val p y)
 
 end QpUn
 
