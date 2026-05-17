@@ -4352,6 +4352,12 @@ noncomputable def QpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+*
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] 𝕃_[p] := QpUn_embd.toAlgebra
 
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] 𝕃_[p] :=
+  (QpUn_embd.comp QpUn.Qp_embd).toAlgebra
+
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : IsScalarTower ℚ_[p] ℚᵘⁿ_[p] 𝕃_[p] :=
+  IsScalarTower.of_algebraMap_smul fun _ ↦ congrFun rfl
+
 end pAdicHahnSeries
 end Poonen1993
 
@@ -4365,9 +4371,18 @@ end QpUn
 namespace Poonen1993
 namespace pAdicHahnSeries
 
-/-USER: This is hard. Just ignore this. Mark this file as completed.
+lemma alg_QpUn_of_alg_Qp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) :
+  IsAlgebraic ℚ_[p] f → IsAlgebraic ℚᵘⁿ_[p] f := by
+  intro h
+  simpa using h.tower_top (ℚᵘⁿ_[p])
+
+/- USER : This follows from an induction on the card of f.support:
+If f.support = {q}, then f = [a_q] p^q. If we set q =a/b with a b integers, then f is a root of the polynomial X^b-[a_q]^b X^a, which is in ℚᵘⁿ_[p][X].
+The induction step follows from the fact that the sum of algebraic elements is still algebraic.
 -/
-instance (p : ℕ) [Fact (Nat.Prime p)] : IsAlgClosed (𝕃_[p]) := by sorry
+lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.support.Finite) :
+  IsAlgebraic ℚᵘⁿ_[p] f := sorry
+
 
 end pAdicHahnSeries
 end Poonen1993
