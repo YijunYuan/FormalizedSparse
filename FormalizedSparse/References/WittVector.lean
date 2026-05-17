@@ -103,9 +103,7 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
           rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
             (WittVector.p_nonzero p _) hpe]
           rfl
-        first
-        | (rw [hp_val]; decide)
-        | (rw [hp_val]; decide) }
+        rw [hp_val]; decide }
   -- Step 1: use `Valued.toNormedField` so that the NormedField's UniformSpace coincides
   -- with the Valued one (avoids the clash with the file-level `WithAbs.normedField (abs p)`).
   letI nfd : NormedField (ℚᵘⁿ_[p]) :=
@@ -119,7 +117,8 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
   -- Mathematical idea: this set equals the image of `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]` (since
   -- `ℤᵘⁿ_[p]` is a DVR and `ℚᵘⁿ_[p]` is its fraction field). The image is a closed subset
   -- (`Valued.isClosed_integer`) and is uniformly isomorphic to `ℤᵘⁿ_[p] = WittVector p 𝔽ᵃ_[p]`.
-  -- The Witt vector ring is `IsAdicComplete (Ideal.span {p})` (`WittVector.isAdicCompleteIdealSpanP`),
+  -- The Witt vector ring is `IsAdicComplete (Ideal.span {p})`
+  -- (`WittVector.isAdicCompleteIdealSpanP`),
   -- and the adic topology matches the valuation topology on `Valued.integer` (the maximal ideal
   -- of `WittVector p 𝔽ᵃ_[p]` is `Ideal.span {p}` by `Irreducible.maximalIdeal_eq` together with
   -- `WittVector.irreducible`). Sequential completeness from `IsPrecomplete` therefore transports

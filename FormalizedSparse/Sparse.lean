@@ -2390,7 +2390,7 @@ lemma indicatorSeries_IsP (p : ℕ) [Fact (Nat.Prime p)] (A : Set ℕ) (hA_fin :
   · exact (Fact.out : Nat.Prime p).one_lt
   · exact (Fact.out : Nat.Prime p).pos
 
-lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ)
+lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite) (hA0 : ∀ n, 0 ∉ A n)
 (hAsup : ∃ K : ℕ, (∀ n, (hA3 n).toFinset.card ≤ K) ∧
@@ -2933,6 +2933,82 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
     have h_eq : m (perm i) = ι_index i := hperm_eq i
     rw [hm_eq (perm i), h_eq]
 
-/- USER: The aobve are your only goals. You do NOT need to autoformalize or proof anything
-else in Sparse.pdf.-/
+lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ+)
+(hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
+(hA3 : ∀ n, (A n).Finite)
+(hAsup : ∃ K : ℕ, (∀ n, (hA3 n).toFinset.card ≤ K) ∧
+          {n | (hA3 n).toFinset.card = K}.Infinite) :
+  IsSparse p {∑ r ∈ (hA3 i).toFinset, (p : ℚ) ^ (-(r: ℤ)) | i : ℕ } := by
+  classical
+  let B : ℕ → Set ℕ := fun n => Subtype.val '' A n
+  have hB1 : ∀ n, (B n).Nonempty := by
+    intro n
+    rcases hA1 n with ⟨a, ha⟩
+    exact ⟨a, ⟨a, ha, rfl⟩⟩
+  have hB2 : ∀ i j, (B i) ∩ (B j) ≠ ∅ → i = j := by
+    intro i j hij
+    apply hA2 i j
+    rw [← Set.nonempty_iff_ne_empty]
+    rcases Set.nonempty_iff_ne_empty.mpr hij with ⟨x, hx, hx'⟩
+    rcases hx with ⟨a, ha, rfl⟩
+    rcases hx' with ⟨b, hb, hab⟩
+    refine ⟨a, ha, ?_⟩
+    exact PNat.coe_injective hab ▸ hb
+  have hB3 : ∀ n, (B n).Finite := by
+    intro n
+    exact (hA3 n).image Subtype.val
+  have hB0 : ∀ n, 0 ∉ B n := by
+    intro n h0
+    rcases h0 with ⟨a, _, ha⟩
+    exact Nat.ne_of_gt a.2 ha
+  have hcard_eq : ∀ n, (hB3 n).toFinset.card = (hA3 n).toFinset.card := by
+    intro n
+    symm
+    refine Finset.card_bij (fun a _ => (a : ℕ)) ?_ ?_ ?_
+    · intro a ha
+      simp only [Set.Finite.mem_toFinset, B]
+      exact ⟨a, by simpa using ha, rfl⟩
+    · intro a₁ _ a₂ _ h
+      exact PNat.coe_injective h
+    · intro b hb
+      simp only [Set.Finite.mem_toFinset, B] at hb
+      rcases hb with ⟨a, ha, rfl⟩
+      exact ⟨a, by simpa using ha, rfl⟩
+  have hBsup : ∃ K : ℕ, (∀ n, (hB3 n).toFinset.card ≤ K) ∧
+      {n | (hB3 n).toFinset.card = K}.Infinite := by
+    rcases hAsup with ⟨K, hK, hKinf⟩
+    refine ⟨K, ?_, ?_⟩
+    · intro n
+      rw [hcard_eq n]
+      exact hK n
+    · have hEq : {n | (hB3 n).toFinset.card = K} = {n | (hA3 n).toFinset.card = K} := by
+        ext n
+        simp [hcard_eq n]
+      simpa [hEq] using hKinf
+  have hsum_eq : ∀ i,
+      ∑ r ∈ (hB3 i).toFinset, (p : ℚ) ^ (-(r : ℤ)) =
+        ∑ r ∈ (hA3 i).toFinset, (p : ℚ) ^ (-(r : ℤ)) := by
+    intro i
+    symm
+    refine Finset.sum_bij (fun a _ => (a : ℕ)) ?_ ?_ ?_ ?_
+    · intro a ha
+      simp only [Set.Finite.mem_toFinset, B]
+      exact ⟨a, by simpa using ha, rfl⟩
+    · intro a₁ _ a₂ _ h
+      exact PNat.coe_injective h
+    · intro b hb
+      simp only [Set.Finite.mem_toFinset, B] at hb
+      rcases hb with ⟨a, ha, rfl⟩
+      exact ⟨a, by simpa using ha, rfl⟩
+    · intro a _
+      rfl
+  have h0 := IsSparse_of_digit_disjoint₀ p B hB1 hB2 hB3 hB0 hBsup
+  convert h0 using 1
+  ext q
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨i, hsum_eq i⟩
+  · rintro ⟨i, rfl⟩
+    exact ⟨i, (hsum_eq i).symm⟩
+
 end Sparse

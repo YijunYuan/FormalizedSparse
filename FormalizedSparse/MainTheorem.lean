@@ -5172,7 +5172,7 @@ private lemma sparse_contradiction_engine
 end MainTheorem
 
 open MainTheorem in
-theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
+theorem main_theorem₀ (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
 (S : Set (DigitSeries)) (hS : ∀ f ∈ S, f.IsP p)
 (hS : ∃ c : PNat, ∃ D : Set ℕ+, D.Infinite ∧ ∀ n ∈ D, IsCNSparse p c n S hS)
 (hf2 : IsRepModZ ((DigitSeries.norm p) '' S) {-1 * T * q | q ∈ f.support}) :
@@ -5210,3 +5210,13 @@ theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
   -- Build the lift data and apply the engine.
   have lift_data := exists_FhatData f T hS hf2
   exact sparse_contradiction_engine (hcD n hnD) lift_data hP2 hP1 hP3
+
+theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
+(W : Set ℚ) (hW1 : W ≠ {0}) (hW2 : IsSparse p W)
+(hf2 : IsRepModZ W {-1 * T * q | q ∈ f.support}) :
+  ¬ IsAlgebraic ℚᵘⁿ_[p] f := by
+  rw [IsSparse_iff_IsCNSparse] at hW2
+  · rcases hW2 with ⟨S, hSP, hS, c, D, hD1, hD2⟩
+    apply main_theorem₀ p f T S hSP ⟨c, D, hD1, hD2⟩
+    rwa [hS]
+  · exact hW1
