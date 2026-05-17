@@ -78,8 +78,33 @@ Another approach is to use `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`
 
 -/
 instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
-  unfold QpUn OQpUn
-
+  -- Strategy: reduce `CompleteSpace ℚᵘⁿ_[p]` to `IsComplete (Valued.v.integer)`, then
+  -- use that this integer subring is isomorphic to the IsAdicComplete `ℤᵘⁿ_[p]`.
+  -- Step 1: use `Valued.toNormedField` so that the NormedField's UniformSpace coincides
+  -- with the Valued one (avoids the clash with the file-level `WithAbs.normedField (abs p)`).
+  letI nfd : NormedField (ℚᵘⁿ_[p]) :=
+    Valued.toNormedField (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
+  -- Step 2: by `NormedField.completeSpace_iff_isComplete_closedBall`, it suffices to show the
+  -- unit closed ball is complete.
+  refine NormedField.completeSpace_iff_isComplete_closedBall.mpr ?_
+  -- Step 3: the unit closed ball is exactly the valuation-integer subring (as a set).
+  rw [← Valued.toNormedField.setOf_mem_integer_eq_closedBall]
+  -- Step 4: show that `{x | x ∈ Valued.v.integer}` is complete.
+  -- Mathematical idea: this set equals the image of `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]` (since
+  -- `ℤᵘⁿ_[p]` is a DVR and `ℚᵘⁿ_[p]` is its fraction field). The image is a closed subset
+  -- (`Valued.isClosed_integer`) and is uniformly isomorphic to `ℤᵘⁿ_[p] = WittVector p 𝔽ᵃ_[p]`.
+  -- The Witt vector ring is `IsAdicComplete (Ideal.span {p})` (`WittVector.isAdicCompleteIdealSpanP`),
+  -- and the adic topology matches the valuation topology on `Valued.integer` (the maximal ideal
+  -- of `WittVector p 𝔽ᵃ_[p]` is `Ideal.span {p}` by `Irreducible.maximalIdeal_eq` together with
+  -- `WittVector.irreducible`). Sequential completeness from `IsPrecomplete` therefore transports
+  -- to filter completeness of the integer subring.
+  --
+  -- Formalizing the uniform-equivalence + transport step requires installing a UniformSpace
+  -- instance on `WittVector p 𝔽ᵃ_[p]` whose uniformity is the `(Ideal.span {p})`-adic one and
+  -- verifying it matches the subspace uniformity inherited from `ℚᵘⁿ_[p]`. This bridge is
+  -- substantial and is left as the residual gap below. The alternative Teichmüller-series
+  -- approach (`dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`) reduces to essentially the
+  -- same convergence argument.
   admit
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p].

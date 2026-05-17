@@ -1849,9 +1849,9 @@ lemma DigitSeries.pDigitSum_norm_eq (p : ℕ) [Fact (Nat.Prime p)]
     rw [hsupp_eq]
     rfl
   congr 1
-  show ∑ n ∈ hsupp_fin.toFinset, (decDigits p (f.norm p) n).val = Sparse.DigitSeries.Sigma f
+  change ∑ n ∈ hsupp_fin.toFinset, (decDigits p (f.norm p) n).val = Sparse.DigitSeries.Sigma f
   rw [hfsupp_eq]
-  show ∑ i ∈ f.fin_supp.toFinset, (decDigits p (f.norm p) i).val =
+  change ∑ i ∈ f.fin_supp.toFinset, (decDigits p (f.norm p) i).val =
         ∑ i ∈ f.fin_supp.toFinset, f i
   refine Finset.sum_congr rfl (fun i _ => hbridge i)
 
@@ -1878,12 +1878,12 @@ lemma DigitSeries.Sigma_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : �
       constructor
       · intro h hz
         apply h
-        show (decDigits p q i).val = 0
+        change (decDigits p q i).val = 0
         rw [hz]; rfl
       · intro h hz
         apply h
         exact Fin.ext hz
-    show ∑ i ∈ (DigitSeries.ofRat p q hq).fin_supp.toFinset,
+    change ∑ i ∈ (DigitSeries.ofRat p q hq).fin_supp.toFinset,
             (DigitSeries.ofRat p q hq : ℕ+ → ℕ) i =
           ∑ n ∈ hfin.toFinset, (decDigits p q n).val
     rw [hsupport_eq]
@@ -1978,7 +1978,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
           have hofRat_zero : DigitSeries.ofRat p q hq_fin_q = 0 := by
             ext n
             change (DigitSeries.ofRat p q hq_fin_q).toFun n = (0 : DigitSeries).toFun n
-            show (decDigits p q n).val = 0
+            change (decDigits p q n).val = 0
             -- Use Sigma = 0: support is empty
             by_contra hne
             have hn_in : n ∈ (DigitSeries.ofRat p q hq_fin_q).fin_supp.toFinset := by
@@ -1991,7 +1991,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
             have hfn_pos : 0 < (DigitSeries.ofRat p q hq_fin_q : ℕ+ → ℕ) n :=
               Nat.pos_of_ne_zero hne
             have hSig_pos : 0 < (DigitSeries.ofRat p q hq_fin_q).Sigma := by
-              show 0 < ∑ i ∈ (DigitSeries.ofRat p q hq_fin_q).fin_supp.toFinset,
+              change 0 < ∑ i ∈ (DigitSeries.ofRat p q hq_fin_q).fin_supp.toFinset,
                   (DigitSeries.ofRat p q hq_fin_q : ℕ+ → ℕ) i
               exact Finset.sum_pos' (fun _ _ => Nat.zero_le _) ⟨n, hn_in, hfn_pos⟩
             rw [hSig_nat] at hSig_pos
@@ -2027,7 +2027,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
           have hle : pDigitSum p q ≤ dom p W := by
             unfold dom; exact le_sSup ⟨q, hq, rfl⟩
           rw [hSig, hkeq] at hle
-          show (DigitSeries.ofRat p q (hq_finite q hq)).Sigma ≤ (⟨k, _⟩ : ℕ+).val
+          change (DigitSeries.ofRat p q (hq_finite q hq)).Sigma ≤ (⟨k, _⟩ : ℕ+).val
           exact_mod_cast hle
         · -- ∃ d' : Fin n → S with the IsCNSparse conditions
           /- Translate d_orig : Fin n → Dom p W to d' : Fin n → S via ofRat. -/
@@ -2045,7 +2045,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
                 ((DigitSeries.ofRat p (d_orig i).val
                     (hq_finite (d_orig i).val (d_orig i).property.1)).Sigma : WithTop ℕ) =
                   ((k : ℕ) : WithTop ℕ) := hSig.symm.trans hPS_chain
-            show (DigitSeries.ofRat p (d_orig i).val
+            change (DigitSeries.ofRat p (d_orig i).val
                     (hq_finite (d_orig i).val (d_orig i).property.1)).Sigma = (⟨k, _⟩ : ℕ+).val
             exact_mod_cast hFinal
           · -- (∑ i, (d' i).val).IsP p
@@ -2053,7 +2053,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
             /- (d' i).val = ofRat p (d_orig i).val _; at position pos this is
                (decDigits p (d_orig i).val pos).val. Sum = hnoCarry pos. -/
             rw [DigitSeries.sum_apply]
-            show ∑ j : Fin (n : ℕ),
+            change ∑ j : Fin (n : ℕ),
                 (DigitSeries.ofRat p (d_orig j).val
                   (hq_finite (d_orig j).val (d_orig j).property.1) : ℕ+ → ℕ) pos < p
             have hsimp : ∀ j : Fin (n : ℕ),
@@ -2108,7 +2108,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
                   (DigitSeries.ofRat p (d_orig j).val
                     (hq_finite (d_orig j).val (d_orig j).property.1) : ℕ+ → ℕ) pos =
                     (decDigits p (d_orig j).val pos).val := fun _ => rfl
-              show ∑ j : Fin (n : ℕ),
+              change ∑ j : Fin (n : ℕ),
                   (DigitSeries.ofRat p (d_orig j).val
                     (hq_finite (d_orig j).val (d_orig j).property.1) : ℕ+ → ℕ) pos < p
               simp_rw [hsimp]
@@ -2200,7 +2200,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
               -- (e_orig (perm i)).val = (e (perm i)).val.norm p
               have h1 : (d_orig i).val = (e_orig (perm i)).val := by
                 exact congrArg Subtype.val (hperm i)
-              show (d_orig i).val = (e (perm i)).val.norm p
+              change (d_orig i).val = (e (perm i)).val.norm p
               exact h1
             exact DigitSeries.IsP_norm_injective h_d'IsP h_ePiP h_norm_eq
   · -- Backward direction: ∃ S, ... → IsSparse
@@ -2273,7 +2273,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
            By hdIsP : (∑ j, (d j).val).IsP p, this sum is < p. -/
         have hbridge : ∀ j : Fin n, (decDigits p (d' j).val i).val = (d j).val i := by
           intro j
-          show (decDigits p ((d j).val.norm p) i).val = (d j).val i
+          change (decDigits p ((d j).val.norm p) i).val = (d j).val i
           exact DigitSeries.decDigits_norm p (d j).val (hS _ (d j).property) i
         calc ∑ j : Fin n, (decDigits p (d' j).val i).val
             = ∑ j : Fin n, (d j).val i := Finset.sum_congr rfl (fun j _ => hbridge j)
@@ -2314,10 +2314,10 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
         refine ⟨perm, ?_⟩
         intro i
         apply Subtype.ext
-        show (d i).val.norm p = (e' (perm i)).val
+        change (d i).val.norm p = (e' (perm i)).val
         have hval_eq : (d i).val = (g_pkg (perm i)).val := congrArg Subtype.val (hperm i)
         rw [hval_eq]
-        show (g (perm i)).norm p = (e' (perm i)).val
+        change (g (perm i)).norm p = (e' (perm i)).val
         exact hg_norm (perm i)
 
 /- USER: The first assertion of Proposition 5.3 of Sparse.pdf
@@ -2366,9 +2366,9 @@ noncomputable def indicatorSeries (A : Set ℕ) (hA_fin : A.Finite) : DigitSerie
       classical
       simp only [Function.mem_support, ne_eq, Set.mem_preimage]
       by_cases hin : (n : ℕ) ∈ A
-      · simp [hin]
+      · simp only [hin, ↓reduceIte, one_ne_zero, not_false_eq_true, true_iff]
         exact hin
-      · simp [hin]
+      · simp only [hin, ↓reduceIte, not_true_eq_false, false_iff]
         exact hin
     have hpre_fin : ((Subtype.val : ℕ+ → ℕ) ⁻¹' A).Finite :=
       hA_fin.preimage (PNat.coe_injective.injOn)
@@ -2417,13 +2417,13 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
     /- Support of f i is in bijection with A i via PNat.coe. Each digit in
        support is exactly 1, so Sigma = card(support) = card(A i). -/
     -- Compute Sigma = sum over support
-    show ∑ n ∈ (f i).fin_supp.toFinset, (f i : ℕ+ → ℕ) n = (hA3 i).toFinset.card
+    change ∑ n ∈ (f i).fin_supp.toFinset, (f i : ℕ+ → ℕ) n = (hA3 i).toFinset.card
     -- The support equals the preimage of A i under PNat.coe
     have hsupp : (f i).fin_supp.toFinset =
         ((hA3 i).preimage (PNat.coe_injective.injOn)).toFinset := by
       ext n
       simp only [Set.Finite.mem_toFinset, Function.mem_support, ne_eq, Set.mem_preimage]
-      show (f i).toFun n ≠ 0 ↔ (n : ℕ) ∈ A i
+      change (f i).toFun n ≠ 0 ↔ (n : ℕ) ∈ A i
       simp only [show (f i).toFun n = (indicatorSeries (A i) (hA3 i)).toFun n from rfl]
       change (haveI := Classical.propDecidable ((n : ℕ) ∈ A i);
         if (n : ℕ) ∈ A i then (1 : ℕ) else 0) ≠ 0 ↔ (n : ℕ) ∈ A i
@@ -2436,7 +2436,7 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
         (f i : ℕ+ → ℕ) n = 1 := by
       intro n hn
       simp only [Set.Finite.mem_toFinset, Set.mem_preimage] at hn
-      show (indicatorSeries (A i) (hA3 i)).toFun n = 1
+      change (indicatorSeries (A i) (hA3 i)).toFun n = 1
       change (haveI := Classical.propDecidable ((n : ℕ) ∈ A i);
         if (n : ℕ) ∈ A i then (1 : ℕ) else 0) = 1
       simp [hn]
@@ -2469,14 +2469,14 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
     intro i
     /- Reindex the sum over the support (ℕ+) to the sum over A i (ℕ) via
        PNat.coe (which is injective on the support since hA0 ensures r ≥ 1). -/
-    show ∑ n ∈ (f i).fin_supp.toFinset, ((f i : ℕ+ → ℕ) n : ℚ) * (p : ℚ) ^ (-(n : ℤ)) =
+    change ∑ n ∈ (f i).fin_supp.toFinset, ((f i : ℕ+ → ℕ) n : ℚ) * (p : ℚ) ^ (-(n : ℤ)) =
         ∑ r ∈ (hA3 i).toFinset, (p : ℚ) ^ (-(r : ℤ))
     -- The support equals the preimage of A i under PNat.coe.
     have hsupp : (f i).fin_supp.toFinset =
         ((hA3 i).preimage (PNat.coe_injective.injOn)).toFinset := by
       ext n
       simp only [Set.Finite.mem_toFinset, Function.mem_support, ne_eq, Set.mem_preimage]
-      show (f i).toFun n ≠ 0 ↔ (n : ℕ) ∈ A i
+      change (f i).toFun n ≠ 0 ↔ (n : ℕ) ∈ A i
       simp only [show (f i).toFun n = (indicatorSeries (A i) (hA3 i)).toFun n from rfl]
       change (haveI := Classical.propDecidable ((n : ℕ) ∈ A i);
         if (n : ℕ) ∈ A i then (1 : ℕ) else 0) ≠ 0 ↔ (n : ℕ) ∈ A i
@@ -2488,7 +2488,7 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
         (f i : ℕ+ → ℕ) n = 1 := by
       intro n hn
       simp only [Set.Finite.mem_toFinset, Set.mem_preimage] at hn
-      show (indicatorSeries (A i) (hA3 i)).toFun n = 1
+      change (indicatorSeries (A i) (hA3 i)).toFun n = 1
       change (haveI := Classical.propDecidable ((n : ℕ) ∈ A i);
         if (n : ℕ) ∈ A i then (1 : ℕ) else 0) = 1
       simp [hn]
@@ -2635,7 +2635,7 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
           (haveI := Classical.propDecidable ((pos : ℕ) ∈ A (ι_index j));
            if (pos : ℕ) ∈ A (ι_index j) then (1 : ℕ) else 0) := by
       intro j
-      show (indicatorSeries (A (ι_index j)) (hA3 _)).toFun pos = _
+      change (indicatorSeries (A (ι_index j)) (hA3 _)).toFun pos = _
       rfl
     /- At most one `j` has `(pos : ℕ) ∈ A_{ι_index j}` (by hA2 + ι injective). -/
     have h_atmost_one : ∀ j₁ j₂ : Fin (n : ℕ),
@@ -2712,7 +2712,7 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
             (haveI := Classical.propDecidable ((pos : ℕ) ∈ A (ι_index j));
              if (pos : ℕ) ∈ A (ι_index j) then (1 : ℕ) else 0) := by
         intro j
-        show (indicatorSeries (A (ι_index j)) (hA3 _)).toFun pos = _
+        change (indicatorSeries (A (ι_index j)) (hA3 _)).toFun pos = _
         rfl
       have h_atmost_one : ∀ j₁ j₂ : Fin (n : ℕ),
           (pos : ℕ) ∈ A (ι_index j₁) → (pos : ℕ) ∈ A (ι_index j₂) → j₁ = j₂ := by
@@ -2807,14 +2807,14 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
           (haveI := Classical.propDecidable ((pos : ℕ) ∈ A (ι_index j));
            if (pos : ℕ) ∈ A (ι_index j) then (1 : ℕ) else 0) := by
       intro j pos
-      show (indicatorSeries (A (ι_index j)) (hA3 _)).toFun pos = _
+      change (indicatorSeries (A (ι_index j)) (hA3 _)).toFun pos = _
       rfl
     have h_indic_e : ∀ j (pos : ℕ+),
         (f (m j) : ℕ+ → ℕ) pos =
           (haveI := Classical.propDecidable ((pos : ℕ) ∈ A (m j));
            if (pos : ℕ) ∈ A (m j) then (1 : ℕ) else 0) := by
       intro j pos
-      show (indicatorSeries (A (m j)) (hA3 _)).toFun pos = _
+      change (indicatorSeries (A (m j)) (hA3 _)).toFun pos = _
       rfl
     /- The digit sum of `d_DS` at any pos is at most 1. -/
     have h_d_le_one : ∀ pos : ℕ+, ∑ j : Fin (n : ℕ), (f (ι_index j) : ℕ+ → ℕ) pos ≤ 1 := by
