@@ -813,7 +813,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     main_theorem p f_good T W hW_ne hSparse_W' hRep
   -- f_bad is algebraic.
   have hf_bad_alg : IsAlgebraic ℚᵘⁿ_[p] f_bad :=
-    alg_of_fin_supp p f_bad hf_bad_supp_fin
+    alg_QpUn_of_alg_Qp p f_bad (alg_of_fin_supp p f_bad hf_bad_supp_fin)
   -- Conclude.
   intro hf_alg
   apply hf_good_not_alg
@@ -822,3 +822,14 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     linear_combination -h
   rw [hf_good_eq]
   exact hf_alg.sub hf_bad_alg
+
+theorem pAdicHuangStefanescu (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p])
+(hf : f.support ⊆ {-(p : ℚ) ^ (-(i : ℤ)) | i : ℕ+}) :
+List.TFAE [
+  f.support.Finite,
+  IsAlgebraic ℚᵘⁿ_[p] f,
+  IsAlgebraic ℚ_[p] f
+] := by
+  tfae_have 1 → 3 := by
+    sorry
+  sorry

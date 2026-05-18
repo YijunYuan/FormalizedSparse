@@ -3,6 +3,9 @@ import Mathlib.RingTheory.HahnSeries.Multiplication
 import Mathlib.RingTheory.HahnSeries.Summable
 import Mathlib.RingTheory.WittVector.TeichmullerSeries
 import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
+import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
+import Mathlib.FieldTheory.Finite.Basic
+import Mathlib.FieldTheory.Finiteness
 
 open WittVector
 
@@ -4650,47 +4653,91 @@ private lemma mkLp_single_pow_den (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) (a : 
     · rw [one_mul]
   rw [hsingle_split, mkLp_mul, mk_single_int_eq_p_zpow]
 
+/- Helper: For `a : Fpbar p`, there exists `n ≥ 1` with `a ^ (p ^ n) = a`.
+This uses that `Fpbar p = AlgebraicClosure (ZMod p)`, so `a` lies in a finite
+intermediate field of cardinality `p ^ d`. -/
+private lemma exists_pow_p_eq_self_Fpbar (p : ℕ) [Fact (Nat.Prime p)] (a : Fpbar p) :
+    ∃ n : ℕ, 0 < n ∧ a ^ (p ^ n) = a := by
+  classical
+  have hint : IsIntegral (ZMod p) a := Algebra.IsIntegral.isIntegral a
+  let K : IntermediateField (ZMod p) (Fpbar p) :=
+    IntermediateField.adjoin (ZMod p) ({a} : Set (Fpbar p))
+  haveI : FiniteDimensional (ZMod p) K :=
+    IntermediateField.adjoin.finiteDimensional hint
+  haveI : Finite K := Module.finite_of_finite (ZMod p)
+  haveI : Fintype K := Fintype.ofFinite _
+  have ha_in_K : a ∈ K :=
+    IntermediateField.subset_adjoin _ _ (Set.mem_singleton _)
+  set d := Fintype.card K with hd_def
+  have hd_pow : ∃ n, 0 < n ∧ d = p ^ n := by
+    have hcard : (Fintype.card K : ℕ) =
+        (Fintype.card (ZMod p)) ^ Module.finrank (ZMod p) K :=
+      Module.card_eq_pow_finrank
+    rw [ZMod.card] at hcard
+    exact ⟨_, Module.finrank_pos, hcard⟩
+  obtain ⟨n, hn_pos, hn_eq⟩ := hd_pow
+  refine ⟨n, hn_pos, ?_⟩
+  have h_inK : (⟨a, ha_in_K⟩ : K) ^ d = ⟨a, ha_in_K⟩ := FiniteField.pow_card _
+  rw [hn_eq] at h_inK
+  exact congrArg Subtype.val h_inK
+
+/- Helper: `ZpUn_embd (teichmuller p a)` (the image of the Teichmüller lift in `𝕃_[p]`)
+is algebraic over `ℚ_[p]`. The witness is the polynomial `X^(p^n) - X ∈ ℤ ⊂ ℚ_[p][X]`,
+where `n` comes from `exists_pow_p_eq_self_Fpbar`. -/
+private lemma teich_isAlgebraic_Qp (p : ℕ) [Fact (Nat.Prime p)] (a : Fpbar p) :
+    IsAlgebraic ℚ_[p] (ZpUn_embd (teichmuller p a) : 𝕃_[p]) := by
+  obtain ⟨n, hn_pos, han⟩ := exists_pow_p_eq_self_Fpbar p a
+  set x : 𝕃_[p] := ZpUn_embd (teichmuller p a) with hx_def
+  have hteich_pow : (teichmuller p a) ^ (p ^ n) = teichmuller p a := by
+    rw [← map_pow]; exact congrArg _ han
+  have hx_pow : x ^ (p ^ n) = x := by
+    rw [hx_def, ← map_pow, hteich_pow]
+  refine ⟨Polynomial.X ^ (p ^ n) - Polynomial.X, ?_, ?_⟩
+  · intro hpoly_zero
+    have hp_pos : 0 < p := (Fact.out : Nat.Prime p).pos
+    have hp_ge_two : 2 ≤ p := (Fact.out : Nat.Prime p).two_le
+    have hpn_ge_two : 2 ≤ p ^ n := by
+      calc 2 ≤ p := hp_ge_two
+        _ = p ^ 1 := (pow_one p).symm
+        _ ≤ p ^ n := Nat.pow_le_pow_right (by omega) hn_pos
+    have hdeg :
+        (Polynomial.X ^ (p ^ n) - Polynomial.X : Polynomial ℚ_[p]).natDegree = p ^ n := by
+      rw [Polynomial.natDegree_sub_eq_left_of_natDegree_lt]
+      · exact Polynomial.natDegree_X_pow _
+      · rw [Polynomial.natDegree_X_pow, Polynomial.natDegree_X]; omega
+    rw [hpoly_zero, Polynomial.natDegree_zero] at hdeg
+    omega
+  · simp [hx_pow]
+
 /- Helper: For `q : ℚ` and `a : Fpbar p`,
-`mkLp(single q (teich a))` is algebraic over `ℚᵘⁿ_[p]`. -/
+`mkLp(single q (teich a))` is algebraic over `ℚ_[p]`. -/
 private lemma alg_of_single (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) (a : Fpbar p) :
-    IsAlgebraic ℚᵘⁿ_[p]
+    IsAlgebraic ℚ_[p]
       (mkLp (HahnSeries.single q (teichmuller p a)) : 𝕃_[p]) := by
   set f : 𝕃_[p] := mkLp (HahnSeries.single q (teichmuller p a)) with hf_def
   have hfN := mkLp_single_pow_den p q (teichmuller p a)
   rw [← hf_def] at hfN
-  -- Express `f^q.den` as `algebraMap ℚᵘⁿ_[p] 𝕃_[p] c` for some `c ∈ ℚᵘⁿ_[p]`.
-  have h_image : f ^ (q.den : ℕ) ∈ Set.range (algebraMap ℚᵘⁿ_[p] 𝕃_[p]) := by
-    rw [hfN]
-    -- First factor: ((p : ℕ) : 𝕃_[p])^q.num = algebraMap (((p : ℕ) : ℚᵘⁿ_[p])^q.num).
-    -- Second factor: mkLp(single 0 (teich a)^q.den) = algebraMap of ZpUn_embd(teich a^q.den)
-    --   which equals algebraMap(ZpUn embedded in QpUn) of teich(a)^q.den.
-    have h_pow : ((p : ℕ) : 𝕃_[p]) ^ q.num =
-        algebraMap ℚᵘⁿ_[p] 𝕃_[p] (((p : ℕ) : ℚᵘⁿ_[p]) ^ q.num) := by
-      rw [map_zpow₀]
-      congr 1
-      push_cast; rfl
-    have h_single0 :
-        (mkLp (HahnSeries.single (0 : ℚ) ((teichmuller p a) ^ (q.den : ℕ))) : 𝕃_[p]) =
-          algebraMap ℚᵘⁿ_[p] 𝕃_[p]
-            ((algebraMap (OQpUn p) (ℚᵘⁿ_[p])) ((teichmuller p a) ^ (q.den : ℕ))) := by
-      have hLHS : (mkLp (HahnSeries.single (0 : ℚ) ((teichmuller p a) ^ (q.den : ℕ))) : 𝕃_[p]) =
-          ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) := rfl
-      rw [hLHS]
-      show ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) =
-          (QpUn_embd : ℚᵘⁿ_[p] →+* 𝕃_[p]) ((algebraMap (OQpUn p) (ℚᵘⁿ_[p])) _)
-      show ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) =
-          IsLocalization.map (M := nonZeroDivisors (OQpUn p)) (𝕃_[p]) ZpUn_embd
-            (show nonZeroDivisors (OQpUn p) ≤ (nonZeroDivisors 𝕃_[p]).comap ZpUn_embd from
-              nonZeroDivisors_le_comap_nonZeroDivisors_of_injective _ ZpUn_embd_injective)
-            ((algebraMap (OQpUn p) (ℚᵘⁿ_[p])) _)
-      rw [IsLocalization.map_eq]
-      rfl
-    rw [h_pow, h_single0, ← map_mul]
-    exact Set.mem_range_self _
-  obtain ⟨c, hc⟩ := h_image
-  have hfN_alg : IsAlgebraic ℚᵘⁿ_[p] (f ^ (q.den : ℕ)) := by
-    rw [← hc]
-    exact isAlgebraic_algebraMap c
+  -- `f^q.den = (p^q.num) * mkLp(single 0 (teich(a)^q.den))`.
+  -- First factor lies in image of `ℚ_[p]`, hence algebraic over `ℚ_[p]`.
+  -- Second factor equals `(ZpUn_embd (teich a))^q.den`, algebraic by `teich_isAlgebraic_Qp.pow`.
+  have h_factor_alg : IsAlgebraic ℚ_[p] (((p : ℕ) : 𝕃_[p]) ^ q.num) := by
+    have h_in_range : ((p : ℕ) : 𝕃_[p]) ^ q.num ∈
+        Set.range (algebraMap ℚ_[p] 𝕃_[p]) := by
+      refine ⟨((p : ℕ) : ℚ_[p]) ^ q.num, ?_⟩
+      rw [map_zpow₀, map_natCast]
+    obtain ⟨c, hc⟩ := h_in_range
+    rw [← hc]; exact isAlgebraic_algebraMap c
+  have h_teich_alg : IsAlgebraic ℚ_[p]
+      ((mkLp (HahnSeries.single (0 : ℚ) ((teichmuller p a) ^ (q.den : ℕ))) : 𝕃_[p])) := by
+    -- `mkLp(single 0 b) = ZpUn_embd b` for any `b : ℤᵘⁿ_[p]`.
+    have hLHS : (mkLp (HahnSeries.single (0 : ℚ) ((teichmuller p a) ^ (q.den : ℕ))) : 𝕃_[p]) =
+        ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) := rfl
+    have hPow : ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) =
+        (ZpUn_embd (teichmuller p a)) ^ (q.den : ℕ) := by rw [map_pow]
+    rw [hLHS, hPow]
+    exact (teich_isAlgebraic_Qp p a).pow q.den
+  have hfN_alg : IsAlgebraic ℚ_[p] (f ^ (q.den : ℕ)) := by
+    rw [hfN]; exact h_factor_alg.mul h_teich_alg
   exact hfN_alg.of_pow q.pos
 
 /- Helper: `(f - mkLp(single q (teich (f.coeff q)))).coeff = Function.update f.coeff q 0`. -/
@@ -4765,7 +4812,7 @@ private lemma support_sub_single_ssubset (p : ℕ) [Fact (Nat.Prime p)]
     simp [Function.update_self] at hq_in_g
 
 lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.support.Finite) :
-  IsAlgebraic ℚᵘⁿ_[p] f := by
+  IsAlgebraic ℚ_[p] f := by
   classical
   generalize hn : hf.toFinset.card = n
   induction n using Nat.strong_induction_on generalizing f with
@@ -4809,9 +4856,9 @@ lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.supp
             rw [← hheq] at hx'
             exact (Set.Finite.mem_toFinset _).mp hx'
           exact hg_supp_ssub.ne h_eq
-      have hg_alg : IsAlgebraic ℚᵘⁿ_[p] g :=
+      have hg_alg : IsAlgebraic ℚ_[p] g :=
         ih hg_supp_fin.toFinset.card hg_card g hg_supp_fin rfl
-      have hh_alg : IsAlgebraic ℚᵘⁿ_[p] h := alg_of_single p q (f.coeff q)
+      have hh_alg : IsAlgebraic ℚ_[p] h := alg_of_single p q (f.coeff q)
       have hfeq : f = g + h := by rw [hg_def]; ring
       rw [hfeq]
       exact hg_alg.add hh_alg
