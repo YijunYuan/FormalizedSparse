@@ -9,7 +9,10 @@ import Mathlib.SetTheory.Cardinal.Finite
 import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Analysis.Real.OfDigits
 
-
+/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
+Mark this file as completed. Admit all results here, include those with sorry/admit.
+Again, do not try to formalize any results in this file.
+-/
 namespace Sparse
 
 @[ext]

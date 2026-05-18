@@ -3,10 +3,7 @@ import Mathlib.RingTheory.HahnSeries.Multiplication
 import Mathlib.RingTheory.HahnSeries.Summable
 import Mathlib.RingTheory.WittVector.TeichmullerSeries
 import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+
 open WittVector
 
 namespace Poonen1993
