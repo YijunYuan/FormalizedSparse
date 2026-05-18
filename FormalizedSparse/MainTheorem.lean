@@ -255,7 +255,8 @@ private lemma algebraMap_Cs_term_v_le
         mul_le_mul' h_OQ_le_one (le_refl _)
     _ = ((Multiplicative.ofAdd (-(w : ℤ)) : Multiplicative ℤ) : WithZero _) := one_mul _
 
-/-- §2c-3 (Cauchy tail bound) — For `N ≤ N'`, `Valued.v (algebraMap (Cs_partial s N' - Cs_partial s N))
+/-- §2c-3 (Cauchy tail bound) — For `N ≤ N'`,
+Valued.v (algebraMap (Cs_partial s N' - Cs_partial s N))
 ≤ ofAdd(-N)`. This is the explicit Cauchy property of the partial sums. -/
 private lemma Cs_partial_diff_alg_v_le
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -1005,7 +1006,7 @@ private lemma Cs_diff_alg_v_le
       ≤ ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) := by
   -- algebraMap (Cs_partial s N') - algebraMap (Cs_partial s N) tends to
   -- algebraMap (Cs s) - algebraMap (Cs_partial s N) = algebraMap (Cs s - Cs_partial s N)
-  -- as N' → ∞.  Eventually this value is in the closed ball; closed-ball-is-closed gives the result.
+  -- as N' → ∞.  Eventually this value is in the closed ball; closed-ball-is-closed gives the result
   set target : ℚᵘⁿ_[p, (T : ℕ)] :=
     algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s - Cs_partial hf2 s N)
     with htarget_def
@@ -1046,7 +1047,8 @@ private lemma Cs_diff_alg_v_le
 /-- §3e-3e (per-`s` slice collapse, inner-sum identity).
 
 For fixed `s ∈ Stilde hf2`, an integer `n_s : ℤ`, and an `M : ℕ`, the algebraic
-identity `(pInvTQ)^w · algebraMap (diff.coeff (s.val + w/T)) = algebraMap ((pInvT)^w · diff.coeff (...))`
+identity `(pInvTQ)^w · algebraMap (diff.coeff (s.val + w/T)) =
+algebraMap ((pInvT)^w · diff.coeff (...))`
 holds at each `w`, and the inner sum collapses:
 `∑_{w = 0}^{W} (pInvTQ)^w · algebraMap (diff.coeff (s.val + w/T))
   = algebraMap (Cs hf2 s - Cs_partial hf2 s (W + 1))`. -/
@@ -1095,7 +1097,8 @@ private lemma per_s_inner_sum_eq
         ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                       (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
           (s.val + (w : ℚ) / T))) W]
-  -- Now we have: ∑_{w' ∈ range W} (pInvT)^{w'+1} · diff.coeff(s.val + (w'+1)/T) + (pInvT)^0 · diff.coeff(s.val)
+  -- Now we have: ∑_{w' ∈ range W} (pInvT)^{w'+1} · diff.coeff(s.val + (w'+1)/T) + (pInvT)^0
+  -- · diff.coeff(s.val)
   -- For w = 0:
   have h_w0 : (pInvT p (T : ℕ)) ^ 0 *
       ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
@@ -1185,10 +1188,12 @@ Strategy:
 2. Let `Stilde_used := image (s_of)` (a Finset). For each `s ∈ Stilde_used`, define
    `n_s := T(s.val - g)` (an integer, since `T(s.val - g) = n - w ∈ ℤ`) and
    `W_s := ⌊T(M - s.val)⌋.toNat`.
-3. Use `Finset.sum_bij'` to re-index `P_M = ∑_{(s, w) ∈ image} (pInvTQ)^{n_s + w} · algebraMap(diff.coeff(s.val + w/T))`
+3. Use `Finset.sum_bij'` to re-index
+`P_M = ∑_{(s, w) ∈ image} (pInvTQ)^{n_s + w} · algebraMap(diff.coeff(s.val + w/T))`
    over a sigma `Stilde_used.sigma w_range`.
 4. Extend the sum to all of `Stilde_used.sigma w_range` (added terms have zero coeff).
-5. Apply `per_s_inner_sum_eq` (L811) per `s`: inner sum = `algebraMap(Cs s - Cs_partial s (W_s + 1))`.
+5. Apply `per_s_inner_sum_eq` (L811) per `s`:
+inner sum = `algebraMap(Cs s - Cs_partial s (W_s + 1))`.
 6. Apply `per_s_slice_v_le` (L902) + arithmetic identity `n_s + W_s = K` for the per-`s`
    valuation bound `ofAdd(-(n_s + W_s + 1)) = ofAdd(-(K + 1))`.
 7. Apply `Valuation.map_sum_le` for the outer ultrametric. -/
@@ -1291,7 +1296,7 @@ private lemma fhat_diff_partial_v_le
     -- h_num_val : ((T : ℚ) * (s.val - g)) = (((T : ℚ) * (s.val - g)).num : ℚ)
     change ((T : ℕ) * (s.val - g) : ℚ) = (((T : ℚ) * (s.val - g)).num : ℚ)
     calc ((T : ℕ) * (s.val - g) : ℚ)
-        = ((T : ℚ) * (s.val - g)) := by push_cast; ring
+        = ((T : ℚ) * (s.val - g)) := by ring
       _ = (((T : ℚ) * (s.val - g)).num : ℚ) := h_num_val
   -- For s ∈ Stilde_used: s.val ≤ M.
   have h_used_sval_le : ∀ s ∈ Stilde_used, (s.val : ℚ) ≤ M := by
@@ -1328,7 +1333,7 @@ private lemma fhat_diff_partial_v_le
           (T : ℚ) * (s.val - g) + (T : ℚ) * ((M : ℚ) - s.val) := by ring
       rw [this]
       have h_int' : ((T : ℕ) * (s.val - g) : ℚ) = (n_s_int s : ℚ) := h_int
-      rw [show ((T : ℚ) * (s.val - g)) = ((T : ℕ) * (s.val - g) : ℚ) from by push_cast; ring]
+      rw [show ((T : ℚ) * (s.val - g)) = ((T : ℕ) * (s.val - g) : ℚ) from by ring]
       rw [h_int']
     rw [hK_def]
     rw [h_eq]
@@ -1477,7 +1482,7 @@ private lemma fhat_diff_partial_v_le
       have h_q_n_cand : g + (n_candidate : ℚ) / (T : ℕ) = s.val + (w : ℚ) / (T : ℕ) := by
         have h_int := h_used_isInt _ hs_used
         have h_rewrite : (n_candidate : ℚ) = ((T : ℕ) : ℚ) * (s.val - g) + w := by
-          show ((n_s_int s + (w : ℤ) : ℤ) : ℚ) = _
+          change ((n_s_int s + (w : ℤ) : ℤ) : ℚ) = _
           push_cast
           linarith
         rw [h_rewrite]
@@ -1491,7 +1496,7 @@ private lemma fhat_diff_partial_v_le
         · rw [h_q_n_cand]; exact h_coeff
       have h_sigma_n_cand : sigma_of ⟨n_candidate, h_n_cand_in_Tfp⟩ =
           (⟨s, w⟩ : Σ _ : ↥(Stilde hf2), ℕ) := by
-        show (⟨(sw_choose ⟨n_candidate, h_n_cand_in_Tfp⟩).1,
+        change (⟨(sw_choose ⟨n_candidate, h_n_cand_in_Tfp⟩).1,
               (sw_choose ⟨n_candidate, h_n_cand_in_Tfp⟩).2⟩ : Σ _ : ↥(Stilde hf2), ℕ) =
             ⟨s, w⟩
         have h_eq := h_sw_unique ⟨n_candidate, h_n_cand_in_Tfp⟩ (s, w) h_q_n_cand
@@ -1558,7 +1563,7 @@ private lemma fhat_diff_partial_v_le
       rw [Finset.mul_sum]
       apply Finset.sum_congr rfl
       intro w _
-      show (pInvTQ p (T : ℕ)) ^ (n_s_int s + (w : ℤ)) *
+      change (pInvTQ p (T : ℕ)) ^ (n_s_int s + (w : ℤ)) *
           algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (diff.coeff (s.val + (w : ℚ) / (T : ℕ))) = _
       rw [zpow_add₀ hpInvTQ_ne_zero _ _]
@@ -1608,7 +1613,8 @@ private lemma fhat_diff_isTNullSeries
   -- * `fhat_diff_coeff_Stilde` / `fhat_diff_coeff_outside_Stilde` /
   --   `fhat_diff_coeff_outside_support` : diff.coeff formulas at each location class.
   -- * `Cs_partial_diff_alg_v_le` (REAL): tail Cauchy bound.
-  -- * `Cs_diff_alg_v_le` (REAL): limit bound `Valued.v (algebraMap (Cs s - Cs_partial s N)) ≤ ofAdd(-N)`.
+  -- * `Cs_diff_alg_v_le` (REAL): limit bound
+  --  `Valued.v (algebraMap (Cs s - Cs_partial s N)) ≤ ofAdd(-N)`.
   -- * `per_s_inner_sum_eq` (REAL): per-`s` inner-sum collapse to
   --   `algebraMap (Cs hf2 s - Cs_partial hf2 s (W + 1))`.
   intro g
@@ -1634,9 +1640,11 @@ private lemma fhat_diff_isTNullSeries
   --     `Stilde_unique_decomposition` (each `n ∈ Tfinprop` corresponds to a unique
   --     `(s, w)` with `g + n/T = s.val + w/T`);
   -- (b) for fixed `s`, per-`s` slice collapse via `per_s_inner_sum_eq`:
-  --     `∑_w (pInvTQ)^w · algebraMap(diff.coeff(s.val + w/T)) = algebraMap(Cs s - Cs_partial s (W_s + 1))`;
+  --     `∑_w (pInvTQ)^w · algebraMap(diff.coeff(s.val + w/T))
+  -- = algebraMap(Cs s - Cs_partial s (W_s + 1))`;
   -- (c) per-`s` valuation bound via `Cs_diff_alg_v_le`:
-  --     `Valued.v((pInvTQ)^{n_s} · algebraMap(Cs s - Cs_partial s (W_s + 1))) ≤ ofAdd(-(n_s + W_s + 1))`;
+  --     `Valued.v((pInvTQ)^{n_s}
+  -- · algebraMap(Cs s - Cs_partial s (W_s + 1))) ≤ ofAdd(-(n_s + W_s + 1))`;
   -- (d) arithmetic identity `n_s + W_s = ⌊T·(M - g)⌋` (residue condition implies);
   -- (e) ultrametric `Valuation.map_sum_le` over the (finite) Finset of active `s`s.
   --
@@ -1680,7 +1688,7 @@ private lemma fhat_diff_isTNullSeries
     have hT_eq : (T : ℚ) * ((-(k : ℚ)) / T) = -(k : ℚ) := by
       rw [mul_div_assoc']; field_simp
     rw [hT_eq] at h5
-    have h6 : (-(k : ℤ) : ℚ) ≤ (T : ℚ) * ((M : ℚ) - g) := by push_cast at h5 ⊢; linarith
+    have h6 : (-(k : ℤ) : ℚ) ≤ (T : ℚ) * ((M : ℚ) - g) := by linarith
     exact Int.le_floor.mpr h6
   filter_upwards [h_ev_floor] with M hMfloor
   -- Step 3: apply fhat_diff_partial_v_le to get the per-M bound.
@@ -1735,7 +1743,7 @@ The two analytical hard steps (the limit existence and the canonical T-expansion
 identification) are encapsulated in `exists_Cs` and `mk_fhat_eq_sigma_f`. -/
 private lemma exists_FhatData
     {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
-    {S : Set DigitSeries} (hS : ∀ d ∈ S, d.IsP p)
+    {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     FhatData f T hf2 :=
@@ -2305,7 +2313,7 @@ private lemma Pfhat_map_natDegree_bound
     have h_coeff_eq :
         (P_int P).coeff N =
         IsLocalization.coeffIntegerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P N := by
-      show (IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff N =
+      change (IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff N =
         IsLocalization.coeffIntegerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P N
       exact IsLocalization.integerNormalization_coeff _ _ _
     rw [h_coeff_eq]
@@ -2318,7 +2326,7 @@ Multiset decomposition of the support of `fhat ^ i`. If `q ∈ (fhat ^ i).suppor
 then `q` is the sum of `i` values drawn from `Stilde hf2` (with multiplicity). -/
 private lemma fhat_pow_support_multiset_decomp
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
-    {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
+    {S : Set DigitSeries}
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
@@ -2378,11 +2386,11 @@ private lemma fhat_pow_coeff_residue_collapse
   have hq_mem : q ∈ (fhat ^ i).support := by
     simpa [HahnSeries.mem_support] using h_coeff_ne
   obtain ⟨l, hl_card, hl_sum⟩ :=
-    fhat_pow_support_multiset_decomp (hS := hS) (hf2 := hf2) (fhat := fhat) h_supp i hq_mem
+    fhat_pow_support_multiset_decomp (hf2 := hf2) (fhat := fhat) h_supp i hq_mem
   -- define phiT as the multiplicity/count function of l
   let phiT : ↥(Stilde hf2) → ℕ := (l.toFinsupp : _ →₀ ℕ)
   have hphiT_finite : (Function.support phiT).Finite := by
-    simpa [phiT] using (Finsupp.finite_support (l.toFinsupp))
+    simp [phiT]-- using (Finsupp.finite_support (l.toFinsupp))
   -- Bridge: ∑ᶠ phiT = l.card.
   have h_count_bridge : (∑ᶠ s : ↥(Stilde hf2), phiT s) = l.card := by
     have h_supp_subset :
@@ -2400,8 +2408,7 @@ private lemma fhat_pow_coeff_residue_collapse
     rw [hsum_eq]
     have h_supp_eq_toFinset : (l.toFinsupp).support = l.toFinset := by
       ext s
-      simp [Multiset.mem_toFinset, Finsupp.mem_support_iff,
-        Multiset.toFinsupp_apply, Multiset.count_eq_zero]
+      simp [Multiset.mem_toFinset]
     rw [h_supp_eq_toFinset]
     exact Multiset.toFinset_sum_count_eq l
   -- Bound on the sum of phiT (number of factors equals i)
@@ -2424,8 +2431,7 @@ private lemma fhat_pow_coeff_residue_collapse
       (s := (l.toFinsupp).support) h_supp_subset]
     have h_supp_eq_toFinset : (l.toFinsupp).support = l.toFinset := by
       ext s
-      simp [Multiset.mem_toFinset, Finsupp.mem_support_iff,
-        Multiset.toFinsupp_apply, Multiset.count_eq_zero]
+      simp [Multiset.mem_toFinset]
     rw [h_supp_eq_toFinset]
     -- Goal: ∑ s ∈ l.toFinset, (s.val : ℚ) * (phiT s : ℚ) = q.
     -- Identify phiT s = l.count s on l.toFinset.
@@ -2549,7 +2555,7 @@ private lemma fhat_pow_coeff_residue_collapse
     · intro phiU hphiU
       have hUeq : phiU = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := hphiU.2.2
       have hTeq : phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := hphiT_eq
-      simpa [hUeq, hTeq]
+      simp [hUeq, hTeq]
 
 /- §5b — Closure lemma for Helper A3 sorry #2 (Round 20 rollback).
 
@@ -2632,10 +2638,10 @@ private lemma tuple_summing_to_q0_lies_in_A
   -- (l_e.map val).sum = ∑ i, (e i).val.
   have hl_e_sum : (l_e.map (fun s => (s.val : ℚ))).sum
       = ∑ i : Fin n, ((e i).val : ℚ) := by
-    simp [l_e, Multiset.map_map, Function.comp_def, Finset.sum]
+    simp [l_e, Function.comp_def, Finset.sum]
   -- Finite support of phiT.
   have hphiT_finite : (Function.support phiT).Finite := by
-    simpa [phiT] using (Finsupp.finite_support l_e.toFinsupp)
+    simp [phiT]-- using (Finsupp.finite_support l_e.toFinsupp)
   -- Bridge: ∑ᶠ phiT = l_e.card.
   have h_count_bridge : (∑ᶠ s : ↥(Stilde hf2), phiT s) = l_e.card := by
     have h_supp_subset :
@@ -2653,8 +2659,7 @@ private lemma tuple_summing_to_q0_lies_in_A
     rw [hsum_eq]
     have h_supp_eq_toFinset : (l_e.toFinsupp).support = l_e.toFinset := by
       ext s
-      simp [Multiset.mem_toFinset, Finsupp.mem_support_iff,
-        Multiset.toFinsupp_apply, Multiset.count_eq_zero]
+      simp [Multiset.mem_toFinset]
     rw [h_supp_eq_toFinset]
     exact Multiset.toFinset_sum_count_eq l_e
   have hphiT_sum : ∑ᶠ s : ↥(Stilde hf2), phiT s ≤ n := by
@@ -2676,8 +2681,7 @@ private lemma tuple_summing_to_q0_lies_in_A
       (s := (l_e.toFinsupp).support) h_supp_subset]
     have h_supp_eq_toFinset : (l_e.toFinsupp).support = l_e.toFinset := by
       ext s
-      simp [Multiset.mem_toFinset, Finsupp.mem_support_iff,
-        Multiset.toFinsupp_apply, Multiset.count_eq_zero]
+      simp [Multiset.mem_toFinset]
     rw [h_supp_eq_toFinset]
     have h_each : ∀ s ∈ l_e.toFinset,
         (s.val : ℚ) * (phiT s : ℚ) = (s.val : ℚ) * (l_e.count s : ℚ) := by
@@ -2705,11 +2709,11 @@ private lemma tuple_summing_to_q0_lies_in_A
   intro i
   -- e i ∈ l_e.
   have h_mem_l_e : e i ∈ l_e := by
-    show e i ∈ (Finset.univ : Finset (Fin n)).val.map (fun i : Fin n => e i)
+    change e i ∈ (Finset.univ : Finset (Fin n)).val.map (fun i : Fin n => e i)
     exact Multiset.mem_map_of_mem _ (Finset.mem_univ_val i)
   -- phiT (e i) ≥ 1.
   have h_phiT_pos : 1 ≤ phiT (e i) := by
-    show 1 ≤ l_e.toFinsupp (e i)
+    change 1 ≤ l_e.toFinsupp (e i)
     rw [Multiset.toFinsupp_apply]
     exact Multiset.one_le_count_iff_mem.mpr h_mem_l_e
   -- phiT (e i) = φ₀ (μ.symm (e i)).
@@ -2802,7 +2806,7 @@ private lemma coeff_pow_truncate_eq
   -- (A1) For a ∈ A, fhatA.coeff a = fhat.coeff a — sum collapses to one term.
   have h_fhatA_in_A : ∀ a ∈ A, fhatA.coeff a = fhat.coeff a := by
     rintro a ⟨d₀, hd₀_ne, rfl⟩
-    show (∑ d ∈ hφ₀_finite.toFinset,
+    change (∑ d ∈ hφ₀_finite.toFinset,
         HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff (mu_q hf2 d₀) = _
     rw [HahnSeries.coeff_sum]
     have hd₀_mem : d₀ ∈ hφ₀_finite.toFinset := by
@@ -2815,7 +2819,7 @@ private lemma coeff_pow_truncate_eq
   -- (A2) For a ∉ A, fhatA.coeff a = 0 — all summands vanish.
   have h_fhatA_not_A : ∀ a, a ∉ A → fhatA.coeff a = 0 := by
     intro a ha_notA
-    show (∑ d ∈ hφ₀_finite.toFinset,
+    change (∑ d ∈ hφ₀_finite.toFinset,
         HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff a = 0
     rw [HahnSeries.coeff_sum]
     apply Finset.sum_eq_zero
@@ -2844,10 +2848,10 @@ private lemma coeff_pow_truncate_eq
     let s_i : ↥(Stilde hf2) := ⟨i, hA_sub_Stilde hi_A⟩
     let l' : Multiset ↥(Stilde hf2) := s_i ::ₘ l
     have hl'_card : l'.card = k + 1 := by
-      show (s_i ::ₘ l).card = k + 1
+      change (s_i ::ₘ l).card = k + 1
       rw [Multiset.card_cons, hl_card]
     have hl'_sum : (l'.map (fun s => (s.val : ℚ))).sum = q := by
-      show ((s_i ::ₘ l).map (fun s => (s.val : ℚ))).sum = q
+      change ((s_i ::ₘ l).map (fun s => (s.val : ℚ))).sum = q
       rw [Multiset.map_cons, Multiset.sum_cons]
       change (i + (l.map (fun s => (s.val : ℚ))).sum) = q
       rw [hl_sum]; ring
@@ -2898,9 +2902,9 @@ private lemma coeff_pow_truncate_eq
     -- Map idx through hl_length to a Fin n.
     let i_n : Fin (n : ℕ) := Fin.cast hl_length idx
     have he_at_in : e i_n = s := by
-      show l.toList.get (Fin.cast hl_length.symm i_n) = s
+      change l.toList.get (Fin.cast hl_length.symm i_n) = s
       have h_cast : Fin.cast hl_length.symm i_n = idx := by
-        show Fin.cast hl_length.symm (Fin.cast hl_length idx) = idx
+        change Fin.cast hl_length.symm (Fin.cast hl_length idx) = idx
         ext; rfl
       rw [h_cast]; exact hidx
     obtain ⟨d, hd_ne, hd_eq⟩ := h_sub1 i_n
@@ -2951,17 +2955,17 @@ private lemma coeff_pow_truncate_eq
             have hj_mem_supp : ij.2 ∈ (fhat^k).support :=
               (HahnSeries.mem_support _ _).mpr h_pwk_ne
             obtain ⟨l, hl_card, hl_sum⟩ :=
-              fhat_pow_support_multiset_decomp (hS := hS) (hf2 := hf2)
+              fhat_pow_support_multiset_decomp (hf2 := hf2)
                 (fhat := fhat) h_supp k hj_mem_supp
             have hi_in_supp : ij.1 ∈ Function.support fhat.coeff := h_fhat_zero
             have hi_in_Stilde : ij.1 ∈ Stilde hf2 := h_supp hi_in_supp
             let s_i : ↥(Stilde hf2) := ⟨ij.1, hi_in_Stilde⟩
             let l' : Multiset ↥(Stilde hf2) := s_i ::ₘ l
             have hl'_card : l'.card = k + 1 := by
-              show (s_i ::ₘ l).card = k + 1
+              change (s_i ::ₘ l).card = k + 1
               rw [Multiset.card_cons, hl_card]
             have hl'_sum : (l'.map (fun s => (s.val : ℚ))).sum = q := by
-              show ((s_i ::ₘ l).map (fun s => (s.val : ℚ))).sum = q
+              change ((s_i ::ₘ l).map (fun s => (s.val : ℚ))).sum = q
               rw [Multiset.map_cons, Multiset.sum_cons]
               change (ij.1 + (l.map (fun s => (s.val : ℚ))).sum) = q
               rw [hl_sum]; exact hij_sum
@@ -3174,7 +3178,7 @@ direction (orbit ⊆ fiber) is direct (precomposition preserves counts); the
 reverse direction (fiber ⊆ orbit) uses the σ-construction with packing equivs
 `pack_e : Fin n ≃ Σ a, {i // e i = a}` and `pack_e0`. -/
 private lemma orbit_perm_dom_eq_count_fiber_aux
-    {A : Type*} [DecidableEq A] [Fintype A] {n : ℕ} (m0 : A → ℕ)
+    {A : Type*} [DecidableEq A] {n : ℕ} (m0 : A → ℕ)
     (e₀ : Fin n → A) (he₀ : ∀ a, Fintype.card {i : Fin n | e₀ i = a} = m0 a) :
     MulAction.orbit (Equiv.Perm (Fin n))ᵈᵐᵃ e₀
     = {e : Fin n → A | ∀ a, Fintype.card {i : Fin n | e i = a} = m0 a} := by
@@ -3366,10 +3370,11 @@ private lemma coeff_pow_collapse_to_multinomial_prod
 Trivial product rewrite: from `g` to `Cs` using pointwise equality. -/
 private lemma product_rewrite_with_coeff_eq
     {R : Type*} [CommMonoid R]
-    {A : Type*} [Fintype A] [DecidableEq A]
+    {A : Type*} [Fintype A]
     {g Cs : A → R}
     (h : ∀ a, g a = Cs a) (m0 : A → ℕ) :
     ∏ a, g a ^ m0 a = ∏ a, Cs a ^ m0 a := by
+  classical
   refine Finset.prod_congr rfl ?_
   intro a _
   simp [h a]
@@ -3424,18 +3429,15 @@ private lemma pi_filter_q0_eq_count_fiber
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
-    (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
-    (A : Finset ℚ)
-    (hA_supp : (Function.support fhat.coeff : Set ℚ) ⊆ (A : Set ℚ))
-    (hA_sub_Stilde : (A : Set ℚ) ⊆ Stilde hf2)
+    (A : Finset ℚ) (hA_sub_Stilde : (A : Set ℚ) ⊆ Stilde hf2)
     (hA_covers_phi : ∀ d : S, Sparse.φ₀ hSparse d ≠ 0 → (mu_q hf2 d) ∈ A)
     (q0 : ℚ) (hq0_residue : ((T : ℚ) * q0 + r0 hSparse).isInt = true)
     (hq0_value : q0 = ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ))
     (m0 : ↥A → ℕ)
     (hm0_def : ∀ a : ↥A, m0 a =
       Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm ⟨a.val, hA_sub_Stilde a.property⟩))
-    (hm0_sum : ∑ a, m0 a = (n : ℕ)) :
+    --(hm0_sum : ∑ a, m0 a = (n : ℕ))
+    :
     ((Finset.univ : Finset (Fin (n : ℕ) → ↥A)).filter
         (fun e => (∑ i : Fin (n : ℕ), ((e i : ℚ))) = q0))
     =
@@ -3469,12 +3471,12 @@ private lemma pi_filter_q0_eq_count_fiber
     have hl_e_sum : (l_e.map (fun s => (s.val : ℚ))).sum = q0 := by
       have h_eq : (l_e.map (fun s => (s.val : ℚ))).sum
           = ∑ i ∈ (Finset.univ : Finset (Fin n)), ((e i).val : ℚ) := by
-        simp [l_e, Multiset.map_map, Function.comp_def, Finset.sum]
+        simp [l_e, Function.comp_def, Finset.sum]
       rw [h_eq]
       simpa using he_sum
     -- Finite support of phiT.
     have hphiT_finite : (Function.support phiT).Finite := by
-      simpa [phiT] using (Finsupp.finite_support l_e.toFinsupp)
+      simp [phiT]-- using (Finsupp.finite_support l_e.toFinsupp)
     -- Bridge: ∑ᶠ phiT = l_e.card.
     have h_count_bridge : (∑ᶠ s : ↥(Stilde hf2), phiT s) = l_e.card := by
       have h_supp_subset :
@@ -3492,8 +3494,7 @@ private lemma pi_filter_q0_eq_count_fiber
       rw [hsum_eq]
       have h_supp_eq_toFinset : (l_e.toFinsupp).support = l_e.toFinset := by
         ext s
-        simp [Multiset.mem_toFinset, Finsupp.mem_support_iff,
-          Multiset.toFinsupp_apply, Multiset.count_eq_zero]
+        simp [Multiset.mem_toFinset]
       rw [h_supp_eq_toFinset]
       exact Multiset.toFinset_sum_count_eq l_e
     have hphiT_sum : ∑ᶠ s : ↥(Stilde hf2), phiT s ≤ n := by
@@ -3514,8 +3515,7 @@ private lemma pi_filter_q0_eq_count_fiber
         (s := (l_e.toFinsupp).support) h_supp_subset]
       have h_supp_eq_toFinset : (l_e.toFinsupp).support = l_e.toFinset := by
         ext s
-        simp [Multiset.mem_toFinset, Finsupp.mem_support_iff,
-          Multiset.toFinsupp_apply, Multiset.count_eq_zero]
+        simp [Multiset.mem_toFinset]
       rw [h_supp_eq_toFinset]
       have h_each : ∀ s ∈ l_e.toFinset,
           (s.val : ℚ) * (phiT s : ℚ) = (s.val : ℚ) * (l_e.count s : ℚ) := by
@@ -3836,7 +3836,7 @@ private lemma fhat_A_of_coeff_props
   · intro a ha
     rw [Finset.mem_image] at ha
     obtain ⟨d₀, hd₀_mem, rfl⟩ := ha
-    show (∑ d ∈ hφ₀_finite.toFinset,
+    change (∑ d ∈ hφ₀_finite.toFinset,
         HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff (mu_q hf2 d₀) = _
     rw [HahnSeries.coeff_sum]
     rw [Finset.sum_eq_single d₀]
@@ -3845,7 +3845,7 @@ private lemma fhat_A_of_coeff_props
       exact HahnSeries.coeff_single_of_ne (fun h => hne (mu_q_injective hS hf2 h.symm))
     · intro h; exact absurd hd₀_mem h
   · intro a ha
-    show (∑ d ∈ hφ₀_finite.toFinset,
+    change (∑ d ∈ hφ₀_finite.toFinset,
         HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff a = 0
     rw [HahnSeries.coeff_sum]
     apply Finset.sum_eq_zero
@@ -3858,7 +3858,7 @@ private lemma fhat_A_of_coeff_props
     have ha_notin : a ∉ hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d) :=
       fun h => ha_notA (Finset.mem_coe.mpr h)
     apply ha_supp
-    show (∑ d ∈ hφ₀_finite.toFinset,
+    change (∑ d ∈ hφ₀_finite.toFinset,
         HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff a = 0
     rw [HahnSeries.coeff_sum]
     apply Finset.sum_eq_zero
@@ -3894,7 +3894,7 @@ private lemma mu_equiv_prod_reindex
       (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
     ?_ ?_ ?_ ?_
   · intro a _
-    show (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩
+    change (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩
         ∈ hφ₀_finite.toFinset
     have ha_image : a.val ∈
         Finset.image (fun d : S => mu_q hf2 d) hφ₀_finite.toFinset := by
@@ -3925,7 +3925,7 @@ private lemma mu_equiv_prod_reindex
     have h_mem' : mu_q hf2 d ∈ A_F := by
       rw [hA_F_def]; exact h_mem
     refine ⟨⟨mu_q hf2 d, h_mem'⟩, Finset.mem_univ _, ?_⟩
-    show (mu_equiv hS hf2).symm ⟨mu_q hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
+    change (mu_equiv hS hf2).symm ⟨mu_q hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
     apply (mu_equiv hS hf2).injective
     rw [Equiv.apply_symm_apply]; apply Subtype.ext; rfl
   · intro a _
@@ -3955,7 +3955,7 @@ private lemma mu_equiv_sum_reindex
       (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
     ?_ ?_ ?_ ?_
   · intro a _
-    show (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩
+    change (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩
         ∈ hφ₀_finite.toFinset
     have ha_image : a.val ∈
         Finset.image (fun d : S => mu_q hf2 d) hφ₀_finite.toFinset := by
@@ -3986,7 +3986,7 @@ private lemma mu_equiv_sum_reindex
     have h_mem' : mu_q hf2 d ∈ A_F := by
       rw [hA_F_def]; exact h_mem
     refine ⟨⟨mu_q hf2 d, h_mem'⟩, Finset.mem_univ _, ?_⟩
-    show (mu_equiv hS hf2).symm ⟨mu_q hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
+    change (mu_equiv hS hf2).symm ⟨mu_q hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
     apply (mu_equiv hS hf2).injective
     rw [Equiv.apply_symm_apply]; apply Subtype.ext; rfl
   · intro a _
@@ -4133,9 +4133,8 @@ private lemma fhat_pow_collapse_to_beta_P_prod
   rw [coeff_pow_truncate_eq (hf2 := hf2) hSparse h_supp h_coeff_eq hCs_ne hφ₀_finite]
   -- (14) Apply Helper A5 to get hCollapse.
   have hCollapse :=
-    pi_filter_q0_eq_count_fiber (hf2 := hf2) hSparse (fhat := fhatA)
-      h_fhatA_supp_Stilde A_F h_fhatA_supp_A_F hA_F_sub_Stilde hA_F_covers_phi
-      q0 hq0_residue hq0_value m0 (fun _ => rfl) hm0_sum
+    pi_filter_q0_eq_count_fiber (hf2 := hf2) hSparse
+      A_F hA_F_sub_Stilde hA_F_covers_phi q0 hq0_residue hq0_value m0 (fun _ => rfl)
   -- (15) Apply Helper A4c.
   rw [coeff_pow_collapse_to_multinomial_prod (Γ := ℚ) (R := ℤᵘⁿ_[p,(T : ℕ)])
         fhatA A_F h_fhatA_supp_A_F (n : ℕ) q0 m0 hm0_sum hCollapse]
@@ -4174,7 +4173,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
         (fun a => fhatA.coeff a.val ^ m0 a)
         (fun d => Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))
         (fun a => by
-          show fhatA.coeff a.val ^ m0 a
+          change fhatA.coeff a.val ^ m0 a
               = Cs (mu_to_Stilde hf2 ((mu_equiv hS hf2).symm
                   ⟨a.val, hA_F_sub_Stilde a.property⟩)) ^
                 (Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
@@ -4186,7 +4185,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
               mu_to_Stilde hf2 ((mu_equiv hS hf2).symm
                 ⟨a.val, hA_F_sub_Stilde a.property⟩)
               = ⟨a.val, hA_F_sub_Stilde a.property⟩ := by
-            show (mu_equiv hS hf2) ((mu_equiv hS hf2).symm
+            change (mu_equiv hS hf2) ((mu_equiv hS hf2).symm
               ⟨a.val, hA_F_sub_Stilde a.property⟩) = _
             exact (mu_equiv hS hf2).apply_symm_apply _
           rw [h_in, h_mu_to_S]
@@ -4272,7 +4271,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
     -- Round-25 closure: invoke the closure-lemma directly above.
     have h_axiom := fhat_pow_collapse_to_beta_P_prod (hf2 := hf2)
       hSparse h_supp h_coeff_eq hCs_ne hφ₀_finite
-    show (fhat ^ (n : ℕ)).coeff q0 = β * P_prod
+    change (fhat ^ (n : ℕ)).coeff q0 = β * P_prod
     rw [show β * P_prod
         = ((Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) :
               ℤᵘⁿ_[p,(T : ℕ)]) *
@@ -4369,7 +4368,8 @@ fixed integer exponent `w₀ := (r₀ + T·∑_{d∈S} φ₀(d)·μ(d)).num` (re
 `w0_rat_isInt`). The conclusion is:
 
 1. ∃ α : ℚᵘⁿ_[p,T], α ≠ 0.
-2. `algebraMap (Pfhat.coeff (-r0/T + w₀/T)) = α · (algebraMap (P.coeff n) · ∏ᶠ algebraMap (Cs(μd)^φ₀(d)))`.
+2. `algebraMap (Pfhat.coeff (-r0/T + w₀/T)) =
+α · (algebraMap (P.coeff n) · ∏ᶠ algebraMap (Cs(μd)^φ₀(d)))`.
 3. ∀ k : ℤ, k ≠ w₀, `Pfhat.coeff (-r0/T + k/T) = 0`.
 
 Mathematical content (PDF pp. 9-10, §5b):
@@ -4535,7 +4535,8 @@ private lemma Pfhat_TLifted_collapse_combinatorial
         rw [h_sum, h_sum_collapse, map_mul]
         -- Step 3: Apply Helper A3 (hβ_coeff already has q0 in scope).
         rw [hβ_coeff, map_mul]
-        -- Goal: algebraMap (OQpUn_embd ((P_int P).coeff n)) * (algebraMap β * algebraMap (∏ᶠ Cs^φ₀))
+        -- Goal: algebraMap (OQpUn_embd ((P_int P).coeff n)) *
+        -- (algebraMap β * algebraMap (∏ᶠ Cs^φ₀))
         --       = α * (algebraMap (P.coeff n) * ∏ᶠ algebraMap (Cs^φ₀))
         -- Step 4: distribute algebraMap over ∏ᶠ.
         have h_mulSup_finite :
@@ -4555,7 +4556,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                 (OQpUn_embd p T ((P_int P).coeff n))
               = (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)])) ((P_int P).coeff n) := by
-          show (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+          change (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
               ((algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,(T : ℕ)])) ((P_int P).coeff n))
               = (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)])) ((P_int P).coeff n)
           exact (IsScalarTower.algebraMap_apply (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,(T : ℕ)])
@@ -4569,7 +4570,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             (ℚᵘⁿ_[p, (T : ℕ)]) ((P_int P).coeff n)
         rw [h_OQpUn_to_QpUn_step]
         -- Unfold `P_int` so that hc applies (hc has the unfolded form).
-        show (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)]))
+        change (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)]))
               ((algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]))
                 ((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff n))
             * ((algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β *
@@ -4629,7 +4630,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
           have hq_mem : q ∈ (fhat ^ i).support := by
             simpa [HahnSeries.mem_support] using h_coeff_ne
           obtain ⟨l, _hl_card, hl_sum⟩ :=
-            fhat_pow_support_multiset_decomp (hS := hS) (hf2 := hf2) (fhat := fhat)
+            fhat_pow_support_multiset_decomp (hf2 := hf2) (fhat := fhat)
               _h_supp i hq_mem
           -- The PDF argument: with phiT = φ₀ ∘ μ.symm we get
           --   ∑ᶠ s, s.val * phiT s = ∑ᶠ d : S, μ(d) * φ₀(d).
@@ -4693,7 +4694,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             classical
             let phiT' : ↥(Stilde hf2) → ℕ := (l.toFinsupp : _ →₀ ℕ)
             have hphiT'_finite : (Function.support phiT').Finite := by
-              simpa [phiT'] using (Finsupp.finite_support (l.toFinsupp))
+              simp [phiT']
             -- Count-bridge for phiT'.
             have h_supp_subset_pT :
                 Function.support phiT' ⊆ ((l.toFinsupp).support : Set (↥(Stilde hf2))) := by
@@ -5205,7 +5206,7 @@ theorem main_theorem₀ (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
     rw [← hP1, Polynomial.coeff_natDegree]
     exact (Polynomial.leadingCoeff_ne_zero).mpr hP_ne
   -- Build the lift data and apply the engine.
-  have lift_data := exists_FhatData f T hS hf2
+  have lift_data := exists_FhatData f T hf2
   exact sparse_contradiction_engine (hcD n hnD) lift_data hP2 hP1 hP3
 
 theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
