@@ -5,10 +5,7 @@ import Mathlib.Data.PNat.Interval
 import Mathlib.RingTheory.Localization.Integral
 import Mathlib.Data.Nat.Choose.Multinomial
 import Mathlib.GroupTheory.Perm.DomMulAct
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+
 open Sparse Poonen1993 TScaled
 
 def IsRepModZ (A B : Set ℚ) : Prop :=

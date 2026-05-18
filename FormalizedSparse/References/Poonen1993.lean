@@ -6,10 +6,7 @@ import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Finite.Basic
 import Mathlib.FieldTheory.Finiteness
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+
 open WittVector
 
 namespace Poonen1993
@@ -4378,11 +4375,6 @@ lemma alg_QpUn_of_alg_Qp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) :
   IsAlgebraic ℚ_[p] f → IsAlgebraic ℚᵘⁿ_[p] f := by
   intro h
   simpa using h.tower_top (ℚᵘⁿ_[p])
-
-/- USER : This follows from an induction on the card of f.support:
-If f.support = {q}, then f = [a_q] p^q. If we set q =a/b with a b integers, then f is a root of the polynomial X^b-[a_q]^b X^a, which is in ℚᵘⁿ_[p][X].
-The induction step follows from the fact that the sum of algebraic elements is still algebraic.
--/
 
 /-- A version of `Ideal.Quotient.mk` returning `𝕃_[p]` directly. -/
 private noncomputable def mkLp {p : ℕ} [Fact (Nat.Prime p)]

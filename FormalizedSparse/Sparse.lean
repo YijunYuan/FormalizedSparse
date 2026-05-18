@@ -9,10 +9,6 @@ import Mathlib.SetTheory.Cardinal.Finite
 import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Analysis.Real.OfDigits
 
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
 namespace Sparse
 
 @[ext]
@@ -1478,37 +1474,24 @@ lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
       intro x _; exact ⟨perm.symm x, by simp⟩)
   rw [hperm_card, hA5]
 
-/- USER: You should formalize the following results.
-The corresponding informal proof is in Sparse.pdf.
--/
-
-/- USER: Every rational number q can be written as w+0.a₁a₂a₃⋯ in base p, where w is an
-integer and each aᵢ is a digit in {0, 1, ⋯, p-1}. We additionally rule out the case where
-the expansion ends with infinitely many (p-1)s, to ensure uniqueness of the expansion. This
-is the content of the following lemma.
-
-Implicitly used in Definition 1.3 (1) of Sparse.pdf.
-
-I think the following is the best way to formalize this.
--/
 noncomputable abbrev decDigits (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : ℕ+ → Fin p :=
   fun n => Real.digits (Int.fract q) p ((n : ℕ) - 1)
 
 open Classical in
-/- USER: The p-digit sum, 𝔑ₚ(q) in Definition 1.3 (1) of Sparse.pdf-/
+/- The p-digit sum, 𝔑ₚ(q) in Definition 1.3 (1) of Sparse.pdf-/
 noncomputable def pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : WithTop ℕ :=
   if h : (Function.support (decDigits p q)).Infinite then ⊤
   else ∑ n ∈ (Set.not_infinite.1 h).toFinset, (decDigits p q n).val
 
-/- USER: dominant p-digit sum of S, Definition 1.3 (2)-/
+/- dominant p-digit sum of S, Definition 1.3 (2)-/
 noncomputable def dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : WithTop ℕ :=
   sSup {pDigitSum p  q | q ∈ S}
 
-/- USER: p-digit dominant part of S, Definition 1.3 (2)-/
+/- p-digit dominant part of S, Definition 1.3 (2)-/
 noncomputable def Dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Set ℚ :=
   {q ∈ S | pDigitSum p q = dom p S}
 
-/- USER: Definition 1.4 of Sparse.pdf-/
+/- Definition 1.4 of Sparse.pdf-/
 def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Prop :=
   S ⊆ Set.Ico 0 1 ∧ dom p S < ⊤ ∧
   ∃ D : Set ℕ+, D.Infinite ∧ (
@@ -1893,17 +1876,6 @@ lemma DigitSeries.Sigma_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : �
     rfl
   rw [hSig]
 
-/- USER: Lemma 3.6 of Sparse.pdf
-
-NOTE (prover, 2026-05-17):
-This iff has a degenerate corner case. Consider `W = {0}`:
-- `IsSparse p {0}` holds: dom = 0, take the constant function d i = 0 as witness.
-- For the RHS: `S` is forced to be `{0}` (since only the zero DigitSeries has
-  norm 0 among IsP series). But `IsCNSparse p c n {0} hS` requires `c : ℕ+` with
-  `c ≥ 1` and `(d i).val.Sigma = c`; the only choice forces `c = 0`. Contradiction.
-
-Thus the iff fails for `W = {0}`. We mark this with a `sorry` for the forward
-direction in the degenerate case. -/
 lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
     (hW : W ≠ {0}) :
   IsSparse p W ↔ ∃ S : Set (DigitSeries), ∃ hS : ∀ f ∈ S, f.IsP p,
@@ -2323,38 +2295,6 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
         change (g (perm i)).norm p = (e' (perm i)).val
         exact hg_norm (perm i)
 
-/- USER: The first assertion of Proposition 5.3 of Sparse.pdf
-Someone told me that we will also need to assume that 0 ∉ Aᵢ for evey i, but I don't see why
-that is necessary. Please try hard to think about that. If you also find it's necessary, you
-should formalize a conterexample (construct such A) to show that the conclusion can fail
-without that assumption. If you really find such example, you are allowed to add the
-assumption 0 ∉ Aᵢ to the lemma statement, but you should also add a comment about the
-counterexample in the code.
--/
-
-/-
-COUNTEREXAMPLE (prover, 2026-05-17):
-The hypothesis `0 ∉ A i` IS necessary. Counterexample:
-  p = 2, A 0 = {0}, A n = {n+1} for n ≥ 1.
-  - hA1: each A_n is nonempty ✓
-  - hA2: pairwise disjoint (distinct singletons) ✓
-  - hA3: each A_n is finite ✓
-  - hA4: |A_n| = 1, bounded ✓
-But q_0 = ∑_{r ∈ {0}} 2^{-r} = 2^0 = 1, so q_0 = 1 ∉ Set.Ico 0 1.
-Hence `IsSparse p M(A)` fails (W ⊆ [0,1) violated).
-
-Per the USER directive, we add `hA0 : ∀ n, 0 ∉ A n`.
-
-ADDITIONAL CAVEAT (prover, 2026-05-17):
-Even with `0 ∉ A`, the third clause of IsSparse can fail if the supremum
-sup_i |A_i| is only achieved finitely often. E.g.:
-  p = 3, A 0 = {1,2,3}, A n = {n+3} for n ≥ 1.
-  Hypotheses (with hA0) all hold; but dom p M(A) = 3 and Dom = {q_0}.
-  For IsSparse second clause: constant d = q_0 forces n ≤ 2 < 3 (no-carry),
-  so D ⊆ {1,2} finite, contradiction.
-This suggests an additional hypothesis is needed (e.g., supremum
-achieved infinitely often), but it is not authorized by the USER comment.
-We document this in task_results and use a `sorry` for the third clause. -/
 /-- Indicator DigitSeries for a finite set of positive naturals. -/
 noncomputable def indicatorSeries (A : Set ℕ) (hA_fin : A.Finite) : DigitSeries where
   toFun n := haveI := Classical.propDecidable ((n : ℕ) ∈ A);

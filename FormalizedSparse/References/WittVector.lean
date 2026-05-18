@@ -99,11 +99,6 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne
           rfl
         rw [hp_val]; decide }
 
-/- USER: This is a consequence of the general fact that the fraction field of of a complete discrete valuation ring is still complete. You should try this approach.
-
-Another approach is to use `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff` in Mathlib, which, roughly speaking, says that every element in the ring of Wiit vectors can be expanded into the form ∑_{i=0}^∞ [x_i]p^i. Although the uniqueness of such expansion is not available yet, but we do not nned it for the proof. Now, as the fraction field of the ring of Witt vectors, every element in ℚᵘⁿ_[p] can be written as ∑_{i=N}^∞[x_i]p^i for some N ∈ ℤ. Then the Cauchy sequence of partial sums of this series converges to the element, which shows that ℚᵘⁿ_[p] is complete. This proof shold be similar to the proof of completeness of the field of formal laurent series k((T)) with respect to the T-adic valuation.
-
--/
 instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
   -- Strategy: reduce `CompleteSpace ℚᵘⁿ_[p]` to `IsComplete (Valued.v.integer)`, then
   -- use that this integer subring is isomorphic to the IsAdicComplete `ℤᵘⁿ_[p]`.

@@ -3,10 +3,7 @@ import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.Polynomial.Eisenstein.Basic
 import Mathlib.RingTheory.Localization.Finiteness
 import Mathlib.Topology.Algebra.Module.FiniteDimension
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+
 /-!
 # T-scaled realization of p-adic Hahn series
 
