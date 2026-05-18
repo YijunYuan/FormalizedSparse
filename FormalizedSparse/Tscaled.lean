@@ -1415,7 +1415,8 @@ private lemma TnatrangeDivT_isPWO (T : ℕ) [NeZero T] :
   simpa using hUniv.image_of_monotoneOn hMono
 
 open scoped Pointwise in
-/-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.support_isPWO_of_subset_support_add_natRange`
+/-- T-scaled analogue of
+  `Poonen1993.existsCanonicalExpansionAux.support_isPWO_of_subset_support_add_natRange`
 (Poonen line 853).  If `Function.support s ⊆ α.support + {n/T | n : ℕ}`, then
 `Function.support s` is partially well-ordered. -/
 private lemma Tsupport_isPWO_of_subset_support_add_natRange
@@ -1745,7 +1746,8 @@ private lemma continuous_algebraMap_K₀_K_early :
   exact continuous_of_continuousAt_zero
     (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])).toAddMonoidHom h0
 
-noncomputable instance : Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) := {
+noncomputable instance :
+  Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) := {
     hom := WithZeroMulInt.toNNReal (p_ne_zero p)
     strictMono' := by
       have hp1 : (1 : NNReal) < p := by
@@ -3977,7 +3979,8 @@ private lemma Tsupport_nonempty_of_nonzero
     exact Quotient.sound this
   apply HahnSeries.ext
   funext n
-  change OQpUn_embd p T (teichmuller p ((0 : ℚ → Fpbar p) n)) = (0 : TLiftedPAdicHahnSeries p T).coeff n
+  change OQpUn_embd p T (teichmuller p ((0 : ℚ → Fpbar p) n)) =
+    (0 : TLiftedPAdicHahnSeries p T).coeff n
   simp [WittVector.teichmuller_zero]
 
 /-- **Helper D.** Port of `Poonen1993.null_series_no_unit_leading` (Poonen 3013–3144).
@@ -5401,7 +5404,7 @@ for every `y ∈ TLiftedPAdicHahnSeries p T`, there exist `x ∈ LiftedPAdicHahn
 
 Round 20: closed via the linear-shift-element trick.  We set
 `x := Σ_i shift_{i/T} (s_proj y i)` and `n := y - ι(x)`, where `s_proj y i` is the i-th
-`R₀`-coordinate projection of `y`.  Coefficient-wise, `n = Σ_i (linear_shift_elt i) · ι(s_proj y i)`,
+`R₀`-coordinate projection of `y`.  Coefficient-wise, `n = Σ_i (linear_shift_elt i) · ι(s_proj y i)`
 and each summand lies in `TNullSeriesIdeal` because `linear_shift_elt i ∈ TNullSeriesIdeal`
 (its partial sum is eventually zero) and `TNullSeriesIdeal` is closed under multiplication. -/
 theorem range_lifted_add_TNull :
