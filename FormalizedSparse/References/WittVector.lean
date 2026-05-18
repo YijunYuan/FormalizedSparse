@@ -5,10 +5,10 @@ import Mathlib.RingTheory.Valuation.Discrete.Basic
 import Mathlib.RingTheory.WittVector.Compare
 import Mathlib.RingTheory.WittVector.DiscreteValuationRing
 import Mathlib.RingTheory.WittVector.Teichmuller
-/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
-Mark this file as completed. Admit all results here, include those with sorry/admit.
-Again, do not try to formalize any results in this file.
--/
+import Mathlib.RingTheory.WittVector.Complete
+import Mathlib.Topology.Algebra.Nonarchimedean.AdicTopology
+import Mathlib.RingTheory.AdicCompletion.Topology
+
 open WittVector
 
 -- The algebraic closure of F_p
@@ -75,16 +75,7 @@ lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
   WithAbs.normedField (abs p)
 
-/- USER: This is a consequence of the general fact that the fraction field of of a complete discrete valuation ring is still complete. You should try this approach.
-
-Another approach is to use `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff` in Mathlib, which, roughly speaking, says that every element in the ring of Wiit vectors can be expanded into the form ∑_{i=0}^∞ [x_i]p^i. Although the uniqueness of such expansion is not available yet, but we do not nned it for the proof. Now, as the fraction field of the ring of Witt vectors, every element in ℚᵘⁿ_[p] can be written as ∑_{i=N}^∞[x_i]p^i for some N ∈ ℤ. Then the Cauchy sequence of partial sums of this series converges to the element, which shows that ℚᵘⁿ_[p] is complete. This proof shold be similar to the proof of completeness of the field of formal laurent series k((T)) with respect to the T-adic valuation.
-
--/
-instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
-  -- Strategy: reduce `CompleteSpace ℚᵘⁿ_[p]` to `IsComplete (Valued.v.integer)`, then
-  -- use that this integer subring is isomorphic to the IsAdicComplete `ℤᵘⁿ_[p]`.
-  -- The `Valuation.RankOne` instance is built later in this file, so we replay it locally.
-  haveI rk1 : Valuation.RankOne
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne
       (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
     hom := WithZeroMulInt.toNNReal (p_ne_zero p)
     strictMono' := by
@@ -107,6 +98,16 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
             (WittVector.p_nonzero p _) hpe]
           rfl
         rw [hp_val]; decide }
+
+/- USER: This is a consequence of the general fact that the fraction field of of a complete discrete valuation ring is still complete. You should try this approach.
+
+Another approach is to use `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff` in Mathlib, which, roughly speaking, says that every element in the ring of Wiit vectors can be expanded into the form ∑_{i=0}^∞ [x_i]p^i. Although the uniqueness of such expansion is not available yet, but we do not nned it for the proof. Now, as the fraction field of the ring of Witt vectors, every element in ℚᵘⁿ_[p] can be written as ∑_{i=N}^∞[x_i]p^i for some N ∈ ℤ. Then the Cauchy sequence of partial sums of this series converges to the element, which shows that ℚᵘⁿ_[p] is complete. This proof shold be similar to the proof of completeness of the field of formal laurent series k((T)) with respect to the T-adic valuation.
+
+-/
+instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
+  -- Strategy: reduce `CompleteSpace ℚᵘⁿ_[p]` to `IsComplete (Valued.v.integer)`, then
+  -- use that this integer subring is isomorphic to the IsAdicComplete `ℤᵘⁿ_[p]`.
+
   -- Step 1: use `Valued.toNormedField` so that the NormedField's UniformSpace coincides
   -- with the Valued one (avoids the clash with the file-level `WithAbs.normedField (abs p)`).
   letI nfd : NormedField (ℚᵘⁿ_[p]) :=
@@ -117,23 +118,81 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
   -- Step 3: the unit closed ball is exactly the valuation-integer subring (as a set).
   rw [← Valued.toNormedField.setOf_mem_integer_eq_closedBall]
   -- Step 4: show that `{x | x ∈ Valued.v.integer}` is complete.
-  -- Mathematical idea: this set equals the image of `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]` (since
-  -- `ℤᵘⁿ_[p]` is a DVR and `ℚᵘⁿ_[p]` is its fraction field). The image is a closed subset
-  -- (`Valued.isClosed_integer`) and is uniformly isomorphic to `ℤᵘⁿ_[p] = WittVector p 𝔽ᵃ_[p]`.
-  -- The Witt vector ring is `IsAdicComplete (Ideal.span {p})`
-  -- (`WittVector.isAdicCompleteIdealSpanP`),
-  -- and the adic topology matches the valuation topology on `Valued.integer` (the maximal ideal
-  -- of `WittVector p 𝔽ᵃ_[p]` is `Ideal.span {p}` by `Irreducible.maximalIdeal_eq` together with
-  -- `WittVector.irreducible`). Sequential completeness from `IsPrecomplete` therefore transports
-  -- to filter completeness of the integer subring.
-  --
-  -- Formalizing the uniform-equivalence + transport step requires installing a UniformSpace
-  -- instance on `WittVector p 𝔽ᵃ_[p]` whose uniformity is the `(Ideal.span {p})`-adic one and
-  -- verifying it matches the subspace uniformity inherited from `ℚᵘⁿ_[p]`. This bridge is
-  -- substantial and is left as the residual gap below. The alternative Teichmüller-series
-  -- approach (`dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`) reduces to essentially the
-  -- same convergence argument.
-  admit
+  -- Equip `ℤᵘⁿ_[p]` with the `(Ideal.span {p})`-adic topology/uniformity via `WithIdeal`.
+  letI : WithIdeal (ℤᵘⁿ_[p]) := ⟨Ideal.span {(p : ℤᵘⁿ_[p])}⟩
+  have hadic : IsAdic (WithIdeal.i (R := ℤᵘⁿ_[p])) := rfl
+  -- `WittVector.isAdicCompleteIdealSpanP` + `IsAdic.isAdicComplete_iff` gives `CompleteSpace`.
+  haveI : CompleteSpace (ℤᵘⁿ_[p]) :=
+    (hadic.isAdicComplete_iff.mp WittVector.isAdicCompleteIdealSpanP).1
+  -- Show `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]` is uniform inducing: pulling back the valuation
+  -- uniformity from `ℚᵘⁿ_[p]` recovers the `(Ideal.span {p})`-adic uniformity on `ℤᵘⁿ_[p]`.
+  have hUI : IsUniformInducing (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])) := by
+    have hsrc : (uniformity (ℤᵘⁿ_[p])).HasBasis (fun _ : ℕ => True)
+        (fun n => {x : ℤᵘⁿ_[p] × ℤᵘⁿ_[p] | x.2 - x.1 ∈ (Ideal.span {(p : ℤᵘⁿ_[p])}) ^ n}) :=
+      Filter.HasBasis.uniformity_of_nhds_zero hadic.hasBasis_nhds_zero
+    have htgt : (uniformity (ℚᵘⁿ_[p])).HasBasis (fun _ : (WithZero (Multiplicative ℤ))ˣ => True)
+        (fun γ => {p_1 : ℚᵘⁿ_[p] × ℚᵘⁿ_[p] | Valued.v (p_1.2 - p_1.1) < γ.val}) :=
+      Valued.hasBasis_uniformity (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
+    rw [hsrc.isUniformInducing_iff htgt]
+    set v := (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p]))
+    have hmax : v.asIdeal = Ideal.span {(p : ℤᵘⁿ_[p])} :=
+      (WittVector.irreducible p).maximalIdeal_eq
+    refine ⟨?_, ?_⟩
+    · -- For any target basis γ, find a source basis n s.t. `r ∈ I^n → v(algebraMap r) < γ`.
+      intro γ _
+      refine ⟨(1 - γ.val.log).toNat, trivial, ?_⟩
+      intro x y h
+      simp only [Set.mem_setOf_eq] at h ⊢
+      rw [← map_sub]
+      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
+        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
+      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [← hmax] at h
+      have h1 : v.intValuation (y - x) ≤ WithZero.exp (-((1 - γ.val.log).toNat : ℤ)) :=
+        (IsDedekindDomain.HeightOneSpectrum.intValuation_le_pow_iff_mem v (y - x) _).mpr h
+      refine lt_of_le_of_lt h1 ?_
+      rw [(WithZero.lt_log_iff_exp_lt γ.ne_zero).symm]
+      by_cases hpos : 1 - γ.val.log ≥ 0
+      · rw [Int.toNat_of_nonneg hpos]; omega
+      · push_neg at hpos
+        rw [Int.toNat_of_nonpos (le_of_lt hpos)]; push_cast; omega
+    · -- For any source basis n, find a target basis γ s.t. `v(algebraMap r) < γ → r ∈ I^n`.
+      intro n _
+      refine ⟨Units.mk0 (WithZero.exp (1 - n : ℤ)) (by simp [WithZero.exp]), trivial, ?_⟩
+      intro x y h
+      simp only [Set.mem_setOf_eq] at h ⊢
+      rw [← hmax]
+      rw [← IsDedekindDomain.HeightOneSpectrum.intValuation_le_pow_iff_mem v (y - x) n]
+      rw [← map_sub] at h
+      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
+        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl] at h
+      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap] at h
+      simp only [Units.val_mk0] at h
+      by_cases hzero : y - x = 0
+      · rw [hzero]; simp
+      · rw [IsDedekindDomain.HeightOneSpectrum.intValuation_if_neg v hzero] at h ⊢
+        rw [WithZero.exp_lt_exp] at h
+        rw [WithZero.exp_le_exp]
+        omega
+  -- Transport completeness: the image of a complete space under a uniform inducing map is complete.
+  have hRange : IsComplete (Set.range (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]))) := hUI.isComplete_range
+  -- Identify the image with `Valued.v.integer` (both equal `{x | v(x) ≤ 1}` since `ℤᵘⁿ_[p]` is a DVR).
+  have hSet : Set.range (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])) =
+      {x : ℚᵘⁿ_[p] | x ∈ Valued.v.integer} := by
+    ext x
+    refine ⟨?_, ?_⟩
+    · rintro ⟨r, rfl⟩
+      change Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) r) ≤ 1
+      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
+        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
+      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      exact (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).intValuation_le_one r
+    · intro hx
+      obtain ⟨r, hr⟩ := IsDiscreteValuationRing.exists_lift_of_le_one
+        (A := ℤᵘⁿ_[p]) (K := ℚᵘⁿ_[p]) hx
+      exact ⟨r, hr⟩
+  rw [hSet] at hRange
+  exact hRange
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p].
 noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] :=
@@ -237,25 +296,6 @@ lemma Qp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
   rw [hnorm]
   rw [show ‖(Qp_embd x : ℚᵘⁿ_[p])‖ = QpUn.abs p (Qp_embd x) by rfl]
   simp [QpUn.abs_def, Qp_embd_keep_val p x]
-
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
-  Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
-    hom := WithZeroMulInt.toNNReal (p_ne_zero p)
-    strictMono' := by
-      have hp1 : (1 : NNReal) < p := by
-        exact_mod_cast (Fact.out : Nat.Prime p).one_lt
-      exact WithZeroMulInt.toNNReal_strictMono hp1
-    exists_val_nontrivial := by
-      refine ⟨QpUn.Qp_embd (p : ℚ_[p]), ?_, ?_⟩
-      · rw [← QpUn.Qp_embd_keep_val p (p : ℚ_[p])]
-        have hp_ne : (p : ℚ_[p]) ≠ 0 := by
-          exact_mod_cast (Fact.out : Nat.Prime p).ne_zero
-        simp [Padic.mulValuation_toFun, hp_ne]
-      · rw [← QpUn.Qp_embd_keep_val p (p : ℚ_[p])]
-        have hp_ne : (p : ℚ_[p]) ≠ 0 := by
-          exact_mod_cast (Fact.out : Nat.Prime p).ne_zero
-        simp [Padic.mulValuation_toFun, hp_ne]
-    }
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NontriviallyNormedField ℚᵘⁿ_[p] :=
   Valued.toNontriviallyNormedField

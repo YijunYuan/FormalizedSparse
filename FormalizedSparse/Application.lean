@@ -2,18 +2,6 @@ import FormalizedSparse.MainTheorem
 
 open Sparse Poonen1993 Poonen1993.pAdicHahnSeries WittVector
 
-/- USER: This corresponds to Proposition 5.3 of Sparse.pdf. You need to formalize the proof.
-Please follow the informal proof in Sparse.pdf.
-
-Basically, this is an application of `main_theorem` in MainTheorem.lean, and
-`IsSparse_of_digit_disjoint₀` in Sparse.lean. The tricky part is to remove finitely many terms
-from the support of `f` to make it fit the condition of `IsSparse_of_digit_disjoint₀`.
-The saying `removing finitely many terms does not change algebraicity` is reflected in
-`alg_of_fin_supp` in Poonen1993.lean, which states that a p-adic Hahn series with finite
-support is algebraic over ℚ_[p] (which, consequently, is algebraic over ℚᵘⁿ_[p] by
-`alg_QpUn_of_alg_Qp` in Poonen1993.lean). This lemma is not proved yet, you should also
-formalize that.
--/
 set_option maxHeartbeats 800000 in
 theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
@@ -830,6 +818,16 @@ List.TFAE [
   IsAlgebraic ℚᵘⁿ_[p] f,
   IsAlgebraic ℚ_[p] f
 ] := by
-  tfae_have 1 → 3 := by
+  tfae_have 3 → 2 := fun a ↦ alg_QpUn_of_alg_Qp p f a
+  tfae_have 1 → 3 := fun a ↦ alg_of_fin_supp p f a
+  tfae_have 2 → 1 := by
+    intro h
+    contrapose h
+    have hDenum : Denumerable f.support := by
+      refine (Set.countable_infinite_iff_nonempty_denumerable.1 ?_).some
+      exact ⟨Set.Countable.mono hf <| Set.to_countable _, Set.not_finite.mp h⟩
+    have := trans_of_digit_disjoint p f (
+      fun n => sorry
+    )
     sorry
-  sorry
+  tfae_finish

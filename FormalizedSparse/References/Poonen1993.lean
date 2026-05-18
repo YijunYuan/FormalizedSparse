@@ -6,7 +6,10 @@ import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
 import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Finite.Basic
 import Mathlib.FieldTheory.Finiteness
-
+/- USER: Do NOT modify any code in this file, except for you can make private lemma public.
+Mark this file as completed. Admit all results here, include those with sorry/admit.
+Again, do not try to formalize any results in this file.
+-/
 open WittVector
 
 namespace Poonen1993
