@@ -193,7 +193,7 @@ noncomputable def Cs_term {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (s : ↥(Stilde hf2)) (w : ℕ) : ℤᵘⁿ_[p, (T : ℕ)] :=
+    (s : ↥(Stilde hf2)) (w : ℕ) : ℤᵘⁿ_[p,(T : ℕ)] :=
   OQpUn_embd p T (WittVector.teichmuller p (f.coeff (s.val + (w : ℚ) / T))) * (pInvT p T) ^ w
 
 /-- §2b — finite partial sum `∑_{w < N} Cs_term hf2 s w`. -/
@@ -201,7 +201,7 @@ noncomputable def Cs_partial {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : 
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (s : ↥(Stilde hf2)) (N : ℕ) : ℤᵘⁿ_[p, (T : ℕ)] :=
+    (s : ↥(Stilde hf2)) (N : ℕ) : ℤᵘⁿ_[p,(T : ℕ)] :=
   ∑ w ∈ Finset.range N, Cs_term hf2 s w
 
 /-- §2c-1 (algebraic factorization) — For `N ≤ N'`, the difference of partial sums
@@ -232,22 +232,22 @@ private lemma algebraMap_Cs_term_v_le
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) (w : ℕ) :
-    Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s w))
+    Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s w))
       ≤ ((Multiplicative.ofAdd (-(w : ℤ)) : Multiplicative ℤ) : WithZero _) := by
   unfold Cs_term
   rw [map_mul]
   rw [map_pow]
-  rw [show (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) (pInvT p T) = pInvTQ p T from rfl]
+  rw [show (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) (pInvT p T) = pInvTQ p T from rfl]
   rw [Valuation.map_mul]
   rw [show ((pInvTQ p T) ^ w : ℚᵘⁿ_[p, (T : ℕ)]) = (pInvTQ p T) ^ (w : ℤ) from by
     rw [zpow_natCast]]
   rw [valued_v_pInvT_zpow]
   have h_OQ_le_one :
-      Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+      Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
         (OQpUn_embd p (T : ℕ)
           (WittVector.teichmuller p (f.coeff (s.val + (w : ℚ) / T))))) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p, (T : ℕ)])).valuation_le_one _
-  calc Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,(T : ℕ)])).valuation_le_one _
+  calc Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (OQpUn_embd p (T : ℕ)
             (WittVector.teichmuller p (f.coeff (s.val + (w : ℚ) / T))))) *
           ((Multiplicative.ofAdd (-(w : ℤ)) : Multiplicative ℤ) : WithZero _)
@@ -263,7 +263,7 @@ private lemma Cs_partial_diff_alg_v_le
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) {N N' : ℕ} (hN : N ≤ N') :
-    Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+    Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (Cs_partial hf2 s N' - Cs_partial hf2 s N))
       ≤ ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) := by
   rw [Cs_partial_diff_eq_Ico_sum hf2 s hN]
@@ -294,8 +294,8 @@ private lemma algebraMap_Cs_partial_diff_v_le
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) {N M M' : ℕ} (hMM' : M ≤ M') (hNM : N ≤ M) :
     Valued.v
-        (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s M')
-          - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s M)) ≤
+        (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s M')
+          - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s M)) ≤
         ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) := by
   rw [← map_sub]
   refine le_trans (Cs_partial_diff_alg_v_le hf2 s hMM') ?_
@@ -317,11 +317,11 @@ private lemma algebraMap_Cs_partial_isCauchy
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) :
     CauchySeq (fun N : ℕ =>
-      algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)) := by
+      algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)) := by
   rw [show CauchySeq (fun N : ℕ =>
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)) =
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)) =
         Cauchy (Filter.atTop.map (fun N : ℕ =>
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))) from rfl,
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))) from rfl,
       Valued.cauchy_iff]
   refine ⟨Filter.map_neBot, ?_⟩
   intro γ
@@ -370,7 +370,7 @@ private lemma algebraMap_Cs_partial_isCauchy
     rw [hε_def] at h_combined
     exact hsm.lt_iff_lt.mp h_combined
   refine ⟨{ a | ∃ K : ℕ, N ≤ K ∧ a =
-    algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K) }, ?_, ?_⟩
+    algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K) }, ?_, ?_⟩
   · rw [Filter.mem_map]
     exact Filter.mem_of_superset (Filter.Ici_mem_atTop N) (fun K hK => ⟨K, hK, rfl⟩)
   · intro a ha b hb
@@ -379,10 +379,10 @@ private lemma algebraMap_Cs_partial_isCauchy
     rcases le_total K K' with hKK' | hKK'
     · exact h_convert _ (algebraMap_Cs_partial_diff_v_le hf2 s hKK' hK)
     · have hneg :
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K')
-            - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K)
-            = -(algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K)
-                - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K')) := by
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K')
+            - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K)
+            = -(algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K)
+                - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s K')) := by
         ring
       rw [hneg, Valuation.map_neg]
       exact h_convert _ (algebraMap_Cs_partial_diff_v_le hf2 s hKK' hK')
@@ -401,7 +401,7 @@ private lemma Cs_term_zero_v_eq_one
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) :
-    Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) =
+    Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) =
       (1 : WithZero (Multiplicative ℤ)) := by
   unfold Cs_term
   simp only [Nat.cast_zero, zero_div, add_zero, pow_zero, mul_one]
@@ -415,7 +415,7 @@ private lemma Cs_term_zero_v_eq_one
       (WittVector.teichmuller p (f.coeff s.val))) :=
     h_teich_unit.map (OQpUn_embd p (T : ℕ))
   exact Valuation.Integers.one_of_isUnit' h_embd_unit
-    (fun _ => (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p, (T : ℕ)])).valuation_le_one _)
+    (fun _ => (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,(T : ℕ)])).valuation_le_one _)
 
 /-- §2c (analytical hard step, *body deferred*) — the partial sums `Cs_partial` admit a
 non-zero limit in `ℤᵘⁿ_[p,T]`.
@@ -434,44 +434,44 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) :
-    ∃ c : ℤᵘⁿ_[p, (T : ℕ)],
+    ∃ c : ℤᵘⁿ_[p,(T : ℕ)],
       c ≠ 0 ∧
       Filter.Tendsto
-        (fun N => algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
+        (fun N => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
         Filter.atTop
-        (nhds (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) c)) := by
+        (nhds (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) c)) := by
   -- Step 1: `algebraMap ∘ Cs_partial s` is Cauchy in `ℚᵘⁿ_[p,T]` (helper §2c-4).
   have h_cauchy := algebraMap_Cs_partial_isCauchy hf2 s
   -- Step 2: take limit `y` in the complete DVF `ℚᵘⁿ_[p,T]`.
   set y : ℚᵘⁿ_[p, (T : ℕ)] := limUnder Filter.atTop
-    (fun N : ℕ => algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
+    (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
     with hy_def
   have hy_tendsto : Filter.Tendsto
-      (fun N : ℕ => algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
+      (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
       Filter.atTop (nhds y) := h_cauchy.tendsto_limUnder
   -- Step 3: `y` lies in the integer subring, hence in the image of `algebraMap`.
   have h_y_v_le_one : Valued.v y ≤ (1 : WithZero (Multiplicative ℤ)) := by
     have h_eventually : ∀ᶠ N : ℕ in Filter.atTop,
-        Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (Cs_partial hf2 s N)) ≤ (1 : WithZero (Multiplicative ℤ)) := by
       apply Filter.Eventually.of_forall
       intro N
-      exact (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p, (T : ℕ)])).valuation_le_one _
+      exact (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,(T : ℕ)])).valuation_le_one _
     have h_closed : IsClosed
         { x : ℚᵘⁿ_[p, (T : ℕ)] | Valued.v x ≤ (1 : WithZero (Multiplicative ℤ)) } :=
       Valued.isClosed_closedBall _ _
     exact h_closed.mem_of_tendsto hy_tendsto h_eventually
   -- Step 4: lift `y` to `c : ℤᵘⁿ_[p,T]` via `IsDiscreteValuationRing.exists_lift_of_le_one`.
   obtain ⟨c, hc_eq⟩ :
-      ∃ c : ℤᵘⁿ_[p, (T : ℕ)],
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) c = y :=
+      ∃ c : ℤᵘⁿ_[p,(T : ℕ)],
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) c = y :=
     IsDiscreteValuationRing.exists_lift_of_le_one h_y_v_le_one
   -- Step 5a: control the tail valuation at `N = 1` via closed-ball + tendsto.
   have h_tail_bound :
-      Valued.v (y - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0))
+      Valued.v (y - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0))
         ≤ ((Multiplicative.ofAdd (-(1 : ℤ)) : Multiplicative ℤ) : WithZero _) := by
     set tgt : ℚᵘⁿ_[p, (T : ℕ)] :=
-      y - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)
+      y - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)
       with htgt_def
     set ball : Set (ℚᵘⁿ_[p, (T : ℕ)]) :=
       { x | Valued.v x ≤ ((Multiplicative.ofAdd (-(1 : ℤ)) : Multiplicative ℤ) : WithZero _) }
@@ -480,20 +480,20 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     have h_tendsto_tail :
         Filter.Tendsto
           (fun N : ℕ =>
-            algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)
-              - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0))
+            algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)
+              - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0))
           Filter.atTop (nhds tgt) :=
       hy_tendsto.sub tendsto_const_nhds
     have h_eventually : ∀ᶠ N : ℕ in Filter.atTop,
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)
-          - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0) ∈ ball := by
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)
+          - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0) ∈ ball := by
       filter_upwards [Filter.eventually_ge_atTop 1] with N hN
-      show Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)
-            - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) ≤ _
+      change Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N)
+            - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) ≤ _
       have h_partial_1 : Cs_partial hf2 s 1 = Cs_term hf2 s 0 := by
         simp [Cs_partial]
-      rw [show algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0) =
-            algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s 1)
+      rw [show algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0) =
+            algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s 1)
           from by rw [h_partial_1]]
       rw [← map_sub]
       exact Cs_partial_diff_alg_v_le hf2 s hN
@@ -510,14 +510,14 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
         WithZero.coe_lt_coe]
       exact Multiplicative.ofAdd_lt.mpr (by omega)
     have h_strict :
-        Valued.v (y - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) <
-          Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) := by
+        Valued.v (y - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) <
+          Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) := by
       rw [h_term_v_one]
       exact lt_of_le_of_lt h_tail_bound h_ofAdd_neg_one_lt_one
     have h_sum_eq := Valuation.map_add_eq_of_lt_left Valued.v h_strict
     have h_simplify :
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)
-          + (y - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) = y := by
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)
+          + (y - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0)) = y := by
       ring
     rw [h_simplify, h_term_v_one] at h_sum_eq
     exact h_sum_eq
@@ -540,7 +540,7 @@ noncomputable def Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (s : ↥(Stilde hf2)) : ℤᵘⁿ_[p, (T : ℕ)] :=
+    (s : ↥(Stilde hf2)) : ℤᵘⁿ_[p,(T : ℕ)] :=
   (exists_Cs hf2 s).choose
 
 /-- §2d — `Cs hf2 s ≠ 0`. Immediate from `exists_Cs`. -/
@@ -559,9 +559,9 @@ lemma Cs_tendsto {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) :
     Filter.Tendsto
-      (fun N => algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
+      (fun N => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
       Filter.atTop
-      (nhds (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s))) :=
+      (nhds (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s))) :=
   (exists_Cs hf2 s).choose_spec.2
 
 /-! ### Step 3 — the lift `fhat` (PDF p. 8). -/
@@ -571,7 +571,7 @@ noncomputable def fhat_coeff {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : 
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (q : ℚ) : ℤᵘⁿ_[p, (T : ℕ)] := by
+    (q : ℚ) : ℤᵘⁿ_[p,(T : ℕ)] := by
   classical
   exact (if h : q ∈ Stilde hf2 then Cs hf2 ⟨q, h⟩ else 0)
 
@@ -600,7 +600,7 @@ lemma fhat_support_subset {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ
   intro q hq
   by_contra hq_notin
   apply hq
-  show fhat_coeff hf2 q = 0
+  change fhat_coeff hf2 q = 0
   unfold fhat_coeff
   exact dif_neg hq_notin
 
@@ -610,7 +610,7 @@ lemma fhat_coeff_eq_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) : (fhat hf2).coeff s.val = Cs hf2 s := by
-  show fhat_coeff hf2 s.val = _
+  change fhat_coeff hf2 s.val = _
   unfold fhat_coeff
   exact dif_pos s.property
 
@@ -1000,14 +1000,14 @@ private lemma Cs_diff_alg_v_le
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) (N : ℕ) :
-    Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+    Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (Cs hf2 s - Cs_partial hf2 s N))
       ≤ ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) := by
   -- algebraMap (Cs_partial s N') - algebraMap (Cs_partial s N) tends to
   -- algebraMap (Cs s) - algebraMap (Cs_partial s N) = algebraMap (Cs s - Cs_partial s N)
   -- as N' → ∞.  Eventually this value is in the closed ball; closed-ball-is-closed gives the result.
   set target : ℚᵘⁿ_[p, (T : ℕ)] :=
-    algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s - Cs_partial hf2 s N)
+    algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s - Cs_partial hf2 s N)
     with htarget_def
   set ball : Set (ℚᵘⁿ_[p, (T : ℕ)]) :=
     { x | Valued.v x ≤ ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) }
@@ -1016,28 +1016,28 @@ private lemma Cs_diff_alg_v_le
     Valued.isClosed_closedBall _ _
   have h_tendsto :
       Filter.Tendsto
-        (fun N' : ℕ => algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        (fun N' : ℕ => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                         (Cs_partial hf2 s N' - Cs_partial hf2 s N))
         Filter.atTop (nhds target) := by
     have h_sub_tendsto :
         Filter.Tendsto
-          (fun N' : ℕ => algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N')
-                        - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
-          Filter.atTop (nhds (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s)
-                              - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          (fun N' : ℕ => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N')
+                        - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
+          Filter.atTop (nhds (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s)
+                              - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                                   (Cs_partial hf2 s N))) :=
       (Cs_tendsto hf2 s).sub tendsto_const_nhds
     have h_target_eq :
         target =
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s)
-            - algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N) := by
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s)
+            - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N) := by
       rw [htarget_def, map_sub]
     rw [h_target_eq]
     convert h_sub_tendsto using 1
     funext N'
     exact map_sub _ _ _
   have h_eventually : ∀ᶠ N' : ℕ in Filter.atTop,
-      algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+      algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
         (Cs_partial hf2 s N' - Cs_partial hf2 s N) ∈ ball := by
     filter_upwards [Filter.eventually_ge_atTop N] with N' hN'
     exact Cs_partial_diff_alg_v_le hf2 s hN'
@@ -1058,26 +1058,26 @@ private lemma per_s_inner_sum_eq
     (s : ↥(Stilde hf2)) (W : ℕ) :
     ∑ w ∈ Finset.range (W + 1),
         (pInvTQ p (T : ℕ)) ^ (w : ℤ) *
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                           (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
               (s.val + (w : ℚ) / T))
-      = algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+      = algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (Cs hf2 s - Cs_partial hf2 s (W + 1)) := by
   -- Step 1: Pull algebraMap outside the sum by rewriting (pInvTQ)^w = algebraMap (pInvT)^w.
   have h_pInvTQ_eq_alg : ∀ w : ℕ, (pInvTQ p (T : ℕ)) ^ (w : ℤ) =
-      algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) ((pInvT p (T : ℕ)) ^ w) := by
+      algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) ((pInvT p (T : ℕ)) ^ w) := by
     intro w
     rw [zpow_natCast, map_pow]
     rfl
   have h_step1 :
       ∑ w ∈ Finset.range (W + 1),
         (pInvTQ p (T : ℕ)) ^ (w : ℤ) *
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                           (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
               (s.val + (w : ℚ) / T))
-      = algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+      = algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (∑ w ∈ Finset.range (W + 1),
             (pInvT p (T : ℕ)) ^ w *
               ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
@@ -1148,18 +1148,18 @@ private lemma per_s_slice_v_le
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) (n_s : ℤ) (W : ℕ) :
     Valued.v ((pInvTQ p (T : ℕ)) ^ n_s *
-              algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+              algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                 (Cs hf2 s - Cs_partial hf2 s (W + 1)))
       ≤ ((Multiplicative.ofAdd (-(n_s + (W : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) := by
   rw [Valuation.map_mul, valued_v_pInvT_zpow]
-  have h_alg : Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+  have h_alg : Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (Cs hf2 s - Cs_partial hf2 s (W + 1)))
       ≤ ((Multiplicative.ofAdd (-((W + 1 : ℕ) : ℤ)) : Multiplicative ℤ) : WithZero _) :=
     Cs_diff_alg_v_le hf2 s (W + 1)
   have h_cast : ((W + 1 : ℕ) : ℤ) = (W : ℤ) + 1 := by push_cast; ring
   rw [h_cast] at h_alg
   calc ((Multiplicative.ofAdd (-n_s : ℤ) : Multiplicative ℤ) : WithZero _) *
-          Valued.v (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (Cs hf2 s - Cs_partial hf2 s (W + 1)))
       ≤ ((Multiplicative.ofAdd (-n_s : ℤ) : Multiplicative ℤ) : WithZero _) *
           ((Multiplicative.ofAdd (-((W : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) :=
@@ -1202,7 +1202,7 @@ private lemma fhat_diff_partial_v_le
                   (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)) g M),
               (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-                algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+                algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                   ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
                     (g + (n.val : ℚ) / T))) ≤
@@ -1289,7 +1289,7 @@ private lemma fhat_diff_partial_v_le
       rw [hT_sval_Q]; exact isInt_intCast' _
     have h_num_val := Rat.eq_num_of_isInt h_isInt
     -- h_num_val : ((T : ℚ) * (s.val - g)) = (((T : ℚ) * (s.val - g)).num : ℚ)
-    show ((T : ℕ) * (s.val - g) : ℚ) = (((T : ℚ) * (s.val - g)).num : ℚ)
+    change ((T : ℕ) * (s.val - g) : ℚ) = (((T : ℚ) * (s.val - g)).num : ℚ)
     calc ((T : ℕ) * (s.val - g) : ℚ)
         = ((T : ℚ) * (s.val - g)) := by push_cast; ring
       _ = (((T : ℚ) * (s.val - g)).num : ℚ) := h_num_val
@@ -1319,7 +1319,7 @@ private lemma fhat_diff_partial_v_le
     have h_floor_nonneg : 0 ≤ ⌊(T : ℚ) * ((M : ℚ) - s.val)⌋ := by
       exact Int.floor_nonneg.mpr (by exact_mod_cast h_TMsval_nonneg)
     have h_W_s_eq : (W_s s : ℤ) = ⌊(T : ℚ) * ((M : ℚ) - s.val)⌋ := by
-      show (⌊(T : ℚ) * ((M : ℚ) - s.val)⌋.toNat : ℤ) = ⌊(T : ℚ) * ((M : ℚ) - s.val)⌋
+      change (⌊(T : ℚ) * ((M : ℚ) - s.val)⌋.toNat : ℤ) = ⌊(T : ℚ) * ((M : ℚ) - s.val)⌋
       exact Int.toNat_of_nonneg h_floor_nonneg
     rw [h_W_s_eq]
     -- Use n_s_plus_W_s_eq_floor style: T(M-g) = T(s.val-g) + T(M-s.val) = n_s + T(M-s.val).
@@ -1338,7 +1338,7 @@ private lemma fhat_diff_partial_v_le
   -- Apply per_s_slice_v_le.
   have h_used_per_s_bound : ∀ s ∈ Stilde_used,
       Valued.v ((pInvTQ p (T : ℕ)) ^ (n_s_int s) *
-                algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+                algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                   (Cs hf2 s - Cs_partial hf2 s (W_s s + 1))) ≤
       ((Multiplicative.ofAdd (-(K + 1)) : Multiplicative ℤ) : WithZero _) := by
     intro s hs
@@ -1354,7 +1354,7 @@ private lemma fhat_diff_partial_v_le
   -- F : value at a Sigma pair.
   let F : (Σ _ : ↥(Stilde hf2), ℕ) → ℚᵘⁿ_[p, (T : ℕ)] := fun p_sig =>
     (pInvTQ p (T : ℕ)) ^ (n_s_int p_sig.1 + (p_sig.2 : ℤ)) *
-      algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+      algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
         (diff.coeff (p_sig.1.val + (p_sig.2 : ℚ) / (T : ℕ)))
   -- sigma_of: the indexing function on the subtype.
   let sigma_of : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)) → Σ _ : ↥(Stilde hf2), ℕ :=
@@ -1362,7 +1362,7 @@ private lemma fhat_diff_partial_v_le
   -- F (sigma_of n) equals the original summand.
   have h_F_eq : ∀ n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)),
       F (sigma_of n) = (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (diff.coeff (g + (n.val : ℚ) / (T : ℕ))) := by
     intro n
     have hs_used : (sw_choose n).1 ∈ Stilde_used :=
@@ -1378,8 +1378,8 @@ private lemma fhat_diff_partial_v_le
       omega
     have h_q_eq : (sw_choose n).1.val + ((sw_choose n).2 : ℚ) / (T : ℕ) =
         g + (n.val : ℚ) / (T : ℕ) := (h_sw_eq n).symm
-    show (pInvTQ p (T : ℕ)) ^ (n_s_int (sw_choose n).1 + ((sw_choose n).2 : ℤ)) *
-      algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+    change (pInvTQ p (T : ℕ)) ^ (n_s_int (sw_choose n).1 + ((sw_choose n).2 : ℤ)) *
+      algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
         (diff.coeff ((sw_choose n).1.val + ((sw_choose n).2 : ℚ) / (T : ℕ))) = _
     rw [h_n_eq, h_q_eq]
   -- sigma_of is injective.
@@ -1433,7 +1433,7 @@ private lemma fhat_diff_partial_v_le
         have h : ((sw_choose n).2 : ℤ) ≤ ((W_s (sw_choose n).1 : ℕ) : ℤ) := by
           rw [h_toNat_eq]; exact h_w_int
         exact_mod_cast h
-      show (sw_choose n).2 < W_s (sw_choose n).1 + 1
+      change (sw_choose n).2 < W_s (sw_choose n).1 + 1
       omega
   -- For p ∈ FullSigma \ Image(sigma_of), F(p) = 0.
   have h_zero_outside : ∀ q_sig ∈ Stilde_used.sigma
@@ -1465,8 +1465,8 @@ private lemma fhat_diff_partial_v_le
         linarith
       linarith
     by_cases h_coeff : diff.coeff (s.val + (w : ℚ) / (T : ℕ)) = 0
-    · show (pInvTQ p (T : ℕ)) ^ (n_s_int s + (w : ℤ)) *
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+    · change (pInvTQ p (T : ℕ)) ^ (n_s_int s + (w : ℤ)) *
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (diff.coeff (s.val + (w : ℚ) / (T : ℕ))) = 0
       rw [h_coeff, map_zero, mul_zero]
     · exfalso
@@ -1506,13 +1506,13 @@ private lemma fhat_diff_partial_v_le
   have h_sum_via_sigma :
       (∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
           (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+            algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (diff.coeff (g + (n.val : ℚ) / (T : ℕ)))) =
       ∑ p_sig ∈ Stilde_used.sigma (fun s : ↥(Stilde hf2) => Finset.range (W_s s + 1)),
         F p_sig := by
     have h_eq : (∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
           (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+            algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (diff.coeff (g + (n.val : ℚ) / (T : ℕ)))) =
         ∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach, F (sigma_of n) := by
       apply Finset.sum_congr rfl
@@ -1536,7 +1536,7 @@ private lemma fhat_diff_partial_v_le
       (∑ p_sig ∈ Stilde_used.sigma (fun s : ↥(Stilde hf2) => Finset.range (W_s s + 1)),
         F p_sig) =
       ∑ s ∈ Stilde_used, (pInvTQ p (T : ℕ)) ^ (n_s_int s) *
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (Cs hf2 s - Cs_partial hf2 s (W_s s + 1)) := by
     rw [Finset.sum_sigma]
     apply Finset.sum_congr rfl
@@ -1553,13 +1553,13 @@ private lemma fhat_diff_partial_v_le
     have h_pull_out : (∑ w ∈ Finset.range (W_s s + 1), F ⟨s, w⟩) =
         (pInvTQ p (T : ℕ)) ^ (n_s_int s) *
           ∑ w ∈ Finset.range (W_s s + 1), (pInvTQ p (T : ℕ)) ^ (w : ℤ) *
-            algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+            algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (diff.coeff (s.val + (w : ℚ) / (T : ℕ))) := by
       rw [Finset.mul_sum]
       apply Finset.sum_congr rfl
       intro w _
       show (pInvTQ p (T : ℕ)) ^ (n_s_int s + (w : ℤ)) *
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (diff.coeff (s.val + (w : ℚ) / (T : ℕ))) = _
       rw [zpow_add₀ hpInvTQ_ne_zero _ _]
       ring
@@ -1572,10 +1572,10 @@ private lemma fhat_diff_partial_v_le
   have h_LHS_eq :
       (∑ n : Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M),
         (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (diff.coeff (g + (n.val : ℚ) / (T : ℕ)))) =
       ∑ s ∈ Stilde_used, (pInvTQ p (T : ℕ)) ^ (n_s_int s) *
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (Cs hf2 s - Cs_partial hf2 s (W_s s + 1)) := by
     rw [← h_sigma_to_per_s, ← h_sum_via_sigma]
     rfl
@@ -1621,7 +1621,7 @@ private lemma fhat_diff_isTNullSeries
   set P : ℕ → ℚᵘⁿ_[p, (T : ℕ)] := fun M =>
     ∑ n : Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M),
       (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-        algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (diff.coeff (g + (n.val : ℚ) / T))
+        algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (diff.coeff (g + (n.val : ℚ) / T))
     with hP_def
   -- We aim to show Tendsto P atTop (𝓝 0).  Use the Valued-topology characterisation:
   -- `(𝓝 0).HasBasis (fun γ : Γ₀ˣ => True) (fun γ => { x | Valued.v x < γ })`.
@@ -1691,7 +1691,7 @@ private lemma fhat_diff_isTNullSeries
                   (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)) g M),
               (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
-                algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+                algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                   ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
                     (g + (n.val : ℚ) / T)) := by
@@ -1722,7 +1722,7 @@ private def FhatData {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) : Prop :=
-  ∃ (Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)])
+  ∃ (Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)])
     (fhat : TLiftedPAdicHahnSeries p (T : ℕ)),
     (∀ s, Cs s ≠ 0) ∧
     (Function.support fhat.coeff ⊆ Stilde hf2) ∧
@@ -1869,7 +1869,7 @@ private lemma Pfhat_TLifted_isTNullSeries
     have h_map : Lifted_to_TLifted p (T : ℕ) (HahnSeries.single 0 x) =
         HahnSeries.single 0 (OQpUn_embd p (T : ℕ) x) :=
       HahnSeries.map_single (a := (0 : ℚ)) (r := x)
-        (f := (OQpUn_embd p (T : ℕ) : ZeroHom ℤᵘⁿ_[p] ℤᵘⁿ_[p, (T : ℕ)]))
+        (f := (OQpUn_embd p (T : ℕ) : ZeroHom ℤᵘⁿ_[p] ℤᵘⁿ_[p,(T : ℕ)]))
     rw [h_map]
     rfl
   -- Step 4-5: σ(P_int.aeval f) = P_int.aeval (σ f) = 0.
@@ -1896,23 +1896,23 @@ private lemma Pfhat_TLifted_isTNullSeries
         (OQpUn_embd p T)).aeval (σ p (T : ℕ) f) =
       (IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).aeval
         (σ p (T : ℕ) f) := by
-    rw [show OQpUn_embd p T = algebraMap ℤᵘⁿ_[p] ℤᵘⁿ_[p, (T : ℕ)] from rfl]
+    rw [show OQpUn_embd p T = algebraMap ℤᵘⁿ_[p] ℤᵘⁿ_[p,(T : ℕ)] from rfl]
     exact Polynomial.aeval_map_algebraMap _ _ _
   -- Step 7: bridge mk to (algebraMap-aeval) via Ideal.Quotient.mkₐ + aeval_algHom_apply.
   have key := Polynomial.aeval_algHom_apply
-    (Ideal.Quotient.mkₐ (ℤᵘⁿ_[p, (T : ℕ)]) (TNullSeriesIdeal p (T : ℕ))) fhat
+    (Ideal.Quotient.mkₐ (ℤᵘⁿ_[p,(T : ℕ)]) (TNullSeriesIdeal p (T : ℕ))) fhat
     (((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).map
        (OQpUn_embd p T)))
   rw [show Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ))
         (((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).map
           (OQpUn_embd p T)).aeval fhat) =
-      Ideal.Quotient.mkₐ (ℤᵘⁿ_[p, (T : ℕ)])
+      Ideal.Quotient.mkₐ (ℤᵘⁿ_[p,(T : ℕ)])
         (TNullSeriesIdeal p (T : ℕ))
         (((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).map
           (OQpUn_embd p T)).aeval fhat) from rfl]
   rw [← key]
   -- Goal: aeval (mkₐ fhat) (P_int.map OQpUn_embd) = 0
-  have h_mkₐ_eq : Ideal.Quotient.mkₐ (ℤᵘⁿ_[p, (T : ℕ)])
+  have h_mkₐ_eq : Ideal.Quotient.mkₐ (ℤᵘⁿ_[p,(T : ℕ)])
       (TNullSeriesIdeal p (T : ℕ)) fhat = σ p (T : ℕ) f := h_mk_eq
   rw [h_mkₐ_eq, h_aeval_map, hPint_σf]
 
@@ -1980,7 +1980,7 @@ private lemma identity_c
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {C : ℕ+} {n : ℕ+} (_hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (_h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (_h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -2770,7 +2770,7 @@ private lemma coeff_pow_truncate_eq
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -4012,7 +4012,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -4023,7 +4023,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
           ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
             (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T) =
       ((Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) :
-          ℤᵘⁿ_[p, (T : ℕ)]) *
+          ℤᵘⁿ_[p,(T : ℕ)]) *
         (∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) := by
   classical
   -- ====== Setup: q0, fhatA, A_F. ======
@@ -4137,7 +4137,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
       h_fhatA_supp_Stilde A_F h_fhatA_supp_A_F hA_F_sub_Stilde hA_F_covers_phi
       q0 hq0_residue hq0_value m0 (fun _ => rfl) hm0_sum
   -- (15) Apply Helper A4c.
-  rw [coeff_pow_collapse_to_multinomial_prod (Γ := ℚ) (R := ℤᵘⁿ_[p, (T : ℕ)])
+  rw [coeff_pow_collapse_to_multinomial_prod (Γ := ℚ) (R := ℤᵘⁿ_[p,(T : ℕ)])
         fhatA A_F h_fhatA_supp_A_F (n : ℕ) q0 m0 hm0_sum hCollapse]
   -- (16) Identify the multinomial.
   have h_mult :
@@ -4222,13 +4222,13 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
     (hCs_ne : ∀ s : ↥(Stilde hf2), Cs s ≠ 0)
     (hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite) :
-    ∃ (β : ℤᵘⁿ_[p, (T : ℕ)]), β ≠ 0 ∧
+    ∃ (β : ℤᵘⁿ_[p,(T : ℕ)]), β ≠ 0 ∧
       (fhat ^ (n : ℕ)).coeff
           (-(r0 hSparse) / T +
             ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
@@ -4239,11 +4239,11 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
   set q0 : ℚ := -(r0 hSparse) / T +
     ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
       (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T with hq0_def
-  set P_prod : ℤᵘⁿ_[p, (T : ℕ)] :=
+  set P_prod : ℤᵘⁿ_[p,(T : ℕ)] :=
     ∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d) with hP_prod_def
   -- k := the multinomial coefficient; β := its image in the coefficient ring.
   set k : ℕ := Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) with hk_def
-  set β : ℤᵘⁿ_[p, (T : ℕ)] := (k : ℤᵘⁿ_[p, (T : ℕ)]) with hβ_def
+  set β : ℤᵘⁿ_[p,(T : ℕ)] := (k : ℤᵘⁿ_[p,(T : ℕ)]) with hβ_def
   -- Round-23 D.3: `hq0_value` derivation. Preparation for Round 25's Sub-lemma 3
   -- assembly (Helper A5 invocation requires `hq0_value` as a hypothesis).
   -- Uses `w0_rat_isInt` (L1945) + `Rat.eq_num_of_isInt` to identify
@@ -4275,7 +4275,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
     show (fhat ^ (n : ℕ)).coeff q0 = β * P_prod
     rw [show β * P_prod
         = ((Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) :
-              ℤᵘⁿ_[p, (T : ℕ)]) *
+              ℤᵘⁿ_[p,(T : ℕ)]) *
           (∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) from by
         rfl]
     exact h_axiom
@@ -4286,15 +4286,15 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
     rw [hβ_def]
     intro h
     apply hk_ne
-    have h_inj : Function.Injective (algebraMap ℤᵘⁿ_[p, (T : ℕ)] ℚᵘⁿ_[p, (T : ℕ)]) :=
-      IsFractionRing.injective (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+    have h_inj : Function.Injective (algebraMap ℤᵘⁿ_[p,(T : ℕ)] ℚᵘⁿ_[p, (T : ℕ)]) :=
+      IsFractionRing.injective (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
     have h_alg :
-        (algebraMap ℤᵘⁿ_[p, (T : ℕ)] ℚᵘⁿ_[p, (T : ℕ)])
-            ((k : ℤᵘⁿ_[p, (T : ℕ)])) = 0 := by
+        (algebraMap ℤᵘⁿ_[p,(T : ℕ)] ℚᵘⁿ_[p, (T : ℕ)])
+            ((k : ℤᵘⁿ_[p,(T : ℕ)])) = 0 := by
       rw [h]; exact map_zero _
     have h_nat : ((k : ℕ) : ℚᵘⁿ_[p, (T : ℕ)]) = 0 := by
       have h_cast :
-          (algebraMap ℤᵘⁿ_[p, (T : ℕ)] ℚᵘⁿ_[p, (T : ℕ)]) ((k : ℤᵘⁿ_[p, (T : ℕ)]))
+          (algebraMap ℤᵘⁿ_[p,(T : ℕ)] ℚᵘⁿ_[p, (T : ℕ)]) ((k : ℤᵘⁿ_[p,(T : ℕ)]))
             = ((k : ℕ) : ℚᵘⁿ_[p, (T : ℕ)]) := by
         push_cast; rfl
       rw [← h_cast]; exact h_alg
@@ -4329,9 +4329,9 @@ the algebraMap-extension), so `algebraMap c.val ≠ 0`. Combined with
 `algebraMap ℤᵘⁿ_[p,T] → ℚᵘⁿ_[p,T]`, the product is nonzero. -/
 private lemma alpha_ne_zero_of_c_β
     {p : ℕ} [Fact (Nat.Prime p)] {T : ℕ+}
-    (c : nonZeroDivisors ℤᵘⁿ_[p]) {β : ℤᵘⁿ_[p, (T : ℕ)]} (hβ_ne : β ≠ 0) :
+    (c : nonZeroDivisors ℤᵘⁿ_[p]) {β : ℤᵘⁿ_[p,(T : ℕ)]} (hβ_ne : β ≠ 0) :
     (algebraMap ℤᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) c.val *
-      (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β ≠ 0 := by
+      (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β ≠ 0 := by
   have hc_ne_zero : c.val ≠ 0 := nonZeroDivisors.coe_ne_zero c
   have h_inj1 : Function.Injective (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) :=
     IsFractionRing.injective ℤᵘⁿ_[p] ℚᵘⁿ_[p]
@@ -4353,10 +4353,10 @@ private lemma alpha_ne_zero_of_c_β
     apply hc_ne_zero
     exact h_inj_total (h.trans (map_zero _).symm)
   have h_inj_OQ :
-      Function.Injective (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) :=
-    IsFractionRing.injective (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+      Function.Injective (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) :=
+    IsFractionRing.injective (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
   have h_alg_β_ne :
-      (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β ≠ 0 := by
+      (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β ≠ 0 := by
     intro h
     apply hβ_ne
     exact h_inj_OQ (h.trans (map_zero _).symm)
@@ -4402,7 +4402,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (_h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (_h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -4412,13 +4412,13 @@ private lemma Pfhat_TLifted_collapse_combinatorial
     (_hP_natDegree : P.natDegree = n) :
     ∃ α : ℚᵘⁿ_[p, (T : ℕ)],
       α ≠ 0 ∧
-      (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+      (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
           ((Pfhat_TLifted T P fhat).coeff
             (-(r0 hSparse) / T +
               ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
                 (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T)) =
         α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-          ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+          ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                       (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
       ∀ k : ℤ, k ≠ (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
                     (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num →
@@ -4442,7 +4442,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
   -- Step 4: define α := (algebraMap c.val : ℚᵘⁿ_[p,T]) * (algebraMap β : ℚᵘⁿ_[p,T]).
   set α : ℚᵘⁿ_[p, (T : ℕ)] :=
     (algebraMap ℤᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) c.val *
-    (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β with hα_def
+    (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β with hα_def
   refine ⟨α, ?_, ?_⟩
   · -- Step 5: α ≠ 0 via `alpha_ne_zero_of_c_β`.
     exact alpha_ne_zero_of_c_β c hβ_ne
@@ -4466,10 +4466,10 @@ private lemma Pfhat_TLifted_collapse_combinatorial
     --
     -- The combined claim:
     have h_collapse :
-        ((algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+        ((algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
             ((Pfhat_TLifted T P fhat).coeff q0) =
           α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-            ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+            ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                         (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))))
         ∧
         (∀ k : ℤ, k ≠ (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
@@ -4552,13 +4552,13 @@ private lemma Pfhat_TLifted_collapse_combinatorial
         -- Step 5: express algebraMap (OQpUn_embd ((P_int P).coeff n)) = algebraMap c.val *
         -- algebraMap (P.coeff n) via hc n + IsScalarTower.
         have h_OQpUn_step :
-            (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+            (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                 (OQpUn_embd p T ((P_int P).coeff n))
               = (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)])) ((P_int P).coeff n) := by
-          show (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-              ((algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p, (T : ℕ)])) ((P_int P).coeff n))
+          show (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+              ((algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,(T : ℕ)])) ((P_int P).coeff n))
               = (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)])) ((P_int P).coeff n)
-          exact (IsScalarTower.algebraMap_apply (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p, (T : ℕ)])
+          exact (IsScalarTower.algebraMap_apply (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,(T : ℕ)])
             (ℚᵘⁿ_[p, (T : ℕ)]) ((P_int P).coeff n)).symm
         rw [h_OQpUn_step]
         have h_OQpUn_to_QpUn_step :
@@ -4572,11 +4572,11 @@ private lemma Pfhat_TLifted_collapse_combinatorial
         show (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)]))
               ((algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]))
                 ((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff n))
-            * ((algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β *
-              ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+            * ((algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β *
+              ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                           (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)))
             = α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-              ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+              ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                           (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)))
         rw [hc n, Algebra.smul_def, map_mul]
         -- Goal: (algebraMap_ℚᵘⁿ_p_to_ℚᵘⁿ_p_T (algebraMap_ℤᵘⁿ_p_to_ℚᵘⁿ_p c.val)
@@ -4852,7 +4852,7 @@ private lemma Pfhat_TLifted_collapse_witness
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (_h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -4862,20 +4862,20 @@ private lemma Pfhat_TLifted_collapse_witness
     (_hP_natDegree : P.natDegree = n) :
     ∃ (w₀ : ℤ) (α : ℚᵘⁿ_[p, (T : ℕ)]) (M₀ : ℕ),
       α ≠ 0 ∧
-      (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+      (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
           ((Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (w₀ : ℚ) / T)) =
         α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-          ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+          ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                       (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
       ∀ M : ℕ, M ≥ M₀ →
         (∑ k : Set.Finite.toFinset
                 (Tfinprop p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M),
             (pInvTQ p (T : ℕ)) ^ (k.val : ℤ) *
-              (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+              (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                 ((Pfhat_TLifted T P fhat).coeff
                   (-(r0 hSparse) / T + (k.val : ℚ) / T))) =
           (pInvTQ p (T : ℕ)) ^ w₀ *
-            (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+            (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
               ((Pfhat_TLifted T P fhat).coeff
                 (-(r0 hSparse) / T + (w₀ : ℚ) / T)) := by
   -- Round 12 — structured proof: combinatorial heart isolated into a single
@@ -4907,10 +4907,10 @@ private lemma Pfhat_TLifted_collapse_witness
   have h_combinatorial :
       ∃ α : ℚᵘⁿ_[p, (T : ℕ)],
         α ≠ 0 ∧
-        (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+        (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
             ((Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (w0_rat.num : ℚ) / T)) =
           α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-            ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+            ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                         (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
         ∀ k : ℤ, k ≠ w0_rat.num →
           (Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (k : ℚ) / T) = 0 := by
@@ -4938,17 +4938,17 @@ private lemma Pfhat_TLifted_collapse_witness
   -- membership-style sum `∑ k ∈ tFin, term k`.
   rw [show (∑ k : tFin,
         (pInvTQ p (T : ℕ)) ^ (k.val : ℤ) *
-          (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+          (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
             ((Pfhat_TLifted T P fhat).coeff
               (-(r0 hSparse) / T + (k.val : ℚ) / T))) =
       ∑ k ∈ tFin,
         (pInvTQ p (T : ℕ)) ^ (k : ℤ) *
-          (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+          (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
             ((Pfhat_TLifted T P fhat).coeff
               (-(r0 hSparse) / T + (k : ℚ) / T)) from
     Finset.sum_attach (s := tFin)
       (f := fun k : ℤ => (pInvTQ p (T : ℕ)) ^ k *
-        (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+        (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
           ((Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (k : ℚ) / T)))]
   -- Case-split on whether `w0_rat.num` is in the Finset.
   by_cases hw0_mem : w0_rat.num ∈ tFin
@@ -4963,7 +4963,7 @@ private lemma Pfhat_TLifted_collapse_witness
     -- combined with `h_M_bound`).
     rw [show (∑ k ∈ tFin,
             (pInvTQ p (T : ℕ)) ^ (k : ℤ) *
-              (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+              (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                 ((Pfhat_TLifted T P fhat).coeff
                   (-(r0 hSparse) / T + (k : ℚ) / T))) = 0 from by
       apply Finset.sum_eq_zero
@@ -4993,7 +4993,7 @@ private lemma identity_c_collapsed
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -5002,7 +5002,7 @@ private lemma identity_c_collapsed
     {P : Polynomial ℚᵘⁿ_[p]} (hP_aeval : (Polynomial.aeval f) P = 0)
     (hP_natDegree : P.natDegree = n) :
     (algebraMap ℚᵘⁿ_[p] ℚᵘⁿ_[p, (T : ℕ)]) (P.coeff n) *
-        (∏ᶠ d : S, algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        (∏ᶠ d : S, algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                      (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
   -- Round 11: chain through `Pfhat_TLifted_collapse_witness`.
   -- Step 1: Get Pfhat_TLifted ∈ TNullSeriesIdeal (closed in Round 10).
@@ -5018,7 +5018,7 @@ private lemma identity_c_collapsed
   -- Step 5: from h_at_r0 + h_eventually, the eventually-constant value = 0.
   set surviving : ℚᵘⁿ_[p, (T : ℕ)] :=
     (pInvTQ p (T : ℕ)) ^ w₀ *
-      (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+      (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
         ((Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (w₀ : ℚ) / T)) with hsurv_def
   have h_surv_zero : surviving = 0 := by
     -- The partial sums equal `surviving` eventually, and they tend to 0.
@@ -5030,7 +5030,7 @@ private lemma identity_c_collapsed
           ∑ k : Set.Finite.toFinset
                   (Tfinprop p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M),
               (pInvTQ p (T : ℕ)) ^ (k.val : ℤ) *
-                (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+                (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                   ((Pfhat_TLifted T P fhat).coeff
                     (-(r0 hSparse) / T + (k.val : ℚ) / T)))
         Filter.atTop (nhds surviving) := by
@@ -5042,7 +5042,7 @@ private lemma identity_c_collapsed
   have h_surv_eq : surviving =
       (pInvTQ p (T : ℕ)) ^ w₀ * (α *
         ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-          ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+          ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                       (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)))) := by
     rw [hsurv_def, h_coeff_eq']
   rw [h_surv_eq] at h_surv_zero
@@ -5056,7 +5056,7 @@ private lemma identity_c_collapsed
   -- From `(pInvTQ)^w₀ * (α * LHS) = 0` and `(pInvTQ)^w₀ ≠ 0`, get `α * LHS = 0`.
   have h_α_lhs_zero : α *
       ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
-        ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
+        ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                     (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
     rcases mul_eq_zero.mp h_surv_zero with hp_zero | h_rest
     · exact absurd hp_zero h_pInvTQ_pow_ne_zero
@@ -5083,7 +5083,7 @@ private lemma final_disjunction
     {hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}}
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
-    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p, (T : ℕ)]}
+    {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
     (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
@@ -5120,7 +5120,7 @@ private lemma final_disjunction
       simp at hd
     have h_mulSup_sub :
         Function.mulSupport (fun d : S =>
-          algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+          algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (Cs (mu_to_Stilde hf2 d) ^ Sparse.φ₀ hSparse d)) ⊆
         Function.support (Sparse.φ₀ hSparse) := by
       intro d hd
@@ -5136,8 +5136,8 @@ private lemma final_disjunction
     -- hd_zero : (algebraMap …) (Cs(μd)^φ₀ d) = 0 in ℚᵘⁿ_[p,T].
     -- Use injectivity of `algebraMap ℤᵘⁿ_[p,T] → ℚᵘⁿ_[p,T]` (IsFractionRing).
     have h_inj₂ : Function.Injective
-        (algebraMap (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) :=
-      IsFractionRing.injective (ℤᵘⁿ_[p, (T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
+        (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) :=
+      IsFractionRing.injective (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
     have h_powZ : Cs (mu_to_Stilde hf2 d) ^ Sparse.φ₀ hSparse d = 0 :=
       h_inj₂ (hd_zero.trans (map_zero _).symm)
     -- `ℤᵘⁿ_[p,T]` is an integral domain (`instIsDomainOQpUnT`). Use pow_eq_zero_iff.

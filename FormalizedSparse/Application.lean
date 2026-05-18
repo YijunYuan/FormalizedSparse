@@ -3,6 +3,7 @@ import FormalizedSparse.MainTheorem
 open Sparse Poonen1993 Poonen1993.pAdicHahnSeries WittVector
 
 set_option maxHeartbeats 800000 in
+-- large nested casts and indicator-series rewrites push the default budget over the limit
 theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite)
@@ -143,7 +144,8 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     intro S T hS hT heq r hr
     have hr_ne : r ≠ 0 := Nat.one_le_iff_ne_zero.mp hr
     set r' : ℕ+ := ⟨r, Nat.pos_of_ne_zero hr_ne⟩
-    have hri : (Sparse.indicatorSeries S hS : ℕ+ → ℕ) r' = (Sparse.indicatorSeries T hT : ℕ+ → ℕ) r' :=
+    have hri : (Sparse.indicatorSeries S hS : ℕ+ → ℕ) r' =
+        (Sparse.indicatorSeries T hT : ℕ+ → ℕ) r' :=
       by rw [heq]
     have hSi : (Sparse.indicatorSeries S hS : ℕ+ → ℕ) r' = 1 ↔ r ∈ S := by
       show (haveI := Classical.propDecidable (r ∈ S);
@@ -264,7 +266,8 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     -- α_i - α_j + ind_i - ind_j ∈ (-2, 2). Integer.
     -- Three integer values: -1, 0, 1. (Cannot be -2 or 2 strictly.)
     -- Each forces specific values of α and ind.
-    -- Most useful: α_i - α_j + ind_i - ind_j = α_i - α_j (since ind_i = ind_j when this is integer).
+    -- Most useful: α_i - α_j + ind_i - ind_j = α_i - α_j
+    --   (since ind_i = ind_j when this is integer).
     -- Hmm, this might not be directly useful. Let's case-split on α_i and α_j.
     by_cases hi : 0 ∈ A i
     · by_cases hj : 0 ∈ A j
@@ -738,7 +741,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       refine ⟨σ n, ⟨?_, ?_⟩, ?_⟩
       · rw [hW_eq]; exact ⟨n, hn, rfl⟩
       · rw [hb_eq]
-        have hint : σ n - (σ n - (c n : ℚ)) = ((c n : ℤ) : ℚ) := by push_cast; ring
+        have hint : σ n - (σ n - (c n : ℚ)) = ((c n : ℤ) : ℚ) := by ring
         rw [hint, Rat.isInt]; simp
       · rintro a ⟨ha_in, ha_int⟩
         rw [hW_eq] at ha_in
@@ -763,7 +766,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
         have hzc : (z : ℚ) - (c n : ℚ) = σ m - σ n := by
           have := hz_eq
           push_cast at this
-          push_cast; linarith
+          linarith
         have hzc_lt : ((z - c n : ℤ) : ℚ) < 1 := by push_cast; linarith
         have hzc_gt : (-1 : ℚ) < ((z - c n : ℤ) : ℚ) := by push_cast; linarith
         have hzc_lt' : z - c n < 1 := by exact_mod_cast hzc_lt
@@ -819,7 +822,8 @@ gives that k_i = k_j ⇒ q_i = q_j ⇒ i = j (by Denumerable bijection).
 Apply trans_of_digit_disjoint p f A hA1 hA2 hA3 hAsup c T hf_eq with:
   A n := {(k_n : ℕ)}  (singletons → pairwise disjoint, hA2 trivial),
   c n := 0, T := 1.
-Then (0 - p^(-k_n)) / 1 = -(p)^(-k_n) = q n, so hf_eq : f.support = {(c i - Σ_{r∈A_i} p^(-r)) / T | i}.
+Then (0 - p^(-k_n)) / 1 = -(p)^(-k_n) = q n,
+  so hf_eq : f.support = {(c i - Σ_{r∈A_i} p^(-r)) / T | i}.
 trans_of_digit_disjoint yields ¬ IsAlgebraic ℚᵘⁿ_[p] f, closing the contraposed goal.
 Discard the partial-application skeleton L829-832; write a self-contained have chain + refine.
 -/

@@ -3627,11 +3627,11 @@ noncomputable def val
                 (x.out + y.out - (x + y).out) := by ring
           rw [hΔ_def, hring]
           apply (NullSeriesIdeal p).add_mem
-          apply (NullSeriesIdeal p).add_mem
-          apply (NullSeriesIdeal p).add_mem
-          · exact (NullSeriesIdeal p).neg_mem hx_null
-          · exact (NullSeriesIdeal p).neg_mem hy_null
-          · exact hxy_null
+          · apply (NullSeriesIdeal p).add_mem
+            · apply (NullSeriesIdeal p).add_mem
+              · exact (NullSeriesIdeal p).neg_mem hx_null
+              · exact (NullSeriesIdeal p).neg_mem hy_null
+            · exact hxy_null
           · exact hout_null
         -- Compute Δ.coeff at qxy.
         have hΔ_coeff_qxy : Δ.coeff qxy = -teichmuller p (s_xy qxy) := by
@@ -4383,22 +4383,22 @@ private noncomputable def mkLp {p : ℕ} [Fact (Nat.Prime p)]
 
 private lemma mkLp_add {p : ℕ} [Fact (Nat.Prime p)] (x y : LiftedPAdicHahnSeries p) :
     mkLp (x + y) = (mkLp x : 𝕃_[p]) + mkLp y := by
-  show Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ + Ideal.Quotient.mk _ _
+  change Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ + Ideal.Quotient.mk _ _
   rw [map_add]
 
 private lemma mkLp_sub {p : ℕ} [Fact (Nat.Prime p)] (x y : LiftedPAdicHahnSeries p) :
     mkLp (x - y) = (mkLp x : 𝕃_[p]) - mkLp y := by
-  show Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ - Ideal.Quotient.mk _ _
+  change Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ - Ideal.Quotient.mk _ _
   rw [map_sub]
 
 private lemma mkLp_mul {p : ℕ} [Fact (Nat.Prime p)] (x y : LiftedPAdicHahnSeries p) :
     mkLp (x * y) = (mkLp x : 𝕃_[p]) * mkLp y := by
-  show Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ * Ideal.Quotient.mk _ _
+  change Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ * Ideal.Quotient.mk _ _
   rw [map_mul]
 
 private lemma mkLp_pow {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (n : ℕ) :
     mkLp (x ^ n) = (mkLp x : 𝕃_[p]) ^ n := by
-  show Ideal.Quotient.mk _ _ = (Ideal.Quotient.mk _ _) ^ n
+  change Ideal.Quotient.mk _ _ = (Ideal.Quotient.mk _ _) ^ n
   rw [map_pow]
 
 private lemma mkLp_eq_iff_sub {p : ℕ} [Fact (Nat.Prime p)]
@@ -4413,8 +4413,7 @@ private lemma p_OQpUn_ne_zero (p : ℕ) [Fact (Nat.Prime p)] :
   have hp_pos : 0 < p := (Fact.out : Nat.Prime p).pos
   have : (p : OQpUn p) ≠ 0 := WittVector.p_nonzero p (Fpbar p)
   apply this
-  have : ((p : ℕ) : OQpUn p) = (p : OQpUn p) := by push_cast; rfl
-  rw [← this]; exact h
+  exact h
 
 /- Helper: `((p : ℕ) : 𝕃_[p]) ≠ 0`. -/
 private lemma p_Lp_ne_zero (p : ℕ) [Fact (Nat.Prime p)] :
@@ -4445,12 +4444,12 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
     HahnSeries.single (1 : ℚ) (1 : ℤᵘⁿ_[p]) -
       HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p]) with hx_def
   have hcoeff_at_1 : x.coeff 1 = (1 : ℤᵘⁿ_[p]) := by
-    simp [hx_def, HahnSeries.coeff_sub', HahnSeries.coeff_single]
+    simp [hx_def, HahnSeries.coeff_sub']
   have hcoeff_at_0 : x.coeff 0 = -((p : ℕ) : ℤᵘⁿ_[p]) := by
-    simp [hx_def, HahnSeries.coeff_sub', HahnSeries.coeff_single]
+    simp [hx_def, HahnSeries.coeff_sub']
   have hcoeff_other : ∀ q : ℚ, q ≠ 0 → q ≠ 1 → x.coeff q = 0 := by
     intro q hq0 hq1
-    simp [hx_def, HahnSeries.coeff_sub', HahnSeries.coeff_single, hq0, hq1]
+    simp [hx_def, HahnSeries.coeff_sub', hq0, hq1]
   have hpz_ne : ((p : ℕ) : ℤᵘⁿ_[p]) ≠ 0 := p_OQpUn_ne_zero p
   by_cases hgZ : ∃ k₀ : ℤ, g = (k₀ : ℚ)
   · obtain ⟨k₀, hk₀⟩ := hgZ
@@ -4494,7 +4493,7 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
     have hS_eq : S = ({-k₀, 1 - k₀} : Finset ℤ) := by
       ext n
       rw [hmem n]
-      simp [eq_comm]
+      simp
     rw [show (∑ n : S, (p : QpUn p) ^ n.val *
         algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n.val))) =
         ∑ n ∈ S, (p : QpUn p) ^ n *
@@ -4560,12 +4559,12 @@ private lemma mk_single_one_eq_p (p : ℕ) [Fact (Nat.Prime p)] :
     (mkLp (HahnSeries.single (1 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = ((p : ℕ) : 𝕃_[p]) := by
   have hp_eq : ((p : ℕ) : 𝕃_[p]) =
       (mkLp (HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p])) : 𝕃_[p]) := by
-    show ((p : ℕ) : 𝕃_[p]) = Ideal.Quotient.mk _ _
+    change ((p : ℕ) : 𝕃_[p]) = Ideal.Quotient.mk _ _
     have hsingle_eq : HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p]) =
         ((p : ℕ) : LiftedPAdicHahnSeries p) := by
       rw [HahnSeries.single_zero_natCast]
     rw [hsingle_eq]
-    push_cast; rfl
+    rfl
   rw [hp_eq]
   exact (mkLp_eq_iff_sub _ _).mpr (single_one_sub_p_mem_nullSeries p)
 
@@ -4577,7 +4576,7 @@ private lemma mk_single_nat_eq_p_pow (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
     show (mkLp _ : 𝕃_[p]) = _
     rw [show ((0 : ℕ) : ℚ) = (0 : ℚ) by norm_cast]
     rw [HahnSeries.single_zero_one]
-    show (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = _
+    change (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = _
     rw [map_one, pow_zero]
   | succ n ih =>
     have hsmm : HahnSeries.single ((n + 1 : ℕ) : ℚ) (1 : ℤᵘⁿ_[p]) =
@@ -4593,7 +4592,7 @@ private lemma mk_single_int_eq_p_zpow (p : ℕ) [Fact (Nat.Prime p)] (n : ℤ) :
   obtain ⟨k, hk⟩ := Int.eq_nat_or_neg n
   rcases hk with hk | hk
   · subst hk
-    rw [show ((k : ℕ) : ℤ) = (k : ℤ) by push_cast; rfl] at *
+    rw [show ((k : ℕ) : ℤ) = (k : ℤ) by rfl] at *
     rw [show (((k : ℕ) : ℤ) : ℚ) = ((k : ℕ) : ℚ) by push_cast; rfl]
     rw [zpow_natCast]
     exact mk_single_nat_eq_p_pow p k
@@ -4601,9 +4600,9 @@ private lemma mk_single_int_eq_p_zpow (p : ℕ) [Fact (Nat.Prime p)] (n : ℤ) :
     rcases Nat.eq_zero_or_pos k with hk0 | hkpos
     · subst hk0
       simp only [Nat.cast_zero, neg_zero, Int.cast_zero, zpow_zero]
-      show (mkLp (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = 1
+      change (mkLp (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = 1
       rw [HahnSeries.single_zero_one]
-      show (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = 1
+      change (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = 1
       exact map_one _
     · have hprod : HahnSeries.single ((-(k : ℤ) : ℤ) : ℚ) (1 : ℤᵘⁿ_[p]) *
           HahnSeries.single ((k : ℕ) : ℚ) (1 : ℤᵘⁿ_[p]) = HahnSeries.single 0 1 := by
@@ -4618,7 +4617,7 @@ private lemma mk_single_int_eq_p_zpow (p : ℕ) [Fact (Nat.Prime p)] (n : ℤ) :
         rw [← mkLp_mul, hprod]
         show (mkLp (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = 1
         rw [HahnSeries.single_zero_one]
-        show (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = 1
+        change (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = 1
         exact map_one _
       rw [mk_single_nat_eq_p_pow p k] at hmkprod
       have heq :
@@ -4635,9 +4634,7 @@ private lemma mkLp_single_pow_den (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) (a : 
         (mkLp (HahnSeries.single (0 : ℚ) (a ^ (q.den : ℕ))) : 𝕃_[p]) := by
   rw [← mkLp_pow, HahnSeries.single_pow]
   have hq_smul : (q.den : ℕ) • q = ((q.num : ℤ) : ℚ) := by
-    rw [nsmul_eq_mul]
-    push_cast
-    rw [Rat.den_mul_eq_num]
+    rw [nsmul_eq_mul, Rat.den_mul_eq_num]
   rw [hq_smul]
   have hsingle_split : HahnSeries.single ((q.num : ℤ) : ℚ) (a ^ (q.den : ℕ)) =
       HahnSeries.single ((q.num : ℤ) : ℚ) (1 : ℤᵘⁿ_[p]) *
@@ -4757,7 +4754,7 @@ private lemma sub_single_coeff (p : ℕ) [Fact (Nat.Prime p)]
     apply HahnSeries.ext
     funext n
     rw [HahnSeries.coeff_sub']
-    show (teichmuller p) (f.coeff n) -
+    change (teichmuller p) (f.coeff n) -
               (HahnSeries.single q ((teichmuller p) (f.coeff q))).coeff n =
             (teichmuller p) (Function.update f.coeff q 0 n)
     by_cases hnq : n = q
@@ -4788,7 +4785,7 @@ private lemma support_sub_single_ssubset (p : ℕ) [Fact (Nat.Prime p)]
   set g := f - (mkLp (HahnSeries.single q (teichmuller p (f.coeff q))) : 𝕃_[p]) with hg_def
   have hgcoeff := sub_single_coeff p f q
   have hg_support : g.support = (Function.update f.coeff q 0).support := by
-    show (g.coeff).support = _
+    change (g.coeff).support = _
     rw [hgcoeff]
   refine ⟨?_, ?_⟩
   · intro q' hq'
@@ -4798,7 +4795,7 @@ private lemma support_sub_single_ssubset (p : ℕ) [Fact (Nat.Prime p)]
     · subst hcase
       simp [Function.update_self] at hq'
     · rw [Function.update_of_ne hcase] at hq'
-      show f.coeff q' ≠ 0
+      change f.coeff q' ≠ 0
       exact hq'
   · intro hsub
     have hq_in_g : q ∈ g.support := hsub hq

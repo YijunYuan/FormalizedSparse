@@ -171,7 +171,8 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
         omega
   -- Transport completeness: the image of a complete space under a uniform inducing map is complete.
   have hRange : IsComplete (Set.range (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]))) := hUI.isComplete_range
-  -- Identify the image with `Valued.v.integer` (both equal `{x | v(x) ≤ 1}` since `ℤᵘⁿ_[p]` is a DVR).
+  -- Identify the image with `Valued.v.integer`
+  -- (both equal `{x | v(x) ≤ 1}` since `ℤᵘⁿ_[p]` is a DVR).
   have hSet : Set.range (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])) =
       {x : ℚᵘⁿ_[p] | x ∈ Valued.v.integer} := by
     ext x
@@ -206,6 +207,7 @@ noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘ�
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p] keeps the valuation.
 set_option maxHeartbeats 1000000 in
+-- needs raised limit: many `rw [show … from rfl]` defeq checks through valuation/algebra layers
 lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚ_[p], Padic.mulValuation x = Valued.v (Qp_embd x) := by
   intro x
