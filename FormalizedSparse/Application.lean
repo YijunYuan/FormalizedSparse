@@ -811,6 +811,18 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   rw [hf_good_eq]
   exact hf_alg.sub hf_bad_alg
 
+/- Proof of (2 ⇒ 1), contrapositive: infinite support ⇒ not algebraic.
+We have hDenum : Denumerable f.support (L826). Enumerate f.support = {q n | n : ℕ}.
+Since hf says each support element has form -(p)^(-i) for i : ℕ+, use Classical.choose
+to pick k_n : ℕ+ such that q n = -(p)^(-(k_n : ℤ)). Injectivity of i ↦ -(p)^(-i) (p > 1)
+gives that k_i = k_j ⇒ q_i = q_j ⇒ i = j (by Denumerable bijection).
+Apply trans_of_digit_disjoint p f A hA1 hA2 hA3 hAsup c T hf_eq with:
+  A n := {(k_n : ℕ)}  (singletons → pairwise disjoint, hA2 trivial),
+  c n := 0, T := 1.
+Then (0 - p^(-k_n)) / 1 = -(p)^(-k_n) = q n, so hf_eq : f.support = {(c i - Σ_{r∈A_i} p^(-r)) / T | i}.
+trans_of_digit_disjoint yields ¬ IsAlgebraic ℚᵘⁿ_[p] f, closing the contraposed goal.
+Discard the partial-application skeleton L829-832; write a self-contained have chain + refine.
+-/
 theorem pAdicHuangStefanescu (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p])
 (hf : f.support ⊆ {-(p : ℚ) ^ (-(i : ℤ)) | i : ℕ+}) :
 List.TFAE [
@@ -826,8 +838,78 @@ List.TFAE [
     have hDenum : Denumerable f.support := by
       refine (Set.countable_infinite_iff_nonempty_denumerable.1 ?_).some
       exact ⟨Set.Countable.mono hf <| Set.to_countable _, Set.not_finite.mp h⟩
-    have := trans_of_digit_disjoint p f (
-      fun n => sorry
-    )
-    sorry
+    -- Enumerate f.support via Denumerable.
+    set e : f.support ≃ ℕ := Denumerable.eqv f.support with he_def
+    set q : ℕ → ℚ := fun n => (e.symm n).val with hq_def
+    have hq_inj : Function.Injective q := by
+      intro i j hij
+      have hsub : e.symm i = e.symm j := Subtype.ext hij
+      exact e.symm.injective hsub
+    have hq_mem : ∀ n, q n ∈ f.support := fun n => (e.symm n).property
+    have hq_range : Set.range q = f.support := by
+      ext x
+      refine ⟨?_, ?_⟩
+      · rintro ⟨n, rfl⟩
+        exact hq_mem n
+      · intro hx
+        refine ⟨e ⟨x, hx⟩, ?_⟩
+        simp [q]
+    -- Each q n has the form -(p)^(-(k n : ℕ)) for some k n : ℕ+.
+    have hq_form : ∀ n, ∃ k : ℕ+, q n = -((p : ℚ) ^ (-((k : ℕ) : ℤ))) := by
+      intro n
+      have hmem : q n ∈ {x : ℚ | ∃ i : ℕ+, -((p : ℚ) ^ (-((i : ℕ) : ℤ))) = x} := hf (hq_mem n)
+      rcases hmem with ⟨k, hk⟩
+      exact ⟨k, hk.symm⟩
+    set k : ℕ → ℕ+ := fun n => Classical.choose (hq_form n) with hk_def
+    have hk_eq : ∀ n, q n = -((p : ℚ) ^ (-((k n : ℕ) : ℤ))) :=
+      fun n => Classical.choose_spec (hq_form n)
+    -- Injectivity of i ↦ -(p:ℚ)^(-(i:ℤ)) implies k is injective.
+    have hp_pos_Q : (0 : ℚ) < p := by
+      have hp := (Fact.out : Nat.Prime p).pos
+      exact_mod_cast hp
+    have hp_ne_one : (p : ℚ) ≠ 1 := by
+      have hp1 := (Fact.out : Nat.Prime p).one_lt
+      have hpQ_gt : (1 : ℚ) < p := by exact_mod_cast hp1
+      exact (ne_of_lt hpQ_gt).symm
+    have hzpow_inj : Function.Injective (fun n : ℤ => (p : ℚ) ^ n) :=
+      zpow_right_injective₀ hp_pos_Q hp_ne_one
+    have hk_inj : Function.Injective k := by
+      intro i j hij
+      apply hq_inj
+      rw [hk_eq i, hk_eq j, hij]
+    -- Singleton support sets A n = {(k n : ℕ)}.
+    set A : ℕ → Set ℕ := fun n => {(k n : ℕ)} with hA_def
+    have hA1 : ∀ n, (A n).Nonempty := fun n => ⟨(k n : ℕ), rfl⟩
+    have hA3 : ∀ n, (A n).Finite := fun n => Set.finite_singleton _
+    have hA2 : ∀ i j, A i ∩ A j ≠ ∅ → i = j := by
+      intro i j hne
+      rcases Set.nonempty_iff_ne_empty.mpr hne with ⟨x, hxi, hxj⟩
+      simp only [A, Set.mem_singleton_iff] at hxi hxj
+      have hknat : (k i : ℕ) = (k j : ℕ) := hxi.symm.trans hxj
+      exact hk_inj (PNat.coe_injective hknat)
+    have hAsup : ∃ K : ℕ, ∀ n, (hA3 n).toFinset.card ≤ K := by
+      refine ⟨1, fun n => ?_⟩
+      rw [Set.Finite.toFinset_singleton]
+      simp
+    -- Apply trans_of_digit_disjoint.
+    refine trans_of_digit_disjoint p f A hA1 hA2 hA3 hAsup (fun _ => 0) 1 ?_
+    rw [← hq_range]
+    ext x
+    constructor
+    · rintro ⟨n, rfl⟩
+      refine ⟨n, ?_⟩
+      have hFin : (hA3 n).toFinset = ({(k n : ℕ)} : Finset ℕ) :=
+        Set.Finite.toFinset_singleton _
+      rw [hFin, Finset.sum_singleton]
+      rw [hk_eq n]
+      push_cast
+      ring
+    · rintro ⟨n, hn⟩
+      refine ⟨n, ?_⟩
+      have hFin : (hA3 n).toFinset = ({(k n : ℕ)} : Finset ℕ) :=
+        Set.Finite.toFinset_singleton _
+      rw [hFin, Finset.sum_singleton] at hn
+      rw [hk_eq n]
+      push_cast at hn
+      linarith
   tfae_finish
