@@ -61,7 +61,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       rw [hval]
       simp [hk]
     rw [hsupp, Finset.sum_congr rfl hval_eq]
-    show ∑ k ∈ ((hA3 n).preimage (PNat.coe_injective.injOn)).toFinset,
+    change ∑ k ∈ ((hA3 n).preimage (PNat.coe_injective.injOn)).toFinset,
         (p : ℚ) ^ (-((k : ℕ) : ℤ)) = ∑ r ∈ (hA3 n).toFinset, (p : ℚ) ^ (-(r : ℤ))
     refine Finset.sum_bij (fun (k : ℕ+) _ => (k : ℕ)) ?_ ?_ ?_ ?_
     · intro k hk
@@ -108,13 +108,13 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       exact ⟨fun h => absurd h hi, fun h => absurd h hj⟩
     set r' : ℕ+ := ⟨r, Nat.pos_of_ne_zero hr0⟩ with hr'_def
     have hri_iff : r ∈ A i ↔ (Sparse.indicatorSeries (A i) (hA3 i) : ℕ+ → ℕ) r' = 1 := by
-      show r ∈ A i ↔ (haveI := Classical.propDecidable (r ∈ A i);
+      change r ∈ A i ↔ (haveI := Classical.propDecidable (r ∈ A i);
         if r ∈ A i then (1 : ℕ) else 0) = 1
       by_cases hi' : r ∈ A i
       · simp [hi']
       · simp [hi']
     have hrj_iff : r ∈ A j ↔ (Sparse.indicatorSeries (A j) (hA3 j) : ℕ+ → ℕ) r' = 1 := by
-      show r ∈ A j ↔ (haveI := Classical.propDecidable (r ∈ A j);
+      change r ∈ A j ↔ (haveI := Classical.propDecidable (r ∈ A j);
         if r ∈ A j then (1 : ℕ) else 0) = 1
       by_cases hj' : r ∈ A j
       · simp [hj']
@@ -131,7 +131,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   have hindicator_mem_iff : ∀ n (k : ℕ+),
       (Sparse.indicatorSeries (A n) (hA3 n) : ℕ+ → ℕ) k = 1 ↔ (k : ℕ) ∈ A n := by
     intro n k
-    show (haveI := Classical.propDecidable ((k : ℕ) ∈ A n);
+    change (haveI := Classical.propDecidable ((k : ℕ) ∈ A n);
       if (k : ℕ) ∈ A n then (1 : ℕ) else 0) = 1 ↔ (k : ℕ) ∈ A n
     by_cases hin : (k : ℕ) ∈ A n
     · simp [hin]
@@ -148,13 +148,13 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
         (Sparse.indicatorSeries T hT : ℕ+ → ℕ) r' :=
       by rw [heq]
     have hSi : (Sparse.indicatorSeries S hS : ℕ+ → ℕ) r' = 1 ↔ r ∈ S := by
-      show (haveI := Classical.propDecidable (r ∈ S);
+      change (haveI := Classical.propDecidable (r ∈ S);
         if r ∈ S then (1 : ℕ) else 0) = 1 ↔ r ∈ S
       by_cases h : r ∈ S
       · simp [h]
       · simp [h]
     have hTi : (Sparse.indicatorSeries T hT : ℕ+ → ℕ) r' = 1 ↔ r ∈ T := by
-      show (haveI := Classical.propDecidable (r ∈ T);
+      change (haveI := Classical.propDecidable (r ∈ T);
         if r ∈ T then (1 : ℕ) else 0) = 1 ↔ r ∈ T
       by_cases h : r ∈ T
       · simp [h]
@@ -223,7 +223,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
           (∑ r ∈ (hA3 n).toFinset.filter (· ≠ 0), (p : ℚ) ^ (-(r : ℤ))) := by
         congr 1
       linarith
-    show ∑ r ∈ (hA3 n).toFinset, (p : ℚ) ^ (-(r : ℤ)) =
+    change ∑ r ∈ (hA3 n).toFinset, (p : ℚ) ^ (-(r : ℤ)) =
         (if 0 ∈ A n then (1 : ℚ) else 0) +
         ∑ r ∈ (hA3 n).toFinset.filter (· ≠ 0), (p : ℚ) ^ (-(r : ℤ))
     rw [hsum_split]
@@ -254,7 +254,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     have hT_ne : (T : ℚ) ≠ 0 := ne_of_gt hT_pos
     have h1 : (c i : ℚ) - σ i = (c j : ℚ) - σ j := by
       have h := hij
-      show ((c i : ℚ) - σ i) = ((c j : ℚ) - σ j)
+      change ((c i : ℚ) - σ i) = ((c j : ℚ) - σ j)
       have hh : ((c i : ℚ) - σ i) / (T : ℚ) = ((c j : ℚ) - σ j) / (T : ℚ) := h
       exact (div_left_inj' hT_ne).mp hh
     -- Combined approach: use hσ_decomp.
@@ -509,7 +509,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   have henum_surj : ∀ m ∈ good_indices, ∃ n, enum n = m := by
     intro m hm
     refine ⟨enumIso.symm ⟨m, hm⟩, ?_⟩
-    show ((enumIso (enumIso.symm ⟨m, hm⟩))).val = m
+    change ((enumIso (enumIso.symm ⟨m, hm⟩))).val = m
     rw [enumIso.apply_symm_apply]
   -- B = A ∘ enum.
   let B : ℕ → Set ℕ := fun n => A (enum n)
@@ -548,7 +548,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       apply Set.Infinite.mono (s := enum ⁻¹' ({m | (hA3 m).toFinset.card = K_max} ∩ good_indices))
       · intro n hn
         simp only [Set.mem_preimage, Set.mem_inter_iff, Set.mem_setOf_eq] at hn
-        show (hB3 n).toFinset.card = K_max
+        change (hB3 n).toFinset.card = K_max
         rw [hBcard n]; exact hn.1
       · apply Set.Infinite.preimage hinf_int
         intro m hm
@@ -574,7 +574,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       refine ⟨n, ?_⟩
       -- Goal: ∑ r ∈ (hB3 n).toFinset, _ = q
       -- (hB3 n).toFinset = (hA3 (enum n)).toFinset = (hA3 m).toFinset (using hn).
-      show ∑ r ∈ (hA3 (enum n)).toFinset, (p : ℚ) ^ (-(r : ℤ)) = q
+      change ∑ r ∈ (hA3 (enum n)).toFinset, (p : ℚ) ^ (-(r : ℤ)) = q
       rw [hn]; exact hmq
   have hSparse_W' : IsSparse p W := hW_eq ▸ hSparse_W
   -- bad_support = γ '' bad_indices, finite.
@@ -589,7 +589,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   -- good_support = γ '' good_indices.
   let good_support : Set ℚ := γ '' good_indices
   have hgood_supp_eq : good_support = f.support \ bad_support := by
-    show γ '' good_indices = f.support \ (γ '' bad_indices)
+    change γ '' good_indices = f.support \ (γ '' bad_indices)
     rw [hf_supp]
     ext q
     constructor
@@ -622,7 +622,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   let f_bad : 𝕃_[p] := from_coeff s_bad hs_bad_pwo
   have hf_bad_coeff : f_bad.coeff = s_bad := coeff_of_from_coeff_eq_self s_bad hs_bad_pwo
   have hf_bad_supp : f_bad.support ⊆ bad_support := by
-    show Function.support f_bad.coeff ⊆ bad_support
+    change Function.support f_bad.coeff ⊆ bad_support
     rw [hf_bad_coeff]; exact hs_bad_supp_sub
   have hf_bad_supp_fin : f_bad.support.Finite := hbad_supp_fin.subset hf_bad_supp
   -- f_good := from_coeff (q ↦ if q ∈ good_support then f.coeff q else 0).
@@ -638,7 +638,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   let f_good : 𝕃_[p] := from_coeff s_good hs_good_pwo
   have hf_good_coeff : f_good.coeff = s_good := coeff_of_from_coeff_eq_self s_good hs_good_pwo
   have hf_good_supp : f_good.support = good_support := by
-    show Function.support f_good.coeff = good_support
+    change Function.support f_good.coeff = good_support
     rw [hf_good_coeff]
     ext q
     simp only [Function.mem_support, ne_eq, s_good]
@@ -734,7 +734,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
         exact ne_of_gt this
       have hb_eq : b = σ n - c n := by
         rw [← hbq]
-        show (-1 : ℚ) * (T : ℚ) * (((c n : ℚ) - σ n) / T) = σ n - c n
+        change (-1 : ℚ) * (T : ℚ) * (((c n : ℚ) - σ n) / T) = σ n - c n
         field_simp; ring
       have hn_good : n ∈ good_indices := hn
       have h0_notin : 0 ∉ A n := fun h => hn_good (Or.inl h)
@@ -796,7 +796,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       · rw [hf_good_supp]; exact ⟨n, hn, rfl⟩
       · -- (σ n - (-1 * T * γ n)).isInt = true.
         have hint : σ n - ((-1 : ℚ) * T * γ n) = ((c n : ℤ) : ℚ) := by
-          show σ n - (-1 : ℚ) * (T : ℚ) * (((c n : ℚ) - σ n) / T) = ((c n : ℤ) : ℚ)
+          change σ n - (-1 : ℚ) * (T : ℚ) * (((c n : ℚ) - σ n) / T) = ((c n : ℤ) : ℚ)
           field_simp; ring
         rw [hint, Rat.isInt]; simp
   -- Apply main_theorem.
