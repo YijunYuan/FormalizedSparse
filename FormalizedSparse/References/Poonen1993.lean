@@ -4377,8 +4377,444 @@ lemma alg_QpUn_of_alg_Qp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) :
 If f.support = {q}, then f = [a_q] p^q. If we set q =a/b with a b integers, then f is a root of the polynomial X^b-[a_q]^b X^a, which is in ℚᵘⁿ_[p][X].
 The induction step follows from the fact that the sum of algebraic elements is still algebraic.
 -/
+
+/-- A version of `Ideal.Quotient.mk` returning `𝕃_[p]` directly. -/
+private noncomputable def mkLp {p : ℕ} [Fact (Nat.Prime p)]
+    (x : LiftedPAdicHahnSeries p) : 𝕃_[p] :=
+  Ideal.Quotient.mk (NullSeriesIdeal p) x
+
+private lemma mkLp_add {p : ℕ} [Fact (Nat.Prime p)] (x y : LiftedPAdicHahnSeries p) :
+    mkLp (x + y) = (mkLp x : 𝕃_[p]) + mkLp y := by
+  show Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ + Ideal.Quotient.mk _ _
+  rw [map_add]
+
+private lemma mkLp_sub {p : ℕ} [Fact (Nat.Prime p)] (x y : LiftedPAdicHahnSeries p) :
+    mkLp (x - y) = (mkLp x : 𝕃_[p]) - mkLp y := by
+  show Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ - Ideal.Quotient.mk _ _
+  rw [map_sub]
+
+private lemma mkLp_mul {p : ℕ} [Fact (Nat.Prime p)] (x y : LiftedPAdicHahnSeries p) :
+    mkLp (x * y) = (mkLp x : 𝕃_[p]) * mkLp y := by
+  show Ideal.Quotient.mk _ _ = Ideal.Quotient.mk _ _ * Ideal.Quotient.mk _ _
+  rw [map_mul]
+
+private lemma mkLp_pow {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (n : ℕ) :
+    mkLp (x ^ n) = (mkLp x : 𝕃_[p]) ^ n := by
+  show Ideal.Quotient.mk _ _ = (Ideal.Quotient.mk _ _) ^ n
+  rw [map_pow]
+
+private lemma mkLp_eq_iff_sub {p : ℕ} [Fact (Nat.Prime p)]
+    (x y : LiftedPAdicHahnSeries p) :
+    (mkLp x : 𝕃_[p]) = mkLp y ↔ x - y ∈ NullSeriesIdeal p :=
+  Ideal.Quotient.eq
+
+/- Helper: `(p : ℤᵘⁿ_[p]) ≠ 0` (nonzero p-adic integer in the unramified ring of integers). -/
+private lemma p_OQpUn_ne_zero (p : ℕ) [Fact (Nat.Prime p)] :
+    ((p : ℕ) : OQpUn p) ≠ 0 := by
+  intro h
+  have hp_pos : 0 < p := (Fact.out : Nat.Prime p).pos
+  have : (p : OQpUn p) ≠ 0 := WittVector.p_nonzero p (Fpbar p)
+  apply this
+  have : ((p : ℕ) : OQpUn p) = (p : OQpUn p) := by push_cast; rfl
+  rw [← this]; exact h
+
+/- Helper: `((p : ℕ) : 𝕃_[p]) ≠ 0`. -/
+private lemma p_Lp_ne_zero (p : ℕ) [Fact (Nat.Prime p)] :
+    ((p : ℕ) : 𝕃_[p]) ≠ 0 := by
+  intro h
+  have hp_inO : ((p : ℕ) : OQpUn p) ≠ 0 := p_OQpUn_ne_zero p
+  apply hp_inO
+  have hinj_OQ : Function.Injective (algebraMap (OQpUn p) (ℚᵘⁿ_[p])) :=
+    IsFractionRing.injective _ _
+  apply hinj_OQ
+  have hpcast_OQ : algebraMap (OQpUn p) (ℚᵘⁿ_[p]) ((p : ℕ) : OQpUn p) = ((p : ℕ) : ℚᵘⁿ_[p]) := by
+    push_cast; rfl
+  rw [hpcast_OQ, map_zero]
+  have hinj_QL : Function.Injective (algebraMap ℚᵘⁿ_[p] 𝕃_[p]) := RingHom.injective _
+  apply hinj_QL
+  have hpcast_QL : algebraMap ℚᵘⁿ_[p] 𝕃_[p] ((p : ℕ) : ℚᵘⁿ_[p]) = ((p : ℕ) : 𝕃_[p]) := by
+    push_cast; rfl
+  rw [hpcast_QL, map_zero]; exact h
+
+/- Helper: `single 1 1 - single 0 p` is a null series in `LiftedPAdicHahnSeries p`. -/
+private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
+    HahnSeries.single (1 : ℚ) (1 : ℤᵘⁿ_[p]) -
+      HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p]) ∈ NullSeriesIdeal p := by
+  classical
+  change IsNullSeries _
+  intro g
+  set x : LiftedPAdicHahnSeries p :=
+    HahnSeries.single (1 : ℚ) (1 : ℤᵘⁿ_[p]) -
+      HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p]) with hx_def
+  have hcoeff_at_1 : x.coeff 1 = (1 : ℤᵘⁿ_[p]) := by
+    simp [hx_def, HahnSeries.coeff_sub', HahnSeries.coeff_single]
+  have hcoeff_at_0 : x.coeff 0 = -((p : ℕ) : ℤᵘⁿ_[p]) := by
+    simp [hx_def, HahnSeries.coeff_sub', HahnSeries.coeff_single]
+  have hcoeff_other : ∀ q : ℚ, q ≠ 0 → q ≠ 1 → x.coeff q = 0 := by
+    intro q hq0 hq1
+    simp [hx_def, HahnSeries.coeff_sub', HahnSeries.coeff_single, hq0, hq1]
+  have hpz_ne : ((p : ℕ) : ℤᵘⁿ_[p]) ≠ 0 := p_OQpUn_ne_zero p
+  by_cases hgZ : ∃ k₀ : ℤ, g = (k₀ : ℚ)
+  · obtain ⟨k₀, hk₀⟩ := hgZ
+    apply tendsto_atTop_of_eventually_const (i₀ := 1)
+    intro M hM
+    set S := Set.Finite.toFinset (finprop x g M)
+    have hmem : ∀ n : ℤ, n ∈ S ↔ (n = -k₀ ∨ n = 1 - k₀) := by
+      intro n
+      simp only [S, Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨hle, hne⟩
+        by_contra hcases
+        push_neg at hcases
+        obtain ⟨hne1, hne2⟩ := hcases
+        have h0 : (g + (n : ℚ)) ≠ 0 := by
+          intro h
+          have : (n : ℚ) = ((-k₀ : ℤ) : ℚ) := by
+            rw [hk₀] at h; push_cast at h ⊢; linarith
+          exact hne1 (by exact_mod_cast this)
+        have h1 : (g + (n : ℚ)) ≠ 1 := by
+          intro h
+          have : (n : ℚ) = ((1 - k₀ : ℤ) : ℚ) := by
+            rw [hk₀] at h; push_cast at h ⊢; linarith
+          exact hne2 (by exact_mod_cast this)
+        exact hne (hcoeff_other _ h0 h1)
+      · rintro (rfl | rfl)
+        · refine ⟨?_, ?_⟩
+          · rw [hk₀]; push_cast
+            have : (0 : ℚ) ≤ (M : ℚ) := by exact_mod_cast Nat.zero_le M
+            linarith
+          · have hg_eq : g + ((-k₀ : ℤ) : ℚ) = 0 := by rw [hk₀]; push_cast; ring
+            rw [hg_eq, hcoeff_at_0]
+            simpa using hpz_ne
+        · refine ⟨?_, ?_⟩
+          · rw [hk₀]; push_cast
+            have h1M : (1 : ℚ) ≤ (M : ℚ) := by exact_mod_cast hM
+            linarith
+          · have hg_eq : g + ((1 - k₀ : ℤ) : ℚ) = 1 := by rw [hk₀]; push_cast; ring
+            rw [hg_eq, hcoeff_at_1]
+            exact one_ne_zero
+    have hS_eq : S = ({-k₀, 1 - k₀} : Finset ℤ) := by
+      ext n
+      rw [hmem n]
+      simp [eq_comm]
+    rw [show (∑ n : S, (p : QpUn p) ^ n.val *
+        algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n.val))) =
+        ∑ n ∈ S, (p : QpUn p) ^ n *
+          algebraMap (OQpUn p) (QpUn p) (x.coeff (g + (n : ℚ))) from
+      Finset.sum_attach (s := S) (f := fun n : ℤ =>
+        (p : QpUn p) ^ n *
+          algebraMap (OQpUn p) (QpUn p) (x.coeff (g + (n : ℚ))))]
+    rw [hS_eq]
+    have hne : (-k₀ : ℤ) ≠ (1 - k₀ : ℤ) := by omega
+    have hfs : ({-k₀, 1 - k₀} : Finset ℤ) = insert (-k₀) ({1 - k₀} : Finset ℤ) := rfl
+    rw [hfs, Finset.sum_insert (by simp [hne]), Finset.sum_singleton]
+    have hg0 : g + ((-k₀ : ℤ) : ℚ) = 0 := by rw [hk₀]; push_cast; ring
+    have hg1 : g + ((1 - k₀ : ℤ) : ℚ) = 1 := by rw [hk₀]; push_cast; ring
+    rw [hg0, hg1, hcoeff_at_0, hcoeff_at_1]
+    have hp_ne_QpUn : (p : QpUn p) ≠ 0 := by
+      intro h
+      have hp_in_O : ((p : ℕ) : OQpUn p) ≠ 0 := p_OQpUn_ne_zero p
+      apply hp_in_O
+      have hinj : Function.Injective (algebraMap (OQpUn p) (QpUn p)) :=
+        IsFractionRing.injective _ _
+      apply hinj
+      have hpz_eq : algebraMap (OQpUn p) (QpUn p) ((p : ℕ) : OQpUn p) = (p : QpUn p) := by
+        push_cast; rfl
+      rw [hpz_eq, map_zero]; exact h
+    rw [map_neg, map_one]
+    have hpz_in_QpUn : algebraMap (OQpUn p) (QpUn p) ((p : ℕ) : OQpUn p) = (p : QpUn p) := by
+      push_cast; rfl
+    rw [hpz_in_QpUn]
+    rw [show ((p : QpUn p) ^ (1 - k₀ : ℤ) : QpUn p) =
+          (p : QpUn p) ^ (-k₀ : ℤ) * (p : QpUn p) from by
+      rw [show (1 - k₀ : ℤ) = (-k₀ : ℤ) + 1 from by ring,
+        zpow_add₀ hp_ne_QpUn, zpow_one]]
+    ring
+  · push_neg at hgZ
+    apply Filter.Tendsto.congr (f₁ := fun _ : ℕ => (0 : QpUn p)) ?_ tendsto_const_nhds
+    intro M
+    have hempty : Set.Finite.toFinset (finprop x g M) = (∅ : Finset ℤ) := by
+      ext n
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.notMem_empty,
+        iff_false, not_and]
+      intro hle hne
+      have h0 : (g + (n : ℚ)) ≠ 0 := by
+        intro h
+        apply hgZ (-n)
+        push_cast; linarith
+      have h1 : (g + (n : ℚ)) ≠ 1 := by
+        intro h
+        apply hgZ (1 - n)
+        push_cast; linarith
+      exact hne (hcoeff_other _ h0 h1)
+    rw [show (∑ n : Set.Finite.toFinset (finprop x g M),
+        (p : QpUn p) ^ n.val *
+          algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n.val))) =
+        ∑ n ∈ Set.Finite.toFinset (finprop x g M), (p : QpUn p) ^ n *
+          algebraMap (OQpUn p) (QpUn p) (x.coeff (g + (n : ℚ))) from
+      Finset.sum_attach (s := Set.Finite.toFinset (finprop x g M)) (f := fun n : ℤ =>
+        (p : QpUn p) ^ n *
+          algebraMap (OQpUn p) (QpUn p) (x.coeff (g + (n : ℚ))))]
+    rw [hempty, Finset.sum_empty]
+
+/- Helper: `mkLp(single 1 1) = (p : 𝕃_[p])`. -/
+private lemma mk_single_one_eq_p (p : ℕ) [Fact (Nat.Prime p)] :
+    (mkLp (HahnSeries.single (1 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = ((p : ℕ) : 𝕃_[p]) := by
+  have hp_eq : ((p : ℕ) : 𝕃_[p]) =
+      (mkLp (HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p])) : 𝕃_[p]) := by
+    show ((p : ℕ) : 𝕃_[p]) = Ideal.Quotient.mk _ _
+    have hsingle_eq : HahnSeries.single (0 : ℚ) ((p : ℕ) : ℤᵘⁿ_[p]) =
+        ((p : ℕ) : LiftedPAdicHahnSeries p) := by
+      rw [HahnSeries.single_zero_natCast]
+    rw [hsingle_eq]
+    push_cast; rfl
+  rw [hp_eq]
+  exact (mkLp_eq_iff_sub _ _).mpr (single_one_sub_p_mem_nullSeries p)
+
+/- Helper: `mkLp(single n 1) = (p : 𝕃_[p])^n` for `n : ℕ`. -/
+private lemma mk_single_nat_eq_p_pow (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
+    (mkLp (HahnSeries.single ((n : ℕ) : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = ((p : ℕ) : 𝕃_[p]) ^ n := by
+  induction n with
+  | zero =>
+    show (mkLp _ : 𝕃_[p]) = _
+    rw [show ((0 : ℕ) : ℚ) = (0 : ℚ) by norm_cast]
+    rw [HahnSeries.single_zero_one]
+    show (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = _
+    rw [map_one, pow_zero]
+  | succ n ih =>
+    have hsmm : HahnSeries.single ((n + 1 : ℕ) : ℚ) (1 : ℤᵘⁿ_[p]) =
+        HahnSeries.single ((n : ℕ) : ℚ) (1 : ℤᵘⁿ_[p]) * HahnSeries.single (1 : ℚ) 1 := by
+      rw [HahnSeries.single_mul_single, mul_one]
+      congr 1
+      push_cast; rfl
+    rw [hsmm, mkLp_mul, ih, mk_single_one_eq_p, pow_succ]
+
+/- Helper: `mkLp(single n 1) = (p : 𝕃_[p])^n` for `n : ℤ`. -/
+private lemma mk_single_int_eq_p_zpow (p : ℕ) [Fact (Nat.Prime p)] (n : ℤ) :
+    (mkLp (HahnSeries.single ((n : ℤ) : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = ((p : ℕ) : 𝕃_[p]) ^ n := by
+  obtain ⟨k, hk⟩ := Int.eq_nat_or_neg n
+  rcases hk with hk | hk
+  · subst hk
+    rw [show ((k : ℕ) : ℤ) = (k : ℤ) by push_cast; rfl] at *
+    rw [show (((k : ℕ) : ℤ) : ℚ) = ((k : ℕ) : ℚ) by push_cast; rfl]
+    rw [zpow_natCast]
+    exact mk_single_nat_eq_p_pow p k
+  · subst hk
+    rcases Nat.eq_zero_or_pos k with hk0 | hkpos
+    · subst hk0
+      simp only [Nat.cast_zero, neg_zero, Int.cast_zero, zpow_zero]
+      show (mkLp (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = 1
+      rw [HahnSeries.single_zero_one]
+      show (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = 1
+      exact map_one _
+    · have hprod : HahnSeries.single ((-(k : ℤ) : ℤ) : ℚ) (1 : ℤᵘⁿ_[p]) *
+          HahnSeries.single ((k : ℕ) : ℚ) (1 : ℤᵘⁿ_[p]) = HahnSeries.single 0 1 := by
+        rw [HahnSeries.single_mul_single, mul_one]
+        congr 1
+        push_cast
+        simp only [neg_add_cancel]
+      have hp_pow_ne : ((p : ℕ) : 𝕃_[p]) ^ k ≠ 0 := pow_ne_zero _ (p_Lp_ne_zero p)
+      have hmkprod :
+          (mkLp (HahnSeries.single ((-(k : ℤ) : ℤ) : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) *
+          (mkLp (HahnSeries.single ((k : ℕ) : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = 1 := by
+        rw [← mkLp_mul, hprod]
+        show (mkLp (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) = 1
+        rw [HahnSeries.single_zero_one]
+        show (Ideal.Quotient.mk _ 1 : 𝕃_[p]) = 1
+        exact map_one _
+      rw [mk_single_nat_eq_p_pow p k] at hmkprod
+      have heq :
+          (mkLp (HahnSeries.single ((-(k : ℤ) : ℤ) : ℚ) (1 : ℤᵘⁿ_[p])) : 𝕃_[p]) =
+            (((p : ℕ) : 𝕃_[p]) ^ k)⁻¹ :=
+        (inv_eq_of_mul_eq_one_left hmkprod).symm
+      rw [heq, zpow_neg, zpow_natCast]
+
+/- Helper: For `q : ℚ` and `a : ℤᵘⁿ_[p]`,
+`(mkLp(single q a))^q.den = (p : 𝕃_[p])^q.num * mkLp(single 0 (a^q.den))`. -/
+private lemma mkLp_single_pow_den (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) (a : ℤᵘⁿ_[p]) :
+    (mkLp (HahnSeries.single q a) : 𝕃_[p]) ^ (q.den : ℕ) =
+      ((p : ℕ) : 𝕃_[p]) ^ q.num *
+        (mkLp (HahnSeries.single (0 : ℚ) (a ^ (q.den : ℕ))) : 𝕃_[p]) := by
+  rw [← mkLp_pow, HahnSeries.single_pow]
+  have hq_smul : (q.den : ℕ) • q = ((q.num : ℤ) : ℚ) := by
+    rw [nsmul_eq_mul]
+    push_cast
+    rw [Rat.den_mul_eq_num]
+  rw [hq_smul]
+  have hsingle_split : HahnSeries.single ((q.num : ℤ) : ℚ) (a ^ (q.den : ℕ)) =
+      HahnSeries.single ((q.num : ℤ) : ℚ) (1 : ℤᵘⁿ_[p]) *
+        HahnSeries.single (0 : ℚ) (a ^ (q.den : ℕ)) := by
+    rw [HahnSeries.single_mul_single]
+    congr 1
+    · simp only [add_zero]
+    · rw [one_mul]
+  rw [hsingle_split, mkLp_mul, mk_single_int_eq_p_zpow]
+
+/- Helper: For `q : ℚ` and `a : Fpbar p`,
+`mkLp(single q (teich a))` is algebraic over `ℚᵘⁿ_[p]`. -/
+private lemma alg_of_single (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) (a : Fpbar p) :
+    IsAlgebraic ℚᵘⁿ_[p]
+      (mkLp (HahnSeries.single q (teichmuller p a)) : 𝕃_[p]) := by
+  set f : 𝕃_[p] := mkLp (HahnSeries.single q (teichmuller p a)) with hf_def
+  have hfN := mkLp_single_pow_den p q (teichmuller p a)
+  rw [← hf_def] at hfN
+  -- Express `f^q.den` as `algebraMap ℚᵘⁿ_[p] 𝕃_[p] c` for some `c ∈ ℚᵘⁿ_[p]`.
+  have h_image : f ^ (q.den : ℕ) ∈ Set.range (algebraMap ℚᵘⁿ_[p] 𝕃_[p]) := by
+    rw [hfN]
+    -- First factor: ((p : ℕ) : 𝕃_[p])^q.num = algebraMap (((p : ℕ) : ℚᵘⁿ_[p])^q.num).
+    -- Second factor: mkLp(single 0 (teich a)^q.den) = algebraMap of ZpUn_embd(teich a^q.den)
+    --   which equals algebraMap(ZpUn embedded in QpUn) of teich(a)^q.den.
+    have h_pow : ((p : ℕ) : 𝕃_[p]) ^ q.num =
+        algebraMap ℚᵘⁿ_[p] 𝕃_[p] (((p : ℕ) : ℚᵘⁿ_[p]) ^ q.num) := by
+      rw [map_zpow₀]
+      congr 1
+      push_cast; rfl
+    have h_single0 :
+        (mkLp (HahnSeries.single (0 : ℚ) ((teichmuller p a) ^ (q.den : ℕ))) : 𝕃_[p]) =
+          algebraMap ℚᵘⁿ_[p] 𝕃_[p]
+            ((algebraMap (OQpUn p) (ℚᵘⁿ_[p])) ((teichmuller p a) ^ (q.den : ℕ))) := by
+      have hLHS : (mkLp (HahnSeries.single (0 : ℚ) ((teichmuller p a) ^ (q.den : ℕ))) : 𝕃_[p]) =
+          ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) := rfl
+      rw [hLHS]
+      show ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) =
+          (QpUn_embd : ℚᵘⁿ_[p] →+* 𝕃_[p]) ((algebraMap (OQpUn p) (ℚᵘⁿ_[p])) _)
+      show ZpUn_embd ((teichmuller p a) ^ (q.den : ℕ)) =
+          IsLocalization.map (M := nonZeroDivisors (OQpUn p)) (𝕃_[p]) ZpUn_embd
+            (show nonZeroDivisors (OQpUn p) ≤ (nonZeroDivisors 𝕃_[p]).comap ZpUn_embd from
+              nonZeroDivisors_le_comap_nonZeroDivisors_of_injective _ ZpUn_embd_injective)
+            ((algebraMap (OQpUn p) (ℚᵘⁿ_[p])) _)
+      rw [IsLocalization.map_eq]
+      rfl
+    rw [h_pow, h_single0, ← map_mul]
+    exact Set.mem_range_self _
+  obtain ⟨c, hc⟩ := h_image
+  have hfN_alg : IsAlgebraic ℚᵘⁿ_[p] (f ^ (q.den : ℕ)) := by
+    rw [← hc]
+    exact isAlgebraic_algebraMap c
+  exact hfN_alg.of_pow q.pos
+
+/- Helper: `(f - mkLp(single q (teich (f.coeff q)))).coeff = Function.update f.coeff q 0`. -/
+private lemma sub_single_coeff (p : ℕ) [Fact (Nat.Prime p)]
+    (f : 𝕃_[p]) (q : ℚ) :
+    ((f - (mkLp (HahnSeries.single q (teichmuller p (f.coeff q))) : 𝕃_[p])).coeff) =
+      Function.update f.coeff q 0 := by
+  have hfeq : f = from_coeff f.coeff (support_IsPWO f) := (from_coeff_of_coeff_eq_self f).symm
+  have hpwo : (Function.update f.coeff q 0).support.IsPWO := by
+    apply Set.IsPWO.mono (support_IsPWO f)
+    intro n hn
+    rw [Function.mem_support] at hn
+    by_cases hnq : n = q
+    · subst hnq
+      simp [Function.update_self] at hn
+    · rw [Function.update_of_ne hnq] at hn
+      exact hn
+  have hfrom_sub :
+      LiftedPAdicHahnSeries.from_coeff f.coeff (support_IsPWO f) -
+        HahnSeries.single q ((teichmuller p) (f.coeff q)) =
+      LiftedPAdicHahnSeries.from_coeff (Function.update f.coeff q 0) hpwo := by
+    apply HahnSeries.ext
+    funext n
+    rw [HahnSeries.coeff_sub']
+    show (teichmuller p) (f.coeff n) -
+              (HahnSeries.single q ((teichmuller p) (f.coeff q))).coeff n =
+            (teichmuller p) (Function.update f.coeff q 0 n)
+    by_cases hnq : n = q
+    · subst hnq
+      rw [HahnSeries.coeff_single_same, Function.update_self,
+        WittVector.teichmuller_zero]
+      ring
+    · rw [HahnSeries.coeff_single_of_ne hnq, Function.update_of_ne hnq]
+      ring
+  have hsub_eq :
+      f - (mkLp (HahnSeries.single q ((teichmuller p) (f.coeff q))) : 𝕃_[p]) =
+      from_coeff (Function.update f.coeff q 0) hpwo := by
+    have key : f - (mkLp (HahnSeries.single q ((teichmuller p) (f.coeff q))) : 𝕃_[p]) =
+        (mkLp (LiftedPAdicHahnSeries.from_coeff f.coeff (support_IsPWO f)) : 𝕃_[p]) -
+        (mkLp (HahnSeries.single q ((teichmuller p) (f.coeff q))) : 𝕃_[p]) := by
+      congr 1
+    rw [key, ← mkLp_sub, hfrom_sub]
+    rfl
+  rw [hsub_eq]
+  exact coeff_of_from_coeff_eq_self _ _
+
+/- Helper: For `q ∈ f.support`,
+`(f - mkLp(single q (teich (f.coeff q)))).support ⊂ f.support`. -/
+private lemma support_sub_single_ssubset (p : ℕ) [Fact (Nat.Prime p)]
+    (f : 𝕃_[p]) (q : ℚ) (hq : q ∈ f.support) :
+    (f - (mkLp (HahnSeries.single q (teichmuller p (f.coeff q))) : 𝕃_[p])).support ⊂
+      f.support := by
+  set g := f - (mkLp (HahnSeries.single q (teichmuller p (f.coeff q))) : 𝕃_[p]) with hg_def
+  have hgcoeff := sub_single_coeff p f q
+  have hg_support : g.support = (Function.update f.coeff q 0).support := by
+    show (g.coeff).support = _
+    rw [hgcoeff]
+  refine ⟨?_, ?_⟩
+  · intro q' hq'
+    rw [hg_support] at hq'
+    rw [Function.mem_support] at hq'
+    by_cases hcase : q' = q
+    · subst hcase
+      simp [Function.update_self] at hq'
+    · rw [Function.update_of_ne hcase] at hq'
+      show f.coeff q' ≠ 0
+      exact hq'
+  · intro hsub
+    have hq_in_g : q ∈ g.support := hsub hq
+    rw [hg_support] at hq_in_g
+    rw [Function.mem_support] at hq_in_g
+    simp [Function.update_self] at hq_in_g
+
 lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.support.Finite) :
-  IsAlgebraic ℚᵘⁿ_[p] f := sorry
+  IsAlgebraic ℚᵘⁿ_[p] f := by
+  classical
+  generalize hn : hf.toFinset.card = n
+  induction n using Nat.strong_induction_on generalizing f with
+  | _ n ih =>
+    rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+    · subst hn0
+      have hempty : hf.toFinset = ∅ := Finset.card_eq_zero.mp hn
+      have hsupp_empty : f.support = ∅ := by
+        have hcoe : (hf.toFinset : Set ℚ) = ((∅ : Finset ℚ) : Set ℚ) := by
+          rw [hempty]
+        rw [Set.Finite.coe_toFinset] at hcoe
+        simp only [Finset.coe_empty] at hcoe
+        exact hcoe
+      have hf_zero : f = 0 := by
+        apply (eq_zero_iff_coeff_zero f).mpr
+        intro q hq
+        rw [hsupp_empty] at hq
+        exact absurd hq (id (Set.notMem_empty q))
+      rw [hf_zero]
+      exact isAlgebraic_zero
+    · have hnonempty : hf.toFinset.Nonempty := Finset.card_pos.mp (by rw [hn]; exact hnpos)
+      obtain ⟨q, hq⟩ := hnonempty
+      rw [Set.Finite.mem_toFinset] at hq
+      set h : 𝕃_[p] := mkLp (HahnSeries.single q (teichmuller p (f.coeff q))) with hh_def
+      set g : 𝕃_[p] := f - h with hg_def
+      have hg_supp_ssub : g.support ⊂ f.support := support_sub_single_ssubset p f q hq
+      have hg_supp_fin : g.support.Finite := hf.subset hg_supp_ssub.subset
+      have hg_card : hg_supp_fin.toFinset.card < n := by
+        rw [← hn]
+        apply Finset.card_lt_card
+        rw [Finset.ssubset_iff_subset_ne]
+        refine ⟨?_, ?_⟩
+        · intro x hx
+          rw [Set.Finite.mem_toFinset] at hx ⊢
+          exact hg_supp_ssub.subset hx
+        · intro hheq
+          have h_eq : g.support = f.support := by
+            apply Set.eq_of_subset_of_subset hg_supp_ssub.subset
+            intro x hx
+            have hx' : x ∈ hf.toFinset := (Set.Finite.mem_toFinset _).mpr hx
+            rw [← hheq] at hx'
+            exact (Set.Finite.mem_toFinset _).mp hx'
+          exact hg_supp_ssub.ne h_eq
+      have hg_alg : IsAlgebraic ℚᵘⁿ_[p] g :=
+        ih hg_supp_fin.toFinset.card hg_card g hg_supp_fin rfl
+      have hh_alg : IsAlgebraic ℚᵘⁿ_[p] h := alg_of_single p q (f.coeff q)
+      have hfeq : f = g + h := by rw [hg_def]; ring
+      rw [hfeq]
+      exact hg_alg.add hh_alg
 
 
 end pAdicHahnSeries
