@@ -9,20 +9,37 @@ import Mathlib.RingTheory.WittVector.Complete
 import Mathlib.Topology.Algebra.Nonarchimedean.AdicTopology
 import Mathlib.RingTheory.AdicCompletion.Topology
 
+/-!
+# Completed maximal unramified extension of ℚ_[p]
+
+This file contains our implimentation of the completed maximal unramified extension of ℚ_[p],
+denoted `ℚᵘⁿ_[p]` in this file. Since currently the ramification theory in Lean's Mathlib is not yet
+developed, we use the Witt vector construction to define `ℚᵘⁿ_[p]`:
+
+- The algebraic closure of `𝔽ₚ` is `𝔽ᵃ_[p]`.
+- Let `ℤᵘⁿ_[p]` be the ring of Witt vectors over `𝔽ᵃ_[p]`, which is the ring of integers of the
+maximal unramified extension of ℚ_[p].
+- Let `ℚᵘⁿ_[p]` be the fraction field of `ℤᵘⁿ_[p]`, equipped with the topology induced by the
+valuation corresponding to the unique maximal ideal of `ℤᵘⁿ_[p]`.
+- Various properties of `ℚᵘⁿ_[p]` (e.g. `CompleteSpace`, `RankOne` valuation, etc.) are proved in
+the file. These are standard material in algebraic number theory, so we won't give detailed comments
+on the proofs.
+-/
+
 namespace FormalizedSparse
 
 open WittVector
 
--- The algebraic closure of F_p
+-- The algebraic closure of `𝔽ₚ`
 abbrev Fpbar (p : ℕ) [Fact (Nat.Prime p)] := AlgebraicClosure (ZMod p)
 notation "𝔽ᵃ_[" p "]" => Fpbar p
 
--- The ring of integers of the completion of the maximal unramified extension of Q_p,
--- which is the same as W(𝔽ₚ^⁻)((t^ℚ)).
+-- The ring of integers of the completion of the maximal unramified extension of `ℚₚ`,
+-- which is the same as `W(𝔽ₚ^⁻)`.
 abbrev OQpUn (p : ℕ) [Fact (Nat.Prime p)] := WittVector p (Fpbar p)
 notation "ℤᵘⁿ_[" p "]" => OQpUn p
 
--- Equip RawQpUn p with the topology induced by the valuation QpUnVal p.
+-- Equip QpUn p with the topology induced by the valuation QpUnVal p.
 abbrev QpUn (p : ℕ) [Fact (Nat.Prime p)] :=
   WithVal ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation ((FractionRing (ℤᵘⁿ_[p]))))
 notation "ℚᵘⁿ_[" p "]" => QpUn p
@@ -43,6 +60,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
   Valued (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ)) := inferInstance
 
 open Classical in
+-- The absolute value on `ℚᵘⁿ_[p]` induced by the valuation `Valued.v`.
 noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[p] ℝ := {
   toFun a := WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a)
   map_mul' := by
@@ -101,6 +119,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne
           rfl
         rw [hp_val]; decide }
 
+-- ℚᵘⁿ_[p] is complete with respect to the valuation topology.
 instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
   -- Strategy: reduce `CompleteSpace ℚᵘⁿ_[p]` to `IsComplete (Valued.v.integer)`, then
   -- use that this integer subring is isomorphic to the IsAdicComplete `ℤᵘⁿ_[p]`.

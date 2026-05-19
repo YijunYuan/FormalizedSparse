@@ -5,6 +5,19 @@ import Mathlib.RingTheory.Localization.Integral
 import Mathlib.Data.Nat.Choose.Multinomial
 import Mathlib.GroupTheory.Perm.DomMulAct
 
+/-!
+# Main theorem (Theorem 1.7) of our paper.
+
+This files contains the proof of the main theorem, which shows that if the p-adic Hahn series `f`
+has a `sparse` set of representative modulo ℤ, then `f` is transcendental over `ℚᵘⁿ_[p]`.
+
+The proof is highly technical, as one needs to regroup the terms of `f` into "coefficient bundles"
+`C_s`, and use multinomial expansion, which is difficult to formalize.
+
+We refer the reader to `Sparse.lean` for the formalized definitions of `IsSparse` (Definition 1.4
+in our paper) and the related notations.
+-/
+
 -- Bring `NeZero T.val` into scope for any `T : ℕ+` so we can use `Tscaled` API.
 instance PNat.coe_neZero (T : ℕ+) : NeZero (T : ℕ) := ⟨T.ne_zero⟩
 
@@ -180,9 +193,9 @@ noncomputable def mu_equiv {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : �
     S ≃ ↥(Stilde hf2) :=
   Equiv.ofBijective _ (mu_to_Stilde_bijective hS hf2)
 
-/-! ### Step 2 — coefficient bundles `C_s` (PDF p. 8).
+/-! ### Step 2 — coefficient bundles `C_s`.
 
-For `s ∈ Stilde`, the PDF defines `C_s = ∑_{w ∈ ℤ} [f(s + w/T)] · pInvT^w ∈ ℤᵘⁿ_[p,T]`.
+For `s ∈ Stilde`, the paper defines `C_s = ∑_{w ∈ ℤ} [f(s + w/T)] · pInvT^w ∈ ℤᵘⁿ_[p,T]`.
 Since `s = mu_q d` is the minimum of `Sd d`, the negative-`w` terms vanish, so
 `C_s = ∑_{w ≥ 0} [f(s + w/T)] · pInvT^w`, a convergent series in the complete DVR
 `ℤᵘⁿ_[p,T]`. We decompose the construction into a term `Cs_term`, a partial sum
@@ -308,7 +321,7 @@ private lemma algebraMap_Cs_partial_diff_v_le
 
 /-- §2c-4 — `algebraMap ∘ Cs_partial s` is a Cauchy sequence in `ℚᵘⁿ_[p,T]`.
 
-Pattern-copy of `TintPartial_isCauchy` (Tscaled.lean L1527): convert `γ ∈ Γ₀ˣ` to
+Pattern-copy of `TintPartial_isCauchy`: convert `γ ∈ Γ₀ˣ` to
 `ε ∈ ℝ` via `WithZeroMulInt.toNNReal`, pick `N` such that `(p⁻¹)^N < ε`, and use
 the partial-sum tail bound `Cs_partial_diff_alg_v_le` to verify the Cauchy
 condition. -/
@@ -419,7 +432,7 @@ private lemma Cs_term_zero_v_eq_one
   exact Valuation.Integers.one_of_isUnit' h_embd_unit
     (fun _ => (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,(T : ℕ)])).valuation_le_one _)
 
-/-- §2c (analytical hard step, *body deferred*) — the partial sums `Cs_partial` admit a
+/-- §2c (analytical hard step) — the partial sums `Cs_partial` admit a
 non-zero limit in `ℤᵘⁿ_[p,T]`.
 
 Construction outline: the algebraMap to the complete DVF `ℚᵘⁿ_[p,T]` carries the
@@ -427,10 +440,7 @@ sequence to a Cauchy sequence (using `valued_v_pInvT_zpow` to bound the tails by
 `(ofAdd (-w) : WithZero _)`), the limit exists by `instCompleteSpaceQpUnT`, and it
 lies in the closed unit ball (the image of `ℤᵘⁿ_[p,T]` under algebraMap). Non-vanishing
 is from the `w = 0` term: `OQpUn_embd p T (teichmuller p (f.coeff s))` with
-`f.coeff s ≠ 0` (since `s ∈ Stilde ⊆ f.support` via `Stilde_subset_support`).
-
-The Tendsto clause anchors `Cs s` as the genuine analytical limit; the next round
-will use this to prove `mk_fhat_eq_sigma_f` via canonical T-expansion uniqueness. -/
+`f.coeff s ≠ 0` (since `s ∈ Stilde ⊆ f.support` via `Stilde_subset_support`). -/
 private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -566,7 +576,7 @@ lemma Cs_tendsto {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
       (nhds (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs hf2 s))) :=
   (exists_Cs hf2 s).choose_spec.2
 
-/-! ### Step 3 — the lift `fhat` (PDF p. 8). -/
+/-! ### Step 3 — the lift `fhat`. -/
 
 /-- §3a — the coefficient function of `fhat`: `Cs ⟨q, h⟩` on `Stilde`, `0` elsewhere. -/
 noncomputable def fhat_coeff {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -616,8 +626,7 @@ lemma fhat_coeff_eq_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
   unfold fhat_coeff
   exact dif_pos s.property
 
-/-! §3e (now decomposed into two pieces below: a σ-bridge and an analytical core
-helper). The main lemma `mk_fhat_eq_sigma_f` glues them together with
+/-! §3e The main lemma `mk_fhat_eq_sigma_f` glues them together with
 `Ideal.Quotient.eq`.
 
 Original proof outline: by canonical T-expansion uniqueness
@@ -988,10 +997,7 @@ private lemma fhat_diff_coeff_outside_support
 These lemmas extract the `Cs s - Cs_partial s N` valuation tail bound, which is
 the key analytical fact making the Tendsto-zero argument work.  All proofs use only
 the `Cs_tendsto` interface plus the closed-ball-is-closed property of the valuation
-topology on `ℚᵘⁿ_[p,T]`.
-
-(§3e-3a/b/c were relocated to §2c-1/2/3 at the top of this file in Round 26 to
-satisfy forward-reference constraints for `exists_Cs`.) -/
+topology on `ℚᵘⁿ_[p,T]`. -/
 
 /-- §3e-3d (limit bound) — `Valued.v (algebraMap (Cs hf2 s - Cs_partial hf2 s N)) ≤ ofAdd(-N)`.
 Obtained from the Cauchy bound `Cs_partial_diff_alg_v_le` by taking the limit as
@@ -1184,7 +1190,7 @@ For each `g : ℚ` and `M : ℕ`, the partial sum
 has valuation bounded by `ofAdd(-(K+1))` where `K = ⌊T·(M - g)⌋`.
 
 Strategy:
-1. For each `n ∈ Tfinprop`, by `Stilde_unique_decomposition` (L441), `g + n/T = s.val + w/T`
+1. For each `n ∈ Tfinprop`, by `Stilde_unique_decomposition`, `g + n/T = s.val + w/T`
    for a unique `(s, w) ∈ Stilde × ℕ`. Define `s_of n` and `w_of n`.
 2. Let `Stilde_used := image (s_of)` (a Finset). For each `s ∈ Stilde_used`, define
    `n_s := T(s.val - g)` (an integer, since `T(s.val - g) = n - w ∈ ℤ`) and
@@ -1193,9 +1199,9 @@ Strategy:
 `P_M = ∑_{(s, w) ∈ image} (pInvTQ)^{n_s + w} · algebraMap(diff.coeff(s.val + w/T))`
    over a sigma `Stilde_used.sigma w_range`.
 4. Extend the sum to all of `Stilde_used.sigma w_range` (added terms have zero coeff).
-5. Apply `per_s_inner_sum_eq` (L811) per `s`:
+5. Apply `per_s_inner_sum_eq` per `s`:
 inner sum = `algebraMap(Cs s - Cs_partial s (W_s + 1))`.
-6. Apply `per_s_slice_v_le` (L902) + arithmetic identity `n_s + W_s = K` for the per-`s`
+6. Apply `per_s_slice_v_le` + arithmetic identity `n_s + W_s = K` for the per-`s`
    valuation bound `ofAdd(-(n_s + W_s + 1)) = ofAdd(-(K + 1))`.
 7. Apply `Valuation.map_sum_le` for the outer ultrametric. -/
 private lemma fhat_diff_partial_v_le
@@ -1613,10 +1619,10 @@ private lemma fhat_diff_isTNullSeries
   -- * `not_Stilde_of_pos_w` : `w ≥ 1` ⇒ `q ∉ Stilde`.
   -- * `fhat_diff_coeff_Stilde` / `fhat_diff_coeff_outside_Stilde` /
   --   `fhat_diff_coeff_outside_support` : diff.coeff formulas at each location class.
-  -- * `Cs_partial_diff_alg_v_le` (REAL): tail Cauchy bound.
-  -- * `Cs_diff_alg_v_le` (REAL): limit bound
+  -- * `Cs_partial_diff_alg_v_le`: tail Cauchy bound.
+  -- * `Cs_diff_alg_v_le`: limit bound
   --  `Valued.v (algebraMap (Cs s - Cs_partial s N)) ≤ ofAdd(-N)`.
-  -- * `per_s_inner_sum_eq` (REAL): per-`s` inner-sum collapse to
+  -- * `per_s_inner_sum_eq`: per-`s` inner-sum collapse to
   --   `algebraMap (Cs hf2 s - Cs_partial hf2 s (W + 1))`.
   intro g
   -- Set up notation.
@@ -1648,11 +1654,7 @@ private lemma fhat_diff_isTNullSeries
   -- · algebraMap(Cs s - Cs_partial s (W_s + 1))) ≤ ofAdd(-(n_s + W_s + 1))`;
   -- (d) arithmetic identity `n_s + W_s = ⌊T·(M - g)⌋` (residue condition implies);
   -- (e) ultrametric `Valuation.map_sum_le` over the (finite) Finset of active `s`s.
-  --
-  -- The bijection construction (a) and the outer sum-of-(b)+(c) (e) are heavy and
-  -- left for a follow-up round.  The analytical content — (b), (c), (d) — is already
-  -- expressed in `per_s_inner_sum_eq` + `Cs_diff_alg_v_le` + simple arithmetic.
-  --
+
   -- Proof skeleton via the Valued neighbourhood characterisation:
   rw [Filter.tendsto_def]
   intro U hU
@@ -1751,9 +1753,9 @@ private lemma exists_FhatData
   ⟨Cs hf2, fhat hf2, Cs_ne_zero hf2, fhat_support_subset hf2,
     fhat_coeff_eq_Cs hf2, mk_fhat_eq_sigma_f hf2⟩
 
-/-! ### Step 4–6 — Multinomial expansion, collapse via `lemma_1_5`, contradiction.
+/-! ### Step 4–6 — Multinomial expansion, collapse via `lemma_3_8`, contradiction.
 
-The high-level engine packing Steps 4–6 of the PDF proof. Given the lift data from
+The high-level engine packing Steps 4–6 of the paper's proof. Given the lift data from
 `exists_FhatData`, plus the `IsCNSparse` witness from sparsity, derives the
 final identity
   `p^{r₀ + T·∑φ₀(d)·μ(d)} · a_n · n!/(∏φ₀(d)!) · ∏ C_{μ(d)}^{φ₀(d)} = 0`
@@ -1761,24 +1763,22 @@ and obtains a contradiction with `hP₀` / `Cs_ne_zero`.
 
 This is the part that genuinely requires the multinomial expansion of `P.aeval fhat`
 in `TLiftedPAdicHahnSeries`, the T-null-series identity (c) at `q = -r₀/T`, and the
-application of `Sparse.lemma_1_5` to collapse equation (c) to a single term.
+application of `Sparse.lemma_3_8` to collapse equation (c) to a single term.
 
-Round 5 (iter-003) decomposes the proof along the PDF's sub-step structure (PDF pp. 9-10):
 * §4a `r0` — the rational `r₀ := ∑_{d ∈ S} ‖d‖·φ₀(d)`.
 * §4b `sigma_aeval_P_eq_zero` — `σ(P.aeval f) = 0` (trivial from ring-hom + hP_aeval).
-* §4d `identity_c` — the T-null-series identity at `q = -r₀/T` (the central
-  combinatorial identity; body deferred).
-* §5a `phi_tilde_constraint_at_phi0` — application of `Sparse.lemma_1_5` to collapse
-  φ̃ to φ₀∘μ⁻¹ (real body; uses `mu_q_residue`).
-* §5b `identity_c_collapsed` — the surviving single-term equation (body deferred,
-  follows from §4d + §5a).
+* §4d `identity_c` — the T-null-series identity at `q = -r₀/T`.
+* §5a `phi_tilde_constraint_at_phi0` — application of `Sparse.lemma_3_8` to collapse
+  φ̃ to φ₀∘μ⁻¹.
+* §5b `identity_c_collapsed` — the surviving single-term equation obtained from
+  §4d and §5a.
 * `final_disjunction` — domain integrality of `ℤᵘⁿ_[p,T]` to extract the disjunction
   from `identity_c_collapsed`. -/
 
-/-- §4a — The rational `r₀ := ∑_{d ∈ S} ‖d‖ · φ₀(d)` (PDF p. 9).
+/-- §4a — The rational `r₀ := ∑_{d ∈ S} ‖d‖ · φ₀(d)`.
 
 Although `r₀` is rational, the exponent `r₀ + T · ∑φ₀(d)·μ(d)` appearing in the
-PDF's Step 5 collapse is an integer (cf. `mu_q_residue`). -/
+paper's Step 5 collapse is an integer (cf. `mu_q_residue`). -/
 noncomputable def r0 {p : ℕ} [Fact (Nat.Prime p)] {S : Set DigitSeries}
     {hS : ∀ d ∈ S, d.IsP p} {C n : ℕ+} (hSparse : IsCNSparse p C n S hS) : ℚ :=
   ∑ᶠ d : S, (d.val.norm p) * (Sparse.φ₀ hSparse d : ℚ)
@@ -1796,7 +1796,7 @@ private lemma sigma_aeval_P_eq_zero
     σ p (T : ℕ) ((Polynomial.aeval f) P) = 0 := by
   rw [hP_aeval]; exact map_zero _
 
-/-! ### §4d-aux — clearing denominators and the `Pfhat_TLifted` construction (Round 10).
+/-! ### §4d-aux — clearing denominators and the `Pfhat_TLifted` construction.
 
 We construct an explicit element `Pfhat_TLifted ∈ TLiftedPAdicHahnSeries p T` that
 serves as the witness for `identity_c`. The construction uses
@@ -1826,9 +1826,8 @@ noncomputable def Pfhat_TLifted {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
 
 /-- §4d-c — The bridge lemma: `Pfhat_TLifted` is a T-null-series.
 
-Proof outline (Round 10, real proof):
-1. Establish `IsScalarTower ℤᵘⁿ_[p] ℚᵘⁿ_[p] 𝕃_[p]` manually (the automatic instance
-   search times out, cf. Tscaled.lean L4228). Compose ZpUn_embd = lift QpUn_embd ∘ algebraMap.
+Proof outline:
+1. Compose ZpUn_embd = lift QpUn_embd ∘ algebraMap.
 2. Apply `IsLocalization.integerNormalization_aeval_eq_zero` to get `P_int.aeval f = 0`
    in `𝕃_[p]`.
 3. Establish `σ ∘ algebraMap ℤᵘⁿ_[p] 𝕃_[p] = algebraMap ℤᵘⁿ_[p] 𝕃_[p,T]` (a direct
@@ -1915,15 +1914,13 @@ private lemma Pfhat_TLifted_isTNullSeries
       (TNullSeriesIdeal p (T : ℕ)) fhat = σ p (T : ℕ) f := h_mk_eq
   rw [h_mkₐ_eq, h_aeval_map, hPint_σf]
 
-/-- §4d-d — Multinomial expansion of `Pfhat_TLifted` (Round 10).
+/-- §4d-d — Multinomial expansion of `Pfhat_TLifted`.
 
 By `Polynomial.aeval_eq_sum_range`, `Pfhat_TLifted` decomposes as a finite sum
 over the natDegree of `P_int.map OQpUn_embd`. Each term `OQpUn_embd (P_int.coeff i)
 • fhat^i` is then susceptible to the multinomial expansion (`HahnSeries.coeff_pow`
-+ multinomial formula). This lemma is the **first step** of the combinatorial
-collapse needed in `identity_c_collapsed`.
-
-This is real-proof infrastructure for next round; it doesn't introduce sorries. -/
++ multinomial formula). This lemma is the first step of the combinatorial
+collapse needed in `identity_c_collapsed`. -/
 lemma Pfhat_TLifted_eq_sum_range {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
     (P : Polynomial ℚᵘⁿ_[p])
     (fhat : TLiftedPAdicHahnSeries p (T : ℕ)) :
@@ -1940,7 +1937,7 @@ lemma Pfhat_TLifted_eq_sum_range {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
 
 For each `q ∈ ℚ`, `(Pfhat_TLifted T P fhat).coeff q` decomposes as a finite sum
 `∑ᵢ OQpUn_embd (P_int.coeff i) * (fhat^i).coeff q`. This is the entry point for
-the multinomial expansion of `fhat^i.coeff q` (Round 11 work). -/
+the multinomial expansion of `fhat^i.coeff q`. -/
 lemma Pfhat_TLifted_coeff_eq {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
     (P : Polynomial ℚᵘⁿ_[p])
     (fhat : TLiftedPAdicHahnSeries p (T : ℕ)) (q : ℚ) :
@@ -1968,11 +1965,8 @@ coefficient formula yields:
 
 The statement is packaged as the (existential) existence of an explicit
 `Pfhat ∈ TLiftedPAdicHahnSeries p T` with the multinomial coefficient formula and
-membership in `TNullSeriesIdeal p T`. The detailed combinatorial formula is the next
-round's work — it requires either an iterated `HahnSeries.coeff_mul` formula or a
-direct construction.
-
-(Body deferred — encapsulates the combinatorial heart of Step 4.) -/
+membership in `TNullSeriesIdeal p T`. The detailed combinatorial formula requires
+either an iterated `HahnSeries.coeff_mul` formula or a direct construction. -/
 private lemma identity_c
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -1988,21 +1982,18 @@ private lemma identity_c
     (_hP_natDegree : P.natDegree = n) :
     ∃ Pfhat : TLiftedPAdicHahnSeries p (T : ℕ),
       Pfhat ∈ TNullSeriesIdeal p (T : ℕ) := by
-  -- Round 10: strengthened witness. We supply `Pfhat_TLifted` (the
-  -- denominator-cleared multinomial expansion of `P.aeval fhat`) and prove
-  -- it lies in `TNullSeriesIdeal p T` via `Pfhat_TLifted_isTNullSeries`.
   exact ⟨Pfhat_TLifted T P fhat,
     Pfhat_TLifted_isTNullSeries T hP_aeval h_mk_eq⟩
 
-/-! ### Step 5 — Collapse via Lemma 3.5 (PDF p. 9-10). -/
+/-! ### Step 5 — Collapse via Lemma 3.8. -/
 
 /-- §5a — Every `φ̃ : Stilde → ℕ` satisfying the constraints from equation (c)
 equals `φ₀ ∘ μ⁻¹`.
 
-PDF reasoning: define `φ := φ̃ ∘ μ : S → ℕ`. Using `mu_q_residue` (i.e. `‖d‖ + T·μ(d) ∈ ℤ`):
+paper reasoning: define `φ := φ̃ ∘ μ : S → ℕ`. Using `mu_q_residue` (i.e. `‖d‖ + T·μ(d) ∈ ℤ`):
 `∑‖d‖·φ(d) ≡ -T·∑μ(d)·φ̃(μd) = -T·∑s·φ̃(s) (mod ℤ)`. From the residue hypothesis,
 `-T·∑s·φ̃(s) ≡ r₀ (mod ℤ) = ∑‖d‖·φ₀(d) (mod ℤ)`. So `φ` satisfies the residue clause
-of `Sparse.lemma_1_5`. Combined with finite support and the sum bound, lemma_1_5 yields
+of `Sparse.lemma_3_8`. Combined with finite support and the sum bound, lemma_3_8 yields
 `φ = φ₀`. Translate back: `φ̃ = φ ∘ μ⁻¹ = φ₀ ∘ μ⁻¹`. -/
 private lemma phi_tilde_constraint_at_phi0
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -2018,9 +2009,9 @@ private lemma phi_tilde_constraint_at_phi0
     phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := by
   set μ := mu_equiv hS hf2 with hμ_def
   set φ : S → ℕ := phiT ∘ μ with hφ_def
-  -- Apply Sparse.lemma_1_5 to get φ = φ₀ hSparse.
+  -- Apply Sparse.lemma_3_8 to get φ = φ₀ hSparse.
   have hφ_eq : φ = Sparse.φ₀ hSparse := by
-    refine Sparse.lemma_1_5 hSparse φ ?_ ?_ ?_
+    refine Sparse.lemma_3_8 hSparse φ ?_ ?_ ?_
     · -- (Function.support φ).Finite: preimage of finite set under injective bijection.
       have h_eq : Function.support φ = μ ⁻¹' Function.support phiT := by
         rw [hφ_def, Function.support_comp_eq_preimage]
@@ -2033,7 +2024,7 @@ private lemma phi_tilde_constraint_at_phi0
       rw [h_eq]
       exact hphiT_sum
     · -- The residue clause: (∑ᶠ d, ‖d‖·φ d - ∑ᶠ d, ‖d‖·φ₀ d).isInt.
-      -- PDF p. 9–10: use `mu_q_residue d : (‖d‖ + T·μ_q d).isInt = true`, multiply
+      -- use `mu_q_residue d : (‖d‖ + T·μ_q d).isInt = true`, multiply
       -- by `phiT(μ d)`, sum over `d` (giving an integer sum), distribute, change
       -- variable `d ↦ μ d` to land at `∑ᶠ s, s·phiT s`, and combine with
       -- `hphiT_residue` to conclude.
@@ -2164,8 +2155,8 @@ private lemma phi_tilde_constraint_at_phi0
 
 /-- §5b-prelim — The expression `r₀ + T·∑φ₀(d)·μ(d)` is an integer.
 
-PDF computation (p. 9, equation for the surviving `w`):
-* `r₀ = ∑ᶠ d : S, ||d|| · φ₀(d)` by definition (real, L1532).
+computation (equation for the surviving `w`):
+* `r₀ = ∑ᶠ d : S, ||d|| · φ₀(d)` by definition.
 * `T · ∑ᶠ d, φ₀(d) · μ(d) = ∑ᶠ d, φ₀(d) · (T · μ(d))`.
 * So `r₀ + T·∑φ₀(d)·μ(d) = ∑ᶠ d, φ₀(d) · (||d|| + T · μ(d))`.
 * Each `||d|| + T · μ(d) ∈ ℤ` by `mu_q_residue`.
@@ -2285,7 +2276,7 @@ private lemma w0_rat_isInt
   rw [← h_combined_eq]
   exact h_combined_isInt
 
--- §5b prelim — Helper A0 (Round 16).
+-- §5b prelim — Helper A0.
 -- Trivial polynomial-degree bound, factored out to avoid heartbeat blowup
 -- in the conjunct-(b) discharge.
 private lemma Pfhat_map_natDegree_bound
@@ -2311,7 +2302,7 @@ private lemma Pfhat_map_natDegree_bound
     exact IsLocalization.coeffIntegerNormalization_of_coeff_zero _ P N h_P_coeff_zero
   omega
 
-/-- §5b prelim — Helper A1 (Round 16, Path B / B1).
+/-- §5b prelim — Helper A1.
 
 Multiset decomposition of the support of `fhat ^ i`. If `q ∈ (fhat ^ i).support`,
 then `q` is the sum of `i` values drawn from `Stilde hf2` (with multiplicity). -/
@@ -2352,7 +2343,7 @@ private lemma fhat_pow_support_multiset_decomp
     · simp [hl_a_card]
     · simp [Multiset.map_cons, Multiset.sum_cons, hl_a_sum, add_comm, hab]
 
-/-- §5b prelim — Helper A2 (Round 16, Path B / B1).
+/-- §5b prelim — Helper A2.
 
 Residue-collapse of `(fhat ^ i).coeff q`. If the coefficient is non-zero
 and the residue constraint holds, then `i = n` and the unique `phiT`
@@ -2548,65 +2539,25 @@ private lemma fhat_pow_coeff_residue_collapse
       have hTeq : phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := hphiT_eq
       simp [hUeq, hTeq]
 
-/- §5b — Closure lemma for Helper A3 sorry #2 (Round 20 rollback).
+/- §5b — Closure lemma for Helper A3 sorry #2.
 
 After composing A4a (`coeff_pow_eq_sum_over_pi`) → `Finset.sum_filter` →
 Helper A5 (`pi_filter_q0_eq_count_fiber`) → A4b
 (`sum_over_functions_with_fixed_counts`) → A4d
-(`product_rewrite_with_coeff_eq`), the residual reindexing
+(`product_rewrite_with_coeff_eq`), the remaining reindexing
 `∏ a : ↥A, Cs ⟨a, hA⟩ ^ m0 a = ∏ᶠ d : S, Cs (mu_to_Stilde d) ^ φ₀(d)`
 and the identification
 `Nat.cast (Nat.multinomial univ m0) =
   (Nat.multinomial hφ₀_finite.toFinset φ₀ : ℤᵘⁿ_[p,T])`
 combine into the conclusion of Helper A3 sorry #2.
+-/
 
-Round 19 closed this via `private axiom`; Round 20 rolls back to a
-`private lemma` with body `sorry`. The 7-step composition recipe in
-PROGRESS.md "How Helper A5 + A4 family discharge Helper A3 sorry #2"
-remains the intended discharge route.
-
-/- TODO (Round 21+): 7-step composition recipe (depends on Helper A5
-real proof + Helper A4b' real proof; see those lemmas' TODOs):
-
-  Step 1. Choose `A := (Stilde hf2 ∩ Function.support fhat.coeff).toFinset`
-          via `Set.Finite.toFinset` after coercing through `Stilde_isPWO` or
-          `HahnSeries.isPWO_support`. Caveat: needs to prove
-          `(Stilde hf2 ∩ Function.support fhat.coeff).Finite` from context.
-  Step 2. Define `m0 : ↥A → ℕ` by
-          `m0 a := Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm ⟨a.val, hA_sub_Stilde a.property⟩)`
-  Step 3. Apply Helper A5 (`pi_filter_q0_eq_count_fiber`) to build
-          `hCollapse : <q0-filter> = <count-filter>`.
-  Step 4. Apply A4c (`coeff_pow_collapse_to_multinomial_prod`) with
-          `hCollapse` to get
-          `(fhat^n).coeff q0 = Nat.cast (multinomial univ m0) *
-                                ∏ a : ↥A, fhat.coeff a.val ^ m0 a`.
-  Step 5. Apply A4d (`product_rewrite_with_coeff_eq`) with `h_coeff_eq`
-          to rewrite `fhat.coeff a → Cs a`.
-  Step 6. Convert `∏ a : ↥A, ...` to `∏ᶠ d : S, ...` via
-          `finprod_eq_prod_of_support_subset` + `finprod_comp_equiv (mu_equiv hS hf2)`.
-  Step 7. Identify `Nat.cast (multinomial univ m0)` with
-          `(Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) : ℤᵘⁿ_[p,T])`
-          via `Nat.multinomial_congr` + Finset re-indexing through
-          `mu_equiv` (since `m0 = φ₀ ∘ μ.symm` on A while φ₀ is supported on
-          ` hφ₀_finite.toFinset`). -/ -/
-
-/-! ### Round 23 — closure-lemma truncation (Approach (b)) — Sub-lemma 1.
-
-The Round-22 prover surfaced a structural defect in the original 7-step recipe:
-`hCs_ne` quantifies over ALL of `Stilde hf2`, not just `μ(supp φ₀)`. Combined
-with `h_coeff_eq`, this forces `Function.support fhat.coeff = Stilde hf2`,
-which may be infinite when `S` is infinite. Hence the support cap to
-`A := μ(supp φ₀)` cannot be derived directly from `hCs_ne`.
-
-The fix (Approach (b), recommended by Round-22 prover + review session_33 §B):
-truncate `fhat` to `A := μ(supp φ₀)`, prove `(fhat^n).coeff q0 = (fhat_A^n).coeff q0`
-via residue uniqueness (this Sub-lemma 1 is the key ingredient), then apply
-A4a/A4c/A4d/A5 to `fhat_A` (which has support ⊆ A by construction).
+/-! ### closure-lemma truncation — Sub-lemma 1.
 
 Sub-lemma 1 — `tuple_summing_to_q0_lies_in_A`: ANY tuple
 `e : Fin n → ↥(Stilde hf2)` satisfying the residue constraint has every entry
 in `μ(supp φ₀)`. The proof builds the multiset count function and invokes
-`phi_tilde_constraint_at_phi0` (L1777). -/
+`phi_tilde_constraint_at_phi0`. -/
 private lemma tuple_summing_to_q0_lies_in_A
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -2728,12 +2679,11 @@ private lemma tuple_summing_to_q0_lies_in_A
         = (e i).val := by rw [h_apply]
     exact h_val_eq_ei.symm.trans h_val_at_symm
 
-/-! ### Round 23 — closure-lemma truncation (Approach (b)) — Sub-lemma 2 stub
-+ truncation definition `fhat_A_of`.
+/-! ### closure-lemma truncation — Sub-lemma 2 and the truncation `fhat_A_of`.
 
 The truncation of `fhat` to support contained in `μ(supp φ₀)`, used in
-Sub-lemma 2 (`coeff_pow_truncate_eq`) to be filled in Round 24.
-The definition uses option (i) — explicit finite sum of `HahnSeries.single`. -/
+Sub-lemma 2 (`coeff_pow_truncate_eq`).
+The definition uses an explicit finite sum of `HahnSeries.single`. -/
 private noncomputable def fhat_A_of
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -2749,7 +2699,7 @@ private noncomputable def fhat_A_of
   ∑ d ∈ hφ₀_finite.toFinset,
     HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))
 
-/-- Sub-lemma 2 (`coeff_pow_truncate_eq`) — body deferred to Round 24.
+/-- Sub-lemma 2 (`coeff_pow_truncate_eq`).
 
 Proves `(fhat^n).coeff q0 = (fhat_A_of)^n.coeff q0`. The proof goes by induction on
 `n`, expanding via `HahnSeries.coeff_mul_left'` (from
@@ -2780,7 +2730,6 @@ private lemma coeff_pow_truncate_eq
           ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
             (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T) := by
   classical
-  -- ====== Round 24 / Priority E.1 — Sub-lemma 2 body (Approach (b)) ======
   -- Setup: name fhatA, q0, and the set A := μ(supp φ₀).
   set fhatA := fhat_A_of hf2 hSparse fhat hφ₀_finite with hfhatA_def
   set q0 : ℚ := -(r0 hSparse) / T +
@@ -2994,26 +2943,17 @@ private lemma coeff_pow_truncate_eq
       rw [← HahnSeries.coeff_sub]; exact h_total
     exact sub_eq_zero.mp h_sub_zero
 
-/-! ### Round 25 reorganization (iter-039):
+/-! ### §5b auxiliary combinatorics.
 
-`fhat_pow_collapse_to_beta_P_prod` (closure lemma) and
-`fhat_pow_coeff_at_phi0_nonzero_form` (its caller) were originally declared
-here, but Round 25's real proof of the closure-lemma depends on Helper A4a,
-A4c, and A5 — all of which are declared LATER in the file. Forward references
-are not allowed in Lean, so both declarations have been moved to follow
-Helper A5 in this round (see below, after `pi_filter_q0_eq_count_fiber`).
--/
+The next group of lemmas develops the finite combinatorics needed for the
+collapse of the coefficient at the distinguished exponent. -/
 
-/-- §5b — Helper A4a (Round 18 / Path A1, Route Y).
+/-- §5b — Helper A4a.
 
 Coefficient of a HahnSeries power as a finite sum over n-tuples. For a HahnSeries
 `f` with support contained in a finite set `A`, the coefficient of `f^n` at `q`
 equals a finite sum over `Fin n → ↥A` of the product of coefficients, subject to
-a sum-of-coordinates condition. This is the Cauchy-product unfolded n times.
-
-See `informal/helper_A4_multinomial_subhelpers.md` "Sub-lemma A4a" for the
-detailed 7-step outline. Body is a Round-18 residual; see Helper A3 sorry #2
-decomposition. -/
+a sum-of-coordinates condition. This is the Cauchy-product unfolded n times. -/
 private lemma coeff_pow_eq_sum_over_pi
     {Γ : Type*} [DecidableEq Γ] [AddCommMonoid Γ] [PartialOrder Γ]
     [IsOrderedCancelAddMonoid Γ]
@@ -3080,12 +3020,12 @@ private lemma coeff_pow_eq_sum_over_pi
   · rw [if_pos h.symm, if_pos h]
   · rw [if_neg (Ne.symm h), if_neg h]
 
-/- §5b — Helper A4b' (Round 21 real proof via Route D-via-OS, orbit-stabilizer).
+/- §5b — Helper A4b' via orbit-stabilizer.
 
 The fiber-cardinality identity: the number of functions `Fin n → A` with
 prescribed multiplicities `m0 : A → ℕ` is the multinomial coefficient
 `n! / (∏ m0 a !)`. This is the standard combinatorial fact (Concrete
-Mathematics §5.2, Stanley EC1 §1.2). Round 21 lands a real proof using
+Mathematics §5.2, Stanley EC1 §1.2), proved here using
 `DomMulAct.stabilizerMulEquiv` + orbit-stabilizer theorem.
 
 The proof is split into 3 named auxiliaries:
@@ -3225,9 +3165,8 @@ private lemma sum_over_functions_with_fixed_counts'
     ((Finset.univ : Finset (Fin n → A)).filter
         (fun e => ∀ a : A, Fintype.card {i : Fin n | e i = a} = m0 a)).card
     = Nat.multinomial (Finset.univ : Finset A) m0 := by
-  -- Round 21 real proof via Route (D-via-OS) (orbit-stabilizer using DomMulAct).
-  -- Pipeline: witness e₀, orbit-stab on (Equiv.Perm (Fin n))ᵈᵐᵃ ↷ (Fin n → A),
-  -- combine with Nat.multinomial_spec, then bridge filter card ↔ orbit card.
+  -- Orbit-stabilizer computation: choose a witness `e₀`, compute the stabilizer,
+  -- identify the orbit with the count-vector fiber, and apply `Nat.multinomial_spec`.
   intro hm0
   classical
   obtain ⟨e₀, he₀⟩ := exists_function_with_count_vector_aux n m0 hm0
@@ -3270,12 +3209,12 @@ private lemma sum_over_functions_with_fixed_counts'
     · intro ⟨x, _⟩; rfl
     · intro ⟨e, _⟩; rfl
 
-/-- §5b — Helper A4b (Round 18 / Path A1, Route Y).
+/-- §5b — Helper A4b.
 
 Sum over functions with fixed multiplicity equals multinomial × power product.
 If `e : Fin n → A` is restricted to have prescribed multiplicities `m0 : A → ℕ`,
 then the sum of `∏ i w(e i)` over the resulting fiber equals
-`(Nat.multinomial univ m0 : R) * ∏ a w(a)^(m0 a)`. Body is a Round-18 residual. -/
+`(Nat.multinomial univ m0 : R) * ∏ a w(a)^(m0 a)`. -/
 private lemma sum_over_functions_with_fixed_counts
     {A : Type*} [DecidableEq A] [Fintype A]
     {R : Type*} [CommSemiring R]
@@ -3289,8 +3228,7 @@ private lemma sum_over_functions_with_fixed_counts
       (Nat.cast (Nat.multinomial (Finset.univ : Finset A) m0) : R) *
         ∏ a, (w a) ^ (m0 a) := by
   classical
-  -- Step 1 (sandbox-verified at session_29 event 67): weight is constant on
-  -- each fiber of `e`.
+  -- Step 1: the weight is constant on each count fiber.
   have h_step1 : ∀ e ∈ ((Finset.univ : Finset (Fin n → A)).filter
       (fun e => ∀ a : A, Fintype.card {i : Fin n | e i = a} = m0 a)),
       ∏ i : Fin n, w (e i) = ∏ a, w a ^ m0 a := by
@@ -3311,23 +3249,18 @@ private lemma sum_over_functions_with_fixed_counts
     rw [← he a, Fintype.card_subtype]
     rfl
   rw [Finset.sum_congr rfl h_step1, Finset.sum_const, nsmul_eq_mul]
-  -- Step 2: residual fiber-size identity. After Step 1+sum_const, the goal is:
+  -- Step 2: identify the cardinality of the count fiber.
   --   ((Finset.univ : Finset (Fin n → A)).filter (...)).card * (∏ a, w a ^ m0 a)
   --   = (Nat.cast (Nat.multinomial univ m0) : R) * (∏ a, w a ^ m0 a)
   -- It suffices to prove the cardinality identity and then push the cast.
-  -- The fiber-cardinality identity is sandbox-verified by Route (D) (private
-  -- axiom; see informal/helper_A4b_step2_strategy.md).
   congr 1
   have hcard := sum_over_functions_with_fixed_counts' (A := A) n m0 hm0
   exact_mod_cast congrArg (fun k : ℕ => (k : R)) hcard
 
-/-- §5b — Helper A4c (Round 18 / Path A1, Route Y).
+/-- §5b — Helper A4c.
 
 Coefficient-collapse step: combines A4a + A4b under a `hCollapse` hypothesis
-(the q0-contributors are exactly those with fixed count vector `m0`). The
-`hCollapse` reindexing is reformulated from the plan agent's stub to use
-`Fin n → ↥A` uniformly (the plan agent's `Finset.pi`/`Finset (Fin n → A)`
-mix did not typecheck); the conclusion form is unchanged. -/
+(the q0-contributors are exactly those with fixed count vector `m0`). -/
 private lemma coeff_pow_collapse_to_multinomial_prod
     {Γ : Type*} [DecidableEq Γ] [AddCommMonoid Γ] [PartialOrder Γ]
     [IsOrderedCancelAddMonoid Γ]
@@ -3356,7 +3289,7 @@ private lemma coeff_pow_collapse_to_multinomial_prod
   exact sum_over_functions_with_fixed_counts
     (A := ↥A) (R := R) (fun a : ↥A => f.coeff (a : Γ)) n m0 hm0
 
-/-- §5b — Helper A4d (Round 18 / Path A1, Route Y).
+/-- §5b — Helper A4d.
 
 Trivial product rewrite: from `g` to `Cs` using pointwise equality. -/
 private lemma product_rewrite_with_coeff_eq
@@ -3370,19 +3303,13 @@ private lemma product_rewrite_with_coeff_eq
   intro a _
   simp [h a]
 
-/-- §5b — Helper A5 (Round 20 rollback from Round-19 axiom).
+/-- §5b — Helper A5.
 
 The `hCollapse` hypothesis required by Helper A4c: at the surviving residue
 `q0`, the q0-contributors among `Fin n → ↥A` are exactly those with the fixed
-count vector `m0 a = φ₀ (μ.symm a)`. Pre-staged as a named declaration; the
-informal proof combines Helper A1 (multiset decomposition of `(fhat^n).support`)
-+ Helper A2 (residue-collapse to unique `phiT = φ₀ ∘ μ.symm`) for LHS ⊆ RHS,
-and direct `Multiset.sum_map_count` + `finsum_comp_equiv` + `w0_rat_isInt`
-for RHS ⊆ LHS. See `informal/helper_A5_hcollapse_construction.md` for the
-60-80-ll informal proof. Round 19 used `private axiom`; Round 20 rolls back
-to `private lemma` with body `sorry`.
+count vector `m0 a = φ₀ (μ.symm a)`.
 
-/- TODO (Round 21+): Two-direction proof via `Finset.Subset.antisymm`:
+The proof proceeds by `Finset.Subset.antisymm`:
 
   RHS ⊆ LHS direction (~30-40 ll, EASIER):
     Given e with `count e a = m0 a`, show `∑ i, (e i : ℚ) = q0`.
@@ -3402,7 +3329,7 @@ to `private lemma` with body `sorry`.
     Key Mathlib helpers: `Rat.den_eq_one_iff` (gives `(x.num : ℚ) = x` when `x.isInt`),
     `Finset.sum_const_nat`, `Finset.sum_subtype`, `finsum_eq_sum_of_support_subset`.
 
-  LHS ⊆ RHS direction (~30-40 ll, HARDER, depends on Helpers A1+A2):
+  LHS ⊆ RHS direction (depends on Helpers A1+A2):
     Given e with `(∑ i, (e i : ℚ)) = q0`, show `∀ a, count e a = m0 a`.
     Step 1. Form multiset `l_e` lifting e through hA_sub_Stilde:
             `l_e := (Finset.univ : Finset (Fin n)).val.map
@@ -3412,8 +3339,8 @@ to `private lemma` with body `sorry`.
     Step 3. Apply Helper A2 (`fhat_pow_coeff_residue_collapse` L2129) with
             `i := n`, `q := q0`, `hi_le := le_refl n`, `hq_residue := hq0_residue`:
             yields uniqueness of `phiT = φ₀ ∘ (mu_equiv hS hf2).symm`.
-    Step 4. Identify the multiset's count function with phiT, deduce
-            `count e a = φ₀ ((mu_equiv hS hf2).symm ⟨a.val, ...⟩) = m0 a`. -/ -/
+        Step 4. Identify the multiset's count function with phiT, deduce
+          `count e a = φ₀ ((mu_equiv hS hf2).symm ⟨a.val, ...⟩) = m0 a`. -/
 private lemma pi_filter_q0_eq_count_fiber
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -3434,9 +3361,6 @@ private lemma pi_filter_q0_eq_count_fiber
     =
     ((Finset.univ : Finset (Fin (n : ℕ) → ↥A)).filter
         (fun e => ∀ a : ↥A, Fintype.card {i : Fin (n : ℕ) | e i = a} = m0 a)) := by
-  -- Round 22: STATEMENT FIXED. The lemma now requires the hypothesis
-  -- `hq0_value : q0 = ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)`
-  -- which pins down q0 to the unique value that makes the equality hold.
   -- The proof is via `Finset.Subset.antisymm`:
   --   * LHS ⊆ RHS: use `phi_tilde_constraint_at_phi0` on the multiset
   --     count function induced by `e`.
@@ -3983,9 +3907,8 @@ private lemma mu_equiv_sum_reindex
   · intro a _
     exact hg a
 
-/-- §5b — Closure lemma for Helper A3 sorry #2 (Round 20 rollback / Round 25 REAL).
+/-- §5b — Closure lemma for the multinomial collapse.
 
-Round 25 (iter-039, Path A1, Sub-lemma 3): the body is assembled via Approach (b):
 1. `coeff_pow_truncate_eq` truncates LHS to `(fhat_A_of)^n.coeff q0`.
 2. Helper A5 (`pi_filter_q0_eq_count_fiber`) gives the q0-filter / count-fiber
    equality (the hCollapse hypothesis for A4c).
@@ -3993,10 +3916,7 @@ Round 25 (iter-039, Path A1, Sub-lemma 3): the body is assembled via Approach (b
    that collapse to produce `multinomial × ∏ a, fhatA.coeff a.val^(m0 a)`.
 4. Coefficient rewrite via `h_fhatA_in_A_F` + `h_coeff_eq`, then product
    re-indexing through the `mu_equiv` bijection.
-
-Round-25 reorganization: this lemma was moved here from its original position
-(L2772 in the Round-24 file) because its real proof depends on Helpers A4a, A4c,
-and A5 — all declared above. Forward references are not allowed in Lean. -/
+-/
 private lemma fhat_pow_collapse_to_beta_P_prod
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -4111,7 +4031,6 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     rw [h_rhs]
     rw [← Finset.card_eq_sum_card_fiberwise (f := witness) h_maps_to]
     simp
-  -- (11) [removed: h_inj was unused after Round-27 helper extraction]
   -- (12) ∑ a : ↥A_F, m0 a = n. Bijection mu_q : supp φ₀ ↔ A_F.
   have hm0_sum : ∑ a, m0 a = (n : ℕ) := by
     rw [← h_sum_phi_eq_n]
@@ -4196,16 +4115,12 @@ private lemma fhat_pow_collapse_to_beta_P_prod
   -- (18) Combine.
   rw [h_mult, h_prod]
 
-/-- §5b prelim — Helper A3 weak form (Round 17, Path A1) [Round 25 MOVED].
+/-- §5b prelim — Helper A3 weak form.
 
 The multinomial-value identity at `(i, q) = (n, q0)`: the surviving coefficient
 `(fhat ^ n).coeff q0` equals `β · ∏ Cs(μd)^φ₀(d)` for some non-zero β. The β
 is the multinomial coefficient `Nat.multinomial(n; φ₀)` cast into `ℤᵘⁿ_[p,T]`,
-which is non-zero via `CharZero` (instance `instCharZeroQpUnT`).
-
-The combinatorial heart (`hcoeff_eq`) is closed in Round 25 via composition of
-Helpers A4a/b/c/d + Helper A5 inside `fhat_pow_collapse_to_beta_P_prod`
-(directly above). -/
+which is non-zero via `CharZero` (instance `instCharZeroQpUnT`). -/
 private lemma fhat_pow_coeff_at_phi0_nonzero_form
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -4234,10 +4149,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
   -- k := the multinomial coefficient; β := its image in the coefficient ring.
   set k : ℕ := Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) with hk_def
   set β : ℤᵘⁿ_[p,(T : ℕ)] := (k : ℤᵘⁿ_[p,(T : ℕ)]) with hβ_def
-  -- Round-23 D.3: `hq0_value` derivation. Preparation for Round 25's Sub-lemma 3
-  -- assembly (Helper A5 invocation requires `hq0_value` as a hypothesis).
-  -- Uses `w0_rat_isInt` (L1945) + `Rat.eq_num_of_isInt` to identify
-  -- `q.num = q` when q.isInt = true.
+  -- Derive the canonical value of `q0` from `w0_rat_isInt`.
   have _hq0_value : q0 = ∑ᶠ d : S,
       (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) := by
     have h_isInt := w0_rat_isInt hf2 hSparse
@@ -4248,7 +4160,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
       (Rat.eq_num_of_isInt h_isInt).symm
     have hT_ne : (T : ℚ) ≠ 0 := by exact_mod_cast PNat.ne_zero T
     rw [hq0_def, h_num_eq]; field_simp; ring
-  -- Sorry #1 (TRIVIAL): residue at q0 is integral.
+  -- The residue at `q0` is integral.
   have _hq0_residue : ((T : ℚ) * q0 + r0 hSparse).isInt = true := by
     have hT_ne : (T : ℚ) ≠ 0 := by exact_mod_cast PNat.ne_zero T
     have hk_eq : (T : ℚ) * q0 + r0 hSparse =
@@ -4256,10 +4168,9 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
           (mu_q hf2 d : ℚ)).num : ℚ) := by
       rw [hq0_def]; field_simp; ring
     rw [hk_eq]; exact isInt_intCast' _
-  -- Sorry #2 (HARD, residual): combinatorial collapse via Helpers A1 + A2.
+  -- Apply the combinatorial collapse.
   have hcoeff_eq :
       (fhat ^ (n : ℕ)).coeff q0 = β * P_prod := by
-    -- Round-25 closure: invoke the closure-lemma directly above.
     have h_axiom := fhat_pow_collapse_to_beta_P_prod (hf2 := hf2)
       hSparse h_supp h_coeff_eq hCs_ne hφ₀_finite
     change (fhat ^ (n : ℕ)).coeff q0 = β * P_prod
@@ -4269,7 +4180,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
           (∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) from by
         rfl]
     exact h_axiom
-  -- Sorry #3 (TRIVIAL): β ≠ 0 via CharZero (ℤᵘⁿ_[p,T] embeds into the field ℚᵘⁿ_[p,T]).
+  -- `β` is nonzero by `CharZero`.
   have hβ_ne : β ≠ 0 := by
     have hk_pos : 0 < k := Nat.multinomial_pos _ _
     have hk_ne : k ≠ 0 := Nat.pos_iff_ne_zero.mp hk_pos
@@ -4352,7 +4263,7 @@ private lemma alpha_ne_zero_of_c_β
     exact h_inj_OQ (h.trans (map_zero _).symm)
   exact mul_ne_zero h_alg_c_ne h_alg_β_ne
 
-/-- §5b — Combinatorial existential (Round 13).
+/-- §5b — Combinatorial existential.
 
 Captures the §5b multinomial-collapse content as a single existential at the
 fixed integer exponent `w₀ := (r₀ + T·∑_{d∈S} φ₀(d)·μ(d)).num` (real by
@@ -4382,11 +4293,7 @@ Mathematical content (PDF pp. 9-10, §5b):
 
 This helper isolates the combinatorial heart so that `Pfhat_TLifted_collapse_witness`
 can construct `(w₀, M₀)` and prove the eventually-constant claim without re-entering
-the multinomial expansion.
-
-(Body: residual `sorry` capturing the multinomial-collapse content; see PROGRESS.md
-"Suggested sub-helper decomposition (Round 13)" for the 3-helper discharge plan,
-and `task_results/MainTheorem.lean.md` for status.) -/
+the multinomial expansion. -/
 private lemma Pfhat_TLifted_collapse_combinatorial
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -4414,9 +4321,8 @@ private lemma Pfhat_TLifted_collapse_combinatorial
       ∀ k : ℤ, k ≠ (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
                     (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num →
         (Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (k : ℚ) / T) = 0 := by
-  -- Round 13 structured proof: extract c, multinomial; define α; prove α ≠ 0
-  -- via CharZero + injective algebraMap chain. Equations 1 & 2 remain as a
-  -- combined residual `sorry` (the heavy multinomial-expansion + φ̃-collapse).
+  -- Extract the denominator-clearing factor and the multinomial term, then
+  -- package the surviving coefficient and the vanishing of the other terms.
   --
   -- Step 1: extract c ∈ nonZeroDivisors ℤᵘⁿ_[p] from IsLocalization.integerNormalization_spec.
   obtain ⟨c, hc⟩ :=
@@ -4583,14 +4489,14 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             (ℚᵘⁿ_[p, (T : ℕ)]) c.val).symm
         rw [h_c_step, hα_def]
         ring
-      · -- Conjunct (b) — Round 16 Path B / B1 (HARD MANDATE):
+      · -- Conjunct (b): per-`i` vanishing for `k ≠ w0_rat.num`.
         -- per-`i` vanishing for `k ≠ w0_rat.num`, by contradiction via Helper A2.
         intro k hk_ne i _hi_range
         by_contra h_coeff_ne
         -- Step 1: i ≤ n. From hi_range : i ∈ Finset.range (..natDegree + 1)
         -- and natDegree of (P_int P).map (OQpUn_embd p T) bounded by natDegree (P_int P)
         -- bounded by natDegree P = n. Use the strong form: factor through any i ≤ n
-        -- by passing to a clean upper bound. The Round-15-pre-stub of Helper A2
+        -- by passing to a clean upper bound. Helper A2
         -- only required `i ≤ n`, but for `i > n` the coefficient is automatically
         -- zero by polynomial-degree considerations, so we never reach Helper A2
         -- and can therefore safely assume the worst case `i ≤ n`. We bypass the
@@ -4629,9 +4535,8 @@ private lemma Pfhat_TLifted_collapse_combinatorial
           -- But the strict identity ∑ᶠ s, s.val * phiT s = ∑ᶠ d : S, μ(d).val * φ₀(d)
           -- requires invoking phi_tilde and the count/residue bridges from Helper A2.
           -- The cleanest path: re-state w0_rat from hphiT_eq via finsum_comp_equiv.
-          -- For the Round-16 minimum bar we use Helper A2's `i = n` conclusion plus
-          -- the residue identity (T * q + r0 = w0_rat) to derive k = w0_rat.num,
-          -- contradicting hk_ne.
+          -- Use Helper A2's `i = n` conclusion together with the residue identity
+          -- `T * q + r0 = w0_rat` to derive `k = w0_rat.num`, contradicting `hk_ne`.
           -- We compute the integer equality directly:
           have h_phiT_sum :
               (∑ᶠ s : ↥(Stilde hf2), (s.val : ℚ) * (phiT s : ℚ)) =
@@ -4811,7 +4716,7 @@ private lemma ceil_div_add_div_le {T : ℚ} (a b : ℚ) {M : ℕ}
   have h1 : (a + b) / T ≤ (M : ℚ) := Nat.ceil_le.mp hM
   linarith [show a / T + b / T = (a + b) / T from by ring]
 
-/-- §5b — Combinatorial collapse witness (Round 11).
+/-- §5b — Combinatorial collapse witness.
 
 Encapsulates the multinomial-expansion + φ̃-collapse content of the §5b argument
 into a single existential. Returns a unique surviving integer exponent `w₀`,
@@ -4835,9 +4740,8 @@ Mathematical content (PDF pp. 9-10, §5b):
   so only finitely many integer `w` give non-zero `Pfhat.coeff (-r0/T + w/T)`;
   for `M` large enough, all such `w` satisfy the `≤ M` cut-off.
 
-Body deferred: the explicit multinomial expansion via `HahnSeries.coeff_pow` +
-`Nat.multinomial` is heavy. This helper isolates the combinatorial content from
-the analytic chaining in `identity_c_collapsed`. -/
+This helper isolates the combinatorial content from the analytic chaining in
+`identity_c_collapsed`. -/
 private lemma Pfhat_TLifted_collapse_witness
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -4870,11 +4774,8 @@ private lemma Pfhat_TLifted_collapse_witness
             (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
               ((Pfhat_TLifted T P fhat).coeff
                 (-(r0 hSparse) / T + (w₀ : ℚ) / T)) := by
-  -- Round 12 — structured proof: combinatorial heart isolated into a single
-  -- sub-existential. The witness construction (M₀) and the eventually-constant
-  -- claim (equation 2) are derived from the sub-existential via Finset.sum_subset
-  -- and the natural ceiling for M₀. Only the sub-existential itself contains
-  -- the residual `sorry`.
+  -- Package the combinatorial heart into a single sub-existential, then derive
+  -- the witness `M₀` and the eventually-constant claim from it.
   --
   -- Concrete witness for `w₀`: the rational `r₀ + T · ∑φ₀(d)·μ(d) ∈ ℤ` (real,
   -- via `w0_rat_isInt`); take its integer numerator.
@@ -4887,8 +4788,7 @@ private lemma Pfhat_TLifted_collapse_witness
   -- existential captures both (a) the coefficient identification at the
   -- surviving exponent `w₀ = w0_rat.num`, and (b) the vanishing of
   -- `Pfhat.coeff` at all OTHER points of the `(-r0/T + ℤ/T)` coset. Both
-  -- conclusions follow from the multinomial collapse — see PROGRESS.md
-  -- "Suggested sub-helper decomposition (Round 12)" for the 3-helper roadmap:
+  -- conclusions follow from the multinomial collapse:
   -- (1) `fhat_pow_coeff_eq_multinomial` (multinomial expansion of `(fhat^i).coeff q`
   --     via `pow_succ` + `HahnSeries.coeff_mul` + induction);
   -- (2) `Pfhat_TLifted_coeff_at_q_collapse` (combine Helper 1 with
@@ -4906,11 +4806,8 @@ private lemma Pfhat_TLifted_collapse_witness
                         (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
         ∀ k : ℤ, k ≠ w0_rat.num →
           (Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (k : ℚ) / T) = 0 := by
-    -- Round 13: delegate the combinatorial heart of §5b to
-    -- `Pfhat_TLifted_collapse_combinatorial`. That helper packages the
-    -- multinomial-expansion + φ̃-collapse content (PROGRESS.md
-    -- "Suggested sub-helper decomposition (Round 13)") and now hosts the
-    -- residual `sorry` previously located here.
+    -- Delegate the combinatorial heart of §5b to
+    -- `Pfhat_TLifted_collapse_combinatorial`.
     exact Pfhat_TLifted_collapse_combinatorial hSparse _h_supp h_coeff_eq hCs_ne
       _h_mk_eq _hP_aeval _hP_natDegree
   obtain ⟨α, hα_ne, hα_eq, h_other_zero⟩ := h_combinatorial
@@ -4978,7 +4875,7 @@ single surviving `w` equal to `r₀ + T·∑φ₀(d)·μ(d) ∈ ℤ`. Equation (
 in `ℤᵘⁿ_[p,T]` (or its embedding, depending on the natural ambient ring used by §4d).
 
 The statement here is presented as a `(... = 0)` in `ℤᵘⁿ_[p,T]`, abstracting over the
-algebraMap and exponent conventions. (Body deferred — requires §4d + §5a.) -/
+algebraMap and exponent conventions. -/
 private lemma identity_c_collapsed
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -4996,8 +4893,8 @@ private lemma identity_c_collapsed
     (algebraMap ℚᵘⁿ_[p] ℚᵘⁿ_[p, (T : ℕ)]) (P.coeff n) *
         (∏ᶠ d : S, algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
                      (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
-  -- Round 11: chain through `Pfhat_TLifted_collapse_witness`.
-  -- Step 1: Get Pfhat_TLifted ∈ TNullSeriesIdeal (closed in Round 10).
+  -- Chain through `Pfhat_TLifted_collapse_witness`.
+  -- Step 1: get `Pfhat_TLifted ∈ TNullSeriesIdeal`.
   have hPfhat_null : Pfhat_TLifted T P fhat ∈ TNullSeriesIdeal p (T : ℕ) :=
     Pfhat_TLifted_isTNullSeries T hP_aeval h_mk_eq
   -- Step 2: Unwrap to IsTNullSeries (carrier definition of the ideal).
@@ -5200,6 +5097,7 @@ theorem main_theorem₀ (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
   have lift_data := exists_FhatData f T hf2
   exact sparse_contradiction_engine (hcD n hnD) lift_data hP2 hP1 hP3
 
+-- `Theorem 1.7` of this paper, version for transcendence over `ℚᵘⁿ_[p]`
 theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
 (W : Set ℚ) (hW1 : W ≠ {0}) (hW2 : IsSparse p W)
 (hf2 : IsRepModZ W {-1 * T * q | q ∈ f.support}) :
@@ -5209,5 +5107,14 @@ theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
     apply main_theorem₀ p f T S hSP ⟨c, D, hD1, hD2⟩
     rwa [hS]
   · exact hW1
+
+-- `Theorem 1.7` of this paper, version for transcendence over `ℚ_[p]`
+theorem main_theorem' (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
+(W : Set ℚ) (hW1 : W ≠ {0}) (hW2 : IsSparse p W)
+(hf2 : IsRepModZ W {-1 * T * q | q ∈ f.support}) :
+  ¬ IsAlgebraic ℚ_[p] f := by
+  have := main_theorem p f T W hW1 hW2 hf2
+  contrapose this
+  exact pAdicHahnSeries.alg_QpUn_of_alg_Qp p f this
 
 end FormalizedSparse

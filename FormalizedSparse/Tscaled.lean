@@ -7,36 +7,7 @@ import Mathlib.Topology.Algebra.Module.FiniteDimension
 /-!
 # T-scaled realization of p-adic Hahn series
 
-This file is the formalization of Section 2 of `Tscaled.pdf`.  Section 1 of the paper is already
-formalized in `FormalizedSparse/References/lean`, and the present file mirrors that
-development with the prime `p` replaced by its formal `T`-th root `p^{1/T}` adjoined to
-`W(𝔽ₚ^⁻)`.
-
-## Main definitions
-
-* `OQpUnT p T = ℤᵘⁿ_[p,T]`              : the ring `W(𝔽ₚ^⁻)[p^{1/T}]`.
-* `QpUnT  p T = ℚᵘⁿ_[p,T]`              : its fraction field.
-* `pInvT  p T : ℤᵘⁿ_[p,T]`              : the canonical root `p^{1/T}`.
-* `OQpUn_embd : ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T]`  : the natural inclusion of base rings.
-* `QpUn_embd  : ℚᵘⁿ_[p] →+* ℚᵘⁿ_[p,T]`  : its extension to fraction fields.
-* `TLiftedPAdicHahnSeries p T`           : the T-scaled lifted Hahn series
-                                           `W(𝔽ₚ^⁻)[p^{1/T}]((t^ℚ))`.
-* `Lifted_to_TLifted`                    : the natural inclusion of `LiftedPAdicHahnSeries p`
-                                           into `TLiftedPAdicHahnSeries p T`.
-* `IsTNullSeries`                        : Definition 2.4.
-* `TNullSeriesIdeal`                     : Lemma 2.6 (1) — the ideal of T-null-series.
-* `TScaledPAdicHahnSeries p T = 𝕃_[p,T]` : the quotient field, Lemma 2.6 (3).
-* `σ : 𝕃_[p] ≃+* 𝕃_[p,T]`                : the isomorphism of Proposition 2.10.
-
-## Main statements
-
-* `rank_QpUnT_over_QpUn`               : Lemma 2.1.
-* `exists_teichmuller_series_OQpUnT`   : Lemma 2.2.
-* `exists_canonical_T_expansion`       : Lemma 2.6 (2).
-* `instMaximalTNullSeriesIdeal`        : Lemma 2.6 (3).
-* `TNullSeriesIdeal_inter_image`       : Lemma 2.8.
-* `range_lifted_add_TNull`             : Lemma 2.9.
-* `σ`, `σ_coeff_compat`                : Proposition 2.10 and Remark 2.11.
+This file is the formalization of Section 3 of this paper. Most of the proofs are similar to those in `PAdicHahnSeries.lean`.
 -/
 
 open WittVector
@@ -145,12 +116,12 @@ private lemma TPoly_irreducible : Irreducible (TPoly p T) := by
 /-- `ℤᵘⁿ_[p,T]` is a domain.
 The argument: `X^T - p` is Eisenstein at the maximal ideal of the DVR `ℤᵘⁿ_[p]`, hence
 irreducible, hence the quotient `AdjoinRoot (X^T - p)` is an integral domain.  This is the same
-content as Lemma 2.1. -/
+content as Lemma 4.1. -/
 instance instIsDomainOQpUnT : IsDomain (ℤᵘⁿ_[p,T]) := by
   apply AdjoinRoot.isDomain_of_prime
   exact (UniqueFactorizationMonoid.irreducible_iff_prime).mp (TPoly_irreducible p T)
 
-/-! ### Lemma 2.1 (continued) — `ℤᵘⁿ_[p,T]` is a discrete valuation ring -/
+/-! ### Lemma 4.1 (continued) — `ℤᵘⁿ_[p,T]` is a discrete valuation ring -/
 
 /-- `pInvT p T` is nonzero. Proof: `(pInvT)^T = algebraMap p` is nonzero in `S`, since `p` is
 nonzero in `R` and `algebraMap` is injective. -/
@@ -417,7 +388,7 @@ lemma valued_v_pInvT_zpow (n : ℤ) :
 noncomputable def OQpUn_embd : ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T] :=
   algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
 
-/-- The inclusion `ℤᵘⁿ_[p] ↪ ℤᵘⁿ_[p,T]` is injective.  Follows from Lemma 2.1
+/-- The inclusion `ℤᵘⁿ_[p] ↪ ℤᵘⁿ_[p,T]` is injective.  Follows from Lemma 4.1
 (`X^T - p` has positive degree, hence the quotient algebra is free of rank `T`). -/
 lemma OQpUn_embd_injective : Function.Injective (OQpUn_embd p T) := by
   unfold OQpUn_embd
@@ -440,7 +411,7 @@ noncomputable instance : Algebra (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) :=
 
 /-- The natural scalar-tower `ℤᵘⁿ_[p] → ℚᵘⁿ_[p] → ℚᵘⁿ_[p,T]` via the localization
 square plus the Eisenstein extension. Promoted to a global instance because the closure
-construction `Module.Basis.localizationLocalization` (used in Lemma 2.8) requires it. -/
+construction `Module.Basis.localizationLocalization` (used in Lemma 4.8) requires it. -/
 instance instIsScalarTowerOQpUnQpUnQpUnT :
     IsScalarTower (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
   refine IsScalarTower.of_algebraMap_eq fun x => ?_
@@ -463,7 +434,7 @@ instance instIsScalarTowerOQpUnQpUnQpUnT :
   rfl
 
 /-- `ℤᵘⁿ_[p,T]` is module-finite over `ℤᵘⁿ_[p]` (it is `R₀`-free of rank `T`). Promoted to
-a global instance so Lemma 2.8 helpers do not have to re-derive it from
+a global instance so Lemma 4.8 helpers do not have to re-derive it from
 `AdjoinRoot.powerBasis'`. -/
 instance instModuleFiniteOQpUnT : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
   (AdjoinRoot.powerBasis' (TPoly_monic p T)).finite
@@ -491,9 +462,9 @@ instance instModuleFiniteQpUnT : Module.Finite (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
   exact Module.Finite.of_isLocalization (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
     (Rₚ := ℚᵘⁿ_[p]) (Sₚ := ℚᵘⁿ_[p,T]) (nonZeroDivisors (ℤᵘⁿ_[p]))
 
-/-! ### Lemma 2.1 — Eisenstein criterion / degree formula -/
+/-! ### Lemma 4.1 — Eisenstein criterion / degree formula -/
 
-/-- **Lemma 2.1.**  `[ℚᵘⁿ_[p,T] : ℚᵘⁿ_[p]] = T`.
+/-- **Lemma 4.1.**  `[ℚᵘⁿ_[p,T] : ℚᵘⁿ_[p]] = T`.
 
 Equivalently, `1, p^{1/T}, …, p^{(T-1)/T}` form a basis of `ℚᵘⁿ_[p,T]` over `ℚᵘⁿ_[p]`.
 The proof uses the Eisenstein criterion for general DVFs (`X^T - p` is Eisenstein at the
@@ -539,10 +510,10 @@ theorem rank_QpUnT_over_QpUn :
     (R := ℤᵘⁿ_[p]) (R' := ℚᵘⁿ_[p]) (S := ℤᵘⁿ_[p,T]) (S' := ℚᵘⁿ_[p,T])
   rw [this, hpb]
 
-/-! ### Lemma 2.2 — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
+/-! ### Lemma 4.2 — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
 
 /-
-  **Lemma 2.2** is stated and proved further down (after the `TResidue`/
+  **Lemma 4.2** is stated and proved further down (after the `TResidue`/
   `TTeichmuller` infrastructure used in its proof) as
   `exists_teichmuller_series_OQpUnT`.  We move the placement so the proof can
   reuse the digit-extraction lemmas `Texists_T_pInvT_digits` /
@@ -655,7 +626,7 @@ def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
       (pInvTQ p T) ^ (n.val : ℤ) *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) atTop (𝓝 0)
 
-/-! ### Helpers for `smul_mem'` — T-scaled ports of Poonen1993 helpers (Lemma 2.6 (1)) -/
+/-! ### Helpers for `smul_mem'` — T-scaled ports of Poonen1993 helpers (Lemma 4.6 (1)) -/
 
 /-- T-scaled analogue of `finpropInt` (line 61). Indexes integers `n ≤ K` whose
 shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
@@ -1142,9 +1113,9 @@ private lemma TintPartial_mul_valuation_bound
     _ = Valued.v (TintPartial p T x (g - a) K) := one_mul _
     _ ≤ ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := h_inner_le
 
-/-! ### Lemma 2.6 (1) — `TNullSeriesIdeal` is an ideal -/
+/-! ### Lemma 4.6 (1) — `TNullSeriesIdeal` is an ideal -/
 
-/-- **Lemma 2.6 (1).**  T-null-series form an ideal of `TLiftedPAdicHahnSeries p T`. -/
+/-- **Lemma 4.6 (1).**  T-null-series form an ideal of `TLiftedPAdicHahnSeries p T`. -/
 def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
   carrier := { x | IsTNullSeries p T x }
   add_mem' := by
@@ -1433,7 +1404,7 @@ private lemma Trat_decompose (q : ℚ) :
   have h := Int.fract_add_floor q
   linarith
 
-/-! #### `one_notMem_TNullSeriesIdeal` (Lemma 2.6 (1) byproduct) -/
+/-! #### `one_notMem_TNullSeriesIdeal` (Lemma 4.6 (1) byproduct) -/
 
 /-- T-scaled analogue of `one_notMem_NullSeriesIdeal` (Poonen line 751).
 `(1 : TLiftedPAdicHahnSeries p T)` is not a T-null-series; the partial-sum sequence
@@ -2151,7 +2122,7 @@ private lemma Tinjective_TTeichmuller :
 set_option maxHeartbeats 1000000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body (mirrors
 -- teichmuller_digits_unique)
-/-- **Phase 2B (T-Lemma 2.5).** Uniqueness of Teichmüller digits for `ℚᵘⁿ_[p,T]`.
+/-- **Phase 2B (T-Lemma 4.5).** Uniqueness of Teichmüller digits for `ℚᵘⁿ_[p,T]`.
 T-scaled analogue of `teichmuller_digits_unique` (Poonen 1336–1818).
 
 Steps 1–7 follow Poonen mechanically with the substitution rule
@@ -2586,16 +2557,16 @@ private lemma Tteichmuller_digits_unique
     rw [← h_c_eq, ← h_c'_eq]
     exact h_induction (k - m).toNat
 
-/-! ### Lemma 2.2 proper — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
+/-! ### Lemma 4.2 proper — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
 
 open Topology Filter in
-/-- **Lemma 2.2.**  Every element of `ℤᵘⁿ_[p,T]` can be uniquely written as
+/-- **Lemma 4.2.**  Every element of `ℤᵘⁿ_[p,T]` can be uniquely written as
 `∑_{k≥0} [c_k] · (pInvT)^k` with `c_k ∈ 𝔽ᵃ_[p]`, where the sum converges in the
 `(pInvT)`-adic topology on `ℤᵘⁿ_[p,T]` (formalised here as the `Valued`-induced topology
 on `ℚᵘⁿ_[p,T]` after taking `algebraMap`).
 
 This is a consequence of the Teichmüller-series representation of `ℤᵘⁿ_[p]` (Mathlib
-`WittVector.TeichmullerSeries`) combined with Lemma 2.1.
+`WittVector.TeichmullerSeries`) combined with Lemma 4.1.
 
 Existence comes from `Texists_T_pInvT_digits` (the divisibility step) plus a standard
 valuation/Tendsto argument; uniqueness is obtained by extending `c : ℕ → 𝔽ᵃ_[p]` to
@@ -3805,7 +3776,7 @@ theorem Tunique_canonical_T_representative
       filter_upwards with K
       exact h_intPartial_sub K
     exact tendsto_nhds_unique hy_d' h_diff
-  -- y_d = 0 from IsTNullSeries (T-shifted finprop bridge, mirrors Round 11)
+  -- `y_d = 0` follows from `IsTNullSeries` via the T-shifted `finprop` bridge.
   have h_yd_zero : y_d = 0 := by
     have h_finprop_eq_finpropInt :
         ∀ (x : TLiftedPAdicHahnSeries p T) (M : ℕ),
@@ -3911,9 +3882,9 @@ theorem Tunique_canonical_T_representative
   exact Tteichmuller_digits_unique (p := p) (T := T)
     Bs Bs' m_s m_s' hm_s hm_s' htendsto_s_TT htendsto_s'_TT
 
-/-! ### Lemma 2.6 (2) — canonical Teichmüller expansion -/
+/-! ### Lemma 4.6 (2) — canonical Teichmüller expansion -/
 
-/-- **Lemma 2.6 (2).**  Every class in `TLiftedPAdicHahnSeries p T / TNullSeriesIdeal p T`
+/-- **Lemma 4.6 (2).**  Every class in `TLiftedPAdicHahnSeries p T / TNullSeriesIdeal p T`
 admits a unique representative of the canonical Teichmüller form `∑ [g(q)] t^q` for some
 `g : ℚ → 𝔽ᵃ_[p]` with well-ordered support. -/
 theorem exists_canonical_T_expansion :
@@ -3949,7 +3920,7 @@ theorem exists_canonical_T_expansion :
     subst hfun
     rfl
 
-/-! ### Lemma 2.6 (3) — `TNullSeriesIdeal` is maximal -/
+/-! ### Lemma 4.6 (3) — `TNullSeriesIdeal` is maximal -/
 
 /-- **Helper B.** Port of `support_nonempty_of_nonzero` (lines 2940–2952).
 For a nonzero class `x` in the quotient, the canonical T-expansion has nonempty support. -/
@@ -4164,7 +4135,7 @@ private lemma Texists_inverse_of_nonzero
   refine ⟨(Ideal.Quotient.mk (TNullSeriesIdeal p T)) g, ?_⟩
   rw [← hmk_f, ← (Ideal.Quotient.mk _).map_mul, hfg, (Ideal.Quotient.mk _).map_one]
 
-/-- **Lemma 2.6 (3).**  `TNullSeriesIdeal p T` is a maximal ideal, hence the quotient is a
+/-- **Lemma 4.6 (3).**  `TNullSeriesIdeal p T` is a maximal ideal, hence the quotient is a
 field (the T-scaled p-adic Hahn series field). -/
 instance instMaximalTNullSeriesIdeal : (TNullSeriesIdeal p T).IsMaximal := by
   apply Ideal.Quotient.maximal_of_isField
@@ -4209,15 +4180,13 @@ end TScaledPAdicHahnSeries
 
 /-! ### Phase 5 — Projection infrastructure for Lemmas 2.8 and 2.9
 
-These helpers are reusable Round-15 infrastructure intended also for Round 16
-(Lemma 2.9). The `R₀`-coordinate projection layer (`OQpUn_basis`, `OQpUn_basis_apply`,
-`OQpUn_proj`, `OQpUn_basis_decomp`) is fully landed; the `K₀`-side base-change via
-`Module.Basis.localizationLocalization` and the index-splitting identity were drafted
-this round but blocked on `IsScalarTower ℤᵘⁿ_[p] ℚᵘⁿ_[p] ℚᵘⁿ_[p,T]` heartbeat-timeout
-during typeclass synthesis. See `task_results/Tscaled.lean.md` for next-step routing.
+These helpers set up the projection layer used in Lemmas 2.8 and 2.9.
+The `R₀`-coordinate projection layer (`OQpUn_basis`, `OQpUn_basis_apply`,
+`OQpUn_proj`, `OQpUn_basis_decomp`), the `K₀`-side base-change, and the
+index-splitting identities are developed here.
 
 Auxiliary algebra-map identities below (`pInvTQ_pow_T`, `algebraMap_OQpUn_embd_compat`,
-`Lifted_to_TLifted_coeff`) are also reusable for Round 16. -/
+`Lifted_to_TLifted_coeff`) are reused throughout these arguments. -/
 
 /-- Reindexed `R₀`-power-basis of `ℤᵘⁿ_[p,T]`: the basis `{1, π, …, π^(T-1)}` indexed by
 `Fin T` (rather than `Fin (TPoly p T).natDegree`). -/
@@ -4359,8 +4328,8 @@ private lemma pInvTQ_pow_T_zmul (m : ℤ) :
 
 -- The integer-side valuation identity: for `a : ℤᵘⁿ_[p]`,
 -- `v_K(algMap_{K₀→K}(algMap_{R₀→K₀} a)) = (v_{K₀}(algMap_{R₀→K₀} a))^T`.
--- Round 17: derived via DVR canonical decomposition `a = u · p^n` plus
--- `OQpUn_embd p = pInvT^T` (Round 4 / Round 15) and `pInvTQ^T = algMap p` (Round 16).
+-- Derived via the DVR canonical decomposition `a = u · p^n` together with
+-- `OQpUn_embd p = pInvT^T` and `pInvTQ^T = algMap p`.
 private lemma valued_v_algebraMap_K₀_K_int (a : ℤᵘⁿ_[p]) :
     Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)) =
       (Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a))^T := by
@@ -4499,7 +4468,7 @@ private lemma continuous_algebraMap_K₀_K :
   exact continuous_of_continuousAt_zero
     (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])).toAddMonoidHom h0
 
--- Helper 1B (Round 18): for each j, the j-th K₀-coordinate of the basis decomposition
+-- Helper 1B: for each j, the j-th K₀-coordinate of the basis decomposition
 -- has valuation bounded by `v(c) * ofAdd(j)`. Proof via strict ultrametric: nonzero
 -- terms in `c = Σ_i pInvTQ^i · algMap(QpUn_proj i c)` have pairwise distinct
 -- K-valuations (mod T argument), hence by `Valuation.map_sum_eq_of_lt`,
@@ -4644,7 +4613,7 @@ private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
   rw [h_v_c]
   exact hk_max j hj_supp
 
--- Helper 1B (Round 18): tendsto-at-zero of `QpUn_proj j`. Built from
+-- Helper 1B: tendsto-at-zero of `QpUn_proj j`. Built from
 -- `valued_v_QpUn_proj_term_le` plus Helper 1A `valued_v_algebraMap_K₀_K` (the
 -- ramification identity `v(algMap z) = v(z)^T`).
 private lemma tendsto_QpUn_proj_zero (j : Fin T) :
@@ -4746,7 +4715,7 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
   rw [hγ'_eq]
   exact h_lt
 
--- Helper 1B (Round 18): continuity of `QpUn_proj j`. Derived from the
+-- Helper 1B: continuity of `QpUn_proj j`. Derived from the
 -- tendsto-at-zero result above plus the additive-group-hom upgrade.
 private lemma continuous_QpUn_proj (j : Fin T) :
     Continuous (QpUn_proj p T j) := by
@@ -4755,7 +4724,7 @@ private lemma continuous_QpUn_proj (j : Fin T) :
     exact tendsto_QpUn_proj_zero p T j
   exact continuous_of_continuousAt_zero (QpUn_proj p T j).toAddMonoidHom h0
 
--- Helper 1C (Round 18): index-splitting identity (Sub-lemma 2.8.1).
+-- Helper 1C: index-splitting identity (Sub-lemma 4.8.1).
 -- For x : LiftedPAdic, g : ℚ, M : ℕ, the T-side partial sum at base g equals
 -- the sum over r : Fin T of pInvTQ^r times algebraMap_{K₀→K} of the K₀-side
 -- partial sum at base g + r/T. Reindex via n = T*m + r.
@@ -4965,10 +4934,10 @@ private lemma TLifted_partial_sum_split
     have h_exp_eq : (T : ℤ) * n.ediv (T : ℤ) + ((n.emod (T : ℤ)).toNat : ℤ) = n := hsplit_int
     rw [h_exp_eq]
 
--- Round 19: opaque abbreviations for the K₀-side and K-side partial sums. Wrapping
+-- Opaque abbreviations for the K₀-side and K-side partial sums. Wrapping
 -- the sums in `noncomputable def`s prevents Lean from re-elaborating the
 -- `Set.Finite.toFinset`-based index sets on every defeq check during the long
--- `Tendsto.comp` / `tendsto_finset_sum` chains used in Lemma 2.8 below.
+-- `Tendsto.comp` / `tendsto_finset_sum` chains used in Lemma 4.8 below.
 
 /-- K₀-side partial sum (Poonen `S_M(h; x)`).  Definitionally matches the body of
 `IsNullSeries x` at base `h`, step `M`. -/
@@ -4987,7 +4956,7 @@ private noncomputable def T_partial
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
         ((Lifted_to_TLifted p T x).coeff (g + (n.val : ℚ) / T))
 
-/-- Sub-lemma 2.8.1 packaged through the opaque names: the K-side partial sum
+/-- Sub-lemma 4.8.1 packaged through the opaque names: the K-side partial sum
 splits as `T` projections of the K₀-side partial sum at shifted bases. -/
 private lemma T_partial_eq_proj_sum
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
@@ -4998,7 +4967,7 @@ private lemma T_partial_eq_proj_sum
   unfold T_partial S_partial
   exact TLifted_partial_sum_split (p := p) (T := T) x g M
 
--- (⇐) of Lemma 2.8: K₀-side null hypothesis transports to K-side null.
+-- (⇐) of Lemma 4.8: K₀-side null hypothesis transports to K-side null.
 open Topology Filter in
 private lemma tendsto_T_partial_of_null
     (x : LiftedPAdicHahnSeries p)
@@ -5028,7 +4997,7 @@ private lemma tendsto_T_partial_of_null
   have h_mul := h_inner.const_mul ((pInvTQ p T) ^ (r.val : ℕ))
   simpa using h_mul
 
--- (⇒) of Lemma 2.8: K-side null hypothesis transports back via the j=0
+-- (⇒) of Lemma 4.8: K-side null hypothesis transports back via the j=0
 -- coordinate projection.
 open Topology Filter in
 private lemma tendsto_S_partial_of_T_null
@@ -5056,9 +5025,9 @@ private lemma tendsto_S_partial_of_T_null
     simp
   exact h_proj.congr h_eq
 
--- **Lemma 2.8.**  Pulling back along the inclusion
+-- **Lemma 4.7.**  Pulling back along the inclusion
 -- `Lifted_to_TLifted : LiftedPAdicHahnSeries p ↪ TLiftedPAdicHahnSeries p T` gives
--- `TNullSeriesIdeal ∩ LiftedPAdicHahnSeries = NullSeriesIdeal`.  Round 19: assembled
+-- `TNullSeriesIdeal ∩ LiftedPAdicHahnSeries = NullSeriesIdeal`.
 -- via the opaque-abbreviation strategy (see `S_partial`, `T_partial`, and the four
 -- supporting private lemmas above).
 open Topology Filter in
@@ -5073,9 +5042,9 @@ theorem TNullSeriesIdeal_inter_image :
   · exact tendsto_S_partial_of_T_null (p := p) (T := T) x hT h
   · exact tendsto_T_partial_of_null (p := p) (T := T) x hN g
 
-/-! ### Lemma 2.9 -/
+/-! ### Lemma 4.8 -/
 
--- Round 20: helpers for the linear-shift element trick.
+-- Helpers for the linear-shift element trick.
 
 /-- Shift a `LiftedPAdic` Hahn series by `δ : ℚ`: coefficient at `q` is `z.coeff (q - δ)`.
 Support is `support z + δ`, which is PWO because `(· + δ) : ℚ → ℚ` is monotone. -/
@@ -5380,12 +5349,12 @@ private lemma coeff_identity_n
   -- Reduces to: LiftedPAdic_shift δ z .coeff q = z.coeff (q - δ), and s_proj.coeff = OQpUn_proj.
   rfl
 
-/-- **Lemma 2.9.**  The image of `Lifted_to_TLifted` together with `TNullSeriesIdeal` spans
+/-- **Lemma 4.8.**  The image of `Lifted_to_TLifted` together with `TNullSeriesIdeal` spans
 the whole T-lifted ring:
 for every `y ∈ TLiftedPAdicHahnSeries p T`, there exist `x ∈ LiftedPAdicHahnSeries p` and
 `n ∈ TNullSeriesIdeal p T` with `y = Lifted_to_TLifted x + n`.
 
-Round 20: closed via the linear-shift-element trick.  We set
+The proof uses the linear-shift-element trick. We set
 `x := Σ_i shift_{i/T} (s_proj y i)` and `n := y - ι(x)`, where `s_proj y i` is the i-th
 `R₀`-coordinate projection of `y`.  Coefficient-wise, `n = Σ_i (linear_shift_elt i) · ι(s_proj y i)`
 and each summand lies in `TNullSeriesIdeal` because `linear_shift_elt i ∈ TNullSeriesIdeal`
@@ -5411,14 +5380,14 @@ theorem range_lifted_add_TNull :
   · -- y = ι(x) + (y - ι(x))
     abel
 
-/-! ### Proposition 2.10 — isomorphism `σ : 𝕃_[p] ≃+* 𝕃_[p,T]` -/
+/-! ### Proposition 4.9 — isomorphism `σ : 𝕃_[p] ≃+* 𝕃_[p,T]` -/
 
--- Round 21: helpers for the standard quotient-isomorphism construction.
+-- Helpers for the standard quotient-isomorphism construction.
 
 /-- The ring map `𝕃_[p] →+* 𝕃_[p,T]` lifted from
 `Lifted_to_TLifted : LiftedPAdicHahnSeries p →+* TLiftedPAdicHahnSeries p T`
 through the quotient by `NullSeriesIdeal p`.  The lifting kernel condition is the
-(⇐) direction of Lemma 2.8 (`TNullSeriesIdeal_inter_image`). -/
+(⇐) direction of Lemma 4.7 (`TNullSeriesIdeal_inter_image`). -/
 private noncomputable def σ_lift : 𝕃_[p] →+* 𝕃_[p,T] :=
   Ideal.Quotient.lift (NullSeriesIdeal p)
     ((Ideal.Quotient.mk (TNullSeriesIdeal p T)).comp (Lifted_to_TLifted p T))
@@ -5466,22 +5435,22 @@ private lemma Lifted_to_TLifted_from_coeff_eq (s : ℚ → Fpbar p)
   funext q
   rfl
 
-/-- **Proposition 2.10.**  The composition
+/-- **Proposition 4.9.**  The composition
 `LiftedPAdicHahnSeries p → TLiftedPAdicHahnSeries p T → 𝕃_[p,T]`
 factors through the quotient `𝕃_[p]` and induces a ring isomorphism
 `σ : 𝕃_[p] ≃+* 𝕃_[p,T]`.
 
 This is the standard fact "for `R₁ ⊂ R₂` with `R₁ + I = R₂`, `R₁/(I ∩ R₁) ≃ R₂/I`" applied
-to Lemmas 2.8 and 2.9. -/
+to Lemmas 4.7 and 4.8. -/
 noncomputable def σ : 𝕃_[p] ≃+* 𝕃_[p,T] :=
   RingEquiv.ofBijective (σ_lift p T)
     ⟨σ_lift_injective p T, σ_lift_surjective p T⟩
 
-/-! ### Remark 2.11 — coefficient compatibility -/
+/-! ### Remark 4.10 — coefficient compatibility -/
 
-/-- **Remark 2.11.**  The isomorphism `σ` preserves Teichmüller coefficients:
+/-- **Remark 4.10.**  The isomorphism `σ` preserves Teichmüller coefficients:
 `(σ f).coeff = f.coeff` for every `f : 𝕃_[p]`.  Equivalently, the natural commutative
-diagram of Proposition 2.10 commutes on coefficients. -/
+diagram of Proposition 4.9 commutes on coefficients. -/
 theorem σ_coeff_compat (f : 𝕃_[p]) :
     TScaledPAdicHahnSeries.coeff p T (σ p T f) = pAdicHahnSeries.coeff f := by
   change (exists_canonical_T_expansion p T (σ p T f)).choose.val =

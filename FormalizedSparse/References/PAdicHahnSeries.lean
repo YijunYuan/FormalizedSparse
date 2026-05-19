@@ -11,7 +11,7 @@ namespace FormalizedSparse
 
 open WittVector
 
--- W(𝔽ₚ^⁻)((t^ℚ))
+-- The ring of equal-characteristic Hahn series `W(𝔽ₚ^⁻)((t^ℚ))` over `W(𝔽ₚ^⁻)` with value group `ℚ`
 abbrev LiftedPAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] := HahnSeries ℚ (ℤᵘⁿ_[p])
 namespace LiftedPAdicHahnSeries
 -- Define an element of W(𝔽ₚ^⁻)((t^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support
@@ -747,13 +747,11 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
     rw [hε_def] at h_combined
     exact hsm.lt_iff_lt.mp h_combined
 
--- Sub-Obj 2a of `(NullSeriesIdeal p).IsMaximal` decomposition (Session 7).
+-- Sub-Obj 2a of `(NullSeriesIdeal p).IsMaximal` decomposition.
 -- `1 ∉ NullSeriesIdeal p`. Direct route: at `g = 0`, the partial-sum sequence in
 -- the definition of `IsNullSeries` is constantly `1` (only `n = 0` survives, and
 -- `(1).coeff 0 = 1`), but `IsNullSeries` requires it to tend to `0`; uniqueness
 -- of limits in `QpUn p` forces `1 = 0`, contradicting `one_ne_zero`.
--- We avoid `null_series_no_unit_leading` (defined later at L3064) here so the
--- lemma is available at L719 for the future Sub-Obj 2c integration.
 private lemma one_notMem_NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] :
     (1 : LiftedPAdicHahnSeries p) ∉ NullSeriesIdeal p := by
   classical
@@ -813,7 +811,7 @@ private lemma one_notMem_NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] :
   exact one_ne_zero h_eq
 
 -- Eagerly establish `Nontrivial` of the quotient from `one_notMem_NullSeriesIdeal`.
--- The full `IsMaximal` (and therefore `Field`) instance is established later, after
+-- The full `IsMaximal` (and therefore `Field`) instance is established after
 -- `canonical_leading_coeff_isUnit` and `exists_inverse_of_nonzero`. Some intermediate
 -- proofs (notably `val_one_eq_zero`) need `(1 : Quot) ≠ 0` before that point, which
 -- this `Nontrivial` instance supplies without circularity.
@@ -826,8 +824,8 @@ instance (p : ℕ) [Fact (Nat.Prime p)] :
   Auxiliary infrastructure for the proof of `exists_canonical_expansion`.
 
   Following `informal/exists_canonical_expansion.md`, the proof is decomposed
-  into helper lemmas. The deepest step (uniqueness of the Teichmuller series)
-  is a TODO upstream in Mathlib (`Mathlib.RingTheory.WittVector.TeichmullerSeries`).
+  into helper lemmas. The deepest step is the uniqueness of the Teichmuller series,
+  paralleling the material in `Mathlib.RingTheory.WittVector.TeichmullerSeries`.
   Existence comes from `dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`
   applied per coset `g ∈ Set.Ico (0:ℚ) 1`.
 -/
@@ -877,7 +875,7 @@ lemma rat_decompose (q : ℚ) :
 integer-cutoff partial sums `intPartial α g K` form a Cauchy sequence in
 `ℚᵘⁿ_[p]` as `K → ∞`. This follows because `α.coeff (g+n) p^n` has
 `v(·) ≥ n` (in fact more, since `α.coeff (g+n) ∈ ℤᵘⁿ_[p]`), so the tail
-contribution is `≤ p^{-n} → 0`. **Sub-task for next session.**
+contribution is `≤ p^{-n} → 0`.
 -/
 lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
     ∀ ε : NNReal, 0 < ε → ∃ K₀ : ℤ, ∀ K K' : ℤ, K₀ ≤ K → K₀ ≤ K' →
@@ -1044,7 +1042,7 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
 **Limit of partial sums** (sub-claim of existence). The partial sums of `α` at
 coset `g` converge in the complete DVR `ℚᵘⁿ_[p]` to a limit `f_g`.
 Uses `intPartial_isCauchy` and `CompleteSpace ℚᵘⁿ_[p]` (which itself is an
-sorry in `WittVector.lean`, line 76). **Sub-task for next session.**
+instance available in `WittVector.lean`).
 -/
 lemma exists_lim_intPartial (α : LiftedPAdicHahnSeries p) (g : ℚ) :
     ∃ y : ℚᵘⁿ_[p], Filter.Tendsto (intPartial α g) Filter.atTop (nhds y) := by
@@ -1113,7 +1111,7 @@ lemma exists_lim_intPartial (α : LiftedPAdicHahnSeries p) (g : ℚ) :
 
 Built from Mathlib's
 `WittVector.dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff` after
-shifting by `p^{-v(y)}` to land in the integers. **Sub-task for next session.**
+shifting by `p^{-v(y)}` to land in the integers.
 -/
 lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
     ∃ (b : ℤ → Fpbar p) (m₀ : ℤ),
@@ -1335,7 +1333,7 @@ digit-decompositions `b, b' : ℤ → Fpbar p` of the same element of `ℚᵘⁿ
 with the same vanishing-below-cutoff property must agree.
 
 Mathlib's `Mathlib.RingTheory.WittVector.TeichmullerSeries` lists this as
-**TODO**. The argument: read off the lowest nonzero coefficient using
+the key remaining ingredient. The argument is to read off the lowest nonzero coefficient using
 `teichmuller_mul_pow_coeff_of_ne` plus `teichmuller_mul_pow_coeff`, subtract,
 and recurse.
 -/
@@ -1834,7 +1832,7 @@ For every `α : LiftedPAdicHahnSeries p`, there exists `s : ℚ → Fpbar p` wit
 PWO support such that `α - LiftedPAdicHahnSeries.from_coeff s hspwo` is a null
 series (i.e. lies in `NullSeriesIdeal p`).
 
-The construction (per Poonen, p. 6 / `informal/exists_canonical_expansion.md`):
+The construction (per Poonen1993, p. 6):
 for each coset rep `g ∈ Set.Ico 0 1`, take `f_g := ∑_{n∈ℤ} α_{g+n} p^n ∈ ℚᵘⁿ_[p]`,
 shift to land in the integers, and read off coefficients via Mathlib's
 `WittVector.dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`.
@@ -2527,11 +2525,6 @@ set_option maxHeartbeats 220000 in
 
 If `s, s'` both have PWO support and `from_coeff s ≡ from_coeff s'` modulo
 `NullSeriesIdeal p`, then `s = s'`.
-
-The argument (per `informal/exists_canonical_expansion.md`, §"Uniqueness"):
-working coset by coset, the limit of partial sums is the same on both sides;
-by `existsCanonicalExpansionAux.teichmuller_digits_unique`, the per-coset
-coefficients agree, hence so do `s` and `s'`.
 -/
 theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     {s s' : ℚ → Fpbar p}
@@ -3013,7 +3006,7 @@ private lemma val_one_eq_zero (p : ℕ) [Fact (Nat.Prime p)] :
 -- A null series cannot have a unit-valued leading coefficient. The "engine" lemma
 -- powering the strict-ultrametric arguments in `val.map_add_le_max'` and `val.map_mul'`.
 -- Mirrors the `h_sum_eq`-then-tendsto-contradiction pattern of `exists_canonical_representative`
--- (L1455-1518): if `Δ.coeff q` is a unit, the partial sums of `IsNullSeries Δ` at `g := q`
+-- : if `Δ.coeff q` is a unit, the partial sums of `IsNullSeries Δ` at `g := q`
 -- have valuation = `ofAdd(0)` for all M ≥ ⌈q⌉ (strict ultrametric: n=0 term dominates), but
 -- `Tendsto _ (𝓝 0)` requires the valuation to eventually drop below `ofAdd(0)`. Contradiction.
 private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
@@ -3150,8 +3143,7 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
   exact lt_irrefl _ hMclose
 
 /-- The leading coefficient of a `from_coeff`-built series at the minimum of its support
-is a unit in `𝕎(Fpbar p)`. This abstracts the Teichmüller-leading-unit pattern from
-Session 6's `support_ZpUn_embd_nonneg` (L4065–4077). -/
+is a unit in `W(Fpbar p)`. -/
 private lemma canonical_leading_coeff_isUnit
     {p : ℕ} [Fact (Nat.Prime p)]
     {s : ℚ → Fpbar p} (hspwo : (Function.support s).IsPWO)
@@ -3166,7 +3158,7 @@ private lemma canonical_leading_coeff_isUnit
   rw [WittVector.teichmuller_coeff_zero]
   exact hsq₀_ne
 
-/-- For any nonzero element `A` of the quotient `LiftedPAdicHahnSeries p ⧸ NullSeriesIdeal p`,
+/-- For any nonzero element `A` of the quotient `𝕃_[p]`,
 there exists an inverse `B` with `A * B = 1`. The proof uses the canonical expansion to obtain
 a representative `f := from_coeff s_A`, applies `canonical_leading_coeff_isUnit` to show
 `IsUnit f.leadingCoeff`, then concludes `IsUnit f` via Mathlib's `HahnSeries.isUnit_iff`,
@@ -3203,7 +3195,7 @@ private lemma exists_inverse_of_nonzero
   have h_lc_eq : f.leadingCoeff = f.coeff (hspwo.isWF.min hsne) := by
     rw [HahnSeries.leadingCoeff_eq, HahnSeries.order_of_ne hf_ne]
     congr!
-  -- IsUnit of the leading coefficient via the Session 8 lemma.
+  -- IsUnit of the leading coefficient.
   have h_lc_unit : IsUnit f.leadingCoeff := by
     rw [h_lc_eq]
     exact canonical_leading_coeff_isUnit hspwo hsne
@@ -3223,7 +3215,7 @@ private lemma exists_inverse_of_nonzero
 -- [Corollary 3, Poonen1993] : The ideal of null series is maximal, so pAdicHahnSeries p is a field.
 instance (p : ℕ) [Fact (Nat.Prime p)] : (NullSeriesIdeal p).IsMaximal := by
   apply Ideal.Quotient.maximal_of_isField
-  refine ⟨?_, ?_, ?_⟩
+  refine ⟨?_, fun a b => mul_comm a b, ?_⟩
   · -- exists_pair_ne: 1 ≠ 0 in the quotient.
     refine ⟨1, 0, ?_⟩
     intro h
@@ -3233,9 +3225,6 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : (NullSeriesIdeal p).IsMaximal := by
       simp [h]
     have := Ideal.Quotient.eq.mp h1
     simpa using this
-  · -- mul_comm: from CommRing structure.
-    intros a b
-    exact mul_comm a b
   · -- mul_inv_cancel: every nonzero element has a right inverse.
     intros a ha
     exact exists_inverse_of_nonzero p a ha
@@ -3502,7 +3491,7 @@ noncomputable def val
     -- Trivial cases: x+y = 0, x = 0, y = 0 — handled below.
     -- Main case (x, y, x+y all nonzero): reduces to showing
     --   `min(supp s_{x+y}) ≥ min(min(supp s_x), min(supp s_y))`.
-    -- This is hard: see TODO below.
+    -- The main step is the support comparison stated below.
     intro x y
     -- Case x + y = 0: LHS is ⊤, which is `0` (the bottom) in the dual carrier,
     -- so `0 ≤ anything`.
@@ -3912,7 +3901,7 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
 
 /-
 Decomposition of `instCompleteSpace` (mirroring `LaurentSeries.instLaurentSeriesComplete`,
-adapted for ℚ-indexed Hahn series via the `canonical_isometry` linchpin from L588):
+adapted for ℚ-indexed Hahn series via the `canonical_isometry` linchpin):
 
   Step A. (`coeff_stable`) For every Cauchy filter `ℱ` in `𝕃_[p]` and every `q : ℚ`,
     there is a unique `c_q : Fpbar p` with `∀ᶠ x in ℱ, (coeff x) q = c_q`.
@@ -3931,8 +3920,8 @@ adapted for ℚ-indexed Hahn series via the `canonical_isometry` linchpin from L
     into `HahnSeries.orderTop` of the difference of canonical reps; combined with
     Step A and a uniform support-stabilization, eventually all `x ∈ ℱ` lie in `U`.
 
-We isolate Steps A, B, C, D as named scoped lemmas so subsequent rounds can attack
-them individually.
+We isolate Steps A, B, C, D as named scoped lemmas so the convergence argument can
+be developed one component at a time.
 -/
 
 -- Helper for Step A / Step D: pointwise coefficient stability under valuation closeness.
@@ -4213,6 +4202,7 @@ private lemma limit_elt_isLimit {p : ℕ} [Fact (Nat.Prime p)]
   have h_fL : fL.coeff q = teichmuller p ((limit_elt hℱ).coeff q) := rfl
   simp [HahnSeries.coeff_sub', h_fy, h_fL, h_y_eq, h_L_eq]
 
+-- `𝕃_[p]` is complete with respect to the valuation topology.
 instance instCompleteSpace {p : ℕ} [Fact (Nat.Prime p)] :
     CompleteSpace (𝕃_[p]) := by
   refine ⟨fun {ℱ} hℱ => ?_⟩
@@ -4255,6 +4245,7 @@ theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     exact ⟨-y, by dsimp; rw [neg_vadd_eq_iff]; dsimp at hy; exact hy.symm⟩
   rw [this]; exact Quotient.out_eq x
 
+-- An element of 𝕃_[p] is zero iff all its coefficients are zero.
 theorem eq_zero_iff_coeff_zero {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
   x = 0 ↔ ∀ q ∈ x.support, x.coeff q = 0 := by
   have hfrom_zero : from_coeff (p := p) 0 (by simp) = (0 : 𝕃_[p]) := by
@@ -4274,6 +4265,7 @@ theorem eq_zero_iff_coeff_zero {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
       simpa [support, coeff, Function.mem_support] using hq
     exact hq_ne (hx q hq)
 
+-- The embedding of `ℤᵘⁿ_[p]` into `𝕃_[p]`, a ↦ image of a·t⁰
 noncomputable def ZpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℤᵘⁿ_[p] →+* 𝕃_[p] where
   toFun a := Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 a)
   map_one' := by simp
@@ -4809,6 +4801,7 @@ private lemma support_sub_single_ssubset (p : ℕ) [Fact (Nat.Prime p)]
     rw [Function.mem_support] at hq_in_g
     simp [Function.update_self] at hq_in_g
 
+-- If an element of `𝕃_[p]` has finite support, then it is algebraic over `ℚ_[p]`.
 lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.support.Finite) :
   IsAlgebraic ℚ_[p] f := by
   classical

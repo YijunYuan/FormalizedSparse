@@ -4,6 +4,10 @@ namespace FormalizedSparse
 
 open Sparse pAdicHahnSeries WittVector
 
+-- Proposition 5.3 of our paper. This depends on Example 3.7, which is `IsSparse_of_digit_disjoint`
+-- in Sparse.lean. The major difficult is to divide `f` into "good part" and "bad part",
+-- where the good part fits into the sparseness condition, while the "bad part" is a finite sum,
+-- which does not affect algebraicity.
 theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite)
@@ -781,18 +785,9 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   rw [hf_good_eq]
   exact hf_alg.sub hf_bad_alg
 
-/- Proof of (2 ⇒ 1), contrapositive: infinite support ⇒ not algebraic.
-We have hDenum : Denumerable f.support (L826). Enumerate f.support = {q n | n : ℕ}.
-Since hf says each support element has form -(p)^(-i) for i : ℕ+, use Classical.choose
-to pick k_n : ℕ+ such that q n = -(p)^(-(k_n : ℤ)). Injectivity of i ↦ -(p)^(-i) (p > 1)
-gives that k_i = k_j ⇒ q_i = q_j ⇒ i = j (by Denumerable bijection).
-Apply trans_of_digit_disjoint p f A hA1 hA2 hA3 hAsup c T hf_eq with:
-  A n := {(k_n : ℕ)}  (singletons → pairwise disjoint, hA2 trivial),
-  c n := 0, T := 1.
-Then (0 - p^(-k_n)) / 1 = -(p)^(-k_n) = q n,
-  so hf_eq : f.support = {(c i - Σ_{r∈A_i} p^(-r)) / T | i}.
-trans_of_digit_disjoint yields ¬ IsAlgebraic ℚᵘⁿ_[p] f, closing the contraposed goal.
-Discard the partial-application skeleton L829-832; write a self-contained have chain + refine.
+/-
+The p-adic analogue of the result of Huang and Ştefănescu, which corresponds to Theorem 1.9 of our
+paper. This is a corollary of `trans_of_digit_disjoint` above.
 -/
 theorem pAdicHuangStefanescu (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p])
 (hf : f.support ⊆ {-(p : ℚ) ^ (-(i : ℤ)) | i : ℕ+}) :

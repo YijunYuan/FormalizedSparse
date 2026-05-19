@@ -9,10 +9,15 @@ import Mathlib.SetTheory.Cardinal.Finite
 import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Analysis.Real.OfDigits
 
+/-!
+# Sparseness and (c,n)-sparseness (Section 3)
+This files formalize section of this paper.
+-/
 namespace FormalizedSparse
 
 namespace Sparse
 
+-- The type for ⊕_(ℕ+) ℕ: a direct sum of countably many copies of ℕ, indexed by ℕ+.
 @[ext]
 structure DigitSeries where
   toFun : ℕ+ → ℕ
@@ -74,7 +79,7 @@ instance : AddCommMonoid DigitSeries where
     exact Nat.succ_mul n (f s)
 
 namespace DigitSeries
-
+-- `Σ` in `Definition 3.1`
 noncomputable def Sigma : DigitSeries →+ ℕ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, f i
   map_zero' := by
@@ -203,6 +208,7 @@ lemma cast_pow_mul_zpow_neg (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
   rw [zpow_neg, zpow_natCast]
   field_simp [hp0]
 
+-- `‖·‖` in `Definition 3.1`
 noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : DigitSeries →+ ℚ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))
   map_zero' := by
@@ -290,6 +296,7 @@ noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : DigitSeries →+ ℚ whe
             ∑ i ∈ b.fin_supp.toFinset, (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
           rw [← hsum_a, ← hsum_b]
 
+-- `‖a + b‖ = ‖a‖ + ‖b‖` in `Lemma 3.3`
 lemma norm_additive (p : ℕ) [Fact (Nat.Prime p)] (a b : DigitSeries) :
     (a + b).norm p = a.norm p + b.norm p := by
   exact (norm p).map_add a b
@@ -476,7 +483,7 @@ lemma eq_on_of_coeffs_eq : ∀ {f g : ℕ+ → ℕ} {n : ℕ}, coeffs f n = coef
 end DigitSeries
 
 namespace DigitSeries
-
+-- `ℙ` in `Definition 3.1 (2)`
 def IsP (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] : Prop :=
   ∀ n, f n < p
 
@@ -680,7 +687,8 @@ end DigitSeries
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
-lemma lemma_1_2 (d : DigitSeries) :
+-- `Lemma 3.2` in the paper, which is used to define `τ`.
+lemma lemma_3_2 (d : DigitSeries) :
     ∃! f : DigitSeries, f.IsP p ∧ (f.norm p - d.norm p).isInt := by
   let n := d.maxIndex + 1
   let a := d.value p n
@@ -769,21 +777,22 @@ lemma lemma_1_2 (d : DigitSeries) :
   exact DigitSeries.eq_of_norm_sub_isInt hgIsP hfIsP hgf
 
 namespace DigitSeries
-
+-- `τ` in `Lemma 3.2`
 noncomputable def tau (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries) : DigitSeries :=
-  (lemma_1_2 p f).choose
+  (lemma_3_2 p f).choose
 
 lemma tau_isP (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries) : (f.tau p).IsP p :=
-  (lemma_1_2 p f).choose_spec.1.1
+  (lemma_3_2 p f).choose_spec.1.1
 
 end DigitSeries
 
-lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : DigitSeries) :
+-- `Lemma 3.3 (2)` in the paper.
+lemma lemma_3_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : DigitSeries) :
   f.tau p = g.tau p ↔ (f.norm p - g.norm p).isInt := by
     constructor
     · intro htau
-      have hf : ((f.tau p).norm p - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1.2
-      have hg : ((g.tau p).norm p - g.norm p).isInt := (lemma_1_2 p g).choose_spec.1.2
+      have hf : ((f.tau p).norm p - f.norm p).isInt := (lemma_3_2 p f).choose_spec.1.2
+      have hg : ((g.tau p).norm p - g.norm p).isInt := (lemma_3_2 p g).choose_spec.1.2
       have hg' : ((f.tau p).norm p - g.norm p).isInt := by
         simpa [htau] using hg
       have hEq :
@@ -800,9 +809,9 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : DigitSeries) :
       rw [hmain]
       simp [Rat.isInt]
     · intro hfg
-      apply ((lemma_1_2 p g).choose_spec.2 (f.tau p))
+      apply ((lemma_3_2 p g).choose_spec.2 (f.tau p))
       refine ⟨DigitSeries.tau_isP p f, ?_⟩
-      have hf : ((f.tau p).norm p - f.norm p).isInt := (lemma_1_2 p f).choose_spec.1.2
+      have hf : ((f.tau p).norm p - f.norm p).isInt := (lemma_3_2 p f).choose_spec.1.2
       have hEq :
           (f.tau p).norm p - g.norm p =
             ((f.tau p).norm p - f.norm p) + (f.norm p - g.norm p) := by
@@ -817,16 +826,18 @@ lemma lemma_1_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : DigitSeries) :
       rw [hmain]
       simp [Rat.isInt]
 
-lemma lemma_1_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
+-- `Lemma 3.3 (3)` in the paper.
+lemma lemma_3_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   (d.tau p) = d ↔ d.IsP p := by
   constructor
   · intro htau
     simpa [htau] using DigitSeries.tau_isP p d
   · intro hdIsP
     simpa [DigitSeries.tau] using
-      (((lemma_1_2 p d).choose_spec.2 d) ⟨hdIsP, by simp [Rat.isInt]⟩).symm
+      (((lemma_3_2 p d).choose_spec.2 d) ⟨hdIsP, by simp [Rat.isInt]⟩).symm
 
-lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
+-- `Lemma 3.3 (4)` in the paper.
+lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   (d.tau p).Sigma ≤ d.Sigma ∧ (d.tau p).Sigma = d.Sigma ↔
       d.IsP p := by
   constructor
@@ -905,7 +916,7 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
       rw [hdiff]
       simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
     have htau : d.tau p = f := by
-      exact (((lemma_1_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
+      exact (((lemma_3_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
     have htauSigma : (d.tau p).Sigma = Lt.sum := by
       rw [htau]
       have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
@@ -957,10 +968,10 @@ lemma lemma_1_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
       rw [hzero]
       exact (Fact.out : Nat.Prime p).pos
   · intro hdIsP
-    repeat simp [(lemma_1_3₃ p d).2 hdIsP]
+    repeat simp [(lemma_3_3₃ p d).2 hdIsP]
 
--- Unconditional version of the inequality from `lemma_1_3₄`.
--- Mirrors the construction in `lemma_1_3₄`'s forward direction but stops at the
+-- Unconditional version of the inequality from `lemma_3_3₄`.
+-- Mirrors the construction in `lemma_3_3₄`'s forward direction but stops at the
 -- ≤ chain (without requiring Sigma equality / IsP).
 lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     (d.tau p).Sigma ≤ d.Sigma := by
@@ -1038,7 +1049,7 @@ lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     rw [hdiff]
     simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
   have htau : d.tau p = f := by
-    exact (((lemma_1_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
+    exact (((lemma_3_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
   have htauSigma : (d.tau p).Sigma = Lt.sum := by
     rw [htau]
     have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
@@ -1069,13 +1080,15 @@ lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     _ ≤ Ld.sum := hdigits_le
     _ = d.Sigma := hLdSigma.symm
 
-lemma lemma_1_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
+-- `lemma 3.3 (1)` of the paper: ‖·‖ is injective when restricted to ℙ.
+lemma lemma_3_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
     (hd : d.IsP p) (he : e.IsP p) (h : d.norm p = e.norm p) : d = e := by
   have hsub : (d.norm p - e.norm p).isInt := by
     rw [h, sub_self]
     simp [Rat.isInt]
   exact DigitSeries.eq_of_norm_sub_isInt hd he hsub
 
+-- Predicate for `(c,n)-sparse` condition in `Definition 3.5`
 def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
 (c n : PNat) (S : Set (DigitSeries)) (_hS : ∀ f ∈ S, f.IsP p) : Prop :=
   (
@@ -1092,11 +1105,14 @@ def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
       )
   )
 
+-- The `φ₀` in `Lemma 3.8` of the paper
 noncomputable def φ₀ {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)} {hS : ∀ f ∈ S, f.IsP p}
   {c n : ℕ+} (hSparse : IsCNSparse p c n S hS) : S → ℕ :=
   fun d => Nat.card <| hSparse.2.choose⁻¹' {d}
 
-lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
+-- `Lemma 3.8` of the paper, which is the logic core of the uniqueness argument for the witness
+-- sequence in `IsCNSparse`.
+lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
     {hS : ∀ f ∈ S, f.IsP p} {c n : ℕ+} (hSparse : IsCNSparse p c n S hS)
     (φ : S → ℕ)
     (hφ_finite : (Function.support φ).Finite)
@@ -1266,9 +1282,9 @@ lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
         (∑ d ∈ T, (φ d) • d.val).tau p = ∑ i : Fin n, (witness i).val := by
       have h1 : (∑ d ∈ T, (φ d) • d.val).tau p =
                   (∑ i : Fin n, (witness i).val).tau p :=
-        (lemma_1_3₂ p _ _).mpr hisInt
+        (lemma_3_3₂ p _ _).mpr hisInt
       have h2 : (∑ i : Fin n, (witness i).val).tau p = ∑ i : Fin n, (witness i).val :=
-        (lemma_1_3₃ p _).mpr hwitness_IsP
+        (lemma_3_3₃ p _).mpr hwitness_IsP
       rw [h1, h2]
     -- Σ(LHS_φ) ≤ (∑ d ∈ T, φ d) * c.val
     have hSigma_bound :
@@ -1475,24 +1491,25 @@ lemma lemma_1_5 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
       intro x _; exact ⟨perm.symm x, by simp⟩)
   rw [hperm_card, hA5]
 
+-- `Definition 1.3`: the digits in base `p`
 noncomputable abbrev decDigits (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : ℕ+ → Fin p :=
   fun n => Real.digits (Int.fract q) p ((n : ℕ) - 1)
 
 open Classical in
-/- The p-digit sum, 𝔑ₚ(q) in Definition 1.3 (1) of Sparse.pdf-/
+/- The `p-digit sum`, `𝔑ₚ(q)` in `Definition 1.3 (1)`-/
 noncomputable def pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : WithTop ℕ :=
   if h : (Function.support (decDigits p q)).Infinite then ⊤
   else ∑ n ∈ (Set.not_infinite.1 h).toFinset, (decDigits p q n).val
 
-/- dominant p-digit sum of S, Definition 1.3 (2)-/
+/- `dominant p-digit sum` of S, `Definition 1.3 (2)`-/
 noncomputable def dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : WithTop ℕ :=
   sSup {pDigitSum p  q | q ∈ S}
 
-/- p-digit dominant part of S, Definition 1.3 (2)-/
+/- `p-digit dominant part` of S, `Definition 1.3 (2)`-/
 noncomputable def Dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Set ℚ :=
   {q ∈ S | pDigitSum p q = dom p S}
 
-/- Definition 1.4 of Sparse.pdf-/
+/- `Definition 1.4`: The sparse condition -/
 def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Prop :=
   S ⊆ Set.Ico 0 1 ∧ dom p S < ⊤ ∧
   ∃ D : Set ℕ+, D.Infinite ∧ (
@@ -1696,13 +1713,13 @@ lemma DigitSeries.norm_mem_Ico (p : ℕ) [Fact (Nat.Prime p)]
 /-- If `f, g : DigitSeries` are both IsP and `f.norm p = g.norm p`, then `f = g`. -/
 lemma DigitSeries.IsP_norm_injective {p : ℕ} [Fact (Nat.Prime p)] {f g : DigitSeries}
     (hf : f.IsP p) (hg : g.IsP p) (h : f.norm p = g.norm p) : f = g :=
-  lemma_1_3₁ p f g hf hg h
+  lemma_3_3₁ p f g hf hg h
 
 /-- Deep bridge lemma: For `f.IsP p`, the `decDigits` of `f.norm p` recover `f`. -/
 lemma DigitSeries.decDigits_norm (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries)
     (hf : f.IsP p) (n : ℕ+) :
     (decDigits p (f.norm p) n).val = f n := by
-  /- Strategy: Re-route via `lemma_1_3₁` (uniqueness of IsP representations).
+  /- Strategy: Re-route via `lemma_3_3₁` (uniqueness of IsP representations).
      1. Show pDigitSum p (f.norm p) ≠ ⊤ by computing digits beyond f.maxIndex.
      2. Let g := ofRat p (f.norm p) hq; then g.IsP p, g.norm p = f.norm p.
      3. By IsP_norm_injective: g = f.
@@ -1877,6 +1894,7 @@ lemma DigitSeries.Sigma_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : �
     rfl
   rw [hSig]
 
+-- `Lemma 3.6` of the paper, relates `IsSparse` with `IsCNSparse`
 lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
     (hW : W ≠ {0}) :
   IsSparse p W ↔ ∃ S : Set (DigitSeries), ∃ hS : ∀ f ∈ S, f.IsP p,
@@ -1919,10 +1937,10 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
         refine ⟨mkSeries ⟨q, hq⟩, ⟨⟨q, hq⟩, rfl⟩, ?_⟩
         exact DigitSeries.ofRat_norm_eq p (hq_finite q hq) (hW_sub hq)
     · -- ∃ c, D, IsCNSparse
-      /- Need to extract c : ℕ+ from dom p W. The natural choice is c = dom p W.
-         If dom = 0 (degenerate: W ⊆ {0}), there's no valid c : ℕ+ — the iff
-         fails in this case (see NOTE above). We handle the dom ≥ 1 case below
-         and leave the degenerate case as `sorry`. -/
+      /- Need to extract `c : ℕ+` from `dom p W`. The natural choice is `c = dom p W`.
+        If `dom = 0` (degenerate: `W ⊆ {0}`), there is no valid `c : ℕ+`, and we
+        first derive a contradiction with `hW : W ≠ {0}`. The nondegenerate case
+        is then `dom ≥ 1`. -/
       let k : ℕ := (dom p W).untop hdom_lt.ne
       have hkeq : dom p W = ((k : ℕ) : WithTop ℕ) := (WithTop.coe_untop _ hdom_lt.ne).symm
       by_cases hk : k = 0
@@ -2043,8 +2061,8 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
                find perm with d' i = e (perm i).
 
                Proof strategy:
-               1. Use lemma_1_3₂ : .isInt iff τ-equivalent.
-               2. (∑ d'.val).IsP p (just proved), so by lemma_1_3₃, τ(∑ d'.val) = ∑ d'.val.
+               1. Use lemma_3_3₂ : .isInt iff τ-equivalent.
+               2. (∑ d'.val).IsP p (just proved), so by lemma_3_3₃, τ(∑ d'.val) = ∑ d'.val.
                3. Hence ∑ d'.val = τ(∑ e.val).
                4. Σ(∑ d'.val) = Σ(τ(∑ e.val)) ≤ Σ(∑ e.val) (Sigma_tau_le_Sigma).
                5. Σ(∑ d'.val) = n*k (each Sigma = k); Σ(∑ e.val) ≤ n*k (each ≤ k).
@@ -2091,10 +2109,10 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
               exact hnoCarry pos
             -- Step 4: τ-equivalence from h_isInt
             have hτ_eq : (∑ i, (d' i).val).tau p = (∑ i, (e i).val).tau p :=
-              (Sparse.lemma_1_3₂ p _ _).mpr h_isInt
-            -- Step 5: τ(∑ d'.val) = ∑ d'.val by lemma_1_3₃
+              (Sparse.lemma_3_3₂ p _ _).mpr h_isInt
+            -- Step 5: τ(∑ d'.val) = ∑ d'.val by lemma_3_3₃
             have hτ_dself : (∑ i, (d' i).val).tau p = ∑ i, (d' i).val :=
-              (Sparse.lemma_1_3₃ p _).mpr hd'_IsP
+              (Sparse.lemma_3_3₃ p _).mpr hd'_IsP
             -- Step 6: Σ(∑ d'.val) = Σ((∑ e.val).tau)
             have hsigma_eq_τ : (∑ i, (d' i).val).Sigma = ((∑ i, (e i).val).tau p).Sigma := by
               rw [← hτ_dself, hτ_eq]
@@ -2259,7 +2277,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
         intro e' he'_isInt
         /- For each j, e' j : Dom p W ⊆ W. By hnorm_eq (W = norm '' S), there
            exists g_j ∈ S with g_j.norm p = (e' j).val. Use `Set.mem_image` to
-           extract g_j, plus `lemma_1_3₁` (= `DigitSeries.IsP_norm_injective`)
+           extract g_j, plus `lemma_3_3₁` (= `DigitSeries.IsP_norm_injective`)
            if needed for uniqueness.
 
            Then translate he'_isInt:
@@ -2346,7 +2364,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
      (iii) Use hAsup: extract infinite I := {n | |A_n| = K}. For each n : ℕ+,
            pick n distinct indices from I via Set.Infinite.natEmbedding. Build
            witness map j ↦ q_{ι(j)}. No-carry from hA2 (disjointness). Rigidity
-           from digit-uniqueness (lemma_1_3₁). -/
+           from digit-uniqueness (lemma_3_3₁). -/
   classical
   obtain ⟨K, hK_bound, hK_inf⟩ := hAsup
   have hp_prime : Nat.Prime p := Fact.out
@@ -2695,11 +2713,11 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
         ((∑ j : Fin (n : ℕ), d_DS j).norm p - (∑ j : Fin (n : ℕ), e_DS j).norm p).isInt := by
       rw [hsum_d_DS_norm, hsum_e_DS_norm]
       exact he_isInt
-    /- tau-equivalence, then derive ∑ d_DS = ∑ e_DS via lemma_1_3₃ and Sigma bounds. -/
+    /- tau-equivalence, then derive ∑ d_DS = ∑ e_DS via lemma_3_3₃ and Sigma bounds. -/
     have hτ_eq : (∑ j : Fin (n : ℕ), d_DS j).tau p = (∑ j : Fin (n : ℕ), e_DS j).tau p :=
-      (Sparse.lemma_1_3₂ p _ _).mpr h_isInt
+      (Sparse.lemma_3_3₂ p _ _).mpr h_isInt
     have hτ_d_DS : (∑ j : Fin (n : ℕ), d_DS j).tau p = ∑ j : Fin (n : ℕ), d_DS j :=
-      (Sparse.lemma_1_3₃ p _).mpr h_sum_d_DS_IsP
+      (Sparse.lemma_3_3₃ p _).mpr h_sum_d_DS_IsP
     /- Sigma analysis: ∑ d_DS .Sigma = n * K; ∑ e_DS .Sigma ≤ n * K. -/
     have hsigma_d_DS : (∑ j : Fin (n : ℕ), d_DS j).Sigma = (n : ℕ) * K := by
       rw [map_sum]
@@ -2723,13 +2741,13 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
       exact le_antisymm hsigma_e_DS_le h1
     /- From Sigma(∑ e_DS) = Sigma((∑ e_DS).tau), conclude (∑ e_DS).IsP p. -/
     have h_sum_e_DS_IsP : (∑ j : Fin (n : ℕ), e_DS j).IsP p := by
-      have h := (Sparse.lemma_1_3₄ p (∑ j : Fin (n : ℕ), e_DS j)).mp
+      have h := (Sparse.lemma_3_3₄ p (∑ j : Fin (n : ℕ), e_DS j)).mp
       apply h
       refine ⟨hsigma_τ_le, ?_⟩
       rw [hsigma_τ_eq, hsigma_e_DS_eq]
-    /- Now (∑ e_DS).tau = ∑ e_DS (by lemma_1_3₃), hence ∑ d_DS = ∑ e_DS. -/
+    /- Now (∑ e_DS).tau = ∑ e_DS (by lemma_3_3₃), hence ∑ d_DS = ∑ e_DS. -/
     have hτ_e_DS : (∑ j : Fin (n : ℕ), e_DS j).tau p = ∑ j : Fin (n : ℕ), e_DS j :=
-      (Sparse.lemma_1_3₃ p _).mpr h_sum_e_DS_IsP
+      (Sparse.lemma_3_3₃ p _).mpr h_sum_e_DS_IsP
     have hsum_DS_eq : (∑ j : Fin (n : ℕ), d_DS j) = ∑ j : Fin (n : ℕ), e_DS j := by
       have := hτ_eq
       rw [hτ_d_DS, hτ_e_DS] at this
@@ -2877,6 +2895,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
     have h_eq : m (perm i) = ι_index i := hperm_eq i
     rw [hm_eq (perm i), h_eq]
 
+-- `Example 3.7` of the paper: the digit-disjoint sets are sparse.
 lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ+)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite)
