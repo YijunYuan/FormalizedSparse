@@ -1,4 +1,4 @@
-import FormalizedSparse.References.Poonen1993
+import FormalizedSparse.References.PAdicHahnSeries
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.RingTheory.Polynomial.Eisenstein.Basic
 import Mathlib.RingTheory.Localization.Finiteness
@@ -8,7 +8,7 @@ import Mathlib.Topology.Algebra.Module.FiniteDimension
 # T-scaled realization of p-adic Hahn series
 
 This file is the formalization of Section 2 of `Tscaled.pdf`.  Section 1 of the paper is already
-formalized in `FormalizedSparse/References/Poonen1993.lean`, and the present file mirrors that
+formalized in `FormalizedSparse/References/lean`, and the present file mirrors that
 development with the prime `p` replaced by its formal `T`-th root `p^{1/T}` adjoined to
 `W(𝔽ₚ^⁻)`.
 
@@ -41,8 +41,9 @@ development with the prime `p` replaced by its formal `T`-th root `p^{1/T}` adjo
 
 open WittVector
 
+namespace FormalizedSparse
+
 namespace TScaled
-open Poonen1993
 
 variable (p : ℕ) [Fact (Nat.Prime p)] (T : ℕ) [NeZero T]
 
@@ -383,7 +384,7 @@ noncomputable example : Valued (ℚᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))
 noncomputable def pInvTQ : ℚᵘⁿ_[p,T] :=
   algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T)
 
--- The valuation of `pInvTQ p T` is `ofAdd(-1)` — the analogue of `Poonen1993.valued_v_p`.
+-- The valuation of `pInvTQ p T` is `ofAdd(-1)` — the analogue of `valued_v_p`.
 lemma valued_v_pInvT :
     Valued.v (pInvTQ p T) =
       ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
@@ -592,7 +593,7 @@ noncomputable def Lifted_to_TLifted :
 
 /-! ### Definition 2.4 — `IsTNullSeries` -/
 
-/-- T-shifted analogue of `Poonen1993.finprop` (line 21).
+/-- T-shifted analogue of `finprop` (line 21).
 
 For `g ∈ ℚ` and `M ∈ ℕ`, the index set of integers `n` such that `g + n/T ≤ M` and the
 coefficient `x.coeff (g + n/T)` is non-zero is finite.
@@ -646,7 +647,7 @@ open Topology Filter in
 `∑_{n : g + n/T ≤ M, c_{g+n/T} ≠ 0} (pInvTQ p T)^n · c_{g+n/T}` (mapped into `ℚᵘⁿ_[p,T]`
 via `algebraMap`) tend to `0` as `M → ∞`.
 
-This mirrors `Poonen1993.IsNullSeries` (line 55) verbatim with two substitutions:
+This mirrors `IsNullSeries` (line 55) verbatim with two substitutions:
 * `(p : QpUn p)` is replaced by `pInvTQ p T` (the T-th root of `p` in `ℚᵘⁿ_[p,T]`);
 * coefficient indices are shifted by `1/T` rather than `1`. -/
 def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
@@ -656,7 +657,7 @@ def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
 
 /-! ### Helpers for `smul_mem'` — T-scaled ports of Poonen1993 helpers (Lemma 2.6 (1)) -/
 
-/-- T-scaled analogue of `Poonen1993.finpropInt` (line 61). Indexes integers `n ≤ K` whose
+/-- T-scaled analogue of `finpropInt` (line 61). Indexes integers `n ≤ K` whose
 shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
 private noncomputable def TfinpropInt
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) :
@@ -692,14 +693,14 @@ private noncomputable def TfinpropInt
       simp [hcoeff (g + (n : ℚ) / T)]
     simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
 
-/-- T-scaled analogue of `Poonen1993.intPartial` (line 84). -/
+/-- T-scaled analogue of `intPartial` (line 84). -/
 private noncomputable def TintPartial
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) : ℚᵘⁿ_[p,T] :=
   ∑ n : Set.Finite.toFinset (TfinpropInt p T x g K),
     (pInvTQ p T) ^ (n.1 : ℤ) *
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))
 
-/-- T-scaled analogue of `Poonen1993.valued_v_term_le` (line 118). -/
+/-- T-scaled analogue of `valued_v_term_le` (line 118). -/
 private lemma Tvalued_v_term_le (a : ℤᵘⁿ_[p,T]) (n : ℤ) :
     Valued.v ((pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a) ≤
@@ -713,7 +714,7 @@ private lemma Tvalued_v_term_le (a : ℤᵘⁿ_[p,T]) (n : ℤ) :
         mul_le_mul' (le_refl _) h_alg
     _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
 
-/-- T-scaled analogue of `Poonen1993.valued_v_algebraMap_unit_one` (line 131). -/
+/-- T-scaled analogue of `valued_v_algebraMap_unit_one` (line 131). -/
 private lemma Tvalued_v_algebraMap_unit_one (u : (ℤᵘⁿ_[p,T])ˣ) :
     Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) = 1 := by
   have h1 : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) ≤ 1 :=
@@ -737,7 +738,7 @@ private lemma Tvalued_v_algebraMap_unit_one (u : (ℤᵘⁿ_[p,T])ˣ) :
   rw [h3] at h_lt
   exact lt_irrefl _ h_lt
 
-/-- T-scaled analogue of `Poonen1993.intPartial_diff_eq_sdiff_sum` (line 156). -/
+/-- T-scaled analogue of `intPartial_diff_eq_sdiff_sum` (line 156). -/
 private lemma TintPartial_diff_eq_sdiff_sum
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K K' : ℤ) (h : K ≤ K') :
     TintPartial p T x g K' - TintPartial p T x g K =
@@ -765,7 +766,7 @@ private lemma TintPartial_diff_eq_sdiff_sum
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
   rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
 
-/-- T-scaled analogue of `Poonen1993.partial_sum_valuation_cauchy` (line 181). -/
+/-- T-scaled analogue of `partial_sum_valuation_cauchy` (line 181). -/
 private lemma Tpartial_sum_valuation_cauchy
     (x : TLiftedPAdicHahnSeries p T) (g' : ℚ) (K₁ K₂ : ℤ) (h : K₁ ≤ K₂) :
     Valued.v (TintPartial p T x g' K₂ - TintPartial p T x g' K₁) ≤
@@ -793,7 +794,7 @@ private lemma Tpartial_sum_valuation_cauchy
     exact Multiplicative.ofAdd_le.mpr (by omega)
   exact h1.trans h2
 
-/-- T-scaled analogue of `Poonen1993.partialSum_eq_intPartial` (line 211).
+/-- T-scaled analogue of `partialSum_eq_intPartial` (line 211).
 The natural-number partial sum equals the integer-cutoff `TintPartial` at
 `K = ⌊T · (M - g)⌋`. -/
 private lemma TpartialSum_eq_intPartial
@@ -855,7 +856,7 @@ private lemma TpartialSum_eq_intPartial
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
   rw [hset_eq]
 
-/-- T-scaled analogue of `Poonen1993.null_series_tail_bound` (line 253). -/
+/-- T-scaled analogue of `null_series_tail_bound` (line 253). -/
 private lemma Tnull_series_tail_bound
     {x : TLiftedPAdicHahnSeries p T} (hx : IsTNullSeries p T x) (g : ℚ) (K : ℤ) :
     Valued.v (TintPartial p T x g K) ≤
@@ -923,7 +924,7 @@ private lemma Tnull_series_tail_bound
     _ ≤ ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) :=
         max_le h1 hcauchy
 
-/-- T-scaled analogue of `Poonen1993.intPartial_mul_valuation_bound` (line 349). -/
+/-- T-scaled analogue of `intPartial_mul_valuation_bound` (line 349). -/
 private lemma TintPartial_mul_valuation_bound
     (c x : TLiftedPAdicHahnSeries p T) (hx : IsTNullSeries p T x) (g : ℚ) (K : ℤ) :
     Valued.v (TintPartial p T (c * x) g K) ≤
@@ -1147,7 +1148,7 @@ private lemma TintPartial_mul_valuation_bound
 def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
   carrier := { x | IsTNullSeries p T x }
   add_mem' := by
-    -- Mirrors `Poonen1993.NullSeriesIdeal.add_mem'` (Poonen1993.lean:541–656).
+    -- Mirrors `NullSeriesIdeal.add_mem'` (lean:541–656).
     -- Standard linearity argument: rewrite each partial sum as a sum over the union
     -- of the index sets, then apply `Tendsto.add`.
     intro a b ha hb
@@ -1264,14 +1265,14 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     rw [hmain, hfun]
     simpa using ha'.add hb'
   zero_mem' := by
-    -- Mirrors `Poonen1993.NullSeriesIdeal.zero_mem'` (Poonen1993.lean:657).
+    -- Mirrors `NullSeriesIdeal.zero_mem'` (lean:657).
     -- The zero series has identically-zero coefficients, so each partial sum is `0`,
     -- and the constant-zero sequence trivially tends to `0`.
     change IsTNullSeries p T 0
     intro g
     simp
   smul_mem' := by
-    -- Mirrors `Poonen1993.NullSeriesIdeal.smul_mem'` (Poonen1993.lean:658–742).
+    -- Mirrors `NullSeriesIdeal.smul_mem'` (lean:658–742).
     -- Mechanical translation strategy: replace every occurrence of `(p : QpUn p)` with
     -- `pInvTQ p T`, every `valued_v_p` with `valued_v_pInvT` (now proved), every
     -- `valued_v_p_zpow` with `valued_v_pInvT_zpow` (now proved), every `finprop` with
@@ -1279,10 +1280,10 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     --
     -- However, the Poonen proof relies on several intermediate helpers that have not yet
     -- been ported to the T-scaled setting:
-    --   * `intPartial` (Poonen1993.lean:84) — index-set realignment, ℕ-atTop ↔ ℤ-atTop
-    --   * `partialSum_eq_intPartial` (Poonen1993.lean:211) — the key bridge
-    --   * `intPartial_diff_eq_sdiff_sum` (Poonen1993.lean:156)
-    --   * `partial_sum_valuation_cauchy` (Poonen1993.lean:181) — strict-ultrametric bound
+    --   * `intPartial` (lean:84) — index-set realignment, ℕ-atTop ↔ ℤ-atTop
+    --   * `partialSum_eq_intPartial` (lean:211) — the key bridge
+    --   * `intPartial_diff_eq_sdiff_sum` (lean:156)
+    --   * `partial_sum_valuation_cauchy` (lean:181) — strict-ultrametric bound
     --   * `intPartial_mul_valuation_bound` — used at line 715, the central bound
     -- These ~200 lines need to be ported with the same `(g + n)` ↦ `(g + n/T)` shift.
     --
@@ -1388,7 +1389,7 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
 
 /-! ### Phase 1 infrastructure for `exists_canonical_T_expansion` -/
 
-/-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.natRange_isPWO`
+/-- T-scaled analogue of `existsCanonicalExpansionAux.natRange_isPWO`
 (Poonen line 839).  The image of `ℕ` under the canonical embedding `ℕ → ℚ` is
 partially well-ordered.  No T-dependence; statement is identical. -/
 private lemma Tnatrange_isPWO : (Set.range ((↑) : ℕ → ℚ)).IsPWO := by
@@ -1414,7 +1415,7 @@ private lemma TnatrangeDivT_isPWO (T : ℕ) [NeZero T] :
 
 open scoped Pointwise in
 /-- T-scaled analogue of
-  `Poonen1993.existsCanonicalExpansionAux.support_isPWO_of_subset_support_add_natRange`
+  `existsCanonicalExpansionAux.support_isPWO_of_subset_support_add_natRange`
 (Poonen line 853).  If `Function.support s ⊆ α.support + {n/T | n : ℕ}`, then
 `Function.support s` is partially well-ordered. -/
 private lemma Tsupport_isPWO_of_subset_support_add_natRange
@@ -1423,7 +1424,7 @@ private lemma Tsupport_isPWO_of_subset_support_add_natRange
     (Function.support s).IsPWO :=
   (α.isPWO_support.add (TnatrangeDivT_isPWO T)).mono h
 
-/-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.rat_decompose`
+/-- T-scaled analogue of `existsCanonicalExpansionAux.rat_decompose`
 (Poonen line 862).  No T-dependence; statement identical. -/
 private lemma Trat_decompose (q : ℚ) :
     Int.fract q + (⌊q⌋ : ℚ) = q ∧
@@ -1434,7 +1435,7 @@ private lemma Trat_decompose (q : ℚ) :
 
 /-! #### `one_notMem_TNullSeriesIdeal` (Lemma 2.6 (1) byproduct) -/
 
-/-- T-scaled analogue of `Poonen1993.one_notMem_NullSeriesIdeal` (Poonen line 751).
+/-- T-scaled analogue of `one_notMem_NullSeriesIdeal` (Poonen line 751).
 `(1 : TLiftedPAdicHahnSeries p T)` is not a T-null-series; the partial-sum sequence
 at `g = 0` is constantly `1`, hence its limit (in the Hausdorff `Valued`-topology) is
 `1 ≠ 0`. -/
@@ -1509,7 +1510,7 @@ private lemma one_notMem_TNullSeriesIdeal :
 
 /-- Eagerly establish `Nontrivial` of the T-scaled quotient from
 `one_notMem_TNullSeriesIdeal`.  T-scaled analogue of the corresponding `Nontrivial`
-instance at `Poonen1993.lean:814–817`. -/
+instance at `lean:814–817`. -/
 instance instNontrivialQuotTNullSeriesIdeal :
     Nontrivial ((TLiftedPAdicHahnSeries p T) ⧸ (TNullSeriesIdeal p T)) :=
   Submodule.Quotient.nontrivial_iff.mpr
@@ -1517,7 +1518,7 @@ instance instNontrivialQuotTNullSeriesIdeal :
 
 /-! #### Cauchy property + limit of integer partial sums (Sub-tasks 1B, 1C) -/
 
-/-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.intPartial_isCauchy`
+/-- T-scaled analogue of `existsCanonicalExpansionAux.intPartial_isCauchy`
 (Poonen line 876).  Stated in `CauchySeq` form (the form actually consumed by
 `Texists_lim_intPartial`).  Strategy: bound `Valued.v (TintPartial K' - TintPartial K)`
 by `ofAdd(-(min K K' + 1))` via `Tpartial_sum_valuation_cauchy`, convert to ε-form via
@@ -1777,7 +1778,7 @@ from `isModuleTopologyOfFiniteDimensional`. -/
 instance instCompleteSpaceQpUnT : CompleteSpace (ℚᵘⁿ_[p,T]) :=
   FiniteDimensional.complete (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
 
-/-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.exists_lim_intPartial`
+/-- T-scaled analogue of `existsCanonicalExpansionAux.exists_lim_intPartial`
 (Poonen line 1043).  The integer-cutoff partial sums converge to a limit in the
 complete DVF `ℚᵘⁿ_[p,T]`. -/
 private lemma Texists_lim_intPartial
@@ -1912,8 +1913,8 @@ private lemma Texists_T_pInvT_digits (z : ℤᵘⁿ_[p,T]) :
 
 set_option maxHeartbeats 1000000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body (mirrors
--- Poonen1993.exists_teichmuller_digits)
-/-- **Phase 2A wrapper** — T-port of `Poonen1993.exists_teichmuller_digits`.
+-- exists_teichmuller_digits)
+/-- **Phase 2A wrapper** — T-port of `exists_teichmuller_digits`.
 
 For every `y : ℚᵘⁿ_[p,T]`, there exist Teichmüller digits `b : ℤ → Fpbar p` and a
 cutoff `m₀ : ℤ` such that `b k = 0` for `k < m₀` and the partial sums
@@ -2149,9 +2150,9 @@ private lemma Tinjective_TTeichmuller :
 
 set_option maxHeartbeats 1000000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body (mirrors
--- Poonen1993.teichmuller_digits_unique)
+-- teichmuller_digits_unique)
 /-- **Phase 2B (T-Lemma 2.5).** Uniqueness of Teichmüller digits for `ℚᵘⁿ_[p,T]`.
-T-scaled analogue of `Poonen1993.teichmuller_digits_unique` (Poonen 1336–1818).
+T-scaled analogue of `teichmuller_digits_unique` (Poonen 1336–1818).
 
 Steps 1–7 follow Poonen mechanically with the substitution rule
 `(p : QpUn p) ↦ pInvTQ p T`, `(p : OQpUn p) ↦ pInvT p T`,
@@ -2880,7 +2881,7 @@ theorem exists_teichmuller_series_OQpUnT :
 
 /-! ### Phase 3A: existence of canonical T-representative -/
 
-/-- T-analogue of `Poonen1993.exists_canonical_representative`'s `hp_term_val` (lines
+/-- T-analogue of `exists_canonical_representative`'s `hp_term_val` (lines
 1856–1868).  Equality version of `Tvalued_v_term_le` (line 702), valid when the
 Teichmüller argument is nonzero. -/
 private lemma Tvalued_v_pInvTQ_term_val
@@ -2900,7 +2901,7 @@ private lemma Tvalued_v_pInvTQ_term_val
     rw [← hu, Tvalued_v_algebraMap_unit_one p T u]
   rw [h_val_one, mul_one]
 
-/-- T-analogue of `Poonen1993.exists_canonical_representative`'s `h_intPartial_eq_Icc` (lines
+/-- T-analogue of `exists_canonical_representative`'s `h_intPartial_eq_Icc` (lines
 2173–2219).  Bridges `TintPartial` to a `Finset.Icc` sum when the coefficient function is
 Teichmüller-valued and vanishes below `m`. -/
 private lemma Th_intPartial_eq_Icc
@@ -2957,7 +2958,7 @@ private lemma Th_intPartial_eq_Icc
   intro n _
   rw [hβ' (γ' + (n : ℚ) / T)]
 
-/-- T-analogue of `Poonen1993.exists_canonical_representative`'s `h_intPartial_sub` (lines
+/-- T-analogue of `exists_canonical_representative`'s `h_intPartial_sub` (lines
 2344–2440).  Subdistributivity of `TintPartial` over subtraction. -/
 private lemma Th_intPartial_sub
     (α β : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) :
@@ -3067,7 +3068,7 @@ private lemma Th_intPartial_sub
       α.coeff (g + (n : ℚ) / T) - β.coeff (g + (n : ℚ) / T) := rfl
   rw [h_sub_coeff, map_sub, mul_sub]
 
-/-- T-analogue of `Poonen1993.exists_canonical_representative`'s `h_key` (lines
+/-- T-analogue of `exists_canonical_representative`'s `h_key` (lines
 1893–2121).  Given a sequence `b : ℤ → Fpbar p` whose Teichmüller-power sums converge to
 `(Texists_lim_intPartial p T α γ).choose`, if `b k ≠ 0` then there is some `n_α ≤ k` with
 `α.coeff (γ + n_α / T) ≠ 0`. -/
@@ -3322,7 +3323,7 @@ private lemma Th_key
 
 open scoped Pointwise in
 /-- **Phase 3A-iii main assembly.**  T-analogue of
-`Poonen1993.exists_canonical_representative` (lines 1841–2515).  Given a T-lifted Hahn
+`exists_canonical_representative` (lines 1841–2515).  Given a T-lifted Hahn
 series `α`, there exists a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with PWO support so
 that `α - from_coeff p T s` is a T-null-series. -/
 theorem Texists_canonical_T_representative
@@ -3662,7 +3663,7 @@ theorem Texists_canonical_T_representative
 
 /-! ### Phase 3B: uniqueness of canonical T-representative -/
 
-/-- **Phase 3B.**  T-analogue of `Poonen1993.unique_canonical_representative`
+/-- **Phase 3B.**  T-analogue of `unique_canonical_representative`
 (lines 2517–2883).  Two coefficient functions producing T-equivalent canonical
 expansions are equal. -/
 theorem Tunique_canonical_T_representative
@@ -3950,7 +3951,7 @@ theorem exists_canonical_T_expansion :
 
 /-! ### Lemma 2.6 (3) — `TNullSeriesIdeal` is maximal -/
 
-/-- **Helper B.** Port of `Poonen1993.support_nonempty_of_nonzero` (lines 2940–2952).
+/-- **Helper B.** Port of `support_nonempty_of_nonzero` (lines 2940–2952).
 For a nonzero class `x` in the quotient, the canonical T-expansion has nonempty support. -/
 private lemma Tsupport_nonempty_of_nonzero
     (x : (TLiftedPAdicHahnSeries p T) ⧸ (TNullSeriesIdeal p T)) (h : ¬x = 0) :
@@ -3969,7 +3970,7 @@ private lemma Tsupport_nonempty_of_nonzero
     (0 : TLiftedPAdicHahnSeries p T).coeff n
   simp [WittVector.teichmuller_zero]
 
-/-- **Helper D.** Port of `Poonen1993.null_series_no_unit_leading` (Poonen 3013–3144).
+/-- **Helper D.** Port of `null_series_no_unit_leading` (Poonen 3013–3144).
 A T-null-series cannot have a unit-valued leading coefficient. -/
 private lemma Tnull_series_no_unit_leading
     {Δ : TLiftedPAdicHahnSeries p T} (hΔ : Δ ∈ TNullSeriesIdeal p T)
@@ -4092,7 +4093,7 @@ private lemma Tnull_series_no_unit_leading
   rw [h_sum_eq M hMge] at hMclose
   exact lt_irrefl _ hMclose
 
-/-- **Helper C.** Port of `Poonen1993.canonical_leading_coeff_isUnit` (Poonen 3149–3162),
+/-- **Helper C.** Port of `canonical_leading_coeff_isUnit` (Poonen 3149–3162),
 re-routed via the residue map (since `WittVector.isUnit_of_coeff_zero_ne_zero` does not
 apply to `ℤᵘⁿ_[p,T]`). -/
 private lemma Tcanonical_leading_coeff_isUnit
@@ -4120,7 +4121,7 @@ private lemma Tcanonical_leading_coeff_isUnit
   rw [TRes_TTeichmuller] at hRes
   exact hsq₀_ne hRes
 
-/-- **Helper E.** Port of `Poonen1993.exists_inverse_of_nonzero` (Poonen 3168–3215). -/
+/-- **Helper E.** Port of `exists_inverse_of_nonzero` (Poonen 3168–3215). -/
 private lemma Texists_inverse_of_nonzero
     (A : (TLiftedPAdicHahnSeries p T) ⧸ (TNullSeriesIdeal p T)) (hA : A ≠ 0) :
     ∃ B, A * B = 1 := by
@@ -4759,7 +4760,7 @@ private lemma continuous_QpUn_proj (j : Fin T) :
 -- the sum over r : Fin T of pInvTQ^r times algebraMap_{K₀→K} of the K₀-side
 -- partial sum at base g + r/T. Reindex via n = T*m + r.
 private lemma TLifted_partial_sum_split
-    (x : Poonen1993.LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
+    (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
     (∑ n : Set.Finite.toFinset (Tfinprop p T (Lifted_to_TLifted p T x) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
@@ -4767,7 +4768,7 @@ private lemma TLifted_partial_sum_split
     =
     ∑ r : Fin T, (pInvTQ p T) ^ (r.val : ℕ) *
       algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (∑ m : Set.Finite.toFinset (Poonen1993.finprop x (g + (r.val : ℚ) / T) M),
+        (∑ m : Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M),
             ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
                 (x.coeff ((g + (r.val : ℚ) / T) + (m.val : ℚ)))) := by
@@ -4786,18 +4787,18 @@ private lemma TLifted_partial_sum_split
   have h_RHS : ∀ r : Fin T,
       (pInvTQ p T) ^ (r.val : ℕ) *
         algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-          (∑ m : Set.Finite.toFinset (Poonen1993.finprop x (g + (r.val : ℚ) / T) M),
+          (∑ m : Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M),
             ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
                 (x.coeff ((g + (r.val : ℚ) / T) + (m.val : ℚ)))) =
-      ∑ m ∈ Set.Finite.toFinset (Poonen1993.finprop x (g + (r.val : ℚ) / T) M),
+      ∑ m ∈ Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M),
         (pInvTQ p T) ^ ((T : ℤ) * (m : ℤ) + (r.val : ℤ)) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
             ((Lifted_to_TLifted p T x).coeff
               (g + (((T : ℤ) * (m : ℤ) + (r.val : ℤ) : ℤ) : ℚ) / T)) := by
     intro r
     rw [Finset.univ_eq_attach, Finset.sum_attach
-      (Set.Finite.toFinset (Poonen1993.finprop x (g + (r.val : ℚ) / T) M))
+      (Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M))
       (fun m => ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m : ℤ) *
         algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ))))]
     rw [map_sum]
@@ -4845,7 +4846,7 @@ private lemma TLifted_partial_sum_split
   -- Apply Finset.sum_sigma to combine the RHS into a sum over a sigma type,
   -- then use Finset.sum_bij with the bijection n ↔ (r, m) where n = T*m + r.val.
   rw [← Finset.sum_sigma Finset.univ
-      (fun r : Fin T => Set.Finite.toFinset (Poonen1993.finprop x (g + (r.val : ℚ) / T) M))
+      (fun r : Fin T => Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M))
       (fun rm : Σ _ : Fin T, ℤ =>
         (pInvTQ p T) ^ ((T : ℤ) * rm.2 + (rm.1.val : ℤ)) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
@@ -4970,10 +4971,10 @@ private lemma TLifted_partial_sum_split
 -- `Tendsto.comp` / `tendsto_finset_sum` chains used in Lemma 2.8 below.
 
 /-- K₀-side partial sum (Poonen `S_M(h; x)`).  Definitionally matches the body of
-`Poonen1993.IsNullSeries x` at base `h`, step `M`. -/
+`IsNullSeries x` at base `h`, step `M`. -/
 private noncomputable def S_partial
     (x : LiftedPAdicHahnSeries p) (h : ℚ) (M : ℕ) : ℚᵘⁿ_[p] :=
-  ∑ n : Set.Finite.toFinset (Poonen1993.finprop x h M),
+  ∑ n : Set.Finite.toFinset (finprop x h M),
     ((p : ℕ) : ℚᵘⁿ_[p]) ^ (n.val : ℤ) *
       algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff (h + n.val))
 
@@ -5515,3 +5516,5 @@ theorem σ_coeff_compat (f : 𝕃_[p]) :
   exact congrArg Subtype.val heq.symm
 
 end TScaled
+
+end FormalizedSparse

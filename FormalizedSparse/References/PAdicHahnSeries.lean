@@ -7,9 +7,10 @@ import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
 import Mathlib.FieldTheory.Finite.Basic
 import Mathlib.FieldTheory.Finiteness
 
+namespace FormalizedSparse
+
 open WittVector
 
-namespace Poonen1993
 -- W(𝔽ₚ^⁻)((t^ℚ))
 abbrev LiftedPAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] := HahnSeries ℚ (ℤᵘⁿ_[p])
 namespace LiftedPAdicHahnSeries
@@ -4366,16 +4367,14 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : IsScalarTower ℚ_[p] �
   IsScalarTower.of_algebraMap_smul fun _ ↦ congrFun rfl
 
 end pAdicHahnSeries
-end Poonen1993
 
 namespace QpUn
 
 noncomputable abbrev to_Lp {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
-  Poonen1993.pAdicHahnSeries.QpUn_embd
+  pAdicHahnSeries.QpUn_embd
 
 end QpUn
 
-namespace Poonen1993
 namespace pAdicHahnSeries
 
 lemma alg_QpUn_of_alg_Qp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) :
@@ -4864,4 +4863,5 @@ lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.supp
 
 
 end pAdicHahnSeries
-end Poonen1993
+
+end FormalizedSparse

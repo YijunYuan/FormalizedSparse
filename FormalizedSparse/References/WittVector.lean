@@ -9,6 +9,8 @@ import Mathlib.RingTheory.WittVector.Complete
 import Mathlib.Topology.Algebra.Nonarchimedean.AdicTopology
 import Mathlib.RingTheory.AdicCompletion.Topology
 
+namespace FormalizedSparse
+
 open WittVector
 
 -- The algebraic closure of F_p
@@ -300,6 +302,9 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘ�
 
 end QpUn
 
+end FormalizedSparse
+
 namespace Padic
-noncomputable abbrev to_QpUn {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] := QpUn.Qp_embd
+noncomputable abbrev to_QpUn {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] :=
+  FormalizedSparse.QpUn.Qp_embd
 end Padic

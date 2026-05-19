@@ -1,6 +1,8 @@
 import FormalizedSparse.MainTheorem
 
-open Sparse Poonen1993 Poonen1993.pAdicHahnSeries WittVector
+namespace FormalizedSparse
+
+open Sparse pAdicHahnSeries WittVector
 
 theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
@@ -594,7 +596,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   have hgood_supp_subset : good_support ⊆ f.support :=
     hgood_supp_eq ▸ Set.diff_subset
   have hgood_supp_pwo : good_support.IsPWO :=
-    hgood_supp_eq ▸ (Poonen1993.support_IsPWO f).mono Set.diff_subset
+    hgood_supp_eq ▸ (support_IsPWO f).mono Set.diff_subset
   -- f_bad := from_coeff (q ↦ if q ∈ bad_support then f.coeff q else 0).
   let s_bad : ℚ → Fpbar p := fun q => if q ∈ bad_support then f.coeff q else 0
   have hs_bad_supp_sub : Function.support s_bad ⊆ bad_support := by
@@ -635,10 +637,10 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   have hf_decomp : f = f_good + f_bad := by
     -- Lift to LPHS, equate, then quotient.
     have hL_eq :
-        Poonen1993.LiftedPAdicHahnSeries.from_coeff s_good hs_good_pwo +
-        Poonen1993.LiftedPAdicHahnSeries.from_coeff s_bad hs_bad_pwo =
-        Poonen1993.LiftedPAdicHahnSeries.from_coeff f.coeff
-          (Poonen1993.support_IsPWO f) := by
+        LiftedPAdicHahnSeries.from_coeff s_good hs_good_pwo +
+        LiftedPAdicHahnSeries.from_coeff s_bad hs_bad_pwo =
+        LiftedPAdicHahnSeries.from_coeff f.coeff
+          (support_IsPWO f) := by
       apply HahnSeries.ext
       funext q
       change (teichmuller p) (s_good q) + (teichmuller p) (s_bad q) =
@@ -666,16 +668,16 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
           rw [hs_g, hs_b, hfc, WittVector.teichmuller_zero]; ring
     -- Now project.
     have hfg_eq :
-        (Ideal.Quotient.mk (Poonen1993.NullSeriesIdeal p))
-          (Poonen1993.LiftedPAdicHahnSeries.from_coeff s_good hs_good_pwo) +
-        (Ideal.Quotient.mk (Poonen1993.NullSeriesIdeal p))
-          (Poonen1993.LiftedPAdicHahnSeries.from_coeff s_bad hs_bad_pwo) =
-        (Ideal.Quotient.mk (Poonen1993.NullSeriesIdeal p))
-          (Poonen1993.LiftedPAdicHahnSeries.from_coeff f.coeff
-            (Poonen1993.support_IsPWO f)) := by
-      rw [← (Ideal.Quotient.mk (Poonen1993.NullSeriesIdeal p)).map_add]
+        (Ideal.Quotient.mk (NullSeriesIdeal p))
+          (LiftedPAdicHahnSeries.from_coeff s_good hs_good_pwo) +
+        (Ideal.Quotient.mk (NullSeriesIdeal p))
+          (LiftedPAdicHahnSeries.from_coeff s_bad hs_bad_pwo) =
+        (Ideal.Quotient.mk (NullSeriesIdeal p))
+          (LiftedPAdicHahnSeries.from_coeff f.coeff
+            (support_IsPWO f)) := by
+      rw [← (Ideal.Quotient.mk (NullSeriesIdeal p)).map_add]
       exact congrArg _ hL_eq
-    rw [(Poonen1993.pAdicHahnSeries.from_coeff_of_coeff_eq_self f).symm]
+    rw [(pAdicHahnSeries.from_coeff_of_coeff_eq_self f).symm]
     exact hfg_eq.symm
   -- W ≠ {0}.
   have hW_ne : W ≠ {0} := by
@@ -863,3 +865,5 @@ List.TFAE [
       push_cast at hn
       linarith
   tfae_finish
+
+end FormalizedSparse

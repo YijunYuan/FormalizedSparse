@@ -9,6 +9,8 @@ import Mathlib.SetTheory.Cardinal.Finite
 import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Analysis.Real.OfDigits
 
+namespace FormalizedSparse
+
 namespace Sparse
 
 @[ext]
@@ -2954,3 +2956,5 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
     exact ⟨i, (hsum_eq i).symm⟩
 
 end Sparse
+
+end FormalizedSparse

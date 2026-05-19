@@ -1,19 +1,9 @@
-import FormalizedSparse.References.Poonen1993
 import FormalizedSparse.Sparse
 import FormalizedSparse.Tscaled
 import Mathlib.Data.PNat.Interval
 import Mathlib.RingTheory.Localization.Integral
 import Mathlib.Data.Nat.Choose.Multinomial
 import Mathlib.GroupTheory.Perm.DomMulAct
-
-open Sparse Poonen1993 TScaled
-
-def IsRepModZ (A B : Set ℚ) : Prop :=
-  (
-    ∀ b ∈ B, ∃! a ∈ A, (a - b).isInt
-  ) ∧ (
-    ∀ a ∈ A, ∃ b ∈ B, (a - b).isInt
-  )
 
 -- Bring `NeZero T.val` into scope for any `T : ℕ+` so we can use `Tscaled` API.
 instance PNat.coe_neZero (T : ℕ+) : NeZero (T : ℕ) := ⟨T.ne_zero⟩
@@ -26,6 +16,17 @@ private instance instCharZeroQpUn (p : ℕ) [Fact (Nat.Prime p)] : CharZero ℚ�
 private instance instCharZeroQpUnT (p : ℕ) [Fact (Nat.Prime p)] (T : ℕ+) :
     CharZero ℚᵘⁿ_[p, (T : ℕ)] :=
   charZero_of_injective_algebraMap (RingHom.injective (algebraMap ℚᵘⁿ_[p] ℚᵘⁿ_[p, (T : ℕ)]))
+
+namespace FormalizedSparse
+
+open Sparse TScaled
+
+def IsRepModZ (A B : Set ℚ) : Prop :=
+  (
+    ∀ b ∈ B, ∃! a ∈ A, (a - b).isInt
+  ) ∧ (
+    ∀ a ∈ A, ∃ b ∈ B, (a - b).isInt
+  )
 
 namespace MainTheorem
 
@@ -43,11 +44,11 @@ lemma Sd_subset_support {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
 
 lemma Sd_isWF {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : DigitSeries) :
     (Sd p f T d).IsWF :=
-  (Poonen1993.support_IsPWO f).isWF.mono (Sd_subset_support f T d)
+  (support_IsPWO f).isWF.mono (Sd_subset_support f T d)
 
 lemma Sd_isPWO {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : DigitSeries) :
     (Sd p f T d).IsPWO :=
-  (Poonen1993.support_IsPWO f).mono (Sd_subset_support f T d)
+  (support_IsPWO f).mono (Sd_subset_support f T d)
 
 /-- `Sd d` is nonempty for every `d ∈ S`. Uses `hf2.2` (existence side of `IsRepModZ`). -/
 lemma Sd_nonempty {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -147,7 +148,7 @@ lemma Stilde_isPWO {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     (Stilde hf2).IsPWO :=
-  (Poonen1993.support_IsPWO f).mono (Stilde_subset_support hf2)
+  (support_IsPWO f).mono (Stilde_subset_support hf2)
 
 /-- The bijection `μ : S → Stilde`. -/
 noncomputable def mu_to_Stilde {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -1857,7 +1858,7 @@ private lemma Pfhat_TLifted_isTNullSeries
       σ p (T : ℕ) ((algebraMap ℤᵘⁿ_[p] 𝕃_[p]) x) =
         (algebraMap ℤᵘⁿ_[p] 𝕃_[p, (T : ℕ)]) x := by
     intro x
-    change σ p (T : ℕ) (Poonen1993.pAdicHahnSeries.ZpUn_embd x) = _
+    change σ p (T : ℕ) (pAdicHahnSeries.ZpUn_embd x) = _
     change σ p (T : ℕ)
         (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 x)) = _
     rw [show σ p (T : ℕ)
@@ -5208,3 +5209,5 @@ theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
     apply main_theorem₀ p f T S hSP ⟨c, D, hD1, hD2⟩
     rwa [hS]
   · exact hW1
+
+end FormalizedSparse
