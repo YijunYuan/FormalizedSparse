@@ -70,8 +70,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
       simp only [Set.Finite.mem_toFinset] at hr
       have hr_ne : r ≠ 0 := fun heq => h0 (heq ▸ hr)
       refine ⟨⟨r, Nat.pos_of_ne_zero hr_ne⟩, ?_, rfl⟩
-      simp only [Set.Finite.mem_toFinset, Set.mem_preimage]
-      exact hr
+      simpa only [Set.Finite.mem_toFinset, Set.mem_preimage]
     · intro k _; rfl
   -- σ n < 1 when 0 ∉ A n.
   have hσ_lt_one : ∀ n, 0 ∉ A n → σ n < 1 := by
@@ -235,8 +234,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
           simp only [Finset.mem_filter, Set.Finite.mem_toFinset, Finset.mem_singleton]
           refine ⟨fun ⟨_, h⟩ => h, fun h => ?_⟩
           rw [h]; exact ⟨h0, rfl⟩
-        rw [hfilter_eq, Finset.sum_singleton]
-        simp
+        simp [hfilter_eq, Finset.sum_singleton]
       · rw [if_neg h0]
         have hfilter_eq : (hA3 n).toFinset.filter (· = 0) = ∅ := by
           ext r
@@ -500,9 +498,8 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
   haveI : Infinite good_indices := Set.infinite_coe_iff.mpr hgood_inf
   let enumIso : ℕ ≃o good_indices := Nat.Subtype.orderIsoOfNat good_indices
   let enum : ℕ → ℕ := fun n => (enumIso n).val
-  have henum_inj : Function.Injective enum := by
-    intro a b hab
-    exact enumIso.injective (Subtype.ext hab)
+  have henum_inj : Function.Injective enum :=
+    fun a b hab => enumIso.injective (Subtype.ext hab)
   have henum_mem : ∀ n, enum n ∈ good_indices := fun n => (enumIso n).property
   have henum_surj : ∀ m ∈ good_indices, ∃ n, enum n = m := by
     intro m hm
@@ -562,11 +559,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     simp only [hW_def, σ, Set.mem_setOf_eq, Set.mem_image]
     constructor
     · rintro ⟨n, hn⟩
-      refine ⟨enum n, henum_mem n, ?_⟩
-      -- hn : ∑ r ∈ (hB3 n).toFinset, _ = q
-      -- Goal: ∑ r ∈ (hA3 (enum n)).toFinset, _ = q
-      -- (hB3 n).toFinset = (hA3 (enum n)).toFinset by def.
-      exact hn
+      exact ⟨enum n, henum_mem n, hn⟩
     · rintro ⟨m, hm, hmq⟩
       rcases henum_surj m hm with ⟨n, hn⟩
       refine ⟨n, ?_⟩
@@ -594,19 +587,14 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     · rintro ⟨n, hn, rfl⟩
       refine ⟨⟨n, rfl⟩, ?_⟩
       rintro ⟨m, hm, heq⟩
-      have : m = n := hγ_inj heq
-      rw [← this] at hn
+      rw [← hγ_inj heq] at hn
       exact hn hm
     · rintro ⟨⟨n, rfl⟩, hne⟩
-      refine ⟨n, ?_, rfl⟩
-      intro hbad
-      apply hne
-      exact ⟨n, hbad, rfl⟩
-  have hgood_supp_subset : good_support ⊆ f.support := by
-    rw [hgood_supp_eq]; exact Set.diff_subset
-  have hgood_supp_pwo : good_support.IsPWO := by
-    rw [hgood_supp_eq]
-    exact (Poonen1993.support_IsPWO f).mono Set.diff_subset
+      exact ⟨n, fun hbad => hne ⟨n, hbad, rfl⟩, rfl⟩
+  have hgood_supp_subset : good_support ⊆ f.support :=
+    hgood_supp_eq ▸ Set.diff_subset
+  have hgood_supp_pwo : good_support.IsPWO :=
+    hgood_supp_eq ▸ (Poonen1993.support_IsPWO f).mono Set.diff_subset
   -- f_bad := from_coeff (q ↦ if q ∈ bad_support then f.coeff q else 0).
   let s_bad : ℚ → Fpbar p := fun q => if q ∈ bad_support then f.coeff q else 0
   have hs_bad_supp_sub : Function.support s_bad ⊆ bad_support := by
@@ -615,8 +603,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     by_contra hnot
     rw [if_neg hnot] at hq
     exact hq rfl
-  have hs_bad_pwo : (Function.support s_bad).IsPWO :=
-    hbad_supp_pwo.mono hs_bad_supp_sub
+  have hs_bad_pwo := hbad_supp_pwo.mono hs_bad_supp_sub
   let f_bad : 𝕃_[p] := from_coeff s_bad hs_bad_pwo
   have hf_bad_coeff : f_bad.coeff = s_bad := coeff_of_from_coeff_eq_self s_bad hs_bad_pwo
   have hf_bad_supp : f_bad.support ⊆ bad_support := by
@@ -631,8 +618,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     by_contra hnot
     rw [if_neg hnot] at hq
     exact hq rfl
-  have hs_good_pwo : (Function.support s_good).IsPWO :=
-    hgood_supp_pwo.mono hs_good_supp_sub
+  have hs_good_pwo := hgood_supp_pwo.mono hs_good_supp_sub
   let f_good : 𝕃_[p] := from_coeff s_good hs_good_pwo
   have hf_good_coeff : f_good.coeff = s_good := coeff_of_from_coeff_eq_self s_good hs_good_pwo
   have hf_good_supp : f_good.support = good_support := by
@@ -642,9 +628,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     simp only [Function.mem_support, ne_eq, s_good]
     by_cases hq : q ∈ good_support
     · rw [if_pos hq]
-      refine ⟨fun _ => hq, fun _ hc => ?_⟩
-      have : q ∈ f.support := hgood_supp_subset hq
-      exact this hc
+      exact ⟨fun _ => hq, fun _ hc => (hgood_supp_subset hq) hc⟩
     · rw [if_neg hq]
       simp [hq]
   -- f = f_good + f_bad.
@@ -678,9 +662,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
             rw [hgood_supp_eq] at hq_good
             intro hq_in
             exact hq_good ⟨hq_in, hq_bad⟩
-          have hfc : f.coeff q = 0 := by
-            by_contra hc
-            exact hq_notin hc
+          have hfc : f.coeff q = 0 := Decidable.byContradiction fun hc ↦ hq_notin hc
           rw [hs_g, hs_b, hfc, WittVector.teichmuller_zero]; ring
     -- Now project.
     have hfg_eq :
@@ -693,9 +675,7 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
             (Poonen1993.support_IsPWO f)) := by
       rw [← (Ideal.Quotient.mk (Poonen1993.NullSeriesIdeal p)).map_add]
       exact congrArg _ hL_eq
-    have hfeq : f = from_coeff f.coeff (Poonen1993.support_IsPWO f) :=
-      (Poonen1993.pAdicHahnSeries.from_coeff_of_coeff_eq_self f).symm
-    rw [hfeq]
+    rw [(Poonen1993.pAdicHahnSeries.from_coeff_of_coeff_eq_self f).symm]
     exact hfg_eq.symm
   -- W ≠ {0}.
   have hW_ne : W ≠ {0} := by
@@ -722,20 +702,16 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
     linarith
   -- IsRepModZ.
   have hRep : IsRepModZ W {x | ∃ q ∈ f_good.support, -1 * T * q = x} := by
-    refine ⟨?_, ?_⟩
-    · intro b hb
-      rcases hb with ⟨q, hq, hbq⟩
+    refine ⟨fun b hb => ?_, fun a ha => ?_⟩
+    · rcases hb with ⟨q, hq, hbq⟩
       rw [hf_good_supp] at hq
       rcases hq with ⟨n, hn, rfl⟩
-      have hT_ne : (T : ℚ) ≠ 0 := by
-        have : (0 : ℚ) < T := by exact_mod_cast T.pos
-        exact ne_of_gt this
+      have hT_ne : (T : ℚ) ≠ 0 := ne_of_gt <| by exact_mod_cast T.pos
       have hb_eq : b = σ n - c n := by
         rw [← hbq]
         change (-1 : ℚ) * (T : ℚ) * (((c n : ℚ) - σ n) / T) = σ n - c n
         field_simp; ring
-      have hn_good : n ∈ good_indices := hn
-      have h0_notin : 0 ∉ A n := fun h => hn_good (Or.inl h)
+      have h0_notin : 0 ∉ A n := fun h => hn (Or.inl h)
       refine ⟨σ n, ⟨?_, ?_⟩, ?_⟩
       · rw [hW_eq]; exact ⟨n, hn, rfl⟩
       · rw [hb_eq]
@@ -753,11 +729,9 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
           have : σ m - (σ n - (c n : ℚ)) = σ m - σ n + (c n : ℚ) := by ring
           rw [hb_eq] at ha_int
           have ha_int'' : (σ m - (σ n - (c n : ℚ))).isInt = true := ha_int
-          rw [this] at ha_int''
-          exact ha_int''
+          rwa [this] at ha_int''
         -- σ m - σ n + c n ∈ ℤ. Let z = (this).num. Then σ m - σ n = z - c n.
-        have hz_eq : σ m - σ n + (c n : ℚ) = (((σ m - σ n + c n : ℚ).num : ℤ) : ℚ) :=
-          Rat.eq_num_of_isInt ha_int'
+        have hz_eq := Rat.eq_num_of_isInt ha_int'
         set z : ℤ := (σ m - σ n + (c n : ℚ)).num with hz_def
         have hd_lt : σ m - σ n < 1 := by linarith [hσ_nonneg n]
         have hd_gt : (-1 : ℚ) < σ m - σ n := by linarith [hσ_nonneg m]
@@ -775,21 +749,17 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
             have : ((z - c n : ℤ) : ℚ) = 0 := by exact_mod_cast hz_eq2
             push_cast at this; linarith
           linarith [hzc]
-        have hA_eq : A m = A n := hσ_inj_good m n hm_notin h0_notin hσ_eq
         have hmn : m = n := by
           apply hA2 m n
           intro hcontra
           obtain ⟨a, ha⟩ := hA1 m
-          have : a ∈ A m ∩ A n := ⟨ha, hA_eq ▸ ha⟩
+          have : a ∈ A m ∩ A n := ⟨ha, hσ_inj_good m n hm_notin h0_notin hσ_eq ▸ ha⟩
           rw [hcontra] at this
           exact Set.notMem_empty _ this
         rw [hmn]
-    · intro a ha
-      rw [hW_eq] at ha
+    · rw [hW_eq] at ha
       rcases ha with ⟨n, hn, rfl⟩
-      have hT_ne : (T : ℚ) ≠ 0 := by
-        have : (0 : ℚ) < T := by exact_mod_cast T.pos
-        exact ne_of_gt this
+      have hT_ne : (T : ℚ) ≠ 0 := ne_of_gt <| by exact_mod_cast T.pos
       refine ⟨(-1 : ℚ) * T * γ n, ⟨γ n, ?_, rfl⟩, ?_⟩
       · rw [hf_good_supp]; exact ⟨n, hn, rfl⟩
       · -- (σ n - (-1 * T * γ n)).isInt = true.
@@ -798,17 +768,14 @@ theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A
           field_simp; ring
         rw [hint, Rat.isInt]; simp
   -- Apply main_theorem.
-  have hf_good_not_alg : ¬ IsAlgebraic ℚᵘⁿ_[p] f_good :=
-    main_theorem p f_good T W hW_ne hSparse_W' hRep
+  have hf_good_not_alg := main_theorem p f_good T W hW_ne hSparse_W' hRep
   -- f_bad is algebraic.
-  have hf_bad_alg : IsAlgebraic ℚᵘⁿ_[p] f_bad :=
-    alg_QpUn_of_alg_Qp p f_bad (alg_of_fin_supp p f_bad hf_bad_supp_fin)
+  have hf_bad_alg := alg_QpUn_of_alg_Qp p f_bad (alg_of_fin_supp p f_bad hf_bad_supp_fin)
   -- Conclude.
   intro hf_alg
   apply hf_good_not_alg
   have hf_good_eq : f_good = f - f_bad := by
-    have h := hf_decomp
-    linear_combination -h
+    linear_combination -hf_decomp
   rw [hf_good_eq]
   exact hf_alg.sub hf_bad_alg
 
@@ -843,10 +810,7 @@ List.TFAE [
     -- Enumerate f.support via Denumerable.
     set e : f.support ≃ ℕ := Denumerable.eqv f.support with he_def
     set q : ℕ → ℚ := fun n => (e.symm n).val with hq_def
-    have hq_inj : Function.Injective q := by
-      intro i j hij
-      have hsub : e.symm i = e.symm j := Subtype.ext hij
-      exact e.symm.injective hsub
+    have hq_inj : Function.Injective q := fun i j hij => e.symm.injective <| Subtype.ext hij
     have hq_mem : ∀ n, q n ∈ f.support := fun n => (e.symm n).property
     have hq_range : Set.range q = f.support := by
       ext x
@@ -865,16 +829,6 @@ List.TFAE [
     set k : ℕ → ℕ+ := fun n => Classical.choose (hq_form n) with hk_def
     have hk_eq : ∀ n, q n = -((p : ℚ) ^ (-((k n : ℕ) : ℤ))) :=
       fun n => Classical.choose_spec (hq_form n)
-    -- Injectivity of i ↦ -(p:ℚ)^(-(i:ℤ)) implies k is injective.
-    have hp_pos_Q : (0 : ℚ) < p := by
-      have hp := (Fact.out : Nat.Prime p).pos
-      exact_mod_cast hp
-    have hp_ne_one : (p : ℚ) ≠ 1 := by
-      have hp1 := (Fact.out : Nat.Prime p).one_lt
-      have hpQ_gt : (1 : ℚ) < p := by exact_mod_cast hp1
-      exact (ne_of_lt hpQ_gt).symm
-    have hzpow_inj : Function.Injective (fun n : ℤ => (p : ℚ) ^ n) :=
-      zpow_right_injective₀ hp_pos_Q hp_ne_one
     have hk_inj : Function.Injective k := by
       intro i j hij
       apply hq_inj
@@ -887,14 +841,9 @@ List.TFAE [
       intro i j hne
       rcases Set.nonempty_iff_ne_empty.mpr hne with ⟨x, hxi, hxj⟩
       simp only [A, Set.mem_singleton_iff] at hxi hxj
-      have hknat : (k i : ℕ) = (k j : ℕ) := hxi.symm.trans hxj
-      exact hk_inj (PNat.coe_injective hknat)
-    have hAsup : ∃ K : ℕ, ∀ n, (hA3 n).toFinset.card ≤ K := by
-      refine ⟨1, fun n => ?_⟩
-      rw [Set.Finite.toFinset_singleton]
-      simp
+      exact hk_inj (PNat.coe_injective <| hxi.symm.trans hxj)
     -- Apply trans_of_digit_disjoint.
-    refine trans_of_digit_disjoint p f A hA1 hA2 hA3 hAsup (fun _ => 0) 1 ?_
+    refine trans_of_digit_disjoint p f A hA1 hA2 hA3 ⟨1, fun n => by simp⟩ (fun _ => 0) 1 ?_
     rw [← hq_range]
     ext x
     constructor
@@ -902,8 +851,7 @@ List.TFAE [
       refine ⟨n, ?_⟩
       have hFin : (hA3 n).toFinset = ({(k n : ℕ)} : Finset ℕ) :=
         Set.Finite.toFinset_singleton _
-      rw [hFin, Finset.sum_singleton]
-      rw [hk_eq n]
+      rw [hFin, Finset.sum_singleton, hk_eq n]
       push_cast
       ring
     · rintro ⟨n, hn⟩
