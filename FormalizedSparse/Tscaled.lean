@@ -7,7 +7,8 @@ import Mathlib.Topology.Algebra.Module.FiniteDimension
 /-!
 # T-scaled realization of p-adic Hahn series
 
-This file is the formalization of Section 3 of this paper. Most of the proofs are similar to those in `PAdicHahnSeries.lean`.
+This file is the formalization of Section 3 of this paper. Most of the proofs are similar to those
+in `PAdicHahnSeries.lean`.
 -/
 
 open WittVector
