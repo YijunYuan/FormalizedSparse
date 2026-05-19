@@ -4352,6 +4352,13 @@ noncomputable def QpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+*
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚᵘⁿ_[p] 𝕃_[p] := QpUn_embd.toAlgebra
 
+instance (p : ℕ) [Fact (Nat.Prime p)] : IsScalarTower ℤᵘⁿ_[p] ℚᵘⁿ_[p] 𝕃_[p] := by
+    apply IsScalarTower.of_algebraMap_eq
+    intro x
+    change ZpUn_embd x = QpUn_embd ((algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) x)
+    unfold QpUn_embd
+    exact (IsFractionRing.lift_algebraMap (g := ZpUn_embd) ZpUn_embd_injective x).symm
+
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] 𝕃_[p] :=
   (QpUn_embd.comp QpUn.Qp_embd).toAlgebra
 

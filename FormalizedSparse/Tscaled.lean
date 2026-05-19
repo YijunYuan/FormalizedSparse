@@ -923,8 +923,6 @@ private lemma Tnull_series_tail_bound
     _ ≤ ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) :=
         max_le h1 hcauchy
 
-set_option maxHeartbeats 800000 in
--- This is heavy.
 /-- T-scaled analogue of `Poonen1993.intPartial_mul_valuation_bound` (line 349). -/
 private lemma TintPartial_mul_valuation_bound
     (c x : TLiftedPAdicHahnSeries p T) (hx : IsTNullSeries p T x) (g : ℚ) (K : ℤ) :
@@ -1519,7 +1517,6 @@ instance instNontrivialQuotTNullSeriesIdeal :
 
 /-! #### Cauchy property + limit of integer partial sums (Sub-tasks 1B, 1C) -/
 
-set_option maxHeartbeats 800000 in
 /-- T-scaled analogue of `Poonen1993.existsCanonicalExpansionAux.intPartial_isCauchy`
 (Poonen line 876).  Stated in `CauchySeq` form (the form actually consumed by
 `Texists_lim_intPartial`).  Strategy: bound `Valued.v (TintPartial K' - TintPartial K)`
@@ -1602,8 +1599,6 @@ private lemma TintPartial_isCauchy
       rw [hneg, Valuation.map_neg]
       exact h_convert K' hK' _ hbound
 
-set_option synthInstance.maxHeartbeats 1000000 in
-set_option maxHeartbeats 1000000 in
 /-- Algebra-map square commutativity: viewing `OQpUn_embd` followed by `algebraMap` to `K`
 agrees with `algebraMap` to `K₀` followed by the field inclusion `K₀ ↪ K`. -/
 private lemma algebraMap_OQpUn_embd_compat_early (a : ℤᵘⁿ_[p]) :
@@ -2408,10 +2403,8 @@ private lemma Tteichmuller_digits_unique
           (Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N))) 0
         with h0 | h0
       · rw [h0]; exact bot_le
-      · rw [← WithZero.coe_unzero h0]
-        rw [← WithZero.coe_unzero h0] at h_lt
-        rw [WithZero.coe_lt_coe] at h_lt
-        rw [WithZero.coe_le_coe]
+      · rw [← WithZero.coe_unzero h0 ,WithZero.coe_le_coe]
+        rw [← WithZero.coe_unzero h0, WithZero.coe_lt_coe] at h_lt
         rw [show (WithZero.unzero h0) =
             Multiplicative.ofAdd (Multiplicative.toAdd (WithZero.unzero h0)) from rfl]
             at h_lt ⊢
@@ -2437,8 +2430,7 @@ private lemma Tteichmuller_digits_unique
               : Multiplicative ℤ) = 1 from by
           rw [← ofAdd_add]; rw [neg_add_cancel]; rfl]
         rfl
-      rw [h_one] at h_prod
-      exact h_prod
+      rwa [h_one] at h_prod
     obtain ⟨q', hq'⟩ :=
       IsDiscreteValuationRing.exists_lift_of_le_one (K := ℚᵘⁿ_[p,T]) hq_val_le_one
     have h_eq_QpUn : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff =
@@ -2454,13 +2446,10 @@ private lemma Tteichmuller_digits_unique
       rw [mul_one]
     have h_pow_alg : (pInvTQ p T)^((i : ℤ)+1) =
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((pInvT p T)^(i+1)) := by
-      rw [show ((i : ℤ)+1) = ((i+1 : ℕ) : ℤ) from by push_cast; ring]
-      rw [zpow_natCast, map_pow]
+      rw [show ((i : ℤ)+1) = ((i+1 : ℕ) : ℤ) from by push_cast; ring, zpow_natCast, map_pow]
       rfl
     rw [h_pow_alg, ← map_mul] at h_eq_QpUn
-    have h_eq_OQpUn : diff = (pInvT p T)^(i+1) * q' :=
-      IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) h_eq_QpUn
-    exact ⟨q', h_eq_OQpUn⟩
+    exact ⟨q', IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) h_eq_QpUn⟩
   -- Step 8. Induction `c i = c' i`.
   have h_induction : ∀ i : ℕ, c i = c' i := by
     intro i
@@ -3078,7 +3067,6 @@ private lemma Th_intPartial_sub
       α.coeff (g + (n : ℚ) / T) - β.coeff (g + (n : ℚ) / T) := rfl
   rw [h_sub_coeff, map_sub, mul_sub]
 
-set_option maxHeartbeats 1000000 in
 /-- T-analogue of `Poonen1993.exists_canonical_representative`'s `h_key` (lines
 1893–2121).  Given a sequence `b : ℤ → Fpbar p` whose Teichmüller-power sums converge to
 `(Texists_lim_intPartial p T α γ).choose`, if `b k ≠ 0` then there is some `n_α ≤ k` with
@@ -3333,7 +3321,6 @@ private lemma Th_key
     omega
 
 open scoped Pointwise in
-set_option maxHeartbeats 1000000 in
 /-- **Phase 3A-iii main assembly.**  T-analogue of
 `Poonen1993.exists_canonical_representative` (lines 1841–2515).  Given a T-lifted Hahn
 series `α`, there exists a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with PWO support so
@@ -3675,7 +3662,6 @@ theorem Texists_canonical_T_representative
 
 /-! ### Phase 3B: uniqueness of canonical T-representative -/
 
-set_option maxHeartbeats 1000000 in
 /-- **Phase 3B.**  T-analogue of `Poonen1993.unique_canonical_representative`
 (lines 2517–2883).  Two coefficient functions producing T-equivalent canonical
 expansions are equal. -/
@@ -4295,7 +4281,6 @@ private noncomputable def QpUn_proj (i : Fin T) :
 
 -- K₀-basis decomposition: every `c : ℚᵘⁿ_[p,T]` writes as a `K₀`-linear combination of
 -- `{1, π, …, π^(T-1)}`.
-set_option synthInstance.maxHeartbeats 80000 in
 private lemma QpUn_basis_decomp (c : ℚᵘⁿ_[p,T]) :
     c = ∑ i : Fin T, (pInvTQ p T) ^ (i.val : ℕ) *
         algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i c) := by
@@ -4307,7 +4292,6 @@ private lemma QpUn_basis_decomp (c : ℚᵘⁿ_[p,T]) :
 
 -- Naturality of the `K₀`-projection: on the image of `algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])`,
 -- `QpUn_proj` agrees with `OQpUn_proj` followed by the localization map of `ℤᵘⁿ_[p]`.
-set_option synthInstance.maxHeartbeats 400000 in
 private lemma QpUn_proj_algebraMap (i : Fin T) (c : ℤᵘⁿ_[p,T]) :
     QpUn_proj p T i (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) c) =
       algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (OQpUn_proj p T i c) := by
@@ -4317,7 +4301,6 @@ private lemma QpUn_proj_algebraMap (i : Fin T) (c : ℤᵘⁿ_[p,T]) :
 
 -- Key extraction lemma: `QpUn_proj j` extracts the `j`-th coordinate from a `K₀`-linear
 -- combination of `{1, π, …, π^(T-1)}`.
-set_option synthInstance.maxHeartbeats 80000 in
 private lemma QpUn_proj_sum (a : Fin T → ℚᵘⁿ_[p]) (j : Fin T) :
     QpUn_proj p T j (∑ i : Fin T, (pInvTQ p T) ^ (i.val : ℕ) *
         algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (a i)) = a j := by
@@ -4521,7 +4504,6 @@ private lemma continuous_algebraMap_K₀_K :
 -- K-valuations (mod T argument), hence by `Valuation.map_sum_eq_of_lt`,
 -- `v(c) = max_i v(term_i) ≥ v(term_j)`.
 
-set_option synthInstance.maxHeartbeats 80000 in
 private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
     Valued.v ((pInvTQ p T) ^ (j.val : ℕ) *
         algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T j c)) ≤ Valued.v c := by

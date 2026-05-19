@@ -1074,9 +1074,8 @@ lemma lemma_1_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
     simp [Rat.isInt]
   exact DigitSeries.eq_of_norm_sub_isInt hd he hsub
 
-set_option linter.unusedVariables false in
 def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
-(c n : PNat) (S : Set (DigitSeries)) (hS : ∀ f ∈ S, f.IsP p) : Prop :=
+(c n : PNat) (S : Set (DigitSeries)) (_hS : ∀ f ∈ S, f.IsP p) : Prop :=
   (
     ∀ d, d ∈ S → d.Sigma ≤ c
   ) ∧ (

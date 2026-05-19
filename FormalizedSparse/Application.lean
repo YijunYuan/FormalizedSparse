@@ -2,8 +2,6 @@ import FormalizedSparse.MainTheorem
 
 open Sparse Poonen1993 Poonen1993.pAdicHahnSeries WittVector
 
-set_option maxHeartbeats 800000 in
--- large nested casts and indicator-series rewrites push the default budget over the limit
 theorem trans_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite)

@@ -1848,16 +1848,6 @@ private lemma Pfhat_TLifted_isTNullSeries
   rw [← Ideal.Quotient.eq_zero_iff_mem]
   unfold Pfhat_TLifted P_int
   -- Goal: mk ((integerNormalization _ P).map OQpUn_embd).aeval fhat = 0
-  -- Step 1: Manual IsScalarTower ℤᵘⁿ_[p] ℚᵘⁿ_[p] 𝕃_[p].
-  set_option synthInstance.maxHeartbeats 40000 in
-  haveI hST_L : IsScalarTower ℤᵘⁿ_[p] ℚᵘⁿ_[p] 𝕃_[p] := by
-    apply IsScalarTower.of_algebraMap_eq
-    intro x
-    change Poonen1993.pAdicHahnSeries.ZpUn_embd x =
-        Poonen1993.pAdicHahnSeries.QpUn_embd ((algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) x)
-    unfold Poonen1993.pAdicHahnSeries.QpUn_embd
-    exact (IsFractionRing.lift_algebraMap (g := Poonen1993.pAdicHahnSeries.ZpUn_embd)
-      Poonen1993.pAdicHahnSeries.ZpUn_embd_injective x).symm
   -- Step 2: P_int.aeval f = 0 in 𝕃_[p] via IsLocalization.integerNormalization_aeval_eq_zero.
   have hPint_f :
       (IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).aeval f = 0 :=
@@ -2777,8 +2767,8 @@ private lemma coeff_pow_truncate_eq
     {Cs : ↥(Stilde hf2) → ℤᵘⁿ_[p,(T : ℕ)]}
     {fhat : TLiftedPAdicHahnSeries p (T : ℕ)}
     (h_supp : Function.support fhat.coeff ⊆ Stilde hf2)
-    (h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
-    (hCs_ne : ∀ s : ↥(Stilde hf2), Cs s ≠ 0)
+    (_h_coeff_eq : ∀ (s : ↥(Stilde hf2)), fhat.coeff s.val = Cs s)
+    (_hCs_ne : ∀ s : ↥(Stilde hf2), Cs s ≠ 0)
     (hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite) :
     (fhat ^ (n : ℕ)).coeff
         (-(r0 hSparse) / T +

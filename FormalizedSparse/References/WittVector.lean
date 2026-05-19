@@ -206,8 +206,6 @@ noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘ�
   )
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p] keeps the valuation.
-set_option maxHeartbeats 1000000 in
--- needs raised limit: many `rw [show … from rfl]` defeq checks through valuation/algebra layers
 lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
   ∀ x : ℚ_[p], Padic.mulValuation x = Valued.v (Qp_embd x) := by
   intro x
