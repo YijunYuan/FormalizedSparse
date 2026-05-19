@@ -85,13 +85,6 @@ noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[
     · positivity
 }
 
-open Classical in
-lemma abs_def (p : ℕ) [Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]) :
-  abs p a = WithZeroMulInt.toNNReal (p_ne_zero p)
-      (Valued.v a) := by
-  unfold abs
-  aesop
-
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
   WithAbs.normedField (abs p)
 
@@ -300,19 +293,6 @@ lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
     rw [← ofAdd_zsmul vx (-1 : ℤ)]
     congr 1; ring
 
-lemma Qp_embd_keep_norm (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ x : ℚ_[p], ‖x‖ = ‖(Qp_embd x)‖ := by
-  intro x
-  have hnorm :
-      ‖x‖ = ((WithZeroMulInt.toNNReal (p_ne_zero p) (Padic.mulValuation x) : NNReal) : ℝ) := by
-    by_cases hx : x = 0
-    · simp [hx, Padic.mulValuation]
-    · rw [Padic.norm_eq_zpow_log_mulValuation (p := p) hx]
-      simp [Padic.mulValuation, hx, WithZeroMulInt.toNNReal_neg_apply]
-  rw [hnorm]
-  rw [show ‖(Qp_embd x : ℚᵘⁿ_[p])‖ = QpUn.abs p (Qp_embd x) by rfl]
-  simp [QpUn.abs_def, Qp_embd_keep_val p x]
-
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NontriviallyNormedField ℚᵘⁿ_[p] :=
   Valued.toNontriviallyNormedField
 
@@ -322,8 +302,3 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘ�
 end QpUn
 
 end FormalizedSparse
-
-namespace Padic
-noncomputable abbrev to_QpUn {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] :=
-  FormalizedSparse.QpUn.Qp_embd
-end Padic

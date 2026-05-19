@@ -1580,11 +1580,6 @@ lemma DigitSeries.ofRat_IsP (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ)
   intro n
   exact (decDigits p q n).isLt
 
-/-- Coefficients of `DigitSeries.ofRat` are exactly `(decDigits p q n).val`. -/
-@[simp] lemma DigitSeries.ofRat_apply (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ)
-    (hq : pDigitSum p q ≠ ⊤) (n : ℕ+) :
-    (DigitSeries.ofRat p q hq : ℕ+ → ℕ) n = (decDigits p q n).val := rfl
-
 /-- Deep bridge lemma: For `q ∈ [0, 1)` rational with finite digit sum,
 the DigitSeries packaging recovers `q` via norm.
 

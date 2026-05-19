@@ -1480,14 +1480,6 @@ private lemma one_notMem_TNullSeriesIdeal :
   have h_eq : (1 : ℚᵘⁿ_[p,T]) = 0 := tendsto_nhds_unique h_tend_one htend
   exact one_ne_zero h_eq
 
-/-- Eagerly establish `Nontrivial` of the T-scaled quotient from
-`one_notMem_TNullSeriesIdeal`.  T-scaled analogue of the corresponding `Nontrivial`
-instance at `lean:814–817`. -/
-instance instNontrivialQuotTNullSeriesIdeal :
-    Nontrivial ((TLiftedPAdicHahnSeries p T) ⧸ (TNullSeriesIdeal p T)) :=
-  Submodule.Quotient.nontrivial_iff.mpr
-    ((Ideal.ne_top_iff_one _).mpr (one_notMem_TNullSeriesIdeal p T))
-
 /-! #### Cauchy property + limit of integer partial sums (Sub-tasks 1B, 1C) -/
 
 /-- T-scaled analogue of `existsCanonicalExpansionAux.intPartial_isCauchy`
@@ -4164,9 +4156,6 @@ abbrev TScaledPAdicHahnSeries : Type _ :=
 @[inherit_doc] notation "𝕃_[" p "," T "]" => TScaledPAdicHahnSeries p T
 
 namespace TScaledPAdicHahnSeries
-
-noncomputable instance instField : Field (𝕃_[p,T]) :=
-  Ideal.Quotient.field (TNullSeriesIdeal p T)
 
 /-- Coefficient function of an element of `𝕃_[p,T]`: writing `x = ∑ [a_q] p^q` in canonical
 form, this is the function `q ↦ a_q : ℚ → 𝔽ᵃ_[p]`. -/

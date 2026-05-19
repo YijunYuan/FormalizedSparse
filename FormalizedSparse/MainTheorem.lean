@@ -59,10 +59,6 @@ lemma Sd_isWF {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : Digi
     (Sd p f T d).IsWF :=
   (support_IsPWO f).isWF.mono (Sd_subset_support f T d)
 
-lemma Sd_isPWO {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : DigitSeries) :
-    (Sd p f T d).IsPWO :=
-  (support_IsPWO f).mono (Sd_subset_support f T d)
-
 /-- `Sd d` is nonempty for every `d ∈ S`. Uses `hf2.2` (existence side of `IsRepModZ`). -/
 lemma Sd_nonempty {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
@@ -102,20 +98,6 @@ lemma mu_q_residue {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (d : S) : ((d.val.norm p : ℚ) + (T : ℚ) * mu_q hf2 d).isInt = true :=
   ((Sd_isWF f T d.val).min_mem (Sd_nonempty hf2 d.property)).2
-
-/-- Below `mu_q d`, `f.coeff` vanishes on the coset (since `mu_q d` is the minimum). -/
-lemma f_coeff_zero_below {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
-    {S : Set DigitSeries}
-    (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
-                     {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (d : S) {q : ℚ}
-    (hq_lt : q < mu_q hf2 d)
-    (hres : ((d.val.norm p : ℚ) + (T : ℚ) * q).isInt = true) :
-    pAdicHahnSeries.coeff f q = 0 := by
-  by_contra hne
-  have hq_in_supp : q ∈ f.support := hne
-  have hq_in_Sd : q ∈ Sd p f T d.val := ⟨hq_in_supp, hres⟩
-  exact (Sd_isWF f T d.val).not_lt_min (Sd_nonempty hf2 d.property) hq_in_Sd hq_lt
 
 /-- The key uniqueness step: `mu_q` is injective. -/
 lemma mu_q_injective {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -1913,25 +1895,6 @@ private lemma Pfhat_TLifted_isTNullSeries
   have h_mkₐ_eq : Ideal.Quotient.mkₐ (ℤᵘⁿ_[p,(T : ℕ)])
       (TNullSeriesIdeal p (T : ℕ)) fhat = σ p (T : ℕ) f := h_mk_eq
   rw [h_mkₐ_eq, h_aeval_map, hPint_σf]
-
-/-- §4d-d — Multinomial expansion of `Pfhat_TLifted`.
-
-By `Polynomial.aeval_eq_sum_range`, `Pfhat_TLifted` decomposes as a finite sum
-over the natDegree of `P_int.map OQpUn_embd`. Each term `OQpUn_embd (P_int.coeff i)
-• fhat^i` is then susceptible to the multinomial expansion (`HahnSeries.coeff_pow`
-+ multinomial formula). This lemma is the first step of the combinatorial
-collapse needed in `identity_c_collapsed`. -/
-lemma Pfhat_TLifted_eq_sum_range {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
-    (P : Polynomial ℚᵘⁿ_[p])
-    (fhat : TLiftedPAdicHahnSeries p (T : ℕ)) :
-    Pfhat_TLifted T P fhat =
-      ∑ i ∈ Finset.range (((P_int P).map (OQpUn_embd p T)).natDegree + 1),
-        OQpUn_embd p T ((P_int P).coeff i) • fhat ^ i := by
-  unfold Pfhat_TLifted
-  rw [Polynomial.aeval_eq_sum_range]
-  congr 1
-  ext i
-  rw [Polynomial.coeff_map]
 
 /-- §4d-e — Per-coefficient expansion of `Pfhat_TLifted`.
 
