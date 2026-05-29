@@ -12,7 +12,7 @@ A full formalization in Lean 4 of the paper **"p-adic Hahn Series with Sparse Su
 
 The paper introduces a combinatorial "sparseness" condition on the support of a p-adic Hahn series and proves that any p-adic Hahn series satisfying this condition is transcendental over the completed maximal unramified extension of ℚ_[p] (and hence over ℚ_[p]). As an application, it proves a p-adic analogue of a classical result of Huang and Ştefănescu on the algebraicity of equal-characteristic Hahn series.
 
-The formalization covers all definitions, lemmas, and theorems from the paper, including the main theorem (Theorem 1.7/5.1) and its applications (Proposition 5.3, Corollary 5.4).
+The formalization covers all definitions, lemmas, and theorems from the paper, including the main theorem (Theorem 1.7/5.3) and its applications (Proposition 5.3, Corollary 5.4).
 
 ## Project Structure
 
@@ -43,7 +43,7 @@ The formalization covers all definitions, lemmas, and theorems from the paper, i
 
 ### Main Theorem (§5)
 
-- `main_theorem` — Theorem 5.1: if −T·Supp(f) admits a non-zero sparse set of representatives mod ℤ, then f is transcendental over ℚᵘⁿ_[p]
+- `main_theorem` — Theorem 5.3: if −T·Supp(f) admits a non-zero sparse set of representatives mod ℤ, then f is transcendental over ℚᵘⁿ_[p]
 - `trans_of_digit_disjoint` — Proposition 5.3: transcendence for series with non-overlapping base-p digits
 - `pAdicHuangStefanescu` — Corollary 5.4: p-adic analogue of Huang–Ştefănescu; for f = ∑ [f(i)]·p^(−1/p^i), algebraicity over ℚ_[p] is equivalent to finite support.
 

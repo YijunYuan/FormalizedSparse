@@ -79,8 +79,8 @@ instance : AddCommMonoid DigitSeries where
     exact Nat.succ_mul n (f s)
 
 namespace DigitSeries
--- `Σ` in `Definition 3.1`
-noncomputable def Sigma : DigitSeries →+ ℕ where
+-- `Ψ` in `Definition 3.1`
+noncomputable def Psi : DigitSeries →+ ℕ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, f i
   map_zero' := by
     classical
@@ -347,8 +347,8 @@ lemma norm_eq_value (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
     f.norm p = ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) := by
   rw [f.norm_eq_sum_indices p hn, ← f.value_eq_sum_indices p n]
 
-lemma Sigma_eq_sum_indices (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
-    f.Sigma = Finset.sum (indices n) f := by
+lemma Psi_eq_sum_indices (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
+    f.Psi = Finset.sum (indices n) f := by
   classical
   change ∑ i ∈ f.fin_supp.toFinset, f i = Finset.sum (indices n) f
   refine Finset.sum_subset ?_ ?_
@@ -365,9 +365,9 @@ lemma Sigma_eq_sum_indices (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
       exact his (by simpa using hne)
     simp [hzero]
 
-lemma Sigma_eq_coeffs_sum (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
-    f.Sigma = (coeffs f n).sum := by
-  rw [Sigma_eq_sum_indices f hn, ← coeffs_sum f n]
+lemma Psi_eq_coeffs_sum (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
+    f.Psi = (coeffs f n).sum := by
+  rw [Psi_eq_sum_indices f hn, ← coeffs_sum f n]
 
 lemma coeffs_update_above (f : ℕ+ → ℕ) (n m : ℕ) (hm : m ≤ n) (a : ℕ) :
     coeffs (Function.update f (Nat.succPNat n) a) m = coeffs f m := by
@@ -474,9 +474,9 @@ lemma eq_on_of_coeffs_eq : ∀ {f g : ℕ+ → ℕ} {n : ℕ}, coeffs f n = coef
           simpa using hi_eq
         simpa [this] using h'.1
 
-@[simp] lemma Sigma_ofCoeffs (L : List ℕ) : (ofCoeffs L).Sigma = L.sum := by
-  have hsigma : (ofCoeffs L).Sigma = (coeffs (ofCoeffs L) (L.length + 1)).sum := by
-    exact Sigma_eq_coeffs_sum (f := ofCoeffs L) (n := L.length + 1) (maxIndex_ofCoeffs_lt L)
+@[simp] lemma Psi_ofCoeffs (L : List ℕ) : (ofCoeffs L).Psi = L.sum := by
+  have hsigma : (ofCoeffs L).Psi = (coeffs (ofCoeffs L) (L.length + 1)).sum := by
+    exact Psi_eq_coeffs_sum (f := ofCoeffs L) (n := L.length + 1) (maxIndex_ofCoeffs_lt L)
   have htop : ofCoeffs L (Nat.succPNat L.length) = 0 := by
     exact eq_zero_of_maxIndex_lt (f := ofCoeffs L) (n := L.length) (maxIndex_ofCoeffs_lt L)
   simpa [coeffs, htop, coeffs_ofCoeffs] using hsigma
@@ -838,7 +838,7 @@ lemma lemma_3_3₃ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
 
 -- `Lemma 3.3 (4)` in the paper.
 lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
-  (d.tau p).Sigma ≤ d.Sigma ∧ (d.tau p).Sigma = d.Sigma ↔
+  (d.tau p).Psi ≤ d.Psi ∧ (d.tau p).Psi = d.Psi ↔
       d.IsP p := by
   constructor
   · rintro ⟨_, hsigma⟩
@@ -851,8 +851,8 @@ lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     have hp2 : 2 ≤ p := Nat.succ_le_of_lt hp1
     have hdn : d.maxIndex < n := by simp [n]
     have hr_lt : r < p ^ n := Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
-    have hLdSigma : d.Sigma = Ld.sum := by
-      simpa [Ld, n] using DigitSeries.Sigma_eq_coeffs_sum (f := d) (n := n) hdn
+    have hLdPsi : d.Psi = Ld.sum := by
+      simpa [Ld, n] using DigitSeries.Psi_eq_coeffs_sum (f := d) (n := n) hdn
     have hLtlen : Lt.length = n := by
       simp [Lt, (Nat.digits_length_le_iff hp1 r).2 hr_lt]
     have hLdigits : Nat.ofDigits p Lt = r := by
@@ -917,13 +917,13 @@ lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
       simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
     have htau : d.tau p = f := by
       exact (((lemma_3_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
-    have htauSigma : (d.tau p).Sigma = Lt.sum := by
+    have htauPsi : (d.tau p).Psi = Lt.sum := by
       rw [htau]
-      have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
-        change (DigitSeries.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
-        exact DigitSeries.Sigma_ofCoeffs (0 :: Lt)
-      rw [List.sum_cons, zero_add] at hSigmaCoeffs
-      exact hSigmaCoeffs
+      have hPsiCoeffs : f.Psi = (0 :: Lt).sum := by
+        change (DigitSeries.ofCoeffs (0 :: Lt)).Psi = (0 :: Lt).sum
+        exact DigitSeries.Psi_ofCoeffs (0 :: Lt)
+      rw [List.sum_cons, zero_add] at hPsiCoeffs
+      exact hPsiCoeffs
     have hdigits_r : (Nat.digits p r).sum = ((Nat.digits p a).take n).sum := by
       rw [show r = Nat.ofDigits p ((Nat.digits p a).take n) by
         simpa [r] using (Nat.self_mod_pow_eq_ofDigits_take n a hp2)]
@@ -941,9 +941,9 @@ lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
       calc
         ((Nat.digits p a).take n).sum = (Nat.digits p r).sum := by simpa using hdigits_r.symm
         _ = Lt.sum := by simp [Lt, List.sum_append]
-        _ = (d.tau p).Sigma := by simpa using htauSigma.symm
-        _ = d.Sigma := hsigma
-        _ = Ld.sum := hLdSigma
+        _ = (d.tau p).Psi := by simpa using htauPsi.symm
+        _ = d.Psi := hsigma
+        _ = Ld.sum := hLdPsi
     have hdigits_eq : (Nat.digits p a).sum = Ld.sum := by
       apply le_antisymm hdigits_le
       calc
@@ -972,9 +972,9 @@ lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
 
 -- Unconditional version of the inequality from `lemma_3_3₄`.
 -- Mirrors the construction in `lemma_3_3₄`'s forward direction but stops at the
--- ≤ chain (without requiring Sigma equality / IsP).
-lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
-    (d.tau p).Sigma ≤ d.Sigma := by
+-- ≤ chain (without requiring Psi equality / IsP).
+lemma Psi_tau_le_Psi (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
+    (d.tau p).Psi ≤ d.Psi := by
   let n := d.maxIndex + 1
   let a := d.value p n
   let r := a % p ^ n
@@ -984,8 +984,8 @@ lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   have hp2 : 2 ≤ p := Nat.succ_le_of_lt hp1
   have hdn : d.maxIndex < n := by simp [n]
   have hr_lt : r < p ^ n := Nat.mod_lt _ (pow_pos ((Fact.out : Nat.Prime p).pos) _)
-  have hLdSigma : d.Sigma = Ld.sum := by
-    simpa [Ld, n] using DigitSeries.Sigma_eq_coeffs_sum (f := d) (n := n) hdn
+  have hLdPsi : d.Psi = Ld.sum := by
+    simpa [Ld, n] using DigitSeries.Psi_eq_coeffs_sum (f := d) (n := n) hdn
   have hLtlen : Lt.length = n := by
     simp [Lt, (Nat.digits_length_le_iff hp1 r).2 hr_lt]
   have hLdigits : Nat.ofDigits p Lt = r := by
@@ -1050,13 +1050,13 @@ lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     simp [(by norm_num : (-↑qn : ℚ) = (((-(qn : ℤ)) : ℚ))), Rat.isInt]
   have htau : d.tau p = f := by
     exact (((lemma_3_2 p d).choose_spec.2 f) ⟨hfIsP, hfint⟩).symm
-  have htauSigma : (d.tau p).Sigma = Lt.sum := by
+  have htauPsi : (d.tau p).Psi = Lt.sum := by
     rw [htau]
-    have hSigmaCoeffs : f.Sigma = (0 :: Lt).sum := by
-      change (DigitSeries.ofCoeffs (0 :: Lt)).Sigma = (0 :: Lt).sum
-      exact DigitSeries.Sigma_ofCoeffs (0 :: Lt)
-    rw [List.sum_cons, zero_add] at hSigmaCoeffs
-    exact hSigmaCoeffs
+    have hPsiCoeffs : f.Psi = (0 :: Lt).sum := by
+      change (DigitSeries.ofCoeffs (0 :: Lt)).Psi = (0 :: Lt).sum
+      exact DigitSeries.Psi_ofCoeffs (0 :: Lt)
+    rw [List.sum_cons, zero_add] at hPsiCoeffs
+    exact hPsiCoeffs
   have hdigits_r : (Nat.digits p r).sum = ((Nat.digits p a).take n).sum := by
     rw [show r = Nat.ofDigits p ((Nat.digits p a).take n) by
       simpa [r] using (Nat.self_mod_pow_eq_ofDigits_take n a hp2)]
@@ -1073,12 +1073,12 @@ lemma Sigma_tau_le_Sigma (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
   have hLt_sum : Lt.sum = (Nat.digits p r).sum := by
     simp [Lt, List.sum_append]
   calc
-    (d.tau p).Sigma = Lt.sum := htauSigma
+    (d.tau p).Psi = Lt.sum := htauPsi
     _ = (Nat.digits p r).sum := hLt_sum
     _ = ((Nat.digits p a).take n).sum := hdigits_r
     _ ≤ (Nat.digits p a).sum := htake_le
     _ ≤ Ld.sum := hdigits_le
-    _ = d.Sigma := hLdSigma.symm
+    _ = d.Psi := hLdPsi.symm
 
 -- `lemma 3.3 (1)` of the paper: ‖·‖ is injective when restricted to ℙ.
 lemma lemma_3_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
@@ -1092,11 +1092,11 @@ lemma lemma_3_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
 def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
 (c n : PNat) (S : Set (DigitSeries)) (_hS : ∀ f ∈ S, f.IsP p) : Prop :=
   (
-    ∀ d, d ∈ S → d.Sigma ≤ c
+    ∀ d, d ∈ S → d.Psi ≤ c
   ) ∧ (
     ∃ d : Fin n → S,
       (
-        ∀ i : Fin n, (d i).val.Sigma = c
+        ∀ i : Fin n, (d i).val.Psi = c
       ) ∧ (
         (∑ i, (d i).val).IsP p
       ) ∧ (
@@ -1265,14 +1265,14 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
     have hfinsum_norm_eq_sum :
         ∑ᶠ d : S, (d.val.norm p) * (φ d : ℚ) = ∑ d ∈ T, (d.val.norm p) * (φ d : ℚ) :=
       finsum_eq_sum_of_support_subset _ hsupp_norm_subset
-    -- Σ(witness sum) = (n : ℕ) * c.val
-    have hwit_sigma : (∑ i : Fin n, (witness i).val).Sigma = (n : ℕ) * c.val := by
-      rw [map_sum DigitSeries.Sigma (fun i : Fin n => (witness i).val) Finset.univ]
-      simp_rw [show ∀ i : Fin n, DigitSeries.Sigma (witness i).val = c.val from
+    -- Ψ(witness sum) = (n : ℕ) * c.val
+    have hwit_sigma : (∑ i : Fin n, (witness i).val).Psi = (n : ℕ) * c.val := by
+      rw [map_sum DigitSeries.Psi (fun i : Fin n => (witness i).val) Finset.univ]
+      simp_rw [show ∀ i : Fin n, DigitSeries.Psi (witness i).val = c.val from
         fun i => hwitness_prop.1 i]
       rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
       rfl
-    -- ((LHS_φ).norm p - (Σwitness).norm p).isInt
+    -- ((LHS_φ).norm p - (Ψwitness).norm p).isInt
     have hisInt : ((∑ d ∈ T, (φ d) • d.val).norm p -
                    (∑ i : Fin n, (witness i).val).norm p).isInt := by
       rw [hLHS_φ_norm, ← hfinsum_norm_eq_sum, ← hφ₀_norm_eq]
@@ -1286,18 +1286,18 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
       have h2 : (∑ i : Fin n, (witness i).val).tau p = ∑ i : Fin n, (witness i).val :=
         (lemma_3_3₃ p _).mpr hwitness_IsP
       rw [h1, h2]
-    -- Σ(LHS_φ) ≤ (∑ d ∈ T, φ d) * c.val
-    have hSigma_bound :
-        (∑ d ∈ T, (φ d) • d.val).Sigma ≤ (∑ d ∈ T, φ d) * c.val := by
-      rw [map_sum DigitSeries.Sigma (fun d : S => (φ d) • d.val) T]
+    -- Ψ(LHS_φ) ≤ (∑ d ∈ T, φ d) * c.val
+    have hPsi_bound :
+        (∑ d ∈ T, (φ d) • d.val).Psi ≤ (∑ d ∈ T, φ d) * c.val := by
+      rw [map_sum DigitSeries.Psi (fun d : S => (φ d) • d.val) T]
       have hstep : ∀ d : S,
-          DigitSeries.Sigma ((φ d) • d.val) = (φ d) * DigitSeries.Sigma d.val := by
+          DigitSeries.Psi ((φ d) • d.val) = (φ d) * DigitSeries.Psi d.val := by
         intro d
-        rw [DigitSeries.Sigma.map_nsmul]
+        rw [DigitSeries.Psi.map_nsmul]
         rfl
       simp_rw [hstep]
       calc
-        ∑ d ∈ T, φ d * DigitSeries.Sigma d.val
+        ∑ d ∈ T, φ d * DigitSeries.Psi d.val
             ≤ ∑ d ∈ T, φ d * c.val :=
               Finset.sum_le_sum (fun d _ =>
                 Nat.mul_le_mul_left _ (hSparse.1 d.val d.property))
@@ -1306,11 +1306,11 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
     have hchain : (n : ℕ) * c.val ≤ (∑ᶠ d : S, φ d) * c.val := by
       calc
         (n : ℕ) * c.val
-            = (∑ i : Fin n, (witness i).val).Sigma := hwit_sigma.symm
-        _ = ((∑ d ∈ T, (φ d) • d.val).tau p).Sigma := by rw [htau_eq]
-        _ ≤ (∑ d ∈ T, (φ d) • d.val).Sigma :=
-              Sigma_tau_le_Sigma p _
-        _ ≤ (∑ d ∈ T, φ d) * c.val := hSigma_bound
+            = (∑ i : Fin n, (witness i).val).Psi := hwit_sigma.symm
+        _ = ((∑ d ∈ T, (φ d) • d.val).tau p).Psi := by rw [htau_eq]
+        _ ≤ (∑ d ∈ T, (φ d) • d.val).Psi :=
+              Psi_tau_le_Psi p _
+        _ ≤ (∑ d ∈ T, φ d) * c.val := hPsi_bound
         _ = (∑ᶠ d : S, φ d) * c.val := by rw [hsum_φ_eq]
     exact Nat.le_of_mul_le_mul_right hchain c.pos
   -- Step 4: Main uniqueness argument (Stage 2 of informal proof)
@@ -1811,10 +1811,10 @@ lemma DigitSeries.sum_apply {n : ℕ} (d : Fin n → DigitSeries) (i : ℕ+) :
     congr 1
     exact ih (fun j => d j.succ)
 
-/-- For `f.IsP p`, `pDigitSum p (f.norm p)` equals `f.Sigma`. -/
+/-- For `f.IsP p`, `pDigitSum p (f.norm p)` equals `f.Psi`. -/
 lemma DigitSeries.pDigitSum_norm_eq (p : ℕ) [Fact (Nat.Prime p)]
     (f : DigitSeries) (hf : f.IsP p) :
-    pDigitSum p (f.norm p) = (f.Sigma : WithTop ℕ) := by
+    pDigitSum p (f.norm p) = (f.Psi : WithTop ℕ) := by
   classical
   have hbridge : ∀ n : ℕ+, (decDigits p (f.norm p) n).val = f n := fun n =>
     DigitSeries.decDigits_norm p f hf n
@@ -1848,16 +1848,16 @@ lemma DigitSeries.pDigitSum_norm_eq (p : ℕ) [Fact (Nat.Prime p)]
     rw [hsupp_eq]
     rfl
   congr 1
-  change ∑ n ∈ hsupp_fin.toFinset, (decDigits p (f.norm p) n).val = Sparse.DigitSeries.Sigma f
+  change ∑ n ∈ hsupp_fin.toFinset, (decDigits p (f.norm p) n).val = Sparse.DigitSeries.Psi f
   rw [hfsupp_eq]
   change ∑ i ∈ f.fin_supp.toFinset, (decDigits p (f.norm p) i).val =
         ∑ i ∈ f.fin_supp.toFinset, f i
   refine Finset.sum_congr rfl (fun i _ => hbridge i)
 
-/-- For `q ∈ [0,1)` with finite digit sum, `pDigitSum p q = (ofRat p q hq).Sigma`. -/
-lemma DigitSeries.Sigma_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ)
+/-- For `q ∈ [0,1)` with finite digit sum, `pDigitSum p q = (ofRat p q hq).Psi`. -/
+lemma DigitSeries.Psi_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ)
     (hq : pDigitSum p q ≠ ⊤) :
-    pDigitSum p q = ((DigitSeries.ofRat p q hq).Sigma : WithTop ℕ) := by
+    pDigitSum p q = ((DigitSeries.ofRat p q hq).Psi : WithTop ℕ) := by
   classical
   have hfin : (Function.support (decDigits p q)).Finite :=
     (pDigitSum_ne_top_iff p q).mp hq
@@ -1865,11 +1865,11 @@ lemma DigitSeries.Sigma_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : �
       ((∑ n ∈ hfin.toFinset, (decDigits p q n).val : ℕ) : WithTop ℕ) := by
     simp [pDigitSum, Set.not_infinite.mpr hfin]
   rw [hpDS]
-  -- Sigma ofRat = ∑ i ∈ (ofRat).fin_supp.toFinset, (decDigits p q i).val
+  -- Psi ofRat = ∑ i ∈ (ofRat).fin_supp.toFinset, (decDigits p q i).val
   -- The Finsets are equal as sets.
-  have hSig : (DigitSeries.ofRat p q hq).Sigma =
+  have hSig : (DigitSeries.ofRat p q hq).Psi =
       ∑ n ∈ hfin.toFinset, (decDigits p q n).val := by
-    -- Use Sigma_eq_sum_indices? Actually use the definition directly.
+    -- Use Psi_eq_sum_indices? Actually use the definition directly.
     -- We need: ∑ over ofRat.fin_supp.toFinset = ∑ over hfin.toFinset.
     have hsupport_eq : (DigitSeries.ofRat p q hq).fin_supp.toFinset = hfin.toFinset := by
       ext i
@@ -1957,18 +1957,18 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
           intro q hq
           have hpsm := hq_psm_zero q hq
           have hq_fin_q : pDigitSum p q ≠ ⊤ := by rw [hpsm]; exact WithTop.zero_ne_top
-          -- Sigma of ofRat = pDigitSum = 0
-          have hSig_top : ((DigitSeries.ofRat p q hq_fin_q).Sigma : WithTop ℕ) = 0 := by
-            rw [← DigitSeries.Sigma_ofRat_eq_pDigitSum p q hq_fin_q]
+          -- Psi of ofRat = pDigitSum = 0
+          have hSig_top : ((DigitSeries.ofRat p q hq_fin_q).Psi : WithTop ℕ) = 0 := by
+            rw [← DigitSeries.Psi_ofRat_eq_pDigitSum p q hq_fin_q]
             exact hpsm
-          have hSig_nat : (DigitSeries.ofRat p q hq_fin_q).Sigma = 0 := by
+          have hSig_nat : (DigitSeries.ofRat p q hq_fin_q).Psi = 0 := by
             exact_mod_cast hSig_top
           -- ofRat = 0 (zero DigitSeries)
           have hofRat_zero : DigitSeries.ofRat p q hq_fin_q = 0 := by
             ext n
             change (DigitSeries.ofRat p q hq_fin_q).toFun n = (0 : DigitSeries).toFun n
             change (decDigits p q n).val = 0
-            -- Use Sigma = 0: support is empty
+            -- Use Psi = 0: support is empty
             by_contra hne
             have hn_in : n ∈ (DigitSeries.ofRat p q hq_fin_q).fin_supp.toFinset := by
               simp only [Set.Finite.mem_toFinset, Function.mem_support, ne_eq]
@@ -1976,10 +1976,10 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
               -- hcontra : (DigitSeries.ofRat p q hq_fin_q).toFun n = 0
               -- This is (decDigits p q n).val = 0; contradicts hne.
               exact hne hcontra
-            -- Sigma ≥ f n > 0
+            -- Psi ≥ f n > 0
             have hfn_pos : 0 < (DigitSeries.ofRat p q hq_fin_q : ℕ+ → ℕ) n :=
               Nat.pos_of_ne_zero hne
-            have hSig_pos : 0 < (DigitSeries.ofRat p q hq_fin_q).Sigma := by
+            have hSig_pos : 0 < (DigitSeries.ofRat p q hq_fin_q).Psi := by
               change 0 < ∑ i ∈ (DigitSeries.ofRat p q hq_fin_q).fin_supp.toFinset,
                   (DigitSeries.ofRat p q hq_fin_q : ℕ+ → ℕ) i
               exact Finset.sum_pos' (fun _ _ => Nat.zero_le _) ⟨n, hn_in, hfn_pos⟩
@@ -2009,14 +2009,14 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
         intro n hnD
         obtain ⟨d_orig, hnoCarry, hRig⟩ := hD n hnD
         refine ⟨?_, ?_⟩
-        · -- ∀ g ∈ S, g.Sigma ≤ c
+        · -- ∀ g ∈ S, g.Psi ≤ c
           rintro g ⟨⟨q, hq⟩, rfl⟩
-          /- g = ofRat p q _, g.Sigma = pDigitSum p q ≤ dom p W = k. -/
-          have hSig := DigitSeries.Sigma_ofRat_eq_pDigitSum p q (hq_finite q hq)
+          /- g = ofRat p q _, g.Psi = pDigitSum p q ≤ dom p W = k. -/
+          have hSig := DigitSeries.Psi_ofRat_eq_pDigitSum p q (hq_finite q hq)
           have hle : pDigitSum p q ≤ dom p W := by
             unfold dom; exact le_sSup ⟨q, hq, rfl⟩
           rw [hSig, hkeq] at hle
-          change (DigitSeries.ofRat p q (hq_finite q hq)).Sigma ≤ (⟨k, _⟩ : ℕ+).val
+          change (DigitSeries.ofRat p q (hq_finite q hq)).Psi ≤ (⟨k, _⟩ : ℕ+).val
           exact_mod_cast hle
         · -- ∃ d' : Fin n → S with the IsCNSparse conditions
           /- Translate d_orig : Fin n → Dom p W to d' : Fin n → S via ofRat. -/
@@ -2024,18 +2024,18 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
             ⟨mkSeries ⟨(d_orig i).val, (d_orig i).property.1⟩,
               ⟨⟨(d_orig i).val, (d_orig i).property.1⟩, rfl⟩⟩
           refine ⟨d', ?_, ?_, ?_⟩
-          · -- (d' i).val.Sigma = c.val = k
+          · -- (d' i).val.Psi = c.val = k
             intro i
-            have hSig := DigitSeries.Sigma_ofRat_eq_pDigitSum p (d_orig i).val
+            have hSig := DigitSeries.Psi_ofRat_eq_pDigitSum p (d_orig i).val
               (hq_finite (d_orig i).val (d_orig i).property.1)
             have hPS_chain : pDigitSum p (d_orig i).val = ((k : ℕ) : WithTop ℕ) :=
               (d_orig i).property.2.trans hkeq
             have hFinal :
                 ((DigitSeries.ofRat p (d_orig i).val
-                    (hq_finite (d_orig i).val (d_orig i).property.1)).Sigma : WithTop ℕ) =
+                    (hq_finite (d_orig i).val (d_orig i).property.1)).Psi : WithTop ℕ) =
                   ((k : ℕ) : WithTop ℕ) := hSig.symm.trans hPS_chain
             change (DigitSeries.ofRat p (d_orig i).val
-                    (hq_finite (d_orig i).val (d_orig i).property.1)).Sigma = (⟨k, _⟩ : ℕ+).val
+                    (hq_finite (d_orig i).val (d_orig i).property.1)).Psi = (⟨k, _⟩ : ℕ+).val
             exact_mod_cast hFinal
           · -- (∑ i, (d' i).val).IsP p
             intro pos
@@ -2059,34 +2059,34 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
                1. Use lemma_3_3₂ : .isInt iff τ-equivalent.
                2. (∑ d'.val).IsP p (just proved), so by lemma_3_3₃, τ(∑ d'.val) = ∑ d'.val.
                3. Hence ∑ d'.val = τ(∑ e.val).
-               4. Σ(∑ d'.val) = Σ(τ(∑ e.val)) ≤ Σ(∑ e.val) (Sigma_tau_le_Sigma).
-               5. Σ(∑ d'.val) = n*k (each Sigma = k); Σ(∑ e.val) ≤ n*k (each ≤ k).
-               6. Equality forces each (e i).val.Sigma = k, hence each (e i).val.norm p ∈ Dom p W.
+               4. Ψ(∑ d'.val) = Ψ(τ(∑ e.val)) ≤ Ψ(∑ e.val) (Psi_tau_le_Psi).
+               5. Ψ(∑ d'.val) = n*k (each Psi = k); Ψ(∑ e.val) ≤ n*k (each ≤ k).
+               6. Equality forces each (e i).val.Psi = k, hence each (e i).val.norm p ∈ Dom p W.
                7. Build e_orig : Fin n → Dom p W; apply hRig.
                8. Translate the resulting perm back. -/
             intro e h_isInt
-            -- Step 1: Each (e i).val.Sigma ≤ k
-            have hesigma_le : ∀ i : Fin (n : ℕ), (e i).val.Sigma ≤ k := by
+            -- Step 1: Each (e i).val.Psi ≤ k
+            have hesigma_le : ∀ i : Fin (n : ℕ), (e i).val.Psi ≤ k := by
               intro i
               obtain ⟨⟨q, hq⟩, hrng⟩ := (e i).property
               have hev : (e i).val = DigitSeries.ofRat p q (hq_finite q hq) := hrng.symm
-              have hSig : ((e i).val.Sigma : WithTop ℕ) = pDigitSum p q := by
+              have hSig : ((e i).val.Psi : WithTop ℕ) = pDigitSum p q := by
                 rw [hev]
-                exact (DigitSeries.Sigma_ofRat_eq_pDigitSum p q (hq_finite q hq)).symm
+                exact (DigitSeries.Psi_ofRat_eq_pDigitSum p q (hq_finite q hq)).symm
               have hle : pDigitSum p q ≤ dom p W := by
                 unfold dom; exact le_sSup ⟨q, hq, rfl⟩
               rw [← hSig, hkeq] at hle
               exact_mod_cast hle
-            -- Step 2: Each (d' i).val.Sigma = k
-            have hd'sigma_eq : ∀ i : Fin (n : ℕ), (d' i).val.Sigma = k := by
+            -- Step 2: Each (d' i).val.Psi = k
+            have hd'sigma_eq : ∀ i : Fin (n : ℕ), (d' i).val.Psi = k := by
               intro i
-              have hSig := DigitSeries.Sigma_ofRat_eq_pDigitSum p (d_orig i).val
+              have hSig := DigitSeries.Psi_ofRat_eq_pDigitSum p (d_orig i).val
                 (hq_finite (d_orig i).val (d_orig i).property.1)
               have hPS_chain : pDigitSum p (d_orig i).val = ((k : ℕ) : WithTop ℕ) :=
                 (d_orig i).property.2.trans hkeq
               have hFinal :
                   ((DigitSeries.ofRat p (d_orig i).val
-                      (hq_finite (d_orig i).val (d_orig i).property.1)).Sigma : WithTop ℕ) =
+                      (hq_finite (d_orig i).val (d_orig i).property.1)).Psi : WithTop ℕ) =
                     ((k : ℕ) : WithTop ℕ) := hSig.symm.trans hPS_chain
               exact_mod_cast hFinal
             -- Step 3: (∑ d').IsP p
@@ -2108,43 +2108,43 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
             -- Step 5: τ(∑ d'.val) = ∑ d'.val by lemma_3_3₃
             have hτ_dself : (∑ i, (d' i).val).tau p = ∑ i, (d' i).val :=
               (Sparse.lemma_3_3₃ p _).mpr hd'_IsP
-            -- Step 6: Σ(∑ d'.val) = Σ((∑ e.val).tau)
-            have hsigma_eq_τ : (∑ i, (d' i).val).Sigma = ((∑ i, (e i).val).tau p).Sigma := by
+            -- Step 6: Ψ(∑ d'.val) = Ψ((∑ e.val).tau)
+            have hsigma_eq_τ : (∑ i, (d' i).val).Psi = ((∑ i, (e i).val).tau p).Psi := by
               rw [← hτ_dself, hτ_eq]
-            -- Step 7: Σ((∑ e.val).tau) ≤ Σ(∑ e.val)
-            have hsigma_le_τ : ((∑ i, (e i).val).tau p).Sigma ≤ (∑ i, (e i).val).Sigma :=
-              Sparse.Sigma_tau_le_Sigma p _
-            -- Step 8: Σ(∑ d'.val) = n * k
-            have hsigma_d'_eq : (∑ i : Fin (n : ℕ), (d' i).val).Sigma = (n : ℕ) * k := by
+            -- Step 7: Ψ((∑ e.val).tau) ≤ Ψ(∑ e.val)
+            have hsigma_le_τ : ((∑ i, (e i).val).tau p).Psi ≤ (∑ i, (e i).val).Psi :=
+              Sparse.Psi_tau_le_Psi p _
+            -- Step 8: Ψ(∑ d'.val) = n * k
+            have hsigma_d'_eq : (∑ i : Fin (n : ℕ), (d' i).val).Psi = (n : ℕ) * k := by
               rw [map_sum]
               simp_rw [hd'sigma_eq]
               rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
-            -- Step 9: Σ(∑ e.val) ≤ n * k
-            have hsigma_e_le : (∑ i : Fin (n : ℕ), (e i).val).Sigma ≤ (n : ℕ) * k := by
+            -- Step 9: Ψ(∑ e.val) ≤ n * k
+            have hsigma_e_le : (∑ i : Fin (n : ℕ), (e i).val).Psi ≤ (n : ℕ) * k := by
               rw [map_sum]
-              calc ∑ i, (e i).val.Sigma
+              calc ∑ i, (e i).val.Psi
                   ≤ ∑ i : Fin (n : ℕ), k :=
                     Finset.sum_le_sum (fun i _ => hesigma_le i)
                 _ = (n : ℕ) * k := by
                     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
-            -- Step 10: Σ(∑ e.val) = n * k (combining)
-            have hsigma_e_eq : (∑ i : Fin (n : ℕ), (e i).val).Sigma = (n : ℕ) * k := by
-              have h1 : (n : ℕ) * k ≤ (∑ i, (e i).val).Sigma := by
+            -- Step 10: Ψ(∑ e.val) = n * k (combining)
+            have hsigma_e_eq : (∑ i : Fin (n : ℕ), (e i).val).Psi = (n : ℕ) * k := by
+              have h1 : (n : ℕ) * k ≤ (∑ i, (e i).val).Psi := by
                 rw [← hsigma_d'_eq, hsigma_eq_τ]; exact hsigma_le_τ
               exact le_antisymm hsigma_e_le h1
-            -- Step 11: Each (e i).val.Sigma = k
-            have hesigma_eq : ∀ i : Fin (n : ℕ), (e i).val.Sigma = k := by
+            -- Step 11: Each (e i).val.Psi = k
+            have hesigma_eq : ∀ i : Fin (n : ℕ), (e i).val.Psi = k := by
               intro i
               by_contra hne
-              have hi_lt : (e i).val.Sigma < k := lt_of_le_of_ne (hesigma_le i) hne
-              have h_strict : ∑ j : Fin (n : ℕ), (e j).val.Sigma < (n : ℕ) * k := by
-                calc ∑ j, (e j).val.Sigma
+              have hi_lt : (e i).val.Psi < k := lt_of_le_of_ne (hesigma_le i) hne
+              have h_strict : ∑ j : Fin (n : ℕ), (e j).val.Psi < (n : ℕ) * k := by
+                calc ∑ j, (e j).val.Psi
                     < ∑ j : Fin (n : ℕ), k := by
                       refine Finset.sum_lt_sum (fun j _ => hesigma_le j)
                         ⟨i, Finset.mem_univ _, hi_lt⟩
                   _ = (n : ℕ) * k := by
                       rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
-              have hcontra : (∑ j : Fin (n : ℕ), (e j).val).Sigma < (n : ℕ) * k := by
+              have hcontra : (∑ j : Fin (n : ℕ), (e j).val).Psi < (n : ℕ) * k := by
                 rw [map_sum]; exact h_strict
               omega
             -- Step 12: Each (e i).val.norm p ∈ Dom p W
@@ -2201,15 +2201,15 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
       exact DigitSeries.norm_mem_Ico p f (hS f hfS)
     · -- dom p W < ⊤
       /- Every q ∈ W has q = f.norm p for some f ∈ S with f.IsP p.
-         Then pDigitSum p q = pDigitSum p (f.norm p) = f.Sigma ≤ c.
+         Then pDigitSum p q = pDigitSum p (f.norm p) = f.Psi ≤ c.
          So dom p W ≤ c < ⊤. -/
       rw [← hnorm_eq]
       have hbd : ∀ q ∈ (Sparse.DigitSeries.norm p '' S), pDigitSum p q ≤ (c : ℕ) := by
         rintro _ ⟨f, hfS, rfl⟩
         rw [DigitSeries.pDigitSum_norm_eq p f (hS f hfS)]
-        -- Need: (f.Sigma : WithTop ℕ) ≤ c. We have f.Sigma ≤ c.val from IsCNSparse.
+        -- Need: (f.Psi : WithTop ℕ) ≤ c. We have f.Psi ≤ c.val from IsCNSparse.
         /- Pick any n ∈ D (which is infinite, hence nonempty). The first clause of
-           IsCNSparse p c n S hS says ∀ d ∈ S, d.Sigma ≤ c. -/
+           IsCNSparse p c n S hS says ∀ d ∈ S, d.Psi ≤ c. -/
         obtain ⟨n, hnD⟩ := hD_inf.nonempty
         have := (hD_CN n hnD).1 f hfS
         exact_mod_cast this
@@ -2222,14 +2222,14 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
     · -- Build witness D' for IsSparse: same D works, transferred via ofRat-norm.
       /- Strategy:
          For each n ∈ D, hD_CN n hnD gives a witness d : Fin n → S with
-         (d i).val.Sigma = c. Transfer to d' : Fin n → Dom p W by taking norms.
+         (d i).val.Psi = c. Transfer to d' : Fin n → Dom p W by taking norms.
          Need to verify ((d i).val.norm p) ∈ Dom p W, i.e. it's in W and has
          pDigitSum = dom p W. The first is from `norm '' S = W`. For the second,
-         we need to establish dom p W = c (from the witnesses achieving Sigma = c). -/
+         we need to establish dom p W = c (from the witnesses achieving Psi = c). -/
       refine ⟨D, hD_inf, ?_⟩
       intro n hnD
       have hCN := hD_CN n hnD
-      obtain ⟨d, hdSigma, hdIsP, hdRig⟩ := hCN.2
+      obtain ⟨d, hdPsi, hdIsP, hdRig⟩ := hCN.2
       -- Establish dom p W = c (using witnesses).
       have hdom_eq : dom p W = ((c : ℕ) : WithTop ℕ) := by
         rw [← hnorm_eq]
@@ -2240,18 +2240,18 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
           rw [DigitSeries.pDigitSum_norm_eq p f (hS f hfS)]
           have := hCN.1 f hfS
           exact_mod_cast this
-        · -- Use any d 0 as a witness (Sigma = c) — needs n ≥ 1, which holds since n : ℕ+.
+        · -- Use any d 0 as a witness (Psi = c) — needs n ≥ 1, which holds since n : ℕ+.
           unfold dom
           refine le_sSup ?_
           refine ⟨(d 0).val.norm p, ⟨(d 0).val, (d 0).property, rfl⟩, ?_⟩
           rw [DigitSeries.pDigitSum_norm_eq p (d 0).val (hS _ (d 0).property)]
-          rw [hdSigma 0]
+          rw [hdPsi 0]
       -- Now build d' : Fin n → Dom p W.
       have hd_in_Dom : ∀ i : Fin n, (d i).val.norm p ∈ Dom p W := by
         intro i
         refine ⟨?_, ?_⟩
         · rw [← hnorm_eq]; exact ⟨_, (d i).property, rfl⟩
-        · rw [DigitSeries.pDigitSum_norm_eq p (d i).val (hS _ (d i).property), hdSigma i, hdom_eq]
+        · rw [DigitSeries.pDigitSum_norm_eq p (d i).val (hS _ (d i).property), hdPsi i, hdom_eq]
       let d' : Fin n → Dom p W := fun i => ⟨(d i).val.norm p, hd_in_Dom i⟩
       refine ⟨d', ?_, ?_⟩
       · -- No-carry condition: ∀ i, ∑ j, (decDigits p (d' j).val i).val < p
@@ -2368,12 +2368,12 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
   /- The indicator series f_i for each i. -/
   let f : ℕ → DigitSeries := fun i => indicatorSeries (A i) (hA3 i)
   have hf_IsP : ∀ i, (f i).IsP p := fun i => indicatorSeries_IsP p _ _
-  /- Sigma of f i = |A_i| (counting nonzero digits in the indicator). -/
-  have hf_Sigma : ∀ i, (f i).Sigma = (hA3 i).toFinset.card := by
+  /- Psi of f i = |A_i| (counting nonzero digits in the indicator). -/
+  have hf_Psi : ∀ i, (f i).Psi = (hA3 i).toFinset.card := by
     intro i
     /- Support of f i is in bijection with A i via PNat.coe. Each digit in
-       support is exactly 1, so Sigma = card(support) = card(A i). -/
-    -- Compute Sigma = sum over support
+       support is exactly 1, so Psi = card(support) = card(A i). -/
+    -- Compute Psi = sum over support
     change ∑ n ∈ (f i).fin_supp.toFinset, (f i : ℕ+ → ℕ) n = (hA3 i).toFinset.card
     -- The support equals the preimage of A i under PNat.coe
     have hsupp : (f i).fin_supp.toFinset =
@@ -2485,7 +2485,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
     intro i
     rw [← hf_norm i]
     rw [DigitSeries.pDigitSum_norm_eq p (f i) (hf_IsP i)]
-    rw [hf_Sigma i]
+    rw [hf_Psi i]
   have h_dom_le : dom p {∑ r ∈ (hA3 i).toFinset, (p : ℚ)^(-(r:ℤ)) | i : ℕ} ≤
       ((K : ℕ) : WithTop ℕ) := by
     unfold dom
@@ -2648,12 +2648,12 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
     let e_DS : Fin (n : ℕ) → DigitSeries := fun j => f (m j)
     have hd_DS_IsP : ∀ j, (d_DS j).IsP p := fun j => hf_IsP (ι_index j)
     have he_DS_IsP : ∀ j, (e_DS j).IsP p := fun j => hf_IsP (m j)
-    have hd_DS_Sigma : ∀ j, (d_DS j).Sigma = K := by
-      intro j; rw [show (d_DS j).Sigma = (f (ι_index j)).Sigma from rfl,
-                   hf_Sigma (ι_index j), hι_index_card j]
-    have he_DS_Sigma : ∀ j, (e_DS j).Sigma = K := by
-      intro j; rw [show (e_DS j).Sigma = (f (m j)).Sigma from rfl,
-                   hf_Sigma (m j), hm_card j]
+    have hd_DS_Psi : ∀ j, (d_DS j).Psi = K := by
+      intro j; rw [show (d_DS j).Psi = (f (ι_index j)).Psi from rfl,
+                   hf_Psi (ι_index j), hι_index_card j]
+    have he_DS_Psi : ∀ j, (e_DS j).Psi = K := by
+      intro j; rw [show (e_DS j).Psi = (f (m j)).Psi from rfl,
+                   hf_Psi (m j), hm_card j]
     have hd_DS_norm : ∀ j, (d_DS j).norm p = (d j).val := by
       intro j; exact hf_norm (ι_index j)
     have he_DS_norm : ∀ j, (e_DS j).norm p = (e j).val := by
@@ -2708,33 +2708,33 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
         ((∑ j : Fin (n : ℕ), d_DS j).norm p - (∑ j : Fin (n : ℕ), e_DS j).norm p).isInt := by
       rw [hsum_d_DS_norm, hsum_e_DS_norm]
       exact he_isInt
-    /- tau-equivalence, then derive ∑ d_DS = ∑ e_DS via lemma_3_3₃ and Sigma bounds. -/
+    /- tau-equivalence, then derive ∑ d_DS = ∑ e_DS via lemma_3_3₃ and Psi bounds. -/
     have hτ_eq : (∑ j : Fin (n : ℕ), d_DS j).tau p = (∑ j : Fin (n : ℕ), e_DS j).tau p :=
       (Sparse.lemma_3_3₂ p _ _).mpr h_isInt
     have hτ_d_DS : (∑ j : Fin (n : ℕ), d_DS j).tau p = ∑ j : Fin (n : ℕ), d_DS j :=
       (Sparse.lemma_3_3₃ p _).mpr h_sum_d_DS_IsP
-    /- Sigma analysis: ∑ d_DS .Sigma = n * K; ∑ e_DS .Sigma ≤ n * K. -/
-    have hsigma_d_DS : (∑ j : Fin (n : ℕ), d_DS j).Sigma = (n : ℕ) * K := by
+    /- Psi analysis: ∑ d_DS .Psi = n * K; ∑ e_DS .Psi ≤ n * K. -/
+    have hsigma_d_DS : (∑ j : Fin (n : ℕ), d_DS j).Psi = (n : ℕ) * K := by
       rw [map_sum]
-      simp_rw [hd_DS_Sigma]
+      simp_rw [hd_DS_Psi]
       rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
-    have hsigma_e_DS_le : (∑ j : Fin (n : ℕ), e_DS j).Sigma ≤ (n : ℕ) * K := by
+    have hsigma_e_DS_le : (∑ j : Fin (n : ℕ), e_DS j).Psi ≤ (n : ℕ) * K := by
       rw [map_sum]
-      calc ∑ j : Fin (n : ℕ), (e_DS j).Sigma
+      calc ∑ j : Fin (n : ℕ), (e_DS j).Psi
           ≤ ∑ _j : Fin (n : ℕ), K :=
-            Finset.sum_le_sum (fun j _ => le_of_eq (he_DS_Sigma j))
+            Finset.sum_le_sum (fun j _ => le_of_eq (he_DS_Psi j))
         _ = (n : ℕ) * K := by
             rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul]
-    have hsigma_τ_le : ((∑ j : Fin (n : ℕ), e_DS j).tau p).Sigma
-        ≤ (∑ j : Fin (n : ℕ), e_DS j).Sigma :=
-      Sparse.Sigma_tau_le_Sigma p _
-    have hsigma_τ_eq : ((∑ j : Fin (n : ℕ), e_DS j).tau p).Sigma = (n : ℕ) * K := by
+    have hsigma_τ_le : ((∑ j : Fin (n : ℕ), e_DS j).tau p).Psi
+        ≤ (∑ j : Fin (n : ℕ), e_DS j).Psi :=
+      Sparse.Psi_tau_le_Psi p _
+    have hsigma_τ_eq : ((∑ j : Fin (n : ℕ), e_DS j).tau p).Psi = (n : ℕ) * K := by
       rw [← hτ_eq, hτ_d_DS]; exact hsigma_d_DS
-    have hsigma_e_DS_eq : (∑ j : Fin (n : ℕ), e_DS j).Sigma = (n : ℕ) * K := by
-      have h1 : (n : ℕ) * K ≤ (∑ j : Fin (n : ℕ), e_DS j).Sigma := by
+    have hsigma_e_DS_eq : (∑ j : Fin (n : ℕ), e_DS j).Psi = (n : ℕ) * K := by
+      have h1 : (n : ℕ) * K ≤ (∑ j : Fin (n : ℕ), e_DS j).Psi := by
         rw [← hsigma_τ_eq]; exact hsigma_τ_le
       exact le_antisymm hsigma_e_DS_le h1
-    /- From Sigma(∑ e_DS) = Sigma((∑ e_DS).tau), conclude (∑ e_DS).IsP p. -/
+    /- From Psi(∑ e_DS) = Psi((∑ e_DS).tau), conclude (∑ e_DS).IsP p. -/
     have h_sum_e_DS_IsP : (∑ j : Fin (n : ℕ), e_DS j).IsP p := by
       have h := (Sparse.lemma_3_3₄ p (∑ j : Fin (n : ℕ), e_DS j)).mp
       apply h
