@@ -29,7 +29,7 @@ LiftedPAdicHahnSeries p where
     · simp
 end LiftedPAdicHahnSeries
 
-@[reducible] def finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : ℚ) (N : ℕ) :
+abbrev finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : ℚ) (N : ℕ) :
   Finite {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} := by
   by_cases hs : Set.Nonempty x.support
   · let m : ℚ := x.isWF_support.min hs
@@ -3748,6 +3748,17 @@ noncomputable def coeff {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
 -- of x.
 noncomputable def support {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Set ℚ :=
   (exists_canonical_expansion x).choose.val.support
+
+instance wellFoundedLT_support {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) :
+  WellFoundedLT f.support := by
+  have hs : f.support.IsWF := by
+    simpa [pAdicHahnSeries.support] using (FormalizedSparse.support_IsPWO (p := p) f).isWF
+  refine ⟨?_⟩
+  have hsub : WellFounded (Function.onFun (fun x y : ℚ => x < y) (Subtype.val : f.support → ℚ)) :=
+    (Set.wellFoundedOn_range (f := (Subtype.val : f.support → ℚ)) (r := (· < ·))).mp
+      (by simpa [Set.IsWF] using hs)
+  change WellFounded (fun x y : f.support => x.1 < y.1)
+  exact hsub
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Field (𝕃_[p]) := by
   apply Ideal.Quotient.field
