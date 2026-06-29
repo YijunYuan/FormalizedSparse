@@ -361,9 +361,8 @@ lemma valued_v_pInvT :
     Valued.v (pInvTQ p T) =
       ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
   unfold pInvTQ
-  rw [show (Valued.v : ℚᵘⁿ_[p,T] → _) =
-      (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation _ from rfl]
-  rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_of_algebraMap]
+  rw [WithVal.algebraMap_right_apply, WithVal.valued_toVal,
+    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_of_algebraMap]
   have hirr : Irreducible (pInvT p T) := pInvT_irreducible p T
   have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).asIdeal =
       Ideal.span {pInvT p T} := hirr.maximalIdeal_eq
@@ -382,6 +381,65 @@ lemma valued_v_pInvT_zpow (n : ℤ) :
   rw [← ofAdd_zsmul n (-1 : ℤ)]
   congr 1
   ring
+
+-- v4.31 `WithVal`-migration helpers (analogues of those in `PAdicHahnSeries.lean`): the valued
+-- nhds basis is now phrased via `MonoidWithZeroHom.ValueGroup₀`, so we package the bridges once.
+
+-- A basic neighborhood of `0`: `{y | Valued.v y < c}` for `c ≠ 0`.
+lemma Tmem_nhds_zero_v_lt {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
+    {y : ℚᵘⁿ_[p,T] | Valued.v y < c} ∈ nhds (0 : ℚᵘⁿ_[p,T]) := by
+  rw [Valued.mem_nhds]
+  have hva : Valued.v ((pInvTQ p T) ^ (-(WithZero.log c))) = c := by
+    rw [valued_v_pInvT_zpow, neg_neg, ← WithZero.exp_eq_coe_ofAdd, WithZero.exp_log hc]
+  have hane : Valued.v.restrict ((pInvTQ p T) ^ (-(WithZero.log c))) ≠ 0 := by
+    rw [ne_eq, Valuation.restrict_eq_zero_iff, hva]; exact hc
+  refine ⟨Units.mk0 (Valued.v.restrict ((pInvTQ p T) ^ (-(WithZero.log c)))) hane, ?_⟩
+  intro y hy
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero, Units.val_mk0,
+    Valuation.embedding_restrict, hva] at hy
+  exact hy
+
+-- From `U ∈ nhds 0` recover a valuation bound `c ≠ 0` with `{y | Valued.v y < c} ⊆ U`.
+lemma Texists_v_lt_subset {U : Set (ℚᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚᵘⁿ_[p,T])) :
+    ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᵘⁿ_[p,T] | Valued.v y < c} ⊆ U := by
+  rw [Valued.mem_nhds] at hU
+  obtain ⟨γ, hγ⟩ := hU
+  refine ⟨MonoidWithZeroHom.ValueGroup₀.embedding γ.1,
+    MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ, ?_⟩
+  intro y hy
+  apply hγ
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero]
+  exact hy
+
+-- From a witness `w` with `Valued.v w = c ≠ 0`, the ball `{y | Valued.v (y - x) < c}` is a
+-- neighborhood of `x`.
+lemma Tmem_nhds_v_sub_lt {x w : ℚᵘⁿ_[p,T]} {c : WithZero (Multiplicative ℤ)}
+    (hc : c ≠ 0) (hw : Valued.v w = c) :
+    {y : ℚᵘⁿ_[p,T] | Valued.v (y - x) < c} ∈ nhds x := by
+  rw [Valued.mem_nhds]
+  have hane : Valued.v.restrict w ≠ 0 := by
+    rw [ne_eq, Valuation.restrict_eq_zero_iff, hw]; exact hc
+  refine ⟨Units.mk0 (Valued.v.restrict w) hane, ?_⟩
+  intro y hy
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  rw [Valuation.restrict_lt_iff_lt_embedding, Units.val_mk0,
+    Valuation.embedding_restrict, hw] at hy
+  exact hy
+
+-- From `U ∈ nhds x` recover `c ≠ 0` with `{y | Valued.v (y - x) < c} ⊆ U`.
+lemma Texists_v_sub_lt_subset {U : Set (ℚᵘⁿ_[p,T])} {x : ℚᵘⁿ_[p,T]} (hU : U ∈ nhds x) :
+    ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᵘⁿ_[p,T] | Valued.v (y - x) < c} ⊆ U := by
+  rw [Valued.mem_nhds] at hU
+  obtain ⟨γ, hγ⟩ := hU
+  refine ⟨MonoidWithZeroHom.ValueGroup₀.embedding γ.1,
+    MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ, ?_⟩
+  intro y hy
+  apply hγ
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  rw [Valuation.restrict_lt_iff_lt_embedding]
+  exact hy
 
 /-! ### Inclusions `ℤᵘⁿ_[p] ↪ ℤᵘⁿ_[p,T]` and `ℚᵘⁿ_[p] ↪ ℚᵘⁿ_[p,T]` -/
 
@@ -551,17 +609,12 @@ noncomputable def Lifted_to_TLifted :
   map_zero' := by
     change HahnSeries.map 0 (OQpUn_embd p T) = 0
     exact HahnSeries.map_zero (OQpUn_embd p T : ZeroHom (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]))
-  map_one' := by
-    change HahnSeries.map 1 (OQpUn_embd p T) = 1
-    exact HahnSeries.map_one (OQpUn_embd p T : (ℤᵘⁿ_[p]) →*₀ (ℤᵘⁿ_[p,T]))
+  map_one' := HahnSeries.map_one (OQpUn_embd p T).toMonoidWithZeroHom
   map_add' x y := by
     change HahnSeries.map (x + y) (OQpUn_embd p T) =
       HahnSeries.map x (OQpUn_embd p T) + HahnSeries.map y (OQpUn_embd p T)
     exact HahnSeries.map_add (OQpUn_embd p T : ℤᵘⁿ_[p] →+ ℤᵘⁿ_[p,T])
-  map_mul' x y := by
-    change HahnSeries.map (x * y) (OQpUn_embd p T) =
-      HahnSeries.map x (OQpUn_embd p T) * HahnSeries.map y (OQpUn_embd p T)
-    exact HahnSeries.map_mul (OQpUn_embd p T : ℤᵘⁿ_[p] →ₙ+* ℤᵘⁿ_[p,T])
+  map_mul' x y := HahnSeries.map_mul (OQpUn_embd p T).toNonUnitalRingHom
 
 /-! ### Definition 2.4 — `IsTNullSeries` -/
 
@@ -572,7 +625,7 @@ coefficient `x.coeff (g + n/T)` is non-zero is finite.
 
 The well-orderedness of the support transfers via the order-preserving rescaling
 `q ↦ g + q/T` (recall `T ≠ 0` from `[NeZero T]`). -/
-def Tfinprop (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
+@[reducible] def Tfinprop (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
     Finite {n : ℤ | g + (n : ℚ) / T ≤ M ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
@@ -631,7 +684,7 @@ def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
 
 /-- T-scaled analogue of `finpropInt` (line 61). Indexes integers `n ≤ K` whose
 shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
-private noncomputable def TfinpropInt
+@[reducible] private noncomputable def TfinpropInt
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) :
     Finite {n : ℤ | n ≤ K ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
   have hT_pos : (0 : ℚ) < T := by
@@ -836,24 +889,17 @@ private lemma Tnull_series_tail_bound
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
     exact_mod_cast Nat.pos_of_ne_zero hT
-  set γ : (WithZero (Multiplicative ℤ))ˣ :=
-    WithZero.unitsWithZeroEquiv.symm
-      (Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) with hγ_def
-  have hγ_eq : (γ : WithZero (Multiplicative ℤ)) =
-      ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _) := rfl
   have hnhds :
-      {y : ℚᵘⁿ_[p,T] | Valued.v y < (γ : WithZero (Multiplicative ℤ))} ∈
-        nhds (0 : ℚᵘⁿ_[p,T]) := by
-    rw [Valued.mem_nhds]
-    exact ⟨γ, fun y ha => by simpa using ha⟩
+      {y : ℚᵘⁿ_[p,T] | Valued.v y <
+          ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
+        nhds (0 : ℚᵘⁿ_[p,T]) :=
+    Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   have hev_close : ∀ᶠ M : ℕ in Filter.atTop,
       Valued.v (∑ n : Set.Finite.toFinset (Tfinprop p T x g M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) <
-        ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    have := hx g hnhds
-    rw [hγ_eq] at this
-    exact this
+        ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _) :=
+    hx g hnhds
   -- Need ⌊T·(M - g)⌋ ≥ K, i.e., T·(M - g) ≥ K, i.e., M ≥ g + K/T.
   have hev_floor : ∀ᶠ M : ℕ in Filter.atTop, K ≤ ⌊(T : ℚ) * ((M : ℚ) - g)⌋ := by
     have h_int : ∀ᶠ M : ℕ in Filter.atTop, ⌈g + (K : ℚ) / T⌉₊ ≤ M :=
@@ -1285,24 +1331,18 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     have hsm : StrictMono (WithZeroMulInt.toNNReal (p_ne_zero p)) :=
       WithZeroMulInt.toNNReal_strictMono hp1
     have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
-    have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le _
+    have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le
     have hT_pos : (0 : ℚ) < T := by
       have hT : T ≠ 0 := NeZero.ne T
       exact_mod_cast Nat.pos_of_ne_zero hT
     rw [Filter.tendsto_iff_forall_eventually_mem]
     intro U hU
-    rw [Valued.mem_nhds] at hU
-    obtain ⟨γ, hγ⟩ := hU
-    have hγ_ne : (γ : WithZero (Multiplicative ℤ)) ≠ 0 := γ.ne_zero
+    obtain ⟨γ, hγ_ne, hγ⟩ := Texists_v_lt_subset p T hU
     set ε : NNReal :=
       WithZeroMulInt.toNNReal (p_ne_zero p) (γ : WithZero (Multiplicative ℤ)) with hε_def
     have hε_pos : (0 : NNReal) < ε := by
-      rw [hε_def, show ((WithZeroMulInt.toNNReal (p_ne_zero p))
-            (γ : WithZero (Multiplicative ℤ)) =
-          if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
-          else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl,
-        dif_neg hγ_ne]
-      exact zpow_pos hp_pos _
+      rw [hε_def]
+      exact WithZeroMulInt.toNNReal_pos (p_ne_zero p) hγ_ne
     have htendsto : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹) ^ n) Filter.atTop (nhds 0) :=
       tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
     obtain ⟨N, hN⟩ : ∃ N : ℕ, ((p : NNReal)⁻¹) ^ N < ε := by
@@ -1331,8 +1371,7 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     have hK_plus_1 : (N : ℤ) ≤ K + 1 := by linarith
     -- Step 4: apply the bound and convert to ε-form.
     apply hγ
-    change Valued.v (TintPartial p T (c * x) g K - 0) < γ
-    rw [sub_zero]
+    change Valued.v (TintPartial p T (c * x) g K) < γ
     have hbound := TintPartial_mul_valuation_bound p T c x hx g K
     have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p)
         (Valued.v (TintPartial p T (c * x) g K)) ≤
@@ -1342,7 +1381,8 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
         (((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) =
         (p : NNReal) ^ (-(K + 1)) := by
-      simp [WithZeroMulInt.toNNReal]
+      rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero, WithZero.unzero_coe]
+      congr 1
     rw [htoNN] at h_nnreal_le
     have h_pow_le : (p : NNReal) ^ (-(K + 1)) ≤ ((p : NNReal)⁻¹) ^ N := by
       rw [show (p : NNReal) ^ (-(K + 1)) = ((p : NNReal)⁻¹) ^ ((K : ℤ) + 1) from by
@@ -1463,8 +1503,9 @@ private lemma one_notMem_TNullSeriesIdeal :
             ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n : ℚ) / T)))]
     rw [hS_eq, Finset.sum_singleton]
     have h_zero_eq : (0 : ℚ) + (((0 : ℤ) : ℚ)) / T = 0 := by push_cast; ring
-    rw [h_zero_eq]
-    simp [HahnSeries.coeff_one]
+    rw [h_zero_eq, show ((1 : TLiftedPAdicHahnSeries p T).coeff 0) = 1 by
+      rw [HahnSeries.coeff_one]; simp, map_one, mul_one]
+    exact zpow_zero _
   -- The sequence is eventually `1`, so it tends to `1`. By uniqueness of limits in
   -- `ℚᵘⁿ_[p,T]` (which is `T2`), `1 = 0`, contradicting `one_ne_zero`.
   have h_tend_one :
@@ -1500,30 +1541,29 @@ private lemma TintPartial_isCauchy
   have hsm : StrictMono (WithZeroMulInt.toNNReal (p_ne_zero p)) :=
     WithZeroMulInt.toNNReal_strictMono hp1
   have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
-  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le _
+  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le
+  -- In v4.31 `γ : (ValueGroup₀ Valued.v)ˣ`; bridge to a `WithZero (Multiplicative ℤ)` bound `c`.
+  set c : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hc_def
+  have hγ_ne : c ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ
   set ε : NNReal :=
-    WithZeroMulInt.toNNReal (p_ne_zero p) (γ : WithZero (Multiplicative ℤ)) with hε_def
-  have hγ_ne : (γ : WithZero (Multiplicative ℤ)) ≠ 0 := γ.ne_zero
+    WithZeroMulInt.toNNReal (p_ne_zero p) c with hε_def
   have hε_pos : (0 : NNReal) < ε := by
-    rw [hε_def, show ((WithZeroMulInt.toNNReal (p_ne_zero p))
-          (γ : WithZero (Multiplicative ℤ)) =
-        if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
-        else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl,
-      dif_neg hγ_ne]
-    exact zpow_pos hp_pos _
+    rw [hε_def]
+    exact WithZeroMulInt.toNNReal_pos (p_ne_zero p) hγ_ne
   have htendsto : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹) ^ n) Filter.atTop (nhds 0) :=
     tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
   obtain ⟨N, hN⟩ : ∃ N : ℕ, ((p : NNReal)⁻¹) ^ N < ε := by
     have h_eventually : ∀ᶠ n : ℕ in Filter.atTop, ((p : NNReal)⁻¹) ^ n < ε :=
       htendsto.eventually (eventually_lt_nhds hε_pos)
     exact h_eventually.exists
-  -- Helper: convert a `≤ ofAdd(-(L+1))` bound (with L ≥ N - 1) into a `< γ` bound.
+  -- Helper: convert a `≤ ofAdd(-(L+1))` bound (with L ≥ N - 1) into a `< γ.1` bound.
   have h_convert : ∀ L : ℤ, (N : ℤ) - 1 ≤ L →
       ∀ a : ℚᵘⁿ_[p,T],
         Valued.v a ≤
           ((Multiplicative.ofAdd (-(L + 1) : ℤ) : Multiplicative ℤ) : WithZero _) →
-        Valued.v a < (γ : WithZero (Multiplicative ℤ)) := by
+        Valued.v.restrict a < γ.1 := by
     intro L hL a hbound
+    rw [Valuation.restrict_lt_iff_lt_embedding, ← hc_def]
     have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a) ≤
         WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(L + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) :=
@@ -1531,7 +1571,8 @@ private lemma TintPartial_isCauchy
     have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
         (((Multiplicative.ofAdd (-(L + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) =
         (p : NNReal) ^ (-(L + 1)) := by
-      simp [WithZeroMulInt.toNNReal]
+      rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero, WithZero.unzero_coe]
+      congr 1
     rw [htoNN] at h_nnreal_le
     have h_pow_le : (p : NNReal) ^ (-(L + 1)) ≤ ((p : NNReal)⁻¹) ^ N := by
       rw [show (p : NNReal) ^ (-(L + 1)) = ((p : NNReal)⁻¹) ^ ((L : ℤ) + 1) from by
@@ -1634,9 +1675,7 @@ private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᵘⁿ_[p]) :
       exact valued_v_pInvT_zpow (p := p) (T := T) (T : ℤ)
     have hRHS : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
         ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [QpUn.valued_algebraMap]
       have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
       have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
           Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
@@ -1654,7 +1693,8 @@ private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᵘⁿ_[p]) :
 private lemma valued_v_algebraMap_K₀_K_early (z : ℚᵘⁿ_[p]) :
     Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
   obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᵘⁿ_[p]) z
-  rw [← hz, map_div₀, Valued.v.map_div, Valued.v.map_div, div_pow]
+  rw [← hz]
+  simp only [map_div₀, div_pow]
   rw [valued_v_algebraMap_K₀_K_int_early, valued_v_algebraMap_K₀_K_int_early]
 
 /-- The algebra map `K₀ ↪ K` is continuous at `0`. -/
@@ -1662,7 +1702,10 @@ private lemma tendsto_algebraMap_K₀_K_zero_early :
     Filter.Tendsto (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
   rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p,T]) _).tendsto_right_iff]
   intro γ _
-  set γ_m : Multiplicative ℤ := WithZero.unzero γ.ne_zero with hγ_m_def
+  -- In v4.31 `γ : (ValueGroup₀ Valued.v)ˣ`; work with its `WithZero (Multiplicative ℤ)` image.
+  set c : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hc_def
+  have hc_ne : c ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ
+  set γ_m : Multiplicative ℤ := WithZero.unzero hc_ne with hγ_m_def
   set n : ℤ := Multiplicative.toAdd γ_m with hn_def
   set k : ℤ := min (n - 1) (-1) with hk_def
   have hk_lt_n : k ≤ n - 1 := min_le_left _ _
@@ -1674,27 +1717,29 @@ private lemma tendsto_algebraMap_K₀_K_zero_early :
       · linarith [min_le_right (n - 1) (-1)]
     have h2 : k * 1 = k := mul_one _
     linarith
-  set γ' : (WithZero (Multiplicative ℤ))ˣ :=
-    Units.mk0 ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _) (by simp) with hγ'_def
-  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p]) _).eventually_iff]
-  refine ⟨γ', trivial, ?_⟩
+  -- Source bound: the ball `{z | Valued.v z < ofAdd k}` on `ℚᵘⁿ_[p]`.
+  rw [Filter.eventually_iff]
+  have hsrc : {z : ℚᵘⁿ_[p] | Valued.v z <
+      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᵘⁿ_[p]) :=
+    mem_nhds_zero_v_lt WithZero.coe_ne_zero
+  refine Filter.mem_of_superset hsrc ?_
   intro z hz
   simp only [Set.mem_setOf_eq] at hz ⊢
-  rw [valued_v_algebraMap_K₀_K_early]
-  have hγ_eq : γ.val = ((γ_m : Multiplicative ℤ) : WithZero _) :=
-    (WithZero.coe_unzero γ.ne_zero).symm
+  -- Goal: `Valued.v.restrict (algebraMap z) < γ.1`, i.e. `Valued.v (algebraMap z) < c`.
+  rw [Valuation.restrict_lt_iff_lt_embedding, ← hc_def, valued_v_algebraMap_K₀_K_early]
+  have hc_eq : c = ((γ_m : Multiplicative ℤ) : WithZero _) :=
+    (WithZero.coe_unzero hc_ne).symm
   have hγm_eq : γ_m = Multiplicative.ofAdd n := rfl
   calc (Valued.v z)^T
-      ≤ (γ'.val : WithZero _)^T := by
+      ≤ (((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _))^T := by
         apply pow_le_pow_left₀ _ (le_of_lt hz)
-        exact zero_le' (a := Valued.v z)
-    _ < γ.val := by
-        change (((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _))^T < γ.val
+        exact zero_le (a := Valued.v z)
+    _ < c := by
         rw [← WithZero.coe_pow]
         rw [show ((Multiplicative.ofAdd k : Multiplicative ℤ)^T : Multiplicative ℤ) =
               Multiplicative.ofAdd (k * T) from by
           rw [← ofAdd_nsmul]; congr 1; ring]
-        rw [hγ_eq, hγm_eq, WithZero.coe_lt_coe]
+        rw [hc_eq, hγm_eq, WithZero.coe_lt_coe]
         exact Multiplicative.ofAdd_lt.mpr hkT
 
 /-- Continuity of `algebraMap K₀ → K`. -/
@@ -1706,29 +1751,61 @@ private lemma continuous_algebraMap_K₀_K_early :
   exact continuous_of_continuousAt_zero
     (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])).toAddMonoidHom h0
 
+-- The valuation on `ℚᵘⁿ_[p,T]` is rank-one discrete (transferred from the adic valuation on
+-- `FractionRing ℤᵘⁿ_[p,T]` via the value-group equality for `WithVal`). In v4.31 `RankOne` no
+-- longer takes a bare `hom`/`exists_val_nontrivial`; we build it through `IsRankOneDiscrete`.
 noncomputable instance :
-  Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) := {
-    hom := WithZeroMulInt.toNNReal (p_ne_zero p)
-    strictMono' := by
-      have hp1 : (1 : NNReal) < p := by
-        exact_mod_cast (Fact.out : Nat.Prime p).one_lt
-      exact WithZeroMulInt.toNNReal_strictMono hp1
-    exists_val_nontrivial := by
-      refine ⟨pInvTQ p T, ?_, ?_⟩
-      · rw [valued_v_pInvT]
-        simp
-      · have hneq : ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero
-            (Multiplicative ℤ)) ≠ 1 := by
-          intro h
-          have h' : (Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) = 1 := by
-            exact WithZero.coe_injective h
-          have : (-1 : ℤ) = 0 := by simpa using congrArg Multiplicative.toAdd h'
-          norm_num at this
-        rw [valued_v_pInvT]
-        exact hneq
-    }
+    (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))).IsRankOneDiscrete where
+  exists_generator_lt_one' := by
+    have h : ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation
+        (FractionRing (ℤᵘⁿ_[p,T]))).IsRankOneDiscrete := inferInstance
+    obtain ⟨γ, hγ, hγ1⟩ := h.exists_generator_lt_one'
+    exact ⟨γ, by rw [WithVal.valueGroup_eq]; exact hγ, hγ1⟩
 
-noncomputable instance : NontriviallyNormedField ℚᵘⁿ_[p,T] := Valued.toNontriviallyNormedField
+noncomputable instance :
+  Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) :=
+  Valuation.IsRankOneDiscrete.rankOne
+    (v := (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))))
+    (by exact_mod_cast (Fact.out : Nat.Prime p).one_lt : (1 : NNReal) < (p : NNReal))
+
+noncomputable instance : NontriviallyNormedField ℚᵘⁿ_[p,T] :=
+  Valued.toNontriviallyNormedField (ℚᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))
+
+-- Surjectivity of `Valued.v` on `ℚᵘⁿ_[p,T]` (via the `WithVal` bridge to the height-one
+-- valuation on `FractionRing ℤᵘⁿ_[p,T]`). Used by the norm/lift bridges below.
+private lemma Tvalued_v_surjective :
+    Function.Surjective (Valued.v : ℚᵘⁿ_[p,T] → WithZero (Multiplicative ℤ)) := by
+  intro x
+  obtain ⟨y, hy⟩ := (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_surjective
+    (FractionRing (ℤᵘⁿ_[p,T])) x
+  exact ⟨WithVal.toVal _ y, by rw [WithVal.valued_toVal]; exact hy⟩
+
+-- v4.31: `‖·‖` on the `Valued.toNormedField` is `RankOne.hom (Valued.v.restrict ·)`, no longer
+-- defeq to `toNNReal (Valued.v ·)`; bridge through the rank-one `hom` plus surjectivity.
+lemma Tnorm_eq_toNNReal_valued (a : ℚᵘⁿ_[p,T]) :
+    ‖a‖ = ((WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a) : NNReal) : ℝ) := by
+  rw [Valued.toNormedField.norm_def]
+  norm_cast
+  rw [show (Valuation.RankOne.hom (Valued.v : Valuation ℚᵘⁿ_[p,T] _)) (Valued.v.restrict a)
+        = WithZeroMulInt.toNNReal (p_ne_zero p)
+            ((Valuation.IsRankOneDiscrete.valueGroup₀_equiv_withZeroMulInt
+              (v := (Valued.v : Valuation ℚᵘⁿ_[p,T] _))) (Valued.v.restrict a)) from rfl,
+     Valuation.IsRankOneDiscrete.valueGroup₀_equiv_withZeroMulInt_restrict_apply_of_surjective
+       (Tvalued_v_surjective p T) a]
+
+-- Lift an element of `ℚᵘⁿ_[p,T]` with valuation `≤ 1` to `ℤᵘⁿ_[p,T]` (routing through the
+-- `FractionRing` to avoid the `whnf` timeout on the `WithVal` structure).
+lemma Texists_lift_of_valued_le_one {z : ℚᵘⁿ_[p,T]} (hz : Valued.v z ≤ 1) :
+    ∃ a : ℤᵘⁿ_[p,T], algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a = z := by
+  have hz' : ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation
+      ((FractionRing (ℤᵘⁿ_[p,T])))) (WithVal.equiv _ z) ≤ 1 := by
+    rw [WithVal.val_apply_equiv]; exact hz
+  obtain ⟨a, ha⟩ := IsDiscreteValuationRing.exists_lift_of_le_one
+    (A := ℤᵘⁿ_[p,T]) (K := FractionRing (ℤᵘⁿ_[p,T])) hz'
+  refine ⟨a, ?_⟩
+  apply (WithVal.equiv _).injective
+  rw [WithVal.algebraMap_right_apply] at *
+  simpa [WithVal.equiv] using ha
 
 instance : ContinuousSMul (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) :=
     continuousSMul_of_algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (continuous_algebraMap_K₀_K_early p T)
@@ -1781,7 +1858,6 @@ private lemma TRes_TTeichmuller (α : Fpbar p) :
   rw [TResidue_of]
   show (TResidueIsoFpbar p) (IsLocalRing.residue (ℤᵘⁿ_[p]) (teichmuller p α)) = α
   unfold TResidueIsoFpbar
-  rw [RingEquiv.trans_apply]
   change WittVector.quotientPEquiv
       ((Ideal.quotEquivOfEq (WittVector.irreducible p).maximalIdeal_eq)
         (Ideal.Quotient.mk _ (teichmuller p α))) = α
@@ -1934,8 +2010,7 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
       rfl
     have hvz_le : Valued.v z ≤ 1 := hvz.le
     -- Lift z to ℤᵘⁿ_[p,T]
-    obtain ⟨z', hz'⟩ :=
-      IsDiscreteValuationRing.exists_lift_of_le_one (K := ℚᵘⁿ_[p,T]) hvz_le
+    obtain ⟨z', hz'⟩ := Texists_lift_of_valued_le_one p T hvz_le
     -- Apply Texists_T_pInvT_digits
     obtain ⟨a, ha⟩ := Texists_T_pInvT_digits p T z'
     let b : ℤ → Fpbar p := fun k =>
@@ -2033,22 +2108,15 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
       have hsm : StrictMono (WithZeroMulInt.toNNReal (p_ne_zero p)) :=
         WithZeroMulInt.toNNReal_strictMono hp1
       have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
-      have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le _
+      have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le
       rw [Filter.tendsto_iff_forall_eventually_mem]
       intro U hU
-      rw [Valued.mem_nhds] at hU
-      obtain ⟨γ, hγ⟩ := hU
-      have hγ_ne : (γ : WithZero (Multiplicative ℤ)) ≠ 0 := γ.ne_zero
+      obtain ⟨γ, hγ_ne, hγ⟩ := Texists_v_sub_lt_subset p T hU
       set ε : NNReal :=
         WithZeroMulInt.toNNReal (p_ne_zero p) (γ : WithZero (Multiplicative ℤ)) with hε_def
       have hε_pos : (0 : NNReal) < ε := by
         rw [hε_def]
-        rw [show ((WithZeroMulInt.toNNReal (p_ne_zero p))
-              (γ : WithZero (Multiplicative ℤ)) =
-            if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
-            else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl]
-        rw [dif_neg hγ_ne]
-        exact zpow_pos hp_pos _
+        exact WithZeroMulInt.toNNReal_pos (p_ne_zero p) hγ_ne
       have htendsto : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹)^n)
           Filter.atTop (nhds 0) :=
         tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
@@ -2078,7 +2146,9 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
       have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) =
           (p : NNReal)^(-(K + 1)) := by
-        simp [WithZeroMulInt.toNNReal]
+        rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero,
+          WithZero.unzero_coe]
+        congr 1
       rw [htoNN] at h_nnreal_le
       have h_pow_le : (p : NNReal)^(-(K + 1)) ≤ ((p : NNReal)⁻¹)^N := by
         rw [show (p : NNReal)^(-(K + 1)) = ((p : NNReal)⁻¹)^((K : ℤ) + 1) from by
@@ -2340,19 +2410,15 @@ private lemma Tteichmuller_digits_unique
   have h_eventual_div : ∀ i : ℕ, ∃ N : ℕ, N ≥ i ∧
       (pInvT p T)^(i+1) ∣ (Spart c N - Spart c' N) := by
     intro i
-    set γ : (WithZero (Multiplicative ℤ))ˣ :=
-      WithZero.unitsWithZeroEquiv.symm
-        (Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) with hγ_def
-    have hγ_coe : (γ : WithZero (Multiplicative ℤ)) =
-        ((Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) : WithZero _) := rfl
+    set cval : WithZero (Multiplicative ℤ) :=
+      ((Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) : WithZero (Multiplicative ℤ))
+      with hcval_def
     have h_nhds :
-        {a : ℚᵘⁿ_[p,T] | Valued.v a < (γ : WithZero (Multiplicative ℤ))} ∈
-            nhds (0 : ℚᵘⁿ_[p,T]) := by
-      rw [Valued.mem_nhds]
-      exact ⟨γ, by intro a ha; simpa using ha⟩
+        {a : ℚᵘⁿ_[p,T] | Valued.v a < cval} ∈ nhds (0 : ℚᵘⁿ_[p,T]) :=
+      Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
     have h_eventual : ∀ᶠ N : ℕ in Filter.atTop,
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N) ∈
-          {a : ℚᵘⁿ_[p,T] | Valued.v a < (γ : WithZero (Multiplicative ℤ))} :=
+          {a : ℚᵘⁿ_[p,T] | Valued.v a < cval} :=
       hdiff_tendsto h_nhds
     rw [Filter.eventually_atTop] at h_eventual
     obtain ⟨N₀, hN₀⟩ := h_eventual
@@ -2361,7 +2427,7 @@ private lemma Tteichmuller_digits_unique
     have hN_ge : N₀ ≤ N := le_max_left _ _
     have h_lt : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N)) <
         ((Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) : WithZero _) := by
-      rw [← hγ_coe]; exact hN₀ N hN_ge
+      rw [← hcval_def]; exact hN₀ N hN_ge
     have h_le : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N)) ≤
         ((Multiplicative.ofAdd (-((i : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) := by
       rcases eq_or_ne
@@ -2396,8 +2462,7 @@ private lemma Tteichmuller_digits_unique
           rw [← ofAdd_add]; rw [neg_add_cancel]; rfl]
         rfl
       rwa [h_one] at h_prod
-    obtain ⟨q', hq'⟩ :=
-      IsDiscreteValuationRing.exists_lift_of_le_one (K := ℚᵘⁿ_[p,T]) hq_val_le_one
+    obtain ⟨q', hq'⟩ := Texists_lift_of_valued_le_one p T hq_val_le_one
     have h_eq_QpUn : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff =
         (pInvTQ p T)^((i : ℤ)+1) * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) q' := by
       rw [hq']; rw [hq_def]
@@ -2411,7 +2476,9 @@ private lemma Tteichmuller_digits_unique
       rw [mul_one]
     have h_pow_alg : (pInvTQ p T)^((i : ℤ)+1) =
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((pInvT p T)^(i+1)) := by
-      rw [show ((i : ℤ)+1) = ((i+1 : ℕ) : ℤ) from by push_cast; ring, zpow_natCast, map_pow]
+      have hz : (pInvTQ p T)^((i : ℤ)+1) = (pInvTQ p T)^(i+1) := by
+        rw [show ((i : ℤ)+1) = ((i+1 : ℕ) : ℤ) from by push_cast; ring]; exact zpow_natCast _ _
+      rw [hz, map_pow]
       rfl
     rw [h_pow_alg, ← map_mul] at h_eq_QpUn
     exact ⟨q', IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) h_eq_QpUn⟩
@@ -2441,7 +2508,7 @@ private lemma Tteichmuller_digits_unique
               (TTeichmuller p T (c k) - TTeichmuller p T (c' k))) +
             (∑ k ∈ Finset.Iic N \ Finset.range i, (pInvT p T)^k *
               (TTeichmuller p T (c k) - TTeichmuller p T (c' k))) from
-            (Finset.sum_inter_add_sum_diff (Finset.Iic N) (Finset.range i) _).symm]
+            (Finset.sum_inter_add_sum_sdiff (Finset.Iic N) (Finset.range i) _).symm]
         have h_zero : ∑ k ∈ Finset.Iic N ∩ Finset.range i,
             (pInvT p T)^k *
               (TTeichmuller p T (c k) - TTeichmuller p T (c' k)) = 0 := by
@@ -2580,7 +2647,7 @@ theorem exists_teichmuller_series_OQpUnT :
   have hsm : StrictMono (WithZeroMulInt.toNNReal (p_ne_zero p)) :=
     WithZeroMulInt.toNNReal_strictMono hp1
   have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
-  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le _
+  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le
   -- Abbreviation: `algMapₐ` is the algebra map `ℤᵘⁿ_[p,T] → ℚᵘⁿ_[p,T]`.
   set algMapₐ : ℤᵘⁿ_[p,T] →+* ℚᵘⁿ_[p,T] := algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) with halgMapₐ
   -- Convenience: rewrite the partial-sum form in two equivalent ways.
@@ -2656,19 +2723,12 @@ theorem exists_teichmuller_series_OQpUnT :
     intro digits' hdigits'
     rw [Filter.tendsto_iff_forall_eventually_mem]
     intro U hU
-    rw [Valued.mem_nhds] at hU
-    obtain ⟨γ, hγ⟩ := hU
-    have hγ_ne : (γ : WithZero (Multiplicative ℤ)) ≠ 0 := γ.ne_zero
+    obtain ⟨γ, hγ_ne, hγ⟩ := Texists_v_sub_lt_subset p T hU
     set ε : NNReal :=
       WithZeroMulInt.toNNReal (p_ne_zero p) (γ : WithZero (Multiplicative ℤ)) with hε_def
     have hε_pos : (0 : NNReal) < ε := by
       rw [hε_def]
-      rw [show ((WithZeroMulInt.toNNReal (p_ne_zero p))
-            (γ : WithZero (Multiplicative ℤ)) =
-          if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
-          else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl]
-      rw [dif_neg hγ_ne]
-      exact zpow_pos hp_pos _
+      exact WithZeroMulInt.toNNReal_pos (p_ne_zero p) hγ_ne
     have htendsto_pow : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹)^n)
         Filter.atTop (nhds 0) :=
       tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
@@ -2696,7 +2756,8 @@ theorem exists_teichmuller_series_OQpUnT :
     have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
         (((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _)) =
         (p : NNReal)^(-(N : ℤ)) := by
-      simp [WithZeroMulInt.toNNReal]
+      rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero, WithZero.unzero_coe]
+      congr 1
     rw [htoNN] at h_nnreal_le
     have h_pow_le : (p : NNReal)^(-(N : ℤ)) ≤ ((p : NNReal)⁻¹)^N₀ := by
       rw [show (p : NNReal)^(-(N : ℤ)) = ((p : NNReal)⁻¹)^(N : ℤ) from by
@@ -2771,7 +2832,7 @@ theorem exists_teichmuller_series_OQpUnT :
         have hpInvT_cast : algMapₐ (pInvT p T) = pInvTQ p T := rfl
         rw [hpInvT_cast]
         unfold OQpUn_embd TTeichmuller
-        rw [zpow_natCast, mul_comm]
+        rw [show (pInvTQ p T) ^ ((N : ℤ)) = (pInvTQ p T) ^ N from zpow_natCast _ _, mul_comm]
         rfl
       rw [hTT_eq]
       ring
@@ -3102,17 +3163,11 @@ private lemma Th_key
   by_cases h_y : y = 0
   · -- Step 2A: `y = 0` ⇒ contradiction.
     exfalso
-    set γ_unit : (WithZero (Multiplicative ℤ))ˣ :=
-      WithZero.unitsWithZeroEquiv.symm
-        (Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ)
-      with hγ_unit
-    have hγ_unit_eq : (γ_unit : WithZero (Multiplicative ℤ)) =
-        ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := rfl
     have h_nhds :
-        {x : ℚᵘⁿ_[p,T] | Valued.v x < (γ_unit : WithZero (Multiplicative ℤ))} ∈
-          nhds (0 : ℚᵘⁿ_[p,T]) := by
-      rw [Valued.mem_nhds]
-      exact ⟨γ_unit, fun x ha => by simpa using ha⟩
+        {x : ℚᵘⁿ_[p,T] | Valued.v x <
+            ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
+          nhds (0 : ℚᵘⁿ_[p,T]) :=
+      Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
     have h_evtl_close : ∀ᶠ K : ℤ in Filter.atTop,
         Valued.v (∑ j ∈ Finset.Icc m_b K,
             (pInvTQ p T) ^ j *
@@ -3121,9 +3176,7 @@ private lemma Th_key
           ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := by
       have h_tend := hb_tendsto
       rw [h_y] at h_tend
-      have := h_tend h_nhds
-      rw [hγ_unit_eq] at this
-      exact this
+      exact h_tend h_nhds
     have h_evtl_K_ge : ∀ᶠ K : ℤ in Filter.atTop, k_min ≤ K :=
       Filter.eventually_ge_atTop k_min
     obtain ⟨K, hKge, hKclose⟩ := (h_evtl_K_ge.and h_evtl_close).exists
@@ -3133,25 +3186,16 @@ private lemma Th_key
     have h_v_y_eq : Valued.v y =
         ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := by
       have h_v_y_ne : Valued.v y ≠ 0 := by rwa [Valuation.ne_zero_iff]
-      set γ_unit_y : (WithZero (Multiplicative ℤ))ˣ :=
-        WithZero.unitsWithZeroEquiv.symm ((Valued.v y).unzero h_v_y_ne)
-        with hγ_unit_y
-      have hγ_unit_y_eq : (γ_unit_y : WithZero (Multiplicative ℤ)) = Valued.v y := by
-        simp [γ_unit_y, WithZero.coe_unzero]
       have h_nhds_y :
-          {x : ℚᵘⁿ_[p,T] | Valued.v (x - y) < (γ_unit_y : WithZero (Multiplicative ℤ))} ∈
-            nhds y := by
-        rw [Valued.mem_nhds]
-        exact ⟨γ_unit_y, fun x ha => by simpa using ha⟩
+          {x : ℚᵘⁿ_[p,T] | Valued.v (x - y) < Valued.v y} ∈ nhds y :=
+        Tmem_nhds_v_sub_lt p T h_v_y_ne rfl
       have h_evtl_stable : ∀ᶠ K : ℤ in Filter.atTop,
           Valued.v ((∑ j ∈ Finset.Icc m_b K,
               (pInvTQ p T) ^ j *
                 algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
                   (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) - y) <
-            Valued.v y := by
-        have := hb_tendsto h_nhds_y
-        rw [hγ_unit_y_eq] at this
-        exact this
+            Valued.v y :=
+        hb_tendsto h_nhds_y
       have h_evtl_K_ge : ∀ᶠ K : ℤ in Filter.atTop, k_min ≤ K :=
         Filter.eventually_ge_atTop k_min
       obtain ⟨K, hKge, hKstable⟩ := (h_evtl_K_ge.and h_evtl_stable).exists
@@ -3252,21 +3296,12 @@ private lemma Th_key
               rw [WithZero.coe_le_coe]
               exact Multiplicative.ofAdd_le.mpr (by omega)
       have h_v_y_ne : Valued.v y ≠ 0 := by rwa [Valuation.ne_zero_iff]
-      set γ_unit_y : (WithZero (Multiplicative ℤ))ˣ :=
-        WithZero.unitsWithZeroEquiv.symm ((Valued.v y).unzero h_v_y_ne)
-        with hγ_unit_y
-      have hγ_unit_y_eq : (γ_unit_y : WithZero (Multiplicative ℤ)) = Valued.v y := by
-        simp [γ_unit_y, WithZero.coe_unzero]
       have h_nhds_y :
-          {x : ℚᵘⁿ_[p,T] | Valued.v (x - y) < (γ_unit_y : WithZero (Multiplicative ℤ))} ∈
-            nhds y := by
-        rw [Valued.mem_nhds]
-        exact ⟨γ_unit_y, fun x ha => by simpa using ha⟩
+          {x : ℚᵘⁿ_[p,T] | Valued.v (x - y) < Valued.v y} ∈ nhds y :=
+        Tmem_nhds_v_sub_lt p T h_v_y_ne rfl
       have h_evtl_stable : ∀ᶠ K : ℤ in Filter.atTop,
-          Valued.v (TintPartial p T α γ K - y) < Valued.v y := by
-        have := hy_spec h_nhds_y
-        rw [hγ_unit_y_eq] at this
-        exact this
+          Valued.v (TintPartial p T α γ K - y) < Valued.v y :=
+        hy_spec h_nhds_y
       have h_evtl_K_ge : ∀ᶠ K : ℤ in Filter.atTop, m ≤ K := Filter.eventually_ge_atTop m
       obtain ⟨K, hKge, hKstable⟩ := (h_evtl_K_ge.and h_evtl_stable).exists
       have h_intP_le := h_intP_α_bound K hKge
@@ -4029,24 +4064,17 @@ private lemma Tnull_series_no_unit_leading
       rw [h_zero_idx, h_lead_val]
       rw [WithZero.coe_lt_coe]
       exact Multiplicative.ofAdd_lt.mpr (by omega)
-  set γ_unit : (WithZero (Multiplicative ℤ))ˣ :=
-    WithZero.unitsWithZeroEquiv.symm (Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ)
-    with hγ_unit
-  have hγ_unit_eq : (γ_unit : WithZero (Multiplicative ℤ)) =
-      ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := rfl
   have h_nhds :
-      {x : ℚᵘⁿ_[p,T] | Valued.v x < (γ_unit : WithZero (Multiplicative ℤ))} ∈
-        nhds (0 : ℚᵘⁿ_[p,T]) := by
-    rw [Valued.mem_nhds]
-    exact ⟨γ_unit, fun x ha => by simpa using ha⟩
+      {x : ℚᵘⁿ_[p,T] | Valued.v x <
+          ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
+        nhds (0 : ℚᵘⁿ_[p,T]) :=
+    Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   have h_evtl_close : ∀ᶠ M : ℕ in Filter.atTop,
       Valued.v (∑ n : Set.Finite.toFinset (Tfinprop p T Δ q M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) <
-        ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    have := htend h_nhds
-    rw [hγ_unit_eq] at this
-    exact this
+        ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) :=
+    htend h_nhds
   have h_evtl_M_ge : ∀ᶠ M : ℕ in Filter.atTop, q ≤ (M : ℚ) := by
     have h_int : ∀ᶠ M : ℕ in Filter.atTop, ⌈q⌉₊ ≤ M := Filter.eventually_ge_atTop ⌈q⌉₊
     filter_upwards [h_int] with M hM
@@ -4380,9 +4408,7 @@ private lemma valued_v_algebraMap_K₀_K_int (a : ℤᵘⁿ_[p]) :
       exact valued_v_pInvT_zpow (p := p) (T := T) (T : ℤ)
     have hRHS : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
         ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [QpUn.valued_algebraMap]
       have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
       have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
           Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
@@ -4400,7 +4426,8 @@ private lemma valued_v_algebraMap_K₀_K_int (a : ℤᵘⁿ_[p]) :
 private lemma valued_v_algebraMap_K₀_K (z : ℚᵘⁿ_[p]) :
     Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
   obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᵘⁿ_[p]) z
-  rw [← hz, map_div₀, Valued.v.map_div, Valued.v.map_div, div_pow]
+  rw [← hz]
+  simp only [map_div₀, div_pow]
   rw [valued_v_algebraMap_K₀_K_int, valued_v_algebraMap_K₀_K_int]
 
 /-- The algebra map `K₀ ↪ K` is `Tendsto`-continuous at `0`. Built from the
@@ -4410,8 +4437,10 @@ private lemma tendsto_algebraMap_K₀_K_zero :
     Filter.Tendsto (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
   rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p,T]) _).tendsto_right_iff]
   intro γ _
-  -- γ : (WithZero (Multiplicative ℤ))ˣ; extract the Multiplicative ℤ representative
-  set γ_m : Multiplicative ℤ := WithZero.unzero γ.ne_zero with hγ_m_def
+  -- v4.31: `γ : (ValueGroup₀ Valued.v)ˣ`; work with its `WithZero (Multiplicative ℤ)` image.
+  set c : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hc_def
+  have hc_ne : c ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ
+  set γ_m : Multiplicative ℤ := WithZero.unzero hc_ne with hγ_m_def
   set n : ℤ := Multiplicative.toAdd γ_m with hn_def
   set k : ℤ := min (n - 1) (-1) with hk_def
   have hk_neg : k ≤ -1 := min_le_right _ _
@@ -4424,28 +4453,27 @@ private lemma tendsto_algebraMap_K₀_K_zero :
       · linarith
     have h2 : k * 1 = k := mul_one _
     linarith
-  -- form γ' : (WithZero (Mult ℤ))ˣ as the unit corresponding to ofAdd k
-  set γ' : (WithZero (Multiplicative ℤ))ˣ :=
-    Units.mk0 ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _) (by simp) with hγ'_def
-  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p]) _).eventually_iff]
-  refine ⟨γ', trivial, ?_⟩
+  rw [Filter.eventually_iff]
+  have hsrc : {z : ℚᵘⁿ_[p] | Valued.v z <
+      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᵘⁿ_[p]) :=
+    mem_nhds_zero_v_lt WithZero.coe_ne_zero
+  refine Filter.mem_of_superset hsrc ?_
   intro z hz
   simp only [Set.mem_setOf_eq] at hz ⊢
-  rw [valued_v_algebraMap_K₀_K]
-  have hγ_eq : γ.val = ((γ_m : Multiplicative ℤ) : WithZero _) :=
-    (WithZero.coe_unzero γ.ne_zero).symm
+  rw [Valuation.restrict_lt_iff_lt_embedding, ← hc_def, valued_v_algebraMap_K₀_K]
+  have hc_eq : c = ((γ_m : Multiplicative ℤ) : WithZero _) :=
+    (WithZero.coe_unzero hc_ne).symm
   have hγm_eq : γ_m = Multiplicative.ofAdd n := rfl
   calc (Valued.v z)^T
-      ≤ (γ'.val : WithZero _)^T := by
+      ≤ (((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _))^T := by
         apply pow_le_pow_left₀ _ (le_of_lt hz)
-        exact zero_le' (a := Valued.v z)
-    _ < γ.val := by
-        change (((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _))^T < γ.val
+        exact zero_le (a := Valued.v z)
+    _ < c := by
         rw [← WithZero.coe_pow]
         rw [show ((Multiplicative.ofAdd k : Multiplicative ℤ)^T : Multiplicative ℤ) =
               Multiplicative.ofAdd (k * T) from by
           rw [← ofAdd_nsmul]; congr 1; ring]
-        rw [hγ_eq, hγm_eq, WithZero.coe_lt_coe]
+        rw [hc_eq, hγm_eq, WithZero.coe_lt_coe]
         exact Multiplicative.ofAdd_lt.mpr hkT
 
 /-- Continuity of `algebraMap K₀ → K`. Derived from continuity at `0`
@@ -4475,7 +4503,7 @@ private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
   have h_decomp : c = ∑ i : Fin T, term i := QpUn_basis_decomp p T c
   -- If term j = 0, the bound is trivial.
   by_cases hj : term j = 0
-  · rw [hj, Valuation.map_zero]; exact zero_le' (a := Valued.v c)
+  · rw [hj, Valuation.map_zero]; exact zero_le (a := Valued.v c)
   classical
   let supp : Finset (Fin T) := (Finset.univ.filter (fun i => term i ≠ 0))
   have hj_supp : j ∈ supp := by simp [supp, hj]
@@ -4610,21 +4638,25 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
     Filter.Tendsto (QpUn_proj p T j) (nhds (0 : ℚᵘⁿ_[p,T])) (nhds (0 : ℚᵘⁿ_[p])) := by
   rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p]) _).tendsto_right_iff]
   intro γ' _
-  -- γ' : (WithZero (Mult ℤ))ˣ on K₀ side; let N = γ'.toAdd.
-  set γ'_m : Multiplicative ℤ := WithZero.unzero γ'.ne_zero with hγ'_m_def
+  -- v4.31: `γ' : (ValueGroup₀ Valued.v)ˣ` on the `K₀` side; use its `WithZero` image.
+  set c' : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ'.1 with hc'_def
+  have hc'_ne : c' ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ'
+  set γ'_m : Multiplicative ℤ := WithZero.unzero hc'_ne with hγ'_m_def
   set N : ℤ := Multiplicative.toAdd γ'_m with hN_def
   -- Choose k = N * T - j.val - 1 (so k + j.val + 1 ≤ N * T, i.e., k + j < N*T).
   set k : ℤ := N * T - (j.val : ℤ) - 1 with hk_def
   have hT_pos : (0 : ℤ) < T := by exact_mod_cast Nat.pos_of_neZero T
-  -- δ : (WithZero (Mult ℤ))ˣ on K side, with δ.toAdd = k.
-  set δ : (WithZero (Multiplicative ℤ))ˣ :=
-    Units.mk0 ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _) (by simp) with hδ_def
-  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p,T]) _).eventually_iff]
-  refine ⟨δ, trivial, ?_⟩
+  -- Source ball on `K` side, with cutoff `ofAdd k`.
+  rw [Filter.eventually_iff]
+  have hsrc : {c : ℚᵘⁿ_[p,T] | Valued.v c <
+      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᵘⁿ_[p,T]) :=
+    Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
+  refine Filter.mem_of_superset hsrc ?_
   intro c hc
   simp only [Set.mem_setOf_eq] at hc ⊢
-  -- We have hc : v(c) < δ = ofAdd k.
-  -- Goal: v(QpUn_proj j c) < γ' = ofAdd N.
+  rw [Valuation.restrict_lt_iff_lt_embedding, ← hc'_def]
+  -- We have hc : v(c) < ofAdd k.
+  -- Goal: v(QpUn_proj j c) < c' = ofAdd N.
   have h_term_le : Valued.v ((pInvTQ p T) ^ (j.val : ℕ) *
       algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T j c)) ≤ Valued.v c :=
     valued_v_QpUn_proj_term_le p T c j
@@ -4698,11 +4730,11 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
         (Valued.v (QpUn_proj p T j c))^T :=
       pow_le_pow_left₀ (le_of_lt h_rhs_pos) h_not_lt T
     exact absurd (lt_of_lt_of_le h_pow_lt_NT h_pow_le) (lt_irrefl _)
-  -- Convert γ'.val to ofAdd N.
-  have hγ'_eq : γ'.val = ((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero _) := by
+  -- Convert c' to ofAdd N.
+  have hc'_eq : c' = ((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero _) := by
     rw [hN_def, hγ'_m_def]
-    simp [WithZero.coe_unzero γ'.ne_zero]
-  rw [hγ'_eq]
+    simp [WithZero.coe_unzero hc'_ne]
+  rw [hc'_eq]
   exact h_lt
 
 -- Helper 1B: continuity of `QpUn_proj j`. Derived from the

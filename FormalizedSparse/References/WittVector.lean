@@ -2,6 +2,10 @@ import FormalizedSparse.References.Miscellaneous
 import Mathlib.Analysis.Normed.Field.WithAbs
 import Mathlib.NumberTheory.Padics.Complex
 import Mathlib.RingTheory.Valuation.Discrete.Basic
+import Mathlib.RingTheory.Valuation.Discrete.IsDiscreteValuationRing
+import Mathlib.RingTheory.Valuation.Discrete.RankOne
+import Mathlib.RingTheory.DedekindDomain.AdicValuation
+import Mathlib.Topology.Algebra.Valued.WithVal
 import Mathlib.RingTheory.WittVector.Compare
 import Mathlib.RingTheory.WittVector.DiscreteValuationRing
 import Mathlib.RingTheory.WittVector.Teichmuller
@@ -59,58 +63,35 @@ open IsDedekindDomain IsDedekindDomain.HeightOneSpectrum IsDiscreteValuationRing
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
   Valued (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ)) := inferInstance
 
-open Classical in
--- The absolute value on `ℚᵘⁿ_[p]` induced by the valuation `Valued.v`.
-noncomputable def abs (p : ℕ) [Fact (Nat.Prime p)] : AbsoluteValue ℚᵘⁿ_[p] ℝ := {
-  toFun a := WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a)
-  map_mul' := by
-    intro a b
-    simp
-  nonneg' := by
-    intro a
-    positivity
-  eq_zero' := by
-    intro a
-    simp
-  add_le' := by
-    intro a b
-    have hp1 : (1 : NNReal) < p := by
-      exact_mod_cast (Fact.out : Nat.Prime p).one_lt
-    have hmono : Monotone (fun x => ((WithZeroMulInt.toNNReal (p_ne_zero p) x : NNReal) : ℝ)) := by
-      intro x y hxy
-      exact_mod_cast (WithZeroMulInt.toNNReal_strictMono hp1).monotone hxy
-    refine le_trans ?_ (max_le_add_of_nonneg ?_ ?_)
-    · simpa [hmono.map_max] using hmono (Valued.v.map_add a b)
-    · positivity
-    · positivity
-}
+-- `Valued.v` of the image of `r : ℤᵘⁿ_[p]` equals the `intValuation` of `r`.
+-- (In v4.31 `WithVal` is a structure, so `Valued.v` is the `comap` of the base valuation
+-- along `WithVal.equiv`; this lemma packages the bridge once for all the proofs below.)
+theorem valued_algebraMap (p : ℕ) [Fact (Nat.Prime p)] (r : ℤᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) r) =
+      (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).intValuation r := by
+  rw [WithVal.algebraMap_right_apply, WithVal.valued_toVal,
+    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
 
-noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
-  WithAbs.normedField (abs p)
+-- The valuation on `ℚᵘⁿ_[p]` is rank-one discrete (transferred from the adic valuation on
+-- `FractionRing ℤᵘⁿ_[p]` via the value-group equality for `WithVal`).
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
+    (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))).IsRankOneDiscrete where
+  exists_generator_lt_one' := by
+    have h : ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation
+        (FractionRing (ℤᵘⁿ_[p]))).IsRankOneDiscrete := inferInstance
+    obtain ⟨γ, hγ, hγ1⟩ := h.exists_generator_lt_one'
+    exact ⟨γ, by rw [WithVal.valueGroup_eq]; exact hγ, hγ1⟩
 
+-- The valuation on `ℚᵘⁿ_[p]` has rank one, with associated absolute value `p ^ (-v)`.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Valuation.RankOne
-      (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) := {
-    hom := WithZeroMulInt.toNNReal (p_ne_zero p)
-    strictMono' := by
-      have hp1 : (1 : NNReal) < p := by
-        exact_mod_cast (Fact.out : Nat.Prime p).one_lt
-      exact WithZeroMulInt.toNNReal_strictMono hp1
-    exists_val_nontrivial := by
-      refine ⟨algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p]), ?_, ?_⟩ <;>
-      · have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
-        have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
-            Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
-        have hp_val : Valued.v
-            (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
-            ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) :
-              WithZero (Multiplicative ℤ)) := by
-          rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-              (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-          rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
-          rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-            (WittVector.p_nonzero p _) hpe]
-          rfl
-        rw [hp_val]; decide }
+    (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))) :=
+  Valuation.IsRankOneDiscrete.rankOne
+    (v := (Valued.v : Valuation ℚᵘⁿ_[p] (WithZero (Multiplicative ℤ))))
+    (by exact_mod_cast (Fact.out : Nat.Prime p).one_lt : (1 : NNReal) < (p : NNReal))
+
+-- The normed field structure on `ℚᵘⁿ_[p]` induced by the rank-one valuation.
+noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NormedField ℚᵘⁿ_[p] :=
+  Valued.toNormedField (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
 
 -- ℚᵘⁿ_[p] is complete with respect to the valuation topology.
 instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
@@ -139,9 +120,9 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
     have hsrc : (uniformity (ℤᵘⁿ_[p])).HasBasis (fun _ : ℕ => True)
         (fun n => {x : ℤᵘⁿ_[p] × ℤᵘⁿ_[p] | x.2 - x.1 ∈ (Ideal.span {(p : ℤᵘⁿ_[p])}) ^ n}) :=
       Filter.HasBasis.uniformity_of_nhds_zero hadic.hasBasis_nhds_zero
-    have htgt : (uniformity (ℚᵘⁿ_[p])).HasBasis (fun _ : (WithZero (Multiplicative ℤ))ˣ => True)
-        (fun γ => {p_1 : ℚᵘⁿ_[p] × ℚᵘⁿ_[p] | Valued.v (p_1.2 - p_1.1) < γ.val}) :=
-      Valued.hasBasis_uniformity (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
+    -- In v4.31 the valued uniformity basis is indexed by the value group `ValueGroup₀`,
+    -- with the restricted valuation `Valued.v.restrict`.
+    have htgt := Valued.hasBasis_uniformity (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
     rw [hsrc.isUniformInducing_iff htgt]
     set v := (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p]))
     have hmax : v.asIdeal = Ideal.span {(p : ℤᵘⁿ_[p])} :=
@@ -149,40 +130,38 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
     refine ⟨?_, ?_⟩
     · -- For any target basis γ, find a source basis n s.t. `r ∈ I^n → v(algebraMap r) < γ`.
       intro γ _
-      refine ⟨(1 - γ.val.log).toNat, trivial, ?_⟩
+      set g : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hg
+      have hg0 : g ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ
+      refine ⟨(1 - g.log).toNat, trivial, ?_⟩
       intro x y h
       simp only [Set.mem_setOf_eq] at h ⊢
-      rw [← map_sub]
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [Valuation.restrict_lt_iff_lt_embedding, ← map_sub, ← hg, valued_algebraMap]
       rw [← hmax] at h
-      have h1 : v.intValuation (y - x) ≤ WithZero.exp (-((1 - γ.val.log).toNat : ℤ)) :=
+      have h1 : v.intValuation (y - x) ≤ WithZero.exp (-((1 - g.log).toNat : ℤ)) :=
         (IsDedekindDomain.HeightOneSpectrum.intValuation_le_pow_iff_mem v (y - x) _).mpr h
       refine lt_of_le_of_lt h1 ?_
-      rw [(WithZero.lt_log_iff_exp_lt γ.ne_zero).symm]
-      by_cases hpos : 1 - γ.val.log ≥ 0
+      rw [(WithZero.lt_log_iff_exp_lt hg0).symm]
+      by_cases hpos : 1 - g.log ≥ 0
       · rw [Int.toNat_of_nonneg hpos]; omega
-      · push_neg at hpos
-        rw [Int.toNat_of_nonpos (le_of_lt hpos)]; push_cast; omega
+      · rw [Int.toNat_of_nonpos (le_of_lt (by omega))]; push_cast; omega
     · -- For any source basis n, find a target basis γ s.t. `v(algebraMap r) < γ → r ∈ I^n`.
+      -- Take `γ` to be the value-group class of `algebraMap (p^n)`, whose valuation is `exp(-n)`.
       intro n _
-      refine ⟨Units.mk0 (WithZero.exp (1 - n : ℤ)) (by simp [WithZero.exp]), trivial, ?_⟩
+      set a : ℚᵘⁿ_[p] := algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℤᵘⁿ_[p]) ^ n) with ha
+      have hva : Valued.v a = WithZero.exp (-(n : ℤ)) := by
+        rw [ha, valued_algebraMap, map_pow,
+          v.intValuation_singleton (WittVector.p_nonzero p _) hmax, ← WithZero.exp_nsmul]
+        congr 1
+        simp
+      have hane : Valued.v.restrict a ≠ 0 := by
+        rw [ne_eq, Valuation.restrict_eq_zero_iff, hva]; exact WithZero.exp_ne_zero
+      refine ⟨Units.mk0 (Valued.v.restrict a) hane, trivial, ?_⟩
       intro x y h
       simp only [Set.mem_setOf_eq] at h ⊢
-      rw [← hmax]
-      rw [← IsDedekindDomain.HeightOneSpectrum.intValuation_le_pow_iff_mem v (y - x) n]
-      rw [← map_sub] at h
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl] at h
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap] at h
-      simp only [Units.val_mk0] at h
-      by_cases hzero : y - x = 0
-      · rw [hzero]; simp
-      · rw [IsDedekindDomain.HeightOneSpectrum.intValuation_if_neg v hzero] at h ⊢
-        rw [WithZero.exp_lt_exp] at h
-        rw [WithZero.exp_le_exp]
-        omega
+      rw [← hmax, ← IsDedekindDomain.HeightOneSpectrum.intValuation_le_pow_iff_mem v (y - x) n]
+      rw [Valuation.restrict_lt_iff_lt_embedding, ← map_sub, valued_algebraMap, Units.val_mk0,
+        Valuation.embedding_restrict, hva] at h
+      exact le_of_lt h
   -- Transport completeness: the image of a complete space under a uniform inducing map is complete.
   have hRange : IsComplete (Set.range (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]))) := hUI.isComplete_range
   -- Identify the image with `Valued.v.integer`
@@ -193,14 +172,15 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
     refine ⟨?_, ?_⟩
     · rintro ⟨r, rfl⟩
       change Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) r) ≤ 1
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [valued_algebraMap]
       exact (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).intValuation_le_one r
     · intro hx
       obtain ⟨r, hr⟩ := IsDiscreteValuationRing.exists_lift_of_le_one
-        (A := ℤᵘⁿ_[p]) (K := ℚᵘⁿ_[p]) hx
-      exact ⟨r, hr⟩
+        (A := ℤᵘⁿ_[p]) (K := FractionRing (ℤᵘⁿ_[p]))
+        (x := WithVal.equiv _ x) (by rw [WithVal.val_apply_equiv]; exact hx)
+      refine ⟨r, ?_⟩
+      rw [WithVal.algebraMap_right_apply, hr]
+      rfl
   rw [hSet] at hRange
   exact hRange
 
@@ -253,9 +233,7 @@ lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
           WithZero (Multiplicative ℤ)) := by
       rw [show ((p : ℚᵘⁿ_[p])) = algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (p : ℤᵘⁿ_[p]) from by
         push_cast; rfl]
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [valued_algebraMap]
       have hirr : Irreducible (p : ℤᵘⁿ_[p]) := WittVector.irreducible p
       have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
           Ideal.span {(p : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
@@ -274,9 +252,7 @@ lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
         rw [IsFractionRing.map]
         rw [IsLocalization.map_eq]
       rw [hQpu]
-      rw [show (Valued.v : ℚᵘⁿ_[p] → _) =
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation _ from rfl]
-      rw [(IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_of_algebraMap]
+      rw [valued_algebraMap]
       refine (IsDedekindDomain.HeightOneSpectrum.intValuation_eq_one_iff).mpr ?_
       intro hmem
       have hu_unit : IsUnit
@@ -294,7 +270,7 @@ lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
     congr 1; ring
 
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : NontriviallyNormedField ℚᵘⁿ_[p] :=
-  Valued.toNontriviallyNormedField
+  Valued.toNontriviallyNormedField (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
 
 -- View ℚᵘⁿ_[p] as an algebra over ℚ_[p] via the embedding defined above.
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘⁿ_[p]) := (Qp_embd).toAlgebra

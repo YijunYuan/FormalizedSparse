@@ -25,10 +25,15 @@ structure DigitSeries where
 
 instance : FunLike (DigitSeries) ℕ+ ℕ where
   coe := DigitSeries.toFun
-  coe_injective' := by
+  coe_injective := by
     rintro ⟨f, _⟩ ⟨g, _⟩ hfg
     simp only at hfg
     congr
+
+@[simp] theorem DigitSeries.coe_mk (f : ℕ+ → ℕ) (h) :
+    ⇑(⟨f, h⟩ : DigitSeries) = f := rfl
+
+@[simp] theorem DigitSeries.toFun_eq_coe (f : DigitSeries) : f.toFun = ⇑f := rfl
 
 instance : AddCommMonoid DigitSeries where
   add a b := {
@@ -469,9 +474,7 @@ lemma eq_on_of_coeffs_eq : ∀ {f g : ℕ+ → ℕ} {n : ℕ}, coeffs f n = coef
         simpa [coeffs] using h
       rcases Nat.lt_or_eq_of_le hi with hi_lt | hi_eq
       · exact eq_on_of_coeffs_eq h'.2 i (Nat.le_of_lt_succ hi_lt)
-      · have : i = Nat.succPNat n := by
-          apply Subtype.ext
-          simpa using hi_eq
+      · have : i = Nat.succPNat n := Subtype.ext hi_eq
         simpa [this] using h'.1
 
 @[simp] lemma Psi_ofCoeffs (L : List ℕ) : (ofCoeffs L).Psi = L.sum := by
@@ -1365,7 +1368,7 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
       · intro i hi
         simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hi ⊢
         exact hi
-      · intros _ _ _ _; intro h; exact Fin.cast_injective _ h
+      · intro _ _ _ _ h; exact Fin.cast_injective _ h
       · intro j hj
         simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
         refine ⟨Fin.cast hlen j, ?_, ?_⟩
@@ -1386,11 +1389,11 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
         ext x y
         rcases x with ⟨xv, hx⟩
         rcases y with ⟨yv, hy⟩
-        simp [Subtype.instBEq, instBEqOfDecidableEq]
+        simp
       have hbridge : @List.count S Subtype.instBEq d m.toList = Multiset.count d m := by
         rw [hBEq_inst, ← Multiset.coe_count, Multiset.coe_toList]
-      rw [← hbridge, ← hvtoList]
-      convert key using 2
+      rw [← hbridge, ← hvtoList, hBEq_inst]
+      exact key
     rw [hcount_eq]
     exact hA4 d
   -- B: ∑ i, (e i).val = (something) — but actually we need norm version directly
@@ -1775,7 +1778,7 @@ lemma DigitSeries.decDigits_norm (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries
     apply hn
     have hge : (n : ℕ) - 1 ≥ M := by
       by_contra hlt'
-      push_neg at hlt'
+      push Not at hlt'
       exact hnotin ⟨(n : ℕ) - 1, hlt', by
         apply PNat.eq
         change (n : ℕ) - 1 + 1 = (n : ℕ)
@@ -1836,8 +1839,8 @@ lemma DigitSeries.pDigitSum_norm_eq (p : ℕ) [Fact (Nat.Prime p)]
   have hsupp_fin : (Function.support (decDigits p (f.norm p))).Finite := by
     rw [hsupp_eq]
     show (Function.support (f : ℕ+ → ℕ)).Finite
-    -- f.fin_supp is Function.support f.toFun, equal to Function.support (⇑f)
-    convert f.fin_supp using 1
+    -- f.fin_supp is Function.support f.toFun, defeq to Function.support (⇑f)
+    exact f.fin_supp
   have hpDS : pDigitSum p (f.norm p) =
       ((∑ n ∈ hsupp_fin.toFinset, (decDigits p (f.norm p) n).val : ℕ) : WithTop ℕ) := by
     simp [pDigitSum, Set.not_infinite.mpr hsupp_fin]
@@ -1848,7 +1851,6 @@ lemma DigitSeries.pDigitSum_norm_eq (p : ℕ) [Fact (Nat.Prime p)]
     rw [hsupp_eq]
     rfl
   congr 1
-  change ∑ n ∈ hsupp_fin.toFinset, (decDigits p (f.norm p) n).val = Sparse.DigitSeries.Psi f
   rw [hfsupp_eq]
   change ∑ i ∈ f.fin_supp.toFinset, (decDigits p (f.norm p) i).val =
         ∑ i ∈ f.fin_supp.toFinset, f i
@@ -1951,7 +1953,7 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
           have hle : pDigitSum p q ≤ dom p W := by
             unfold dom; exact le_sSup ⟨q, hq, rfl⟩
           rw [hdom_zero] at hle
-          exact le_antisymm hle (zero_le _)
+          exact le_antisymm hle (zero_le)
         -- q ∈ W → q = 0
         have hW_zero : ∀ q ∈ W, q = 0 := by
           intro q hq
@@ -1966,7 +1968,6 @@ lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
           -- ofRat = 0 (zero DigitSeries)
           have hofRat_zero : DigitSeries.ofRat p q hq_fin_q = 0 := by
             ext n
-            change (DigitSeries.ofRat p q hq_fin_q).toFun n = (0 : DigitSeries).toFun n
             change (decDigits p q n).val = 0
             -- Use Psi = 0: support is empty
             by_contra hne
@@ -2321,7 +2322,7 @@ noncomputable def indicatorSeries (A : Set ℕ) (hA_fin : A.Finite) : DigitSerie
         (Subtype.val : ℕ+ → ℕ) ⁻¹' A := by
       ext n
       classical
-      simp only [Function.mem_support, ne_eq, Set.mem_preimage]
+      simp only [Function.mem_support, ne_eq]
       by_cases hin : (n : ℕ) ∈ A
       · simp only [hin, ↓reduceIte, one_ne_zero, not_false_eq_true, true_iff]
         exact hin
@@ -2616,7 +2617,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
           simp [h_notin]
         · intro h; exact absurd (Finset.mem_univ _) h
       omega
-    · push_neg at h_ex
+    · push Not at h_ex
       have h_sum_eq : ∑ j : Fin (n : ℕ), (decDigits p (d j).val pos).val = 0 := by
         rw [Finset.sum_congr rfl (fun j _ => h_each j)]
         rw [Finset.sum_congr rfl (fun j _ => h_indic j)]
@@ -2690,7 +2691,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
             simp [h_notin]
           · intro h; exact absurd (Finset.mem_univ _) h
         omega
-      · push_neg at h_ex
+      · push Not at h_ex
         have h_sum_eq : ∑ j : Fin (n : ℕ), (d_DS j : ℕ+ → ℕ) pos = 0 := by
           rw [Finset.sum_congr rfl (fun j _ => h_each j)]
           refine Finset.sum_eq_zero (fun j _ => ?_)
@@ -2753,7 +2754,6 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
           ∑ j : Fin (n : ℕ), (f (m j) : ℕ+ → ℕ) pos := by
       intro pos
       have := congrArg (fun (g : DigitSeries) => (g : ℕ+ → ℕ) pos) hsum_DS_eq
-      simp only at this
       rw [DigitSeries.sum_apply] at this
       rw [DigitSeries.sum_apply] at this
       exact this
@@ -2792,7 +2792,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
             intro h; exact hjne (h_atmost_one j j₀ h hj₀)
           simp [h_notin]
         · intro h; exact absurd (Finset.mem_univ _) h
-      · push_neg at h_ex
+      · push Not at h_ex
         rw [Finset.sum_congr rfl (fun j _ => h_indic_d j pos)]
         have : ∑ j : Fin (n : ℕ),
             (haveI := Classical.propDecidable ((pos : ℕ) ∈ A (ι_index j));
@@ -2811,7 +2811,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
       obtain ⟨r, hr⟩ := hA1 (m j₁)
       have hr_pos : 0 < r := by
         by_contra hzero
-        push_neg at hzero
+        push Not at hzero
         interval_cases r
         exact hA0 (m j₁) hr
       let pos : ℕ+ := ⟨r, hr_pos⟩
@@ -2836,7 +2836,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
       obtain ⟨r, hr⟩ := hA1 (ι_index i)
       have hr_pos : 0 < r := by
         by_contra hzero
-        push_neg at hzero
+        push Not at hzero
         interval_cases r
         exact hA0 (ι_index i) hr
       let pos : ℕ+ := ⟨r, hr_pos⟩
@@ -2861,7 +2861,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
         rw [← hpointwise]; exact h_d_at_pos
       /- Hence some j has (pos : ℕ) ∈ A (m j). -/
       by_contra h_none
-      push_neg at h_none
+      push Not at h_none
       have h_e_zero : ∑ j : Fin (n : ℕ), (f (m j) : ℕ+ → ℕ) pos = 0 := by
         rw [Finset.sum_congr rfl (fun j _ => h_indic_e j pos)]
         refine Finset.sum_eq_zero (fun j _ => ?_)
@@ -2925,13 +2925,13 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
     refine Finset.card_bij (fun a _ => (a : ℕ)) ?_ ?_ ?_
     · intro a ha
       simp only [Set.Finite.mem_toFinset, B]
-      exact ⟨a, by simpa using ha, rfl⟩
+      exact ⟨a, (hA3 n).mem_toFinset.mp ha, rfl⟩
     · intro a₁ _ a₂ _ h
       exact PNat.coe_injective h
     · intro b hb
       simp only [Set.Finite.mem_toFinset, B] at hb
       rcases hb with ⟨a, ha, rfl⟩
-      exact ⟨a, by simpa using ha, rfl⟩
+      exact ⟨a, (hA3 n).mem_toFinset.mpr ha, rfl⟩
   have hBsup : ∃ K : ℕ, (∀ n, (hB3 n).toFinset.card ≤ K) ∧
       {n | (hB3 n).toFinset.card = K}.Infinite := by
     rcases hAsup with ⟨K, hK, hKinf⟩
@@ -2951,13 +2951,13 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
     refine Finset.sum_bij (fun a _ => (a : ℕ)) ?_ ?_ ?_ ?_
     · intro a ha
       simp only [Set.Finite.mem_toFinset, B]
-      exact ⟨a, by simpa using ha, rfl⟩
+      exact ⟨a, (hA3 i).mem_toFinset.mp ha, rfl⟩
     · intro a₁ _ a₂ _ h
       exact PNat.coe_injective h
     · intro b hb
       simp only [Set.Finite.mem_toFinset, B] at hb
       rcases hb with ⟨a, ha, rfl⟩
-      exact ⟨a, by simpa using ha, rfl⟩
+      exact ⟨a, (hA3 i).mem_toFinset.mpr ha, rfl⟩
     · intro a _
       rfl
   have h0 := IsSparse_of_digit_disjoint₀ p B hB1 hB2 hB3 hB0 hBsup

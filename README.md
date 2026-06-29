@@ -1,8 +1,8 @@
 # FormalizedSparse
 
 ![CI](https://github.com/YijunYuan/FormalizedSparse/actions/workflows/lean_action_ci.yml/badge.svg)
-[![Lean](https://img.shields.io/badge/Lean-4.28.0-5C2D91)](https://leanprover.github.io)
-[![mathlib](https://img.shields.io/badge/mathlib-v4.28.0-5C2D91)](https://github.com/leanprover-community/mathlib4)
+[![Lean](https://img.shields.io/badge/Lean-4.31.0-5C2D91)](https://leanprover.github.io)
+[![mathlib](https://img.shields.io/badge/mathlib-v4.31.0-5C2D91)](https://github.com/leanprover-community/mathlib4)
 
 [![Graph](https://img.shields.io/badge/Dependency_graph-100000?style=for-the-badge&logo=GitHub&logoColor=white&labelColor=black&color=black)](https://yijunyuan.github.io/lean-graph/?url=https://raw.githubusercontent.com/YijunYuan/FormalizedSparse/refs/heads/master/FormalizedSparse.json#dark)
 
@@ -51,4 +51,4 @@ The formalization covers all definitions, lemmas, and theorems from the paper, i
 
 - ~19,300 lines of Lean code
 - All results from the paper are **fully formalized** with no `sorry` gaps
-- Builds against mathlib v4.28.0
+- Builds against mathlib v4.31.0

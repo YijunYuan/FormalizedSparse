@@ -211,14 +211,13 @@ private lemma Cs_partial_diff_eq_Ico_sum
     Cs_partial hf2 s N' - Cs_partial hf2 s N
       = ∑ w ∈ Finset.Ico N N', Cs_term hf2 s w := by
   unfold Cs_partial
-  rw [Finset.range_eq_Ico]
+  simp only [Finset.range_eq_Ico]
   have h_split :
       ∑ w ∈ Finset.Ico 0 N', Cs_term hf2 s w =
         (∑ w ∈ Finset.Ico 0 N, Cs_term hf2 s w) +
         ∑ w ∈ Finset.Ico N N', Cs_term hf2 s w :=
     (Finset.sum_Ico_consecutive (fun w => Cs_term hf2 s w) (Nat.zero_le N) hN).symm
-  rw [h_split]
-  ring
+  rw [h_split, add_sub_cancel_left]
 
 /-- §2c-2 (per-term valuation) — Each summand `algebraMap (Cs_term hf2 s w)` has
 valuation `ofAdd(-w)` in `ℚᵘⁿ_[p,T]`. -/
@@ -235,8 +234,8 @@ private lemma algebraMap_Cs_term_v_le
   rw [map_pow]
   rw [show (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) (pInvT p T) = pInvTQ p T from rfl]
   rw [Valuation.map_mul]
-  rw [show ((pInvTQ p T) ^ w : ℚᵘⁿ_[p, (T : ℕ)]) = (pInvTQ p T) ^ (w : ℤ) from by
-    rw [zpow_natCast]]
+  rw [show ((pInvTQ p T) ^ w : ℚᵘⁿ_[p, (T : ℕ)]) = (pInvTQ p T) ^ (w : ℤ) from
+    (zpow_natCast _ _).symm]
   rw [valued_v_pInvT_zpow]
   have h_OQ_le_one :
       Valued.v (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
@@ -327,17 +326,15 @@ private lemma algebraMap_Cs_partial_isCauchy
   have hsm : StrictMono (WithZeroMulInt.toNNReal (p_ne_zero p)) :=
     WithZeroMulInt.toNNReal_strictMono hp1
   have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
-  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le _
+  have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le
+  -- v4.31: `γ : (ValueGroup₀ Valued.v)ˣ`; bridge to a `WithZero (Multiplicative ℤ)` bound `c`.
+  set c : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hc_def
+  have hγ_ne : c ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ
   set ε : NNReal :=
-    WithZeroMulInt.toNNReal (p_ne_zero p) (γ : WithZero (Multiplicative ℤ)) with hε_def
-  have hγ_ne : (γ : WithZero (Multiplicative ℤ)) ≠ 0 := γ.ne_zero
+    WithZeroMulInt.toNNReal (p_ne_zero p) c with hε_def
   have hε_pos : (0 : NNReal) < ε := by
-    rw [hε_def, show ((WithZeroMulInt.toNNReal (p_ne_zero p))
-          (γ : WithZero (Multiplicative ℤ)) =
-        if h : (γ : WithZero (Multiplicative ℤ)) = 0 then 0
-        else (p : NNReal) ^ ((WithZero.unzero h).toAdd : ℤ)) from rfl,
-      dif_neg hγ_ne]
-    exact zpow_pos hp_pos _
+    rw [hε_def]
+    exact WithZeroMulInt.toNNReal_pos (p_ne_zero p) hγ_ne
   have htendsto : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹) ^ n) Filter.atTop (nhds 0) :=
     tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
   obtain ⟨N, hN⟩ : ∃ N : ℕ, ((p : NNReal)⁻¹) ^ N < ε := by
@@ -347,8 +344,9 @@ private lemma algebraMap_Cs_partial_isCauchy
   have h_convert : ∀ a : ℚᵘⁿ_[p, (T : ℕ)],
       Valued.v a ≤
         ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) →
-      Valued.v a < (γ : WithZero (Multiplicative ℤ)) := by
+      Valued.v.restrict a < γ.1 := by
     intro a hbound
+    rw [Valuation.restrict_lt_iff_lt_embedding, ← hc_def]
     have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a) ≤
         WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _)) :=
@@ -356,12 +354,13 @@ private lemma algebraMap_Cs_partial_isCauchy
     have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
         (((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _)) =
         (p : NNReal) ^ (-(N : ℤ)) := by
-      simp [WithZeroMulInt.toNNReal]
+      rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero, WithZero.unzero_coe]
+      congr 1
     rw [htoNN] at h_nnreal_le
     have h_pow_le : (p : NNReal) ^ (-(N : ℤ)) ≤ ((p : NNReal)⁻¹) ^ N := by
       rw [show (p : NNReal) ^ (-(N : ℤ)) = ((p : NNReal)⁻¹) ^ (N : ℤ) from by
         rw [zpow_neg, ← inv_zpow]]
-      rw [zpow_natCast]
+      rw [show ((p : NNReal)⁻¹) ^ (N : ℤ) = ((p : NNReal)⁻¹) ^ N from zpow_natCast _ _]
     have h_combined : WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a) < ε :=
       lt_of_le_of_lt (h_nnreal_le.trans h_pow_le) hN
     rw [hε_def] at h_combined
@@ -437,7 +436,7 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
   -- Step 1: `algebraMap ∘ Cs_partial s` is Cauchy in `ℚᵘⁿ_[p,T]` (helper §2c-4).
   have h_cauchy := algebraMap_Cs_partial_isCauchy hf2 s
   -- Step 2: take limit `y` in the complete DVF `ℚᵘⁿ_[p,T]`.
-  set y : ℚᵘⁿ_[p, (T : ℕ)] := limUnder Filter.atTop
+  set y : ℚᵘⁿ_[p, (T : ℕ)] := Filter.limUnder Filter.atTop
     (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
     with hy_def
   have hy_tendsto : Filter.Tendsto
@@ -452,14 +451,17 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
       intro N
       exact (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,(T : ℕ)])).valuation_le_one _
     have h_closed : IsClosed
-        { x : ℚᵘⁿ_[p, (T : ℕ)] | Valued.v x ≤ (1 : WithZero (Multiplicative ℤ)) } :=
-      Valued.isClosed_closedBall _ _
+        { x : ℚᵘⁿ_[p, (T : ℕ)] | Valued.v x ≤ (1 : WithZero (Multiplicative ℤ)) } := by
+      have h := Valued.isClosed_integer (ℚᵘⁿ_[p, (T : ℕ)])
+      convert h using 1
+      ext x
+      simp [Valuation.mem_integer_iff]
     exact h_closed.mem_of_tendsto hy_tendsto h_eventually
   -- Step 4: lift `y` to `c : ℤᵘⁿ_[p,T]` via `IsDiscreteValuationRing.exists_lift_of_le_one`.
   obtain ⟨c, hc_eq⟩ :
       ∃ c : ℤᵘⁿ_[p,(T : ℕ)],
         algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) c = y :=
-    IsDiscreteValuationRing.exists_lift_of_le_one h_y_v_le_one
+    Texists_lift_of_valued_le_one p (T : ℕ) h_y_v_le_one
   -- Step 5a: control the tail valuation at `N = 1` via closed-ball + tendsto.
   have h_tail_bound :
       Valued.v (y - algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_term hf2 s 0))
@@ -470,7 +472,16 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     set ball : Set (ℚᵘⁿ_[p, (T : ℕ)]) :=
       { x | Valued.v x ≤ ((Multiplicative.ofAdd (-(1 : ℤ)) : Multiplicative ℤ) : WithZero _) }
       with hball_def
-    have h_ball_closed : IsClosed ball := Valued.isClosed_closedBall _ _
+    have h_ball_closed : IsClosed ball := by
+      -- v4.31: `isClosed_closedBall` is stated via `Valued.v.restrict`; bridge through the
+      -- value-group class of `pInvTQ p T` (whose valuation is `ofAdd(-1)`).
+      have hbridge : ball =
+          {x : ℚᵘⁿ_[p, (T : ℕ)] | Valued.v.restrict x ≤ Valued.v.restrict (pInvTQ p (T : ℕ))} := by
+        ext x
+        rw [hball_def, Set.mem_setOf_eq, Set.mem_setOf_eq,
+          Valuation.restrict_le_iff_le_embedding, Valuation.embedding_restrict, valued_v_pInvT]
+      rw [hbridge]
+      exact Valued.isClosed_closedBall _ _
     have h_tendsto_tail :
         Filter.Tendsto
           (fun N : ℕ =>
@@ -1002,8 +1013,16 @@ private lemma Cs_diff_alg_v_le
   set ball : Set (ℚᵘⁿ_[p, (T : ℕ)]) :=
     { x | Valued.v x ≤ ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) }
     with hball_def
-  have h_ball_closed : IsClosed ball :=
-    Valued.isClosed_closedBall _ _
+  have h_ball_closed : IsClosed ball := by
+    have hbridge : ball =
+        {x : ℚᵘⁿ_[p, (T : ℕ)] |
+          Valued.v.restrict x ≤ Valued.v.restrict ((pInvTQ p (T : ℕ)) ^ (N : ℤ))} := by
+      ext x
+      rw [hball_def, Set.mem_setOf_eq, Set.mem_setOf_eq,
+        Valuation.restrict_le_iff_le_embedding, Valuation.embedding_restrict,
+        valued_v_pInvT_zpow]
+    rw [hbridge]
+    exact Valued.isClosed_closedBall _ _
   have h_tendsto :
       Filter.Tendsto
         (fun N' : ℕ => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
@@ -1059,7 +1078,7 @@ private lemma per_s_inner_sum_eq
   have h_pInvTQ_eq_alg : ∀ w : ℕ, (pInvTQ p (T : ℕ)) ^ (w : ℤ) =
       algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) ((pInvT p (T : ℕ)) ^ w) := by
     intro w
-    rw [zpow_natCast, map_pow]
+    rw [show (pInvTQ p (T : ℕ)) ^ (w : ℤ) = (pInvTQ p (T : ℕ)) ^ w from zpow_natCast _ _, map_pow]
     rfl
   have h_step1 :
       ∑ w ∈ Finset.range (W + 1),
@@ -1640,21 +1659,19 @@ private lemma fhat_diff_isTNullSeries
   -- Proof skeleton via the Valued neighbourhood characterisation:
   rw [Filter.tendsto_def]
   intro U hU
-  rw [Valued.mem_nhds] at hU
-  obtain ⟨γ, hγ⟩ := hU
-  -- It suffices to show: `∀ᶠ M, Valued.v (P M) < γ`.
+  obtain ⟨c, hc_ne, hγ⟩ := Texists_v_lt_subset p (T : ℕ) hU
+  -- It suffices to show: `∀ᶠ M, Valued.v (P M) < c`.
   suffices h_ev : ∀ᶠ M : ℕ in Filter.atTop,
-      Valued.v (P M) < (γ : WithZero (Multiplicative ℤ)) by
+      Valued.v (P M) < c by
     filter_upwards [h_ev] with M hM
     exact hγ (by simpa using hM)
   -- Reduce to: `∀ᶠ M, Valued.v (P M) ≤ ofAdd(-(K + 1))` where K = ⌊T(M-g)⌋,
-  -- and as M → ∞, K → ∞ makes the bound < γ eventually.
-  -- Step 1: extract the integer exponent `k` corresponding to `γ`.
-  set k : ℤ := Multiplicative.toAdd (WithZero.unitsWithZeroEquiv γ) with hk_def
-  have h_γ_val : (γ : WithZero (Multiplicative ℤ)) =
+  -- and as M → ∞, K → ∞ makes the bound < c eventually.
+  -- Step 1: extract the integer exponent `k` corresponding to `c`.
+  set k : ℤ := Multiplicative.toAdd (WithZero.unzero hc_ne) with hk_def
+  have h_γ_val : c =
       ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero (Multiplicative ℤ)) := by
-    rw [(WithZero.coe_unitsWithZeroEquiv_eq_units_val γ).symm]
-    rfl
+    rw [hk_def, ofAdd_toAdd, WithZero.coe_unzero]
   -- Step 2: choose threshold M₀ so that for M ≥ M₀, ⌊T(M-g)⌋ ≥ -k.
   -- Concretely: pick M₀ := ⌈g + (-k)/T⌉₊.
   have hT_pos : (0 : ℚ) < (T : ℕ) := by exact_mod_cast T.pos
@@ -3038,7 +3055,7 @@ private lemma exists_function_with_count_vector_aux
         left_inv := fun ⟨⟨_, k⟩, hb⟩ => by subst hb; rfl
         right_inv := fun _ => rfl }
     rw [Fintype.card_congr e2, Fintype.card_fin]
-  convert h_card
+  exact h_card
 
 /-- §5b auxiliary — Stabilizer cardinality for orbit-stabilizer on `Fin n → A`.
 The stabilizer of `e₀` under the `DomMulAct` (right-composition) action of
@@ -3062,7 +3079,8 @@ private lemma stabilizer_perm_dom_card_aux
   apply Finset.prod_congr rfl
   intro a _
   rw [Fintype.card_perm]
-  have : Fintype.card { i : Fin n // e₀ i = a } = m0 a := by convert he₀ a
+  have : Fintype.card { i : Fin n // e₀ i = a } = m0 a := by
+    rw [← he₀ a]; exact Fintype.card_congr (Equiv.setCongr rfl).symm
   rw [this]
 
 /-- §5b auxiliary — Orbit = count-vector fiber under `DomMulAct` action.
@@ -3094,13 +3112,16 @@ private lemma orbit_perm_dom_eq_count_fiber_aux
     rw [show Fintype.card ↑{i : Fin n | (DomMulAct.mk g₀ • e₀) i = a}
         = Fintype.card { i : Fin n // (DomMulAct.mk g₀ • e₀) i = a } from
       Fintype.card_congr (Equiv.refl _)]
-    rw [key]; convert he₀ a
+    rw [key]
+    rw [← he₀ a]; exact Fintype.card_congr (Equiv.setCongr rfl).symm
   · intro he
     have h_count_eq : ∀ a, Fintype.card {i : Fin n // e i = a}
                       = Fintype.card {i : Fin n // e₀ i = a} := by
       intro a
-      have h1 : Fintype.card { i : Fin n // e i = a } = m0 a := by convert he a
-      have h2 : Fintype.card { i : Fin n // e₀ i = a } = m0 a := by convert he₀ a
+      have h1 : Fintype.card { i : Fin n // e i = a } = m0 a := by
+        rw [← he a]; exact Fintype.card_congr (Equiv.setCongr rfl).symm
+      have h2 : Fintype.card { i : Fin n // e₀ i = a } = m0 a := by
+        rw [← he₀ a]; exact Fintype.card_congr (Equiv.setCongr rfl).symm
       omega
     let βa : (a : A) → {i : Fin n // e i = a} ≃ {i : Fin n // e₀ i = a} := fun a =>
       Fintype.equivOfCardEq (h_count_eq a)
@@ -4288,9 +4309,16 @@ private lemma Pfhat_TLifted_collapse_combinatorial
   -- package the surviving coefficient and the vanishing of the other terms.
   --
   -- Step 1: extract c ∈ nonZeroDivisors ℤᵘⁿ_[p] from IsLocalization.integerNormalization_spec.
-  obtain ⟨c, hc⟩ :=
+  -- (In v4.31 the spec is `∃ b ∈ M, map = b • p` with `c` the bare element; we reconstruct the
+  -- coefficient-wise statement `hc` used below.)
+  obtain ⟨c, hc_mem, hc_eq⟩ :=
     IsLocalization.integerNormalization_spec (nonZeroDivisors ℤᵘⁿ_[p]) P
-  -- hc : ∀ (i : ℕ), (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) ((P_int P).coeff i) = c.val • P.coeff i
+  have hc : ∀ i : ℕ, (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p])
+      ((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff i) = c • P.coeff i := by
+    intro i
+    have := congrArg (fun q : Polynomial ℚᵘⁿ_[p] => q.coeff i) hc_eq
+    simpa [Polynomial.coeff_map, Polynomial.coeff_smul] using this
+  -- hc : ∀ (i : ℕ), (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) ((P_int P).coeff i) = c • P.coeff i
   -- Step 2: extract finite support of φ₀ (for `Nat.multinomial` argument).
   have hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite :=
     phi0_support_finite hSparse
@@ -4301,11 +4329,11 @@ private lemma Pfhat_TLifted_collapse_combinatorial
       (fhat := fhat) hSparse _h_supp _h_coeff_eq hCs_ne hφ₀_finite
   -- Step 4: define α := (algebraMap c.val : ℚᵘⁿ_[p,T]) * (algebraMap β : ℚᵘⁿ_[p,T]).
   set α : ℚᵘⁿ_[p, (T : ℕ)] :=
-    (algebraMap ℤᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) c.val *
+    (algebraMap ℤᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) c *
     (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β with hα_def
   refine ⟨α, ?_, ?_⟩
   · -- Step 5: α ≠ 0 via `alpha_ne_zero_of_c_β`.
-    exact alpha_ne_zero_of_c_β c hβ_ne
+    exact alpha_ne_zero_of_c_β ⟨c, hc_mem⟩ hβ_ne
   · -- Set abbreviations for the surviving rational value `q0` and the inner sum index range.
     set q0 : ℚ := -(r0 hSparse) / T +
       ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
@@ -4446,10 +4474,10 @@ private lemma Pfhat_TLifted_collapse_combinatorial
         --       = α * (algebraMap (P.coeff n) * ∏ᶠ algebraMap (Cs^φ₀))
         have h_c_step :
             (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                ((algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])) c.val)
-              = (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)])) c.val :=
+                ((algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])) c)
+              = (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p, (T : ℕ)])) c :=
           (IsScalarTower.algebraMap_apply (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
-            (ℚᵘⁿ_[p, (T : ℕ)]) c.val).symm
+            (ℚᵘⁿ_[p, (T : ℕ)]) c).symm
         rw [h_c_step, hα_def]
         ring
       · -- Conjunct (b): per-`i` vanishing for `k ≠ w0_rat.num`.
