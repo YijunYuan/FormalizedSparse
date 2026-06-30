@@ -3,23 +3,13 @@ import Mathlib.RingTheory.LaurentSeries
 import Mathlib.RingTheory.IntegralClosure.Algebra.Basic
 import Mathlib.Topology.Defs.Basic
 
-namespace FormalizedSparse.Admitted
+/- USER: This file contains admitted results from Kedlaya's paper. You should `NOT` try to
+formalize them by yourself. Just ues them as black boxes.
+-/
+
+namespace FormalizedSparse.Kedlaya
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
-
-/-!
-# Kedlaya (2001a) Theorem 15, via Kedlaya (2017) Theorem 11.11
-
-This file formalizes the **statement** of Theorem 15 of Kedlaya, *The algebraic closure
-of the power series field in positive characteristic* (2001a).
-
-## References
-
-* K. S. Kedlaya, *The algebraic closure of the power series field in positive
-  characteristic*, Proc. Amer. Math. Soc. 129 (2001), Theorem 15.
-* K. S. Kedlaya, *On the algebraicity of generalized power series* (2017),
-  Definitions 2.1–2.3, Theorem 11.11.
--/
 
 /-- The support set `S_{a,b,c}` of Kedlaya (2017), Definition 2.1.
 
@@ -109,4 +99,4 @@ open Ordinal in
 theorem kedlaya_2001b_ordinal_bound (f : 𝕃_[p]) (hp : IsAlgebraic ℚ_[p] f) :
   typeLT f.support ≤ omega0 ^ omega0 := by admit
 
-end FormalizedSparse.Admitted
+end FormalizedSparse.Kedlaya
