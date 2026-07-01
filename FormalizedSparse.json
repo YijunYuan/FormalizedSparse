@@ -31,6 +31,11 @@
   "constType": "NeZero (0 + 1)",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.word_mapDomain_strictMono",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ) {φ : ℕ → ℕ}, StrictMono φ → FormalizedSparse.word (Finsupp.mapDomain φ d) = FormalizedSparse.word d",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.support_nonempty_of_nonzero",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)]\n  (x : FormalizedSparse.LiftedPAdicHahnSeries p ⧸ FormalizedSparse.NullSeriesIdeal p),\n  ¬x = 0 → (Function.support ↑(Exists.choose ⋯)).Nonempty",
@@ -191,9 +196,24 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T], IsDiscreteValuationRing ℤᵘⁿ_[p,T]",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.shift_comp_shift",
+  "constType":
+  "∀ {k M N n : ℕ},\n  M ≤ n →\n    ∀ (i : ℕ),\n      (fun i => if i < k + M then i else i + N) ((fun i => if i < k then i else i + n) i) =\n        if i < k then i else i + (n + N)",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "Nat.le_succ",
   "constType": "∀ (n : ℕ), n ≤ n.succ",
   "constCategory": "Theorem"},
+ {"references":
+  ["List.dropLast",
+   "HSub.hSub",
+   "List.zipWith",
+   "FormalizedSparse.gapVector.match_1",
+   "OfNat.ofNat",
+   "Unit"],
+  "name": "FormalizedSparse.RayDecomposition.gapOfList",
+  "constType": "List ℕ → List ℕ",
+  "constCategory": "Definition"},
  {"references": [],
   "name": "eq_false",
   "constType": "∀ {p : Prop}, ¬p → p = False",
@@ -283,6 +303,11 @@
   "∀ (f f_1 : FormalizedSparse.Sparse.DigitSeries),\n  f = f_1 → ∀ (p p_1 : ℕ) (e_p : p = p_1) [inst : Fact (Nat.Prime p)], f.IsP p = f_1.IsP p_1",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.singleWitness_ne",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), FormalizedSparse.QuasiTwistRecurrent.singleWitness u ≠ 0",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.rays_sub_or_finite_inter",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {c : ℕ} {m : ℤ} {N : ℕ+} {S R₁ R₂ : Set ℚ},\n  FormalizedSparse.IsRay p a c m N S R₁ → FormalizedSparse.IsRay p a c m N S R₂ → R₁ ⊆ R₂ ∨ R₂ ⊆ R₁ ∨ (R₁ ∩ R₂).Finite",
@@ -338,14 +363,13 @@
   "constType": "∀ (n m k : ℕ), n + m + k = n + (m + k)",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.mapDomain_digit_lt",
-  "constType":
-  "∀ {p : ℕ} [Fact (Nat.Prime p)] (d : ℕ →₀ ℕ) {φ : ℕ → ℕ},\n  Function.Injective φ → (∀ (i : ℕ), d i < p) → ∀ (j : ℕ), (Finsupp.mapDomain φ d) j < p",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.TScaled.instModuleFiniteOQpUnT",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [NeZero T], Module.Finite ℤᵘⁿ_[p] ℤᵘⁿ_[p,T]",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapOfList.eq_1",
+  "constType": "FormalizedSparse.RayDecomposition.gapOfList [] = []",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.QpUn.valued_algebraMap",
@@ -380,6 +404,11 @@
   "constType": "(Set.range Nat.cast).IsPWO",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.singleWitness_support",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), (FormalizedSparse.QuasiTwistRecurrent.singleWitness u).support = {u}",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "Nat.cast_mul",
   "constType":
   "∀ {α : Type u_1} [inst : NonAssocSemiring α] (m n : ℕ), ↑(m * n) = ↑m * ↑n",
@@ -392,16 +421,6 @@
  {"references": [],
   "name": "Nat.Prime",
   "constType": "ℕ → Prop",
-  "constCategory": "Definition"},
- {"references":
-  ["List.dropLast",
-   "HSub.hSub",
-   "List.zipWith",
-   "FormalizedSparse.gapVector.match_1",
-   "OfNat.ofNat",
-   "Unit"],
-  "name": "FormalizedSparse.gapOfList",
-  "constType": "List ℕ → List ℕ",
   "constCategory": "Definition"},
  {"references":
   ["PNat",
@@ -677,9 +696,9 @@
   "{R : Type u_1} →\n  {M : Type u_2} → [inst : Ring R] → [inst_1 : AddCommGroup M] → [inst_2 : _root_.Module R M] → Submodule R M → Setoid M",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.shift_injective",
+  "name": "FormalizedSparse.RayDecomposition.map_getI",
   "constType":
-  "∀ (k t : ℕ), Function.Injective fun i => if i < k then i else i + t",
+  "∀ (l : List ℕ) (f : ℕ → ℕ), ∀ j < l.length, (List.map f l).getI j = f (l.getI j)",
   "constCategory": "Theorem"},
  {"references":
   ["PNat",
@@ -693,11 +712,6 @@
   "constType":
   "∀ (motive : (x : List ℕ) → (x_1 : ℕ+) → (FormalizedSparse.Sparse.DigitSeries.ofCoeffs x) x_1 ≠ 0 → Prop) (x : List ℕ)\n  (x_1 : ℕ+) (x_2 : (FormalizedSparse.Sparse.DigitSeries.ofCoeffs x) x_1 ≠ 0),\n  (∀ (i : ℕ+) (hi : (FormalizedSparse.Sparse.DigitSeries.ofCoeffs []) i ≠ 0), motive [] i hi) →\n    (∀ (a : ℕ) (L : List ℕ) (i : ℕ+) (hi : (FormalizedSparse.Sparse.DigitSeries.ofCoeffs (a :: L)) i ≠ 0),\n        motive (a :: L) i hi) →\n      motive x x_1 x_2",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.gapOfList.eq_2",
-  "constType":
-  "∀ (hd : ℕ) (tl : List ℕ),\n  FormalizedSparse.gapOfList (hd :: tl) = hd :: List.zipWith (fun a b => b - a - 1) (hd :: tl).dropLast tl",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_5",
   "constType":
@@ -831,11 +845,6 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (q : ℚ) (hq : FormalizedSparse.Sparse.pDigitSum p q ≠ ⊤),\n  FormalizedSparse.Sparse.pDigitSum p q =\n    ↑(FormalizedSparse.Sparse.DigitSeries.Psi (FormalizedSparse.Sparse.DigitSeries.ofRat p q hq))",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.gapVector_eq_gapOfList",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ), FormalizedSparse.gapVector d = FormalizedSparse.gapOfList (d.support.sort fun x1 x2 => x1 ≤ x2)",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "Eq.trans",
   "constType": "∀ {α : Sort u} {a b c : α}, a = b → b = c → a = c",
   "constCategory": "Theorem"},
@@ -945,11 +954,6 @@
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T], ContinuousSMul ℚᵘⁿ_[p] ℚᵘⁿ_[p,T]",
   "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.finite_bounded_finsupp",
-  "constType":
-  "∀ (B p : ℕ), 0 < p → {d | (∀ (i : ℕ), d i < p) ∧ d.support ⊆ Finset.range B}.Finite",
-  "constCategory": "Theorem"},
  {"references":
   ["PNat",
    "FormalizedSparse.Sparse.DigitSeries.coeffs.match_1",
@@ -964,11 +968,6 @@
   "constType":
   "∀ {α : Type u} {a : α} {motive : (a_1 : List α) → List.Mem a a_1 → Prop} {a_1 : List α} (t : List.Mem a a_1),\n  (∀ (as : List α), motive (a :: as) ⋯) →\n    (∀ (b : α) {as : List α} (a_2 : List.Mem a as), motive (b :: as) ⋯) → motive a_1 t",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.gapOfList_map_insertZeros",
-  "constType":
-  "∀ (pos : List ℕ),\n  (∀ (j₁ j₂ : ℕ), j₁ < j₂ → j₂ < pos.length → pos.getI j₁ < pos.getI j₂) →\n    ∀ (i N : ℕ),\n      i < pos.length →\n        FormalizedSparse.gapOfList (List.map (fun x => if x < pos.getI i then x else x + N) pos) =\n          (FormalizedSparse.gapOfList pos).set i ((FormalizedSparse.gapOfList pos).getI i + N)",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.ofDigits_eq_zero_of_sum_eq_zero",
   "constType": "∀ (p : ℕ) {L : List ℕ}, L.sum = 0 → Nat.ofDigits p L = 0",
@@ -990,6 +989,11 @@
   "name": "NNReal",
   "constType": "Type",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.insertAt_above",
+  "constType":
+  "∀ {e : ℕ →₀ ℕ} {P n x : ℕ}, P + n ≤ x → (Finsupp.mapDomain (fun y => if y < P then y else y + n) e) x = e (x - n)",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "List.below",
   "constType":
@@ -1019,6 +1023,11 @@
   "name": "FormalizedSparse.TScaled.TLiftedPAdicHahnSeries",
   "constType": "(p : ℕ) → [Fact (Nat.Prime p)] → ℕ → Type",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.insertZeros_comp_same",
+  "constType":
+  "∀ (P N' k j : ℕ),\n  ((fun i => if i < P then i else i + j * N') ∘ fun i => if i < P then i else i + k * N') = fun i =>\n    if i < P then i else i + (k + j) * N'",
+  "constCategory": "Theorem"},
  {"references":
   ["Polynomial.eval₂", "Polynomial.X", "Polynomial.C", "RingHom.comp"],
   "name": "Polynomial.map",
@@ -1105,6 +1114,16 @@
   "name": "le_rfl",
   "constType": "∀ {α : Type u_1} [inst : Preorder α] {a : α}, a ≤ a",
   "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.pAdicHahnSeries.teich_sub_isUnit",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a b : 𝔽ᵃ_[p]},\n  a ≠ b → IsUnit ((WittVector.teichmuller p) a - (WittVector.teichmuller p) b)",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.insert_pow_mem",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ} {m : ℤ} {hm : -b ≤ m} {M N : ℕ+} {S : Set ℚ},\n  FormalizedSparse.IsAdmissible p a b c m hm M N S →\n    ∀ (P : ℕ),\n      ↑M ≤ P →\n        ∀ (s : ℕ) (e : ℕ →₀ ℕ),\n          (∀ (i : ℕ), e i < p) →\n            (e.sum fun x v => v) ≤ c →\n              1 / ↑↑a * (↑m - e.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ∈ S →\n                (∀ (x : ℕ), P - ↑M ≤ x → x < P → e x = 0) →\n                  have e' := Finsupp.mapDomain (fun x => if x < P then x else x + s * ↑N) e;\n                  (∀ (i : ℕ), e' i < p) ∧\n                    (e'.sum fun x v => v) ≤ c ∧\n                      1 / ↑↑a * (↑m - e'.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ∈ S ∧\n                        ∀ (x : ℕ), P - ↑M ≤ x → x < P → e' x = 0",
+  "constCategory": "Theorem"},
  {"references":
   ["Lean.Name.mkStr4",
    "Bind.bind",
@@ -1189,11 +1208,6 @@
   "constType":
   "∀ {α : Type u_1} [inst : Add α] [inst_1 : LT α] [AddLeftStrictMono α] [AddLeftReflectLT α] (a : α) {b c : α},\n  (a + b < a + c) = (b < c)",
   "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.gapVector_eq",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ),\n  FormalizedSparse.gapVector d =\n    match d.support.sort fun x1 x2 => x1 ≤ x2 with\n    | [] => []\n    | hd :: tl => hd :: List.zipWith (fun a b => b - a - 1) (hd :: tl).dropLast tl",
-  "constCategory": "Theorem"},
  {"references": ["ZMod", "AlgebraicClosure", "Nat.Prime"],
   "name": "FormalizedSparse.Fpbar",
   "constType": "(p : ℕ) → [Fact (Nat.Prime p)] → Type",
@@ -1213,14 +1227,23 @@
   "constType":
   "FormalizedSparse.Sparse.DigitSeries → ℕ → FormalizedSparse.Sparse.DigitSeries",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.mem_derivedSet_of_tendsto_seq",
+  "constType":
+  "∀ {α : Type u_1} [inst : TopologicalSpace α] {S : Set α} {x : α} (u : ℕ → α),\n  (∀ (n : ℕ), u n ∈ S) → (∀ (n : ℕ), u n ≠ x) → Filter.Tendsto u Filter.atTop (nhds x) → x ∈ derivedSet S",
+  "constCategory": "Theorem"},
  {"references": ["Multiset.range", "Multiset.nodup_range"],
   "name": "Finset.range",
   "constType": "ℕ → Finset ℕ",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.digitVal_split",
+  "name": "FormalizedSparse.null_series_no_unit_leading",
   "constType":
-  "∀ {p : ℕ} [Fact (Nat.Prime p)] (d : ℕ →₀ ℕ) (s n : ℕ),\n  ((Finsupp.mapDomain (fun x => if x < s then x else x + n) d).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) =\n    ∑ i ∈ d.support with i < s, ↑(d i) * ↑p ^ (-(↑i + 1)) +\n      ↑p ^ (-↑n) * ∑ i ∈ d.support with s ≤ i, ↑(d i) * ↑p ^ (-(↑i + 1))",
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {Δ : FormalizedSparse.LiftedPAdicHahnSeries p},\n  Δ ∈ FormalizedSparse.NullSeriesIdeal p → ∀ {q : ℚ}, IsUnit (Δ.coeff q) → (∀ q' < q, Δ.coeff q' = 0) → False",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.strictMono_insertZeros",
+  "constType": "∀ (s N : ℕ), StrictMono fun j => if j < s then j else j + N",
   "constCategory": "Theorem"},
  {"references": ["Nat.casesOn", "Unit.unit", "OfNat.ofNat", "Unit"],
   "name":
@@ -1233,6 +1256,12 @@
   "name": "FormalizedSparse.IsRepModZ",
   "constType": "Set ℚ → Set ℚ → Prop",
   "constCategory": "Definition"},
+ {"references": [],
+  "name":
+  "FormalizedSparse.BoundedSupport.real_derivedSet_nonempty_of_infinite_bounded",
+  "constType":
+  "∀ {S : Set ℚ}, S.Infinite → Bornology.IsBounded S → (derivedSet (Rat.cast '' S)).Nonempty",
+  "constCategory": "Theorem"},
  {"references": ["Not", "Decidable.casesOn"],
   "name": "dite",
   "constType":
@@ -1387,11 +1416,6 @@
   "constType": "∀ {α : Type u_2} [inst : Preorder α] (x : α), (x < x) = False",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.instIsScalarTowerLaurentHahn",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)], IsScalarTower 𝔽ᵃ_[p] (LaurentSeries 𝔽ᵃ_[p]) (HahnSeries ℚ 𝔽ᵃ_[p])",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_2",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) (x y : FormalizedSparse.LiftedPAdicHahnSeries p),\n  HahnSeries.map (x + y) (FormalizedSparse.TScaled.OQpUn_embd p T) =\n    HahnSeries.map x (FormalizedSparse.TScaled.OQpUn_embd p T) +\n      HahnSeries.map y (FormalizedSparse.TScaled.OQpUn_embd p T)",
@@ -1439,11 +1463,6 @@
   "{F : Type u_1} →\n  {R : Type u_4} →\n    {S : Type u_5} →\n      [inst : NonUnitalNonAssocSemiring R] →\n        [inst_1 : NonUnitalNonAssocSemiring S] →\n          [inst_2 : FunLike F R S] → [NonUnitalRingHomClass F R S] → (f : F) → Function.Bijective ⇑f → R ≃+* S",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.coeff_eq_zero_of_lt_val",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : 𝕃_[p]) (q : ℚ), ↑q < (FormalizedSparse.val p) x → x.coeff q = 0",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.Psi_eq_sum_indices",
   "constType":
   "∀ (f : FormalizedSparse.Sparse.DigitSeries) {n : ℕ},\n  f.maxIndex < n → FormalizedSparse.Sparse.DigitSeries.Psi f = (FormalizedSparse.Sparse.DigitSeries.indices n).sum ⇑f",
@@ -1452,6 +1471,17 @@
   "name": "Nat.mod_add_div",
   "constType": "∀ (m k : ℕ), m % k + k * (m / k) = m",
   "constCategory": "Theorem"},
+ {"references":
+  ["ZMod",
+   "FormalizedSparse.pAdicHahnSeries.fromCoeff",
+   "ite",
+   "FormalizedSparse.Fpbar",
+   "Nat.Prime",
+   "FormalizedSparse.QuasiTwistRecurrent.singleWitness._proof_4",
+   "OfNat.ofNat"],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.singleWitness",
+  "constType": "{p : ℕ} → [inst : Fact (Nat.Prime p)] → ℚ → 𝕃_[p]",
+  "constCategory": "Definition"},
  {"references": [],
   "name": "FormalizedSparse.QpUn.Qp_embd._proof_1",
   "constType":
@@ -1492,11 +1522,6 @@
   "∀ (L : List ℕ), FormalizedSparse.Sparse.DigitSeries.Psi (FormalizedSparse.Sparse.DigitSeries.ofCoeffs L) = L.sum",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.infinite_ray_tail_avoids_finite",
-  "constType":
-  "∀ {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {m : ℤ} {N : ℕ+} (d_base : ℕ →₀ ℕ) (P : ℕ),\n  0 < 1 / ↑↑a * ∑ i ∈ d_base.support with P ≤ i, ↑(d_base i) * ↑p ^ (-(↑i + 1)) →\n    ∀ (F : Finset ℚ),\n      ∃ k₀,\n        ∀ (k : ℕ),\n          k₀ ≤ k →\n            1 / ↑↑a *\n                (↑m -\n                  (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v =>\n                    ↑v * ↑p ^ (-(↑i + 1))) ∉\n              F",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.main_theorem",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (W : Set ℚ),\n  W ≠ {0} →\n    FormalizedSparse.Sparse.IsSparse p W →\n      FormalizedSparse.IsRepModZ W {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x} → ¬IsAlgebraic ℚᵘⁿ_[p] f",
@@ -1505,11 +1530,6 @@
   "name": "PNat.natPred",
   "constType": "ℕ+ → ℕ",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.ball_val_mem_nhds",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ), {h | ↑↑u < (FormalizedSparse.val p) (f - h)} ∈ nhds f",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "Set.Finite.insert",
   "constType":
@@ -1532,6 +1552,16 @@
   "name": "FormalizedSparse.IsNullSeries._proof_2",
   "constType": "IsOrderedMonoid (Multiplicative ℤ)",
   "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.word_sum",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ), (FormalizedSparse.word d).sum = d.sum fun x v => v",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapOfList_map_insertZeros",
+  "constType":
+  "∀ (pos : List ℕ),\n  (∀ (j₁ j₂ : ℕ), j₁ < j₂ → j₂ < pos.length → pos.getI j₁ < pos.getI j₂) →\n    ∀ (i N : ℕ),\n      i < pos.length →\n        FormalizedSparse.RayDecomposition.gapOfList (List.map (fun x => if x < pos.getI i then x else x + N) pos) =\n          (FormalizedSparse.RayDecomposition.gapOfList pos).set i\n            ((FormalizedSparse.RayDecomposition.gapOfList pos).getI i + N)",
+  "constCategory": "Theorem"},
  {"references":
   ["RingHom.id", "Polynomial.monomial", "DFunLike.coe", "OfNat.ofNat"],
   "name": "Polynomial.X",
@@ -1543,6 +1573,11 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T],\n  (FormalizedSparse.TScaled.TNullSeriesIdeal p T).IsTwoSided",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.support_sort_mapDomain",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ) {φ : ℕ → ℕ},\n  StrictMono φ →\n    ((Finsupp.mapDomain φ d).support.sort fun x1 x2 => x1 ≤ x2) = List.map φ (d.support.sort fun x1 x2 => x1 ≤ x2)",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "neg_add_rev",
   "constType":
   "∀ {G : Type u_1} [inst : SubtractionMonoid G] (a b : G), -(a + b) = -b + -a",
@@ -1551,11 +1586,6 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.pDigitSum_norm_eq",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : FormalizedSparse.Sparse.DigitSeries),\n  f.IsP p →\n    FormalizedSparse.Sparse.pDigitSum p ((FormalizedSparse.Sparse.DigitSeries.norm p) f) =\n      ↑(FormalizedSparse.Sparse.DigitSeries.Psi f)",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.gapVector_getI",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ),\n  ∀ j < (FormalizedSparse.gapVector d).length,\n    (FormalizedSparse.gapVector d).getI j =\n      (d.support.sort fun x1 x2 => x1 ≤ x2).getI j -\n        if j = 0 then 0 else (d.support.sort fun x1 x2 => x1 ≤ x2).getI (j - 1) + 1",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "CharP.cast_eq_zero",
@@ -1623,11 +1653,6 @@
   "constType":
   "∀ (f : FormalizedSparse.Sparse.DigitSeries) {n : ℕ},\n  f.maxIndex < n → FormalizedSparse.Sparse.DigitSeries.Psi f = (FormalizedSparse.Sparse.DigitSeries.coeffs (⇑f) n).sum",
   "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.eq_finite_union_rays",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ} {m : ℤ} {hm : -b ≤ m} {M N : ℕ+} {S : Set ℚ},\n  FormalizedSparse.IsAdmissible p a b c m hm M N S →\n    ∃ E rays, (∀ R ∈ rays, FormalizedSparse.IsRay p a c m N S R) ∧ S = ↑E ∪ rays.sup id",
-  "constCategory": "Theorem"},
  {"references":
   ["ZMod",
    "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_3",
@@ -1648,6 +1673,11 @@
   "constType":
   "(p : ℕ) →\n  [inst : Fact (Nat.Prime p)] →\n    (T : ℕ) → FormalizedSparse.LiftedPAdicHahnSeries p →+* FormalizedSparse.TScaled.TLiftedPAdicHahnSeries p T",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.eq_finite_union_rays",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ} {m : ℤ} {hm : -b ≤ m} {M N : ℕ+} {S : Set ℚ},\n  FormalizedSparse.IsAdmissible p a b c m hm M N S →\n    ∃ E rays, (∀ R ∈ rays, FormalizedSparse.IsRay p a c m N S R) ∧ S = ↑E ∪ rays.sup id",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.toFun",
   "constType": "FormalizedSparse.Sparse.DigitSeries → ℕ+ → ℕ",
@@ -1686,29 +1716,9 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)]\n  (x : FormalizedSparse.LiftedPAdicHahnSeries p ⧸ FormalizedSparse.NullSeriesIdeal p),\n  (Function.support ↑(Exists.choose ⋯)).IsPWO",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.word_sum",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ), (FormalizedSparse.word d).sum = d.sum fun x v => v",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.shift_mapDomain_sum",
-  "constType":
-  "∀ (k t : ℕ) (dig : ℕ →₀ ℕ),\n  ((Finsupp.mapDomain (fun i => if i < k then i else i + t) dig).sum fun x v => v) = dig.sum fun x v => v",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.map_getI",
-  "constType":
-  "∀ (l : List ℕ) (f : ℕ → ℕ), ∀ j < l.length, (List.map f l).getI j = f (l.getI j)",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.shiftBy_pos_of_ne_zero",
   "constType":
   "∀ (f : FormalizedSparse.Sparse.DigitSeries) (m : ℕ) (q : ℕ+), (f.shiftBy m) q ≠ 0 → m < ↑q",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.digitVal_double_split",
-  "constType":
-  "∀ {p : ℕ} [Fact (Nat.Prime p)] (d : ℕ →₀ ℕ) (Plo Phi s t N : ℕ),\n  Plo ≤ Phi →\n    ((Finsupp.mapDomain (fun x => (x + if Plo ≤ x then s * N else 0) + if Phi ≤ x then t * N else 0) d).sum fun i v =>\n        ↑v * ↑p ^ (-(↑i + 1))) =\n      ∑ x ∈ d.support with x < Plo, ↑(d x) * ↑p ^ (-(↑x + 1)) +\n          ↑p ^ (-(↑s * ↑N)) * ∑ x ∈ d.support with Plo ≤ x ∧ x < Phi, ↑(d x) * ↑p ^ (-(↑x + 1)) +\n        ↑p ^ (-(↑(s * N) + ↑t * ↑N)) * ∑ x ∈ d.support with Phi ≤ x, ↑(d x) * ↑p ^ (-(↑x + 1))",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.MainTheorem.muQ_injective",
@@ -1720,13 +1730,13 @@
   "constType": "∀ {α : Sort u} {a b : α}, a = b → b = a",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.gapOfList.eq_1",
-  "constType": "FormalizedSparse.gapOfList [] = []",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.MainTheorem.Cs._proof_1",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {T : ℕ+}, IsDomain ℤᵘⁿ_[p,↑T]",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.MainTheorem.isInt_zero'",
+  "constType": "Rat.isInt 0 = true",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.decDigits.congr_simp",
@@ -1744,11 +1754,6 @@
   "constType": "(p : ℕ) → [inst : Fact (Nat.Prime p)] → (T : ℕ) → ℤᵘⁿ_[p,T]",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.singleWitness_ne",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), FormalizedSparse.singleWitness u ≠ 0",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.ext",
   "constType":
   "∀ {x y : FormalizedSparse.Sparse.DigitSeries}, x.toFun = y.toFun → x = y",
@@ -1763,11 +1768,6 @@
   "constType":
   "{motive : ℕ → Sort u} → (t : ℕ) → motive Nat.zero → ((n : ℕ) → motive n.succ) → motive t",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.gapVector_length",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ), (FormalizedSparse.gapVector d).length = d.support.card",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "Top.top",
   "constType": "{α : Type u_1} → [self : Top α] → α",
@@ -1786,6 +1786,16 @@
   "name": "Eq.mpr",
   "constType": "{α β : Sort u} → α = β → β → α",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapVector_getI",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ),\n  ∀ j < (FormalizedSparse.gapVector d).length,\n    (FormalizedSparse.gapVector d).getI j =\n      (d.support.sort fun x1 x2 => x1 ≤ x2).getI j -\n        if j = 0 then 0 else (d.support.sort fun x1 x2 => x1 ≤ x2).getI (j - 1) + 1",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.MainTheorem.isInt_sub'",
+  "constType":
+  "∀ {a b : ℚ}, a.isInt = true → b.isInt = true → (a - b).isInt = true",
+  "constCategory": "Theorem"},
  {"references": ["Set", "Set.Elem"],
   "name": "Set.Finite",
   "constType": "{α : Type u} → Set α → Prop",
@@ -1845,9 +1855,9 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (f : FormalizedSparse.Sparse.DigitSeries),\n  f.IsP p → ∀ (n : ℕ), FormalizedSparse.Sparse.DigitSeries.value p f n < p ^ n",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.twist_of_recurrence",
+  "name": "FormalizedSparse.QuasiTwistRecurrent.shift_mapDomain_sum",
   "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : HahnSeries ℚ 𝔽ᵃ_[p]) (a : ℕ+) (b c : ℕ) (M N : ℕ+),\n  (∀ (w : ℤ),\n      -↑b ≤ w →\n        ∀ (d : ℕ →₀ ℕ),\n          (∀ (i : ℕ), d i < p) →\n            (d.sum fun x v => v) ≤ c →\n              ∀ (k : ℕ),\n                (∀ (i : ℕ), k ≤ i → i < k + ↑M → d i = 0) →\n                  x.coeff (1 / ↑↑a * (↑w - d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1)))) =\n                    x.coeff\n                      (1 / ↑↑a *\n                        (↑w -\n                          (Finsupp.mapDomain (fun i => if i < k + ↑M then i else i + ↑N) d).sum fun i v =>\n                            ↑v * ↑p ^ (-(↑i + 1))))) →\n    ∀ m ≥ -↑b,\n      ∀ (j : ℕ) (dig : ℕ →₀ ℕ),\n        0 < j →\n          (∀ (i : ℕ), dig i < p) →\n            (dig.sum fun x v => v) ≤ c →\n              ∀ (n : ℕ),\n                ↑M ≤ n →\n                  FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig (n + ↑N) =\n                    FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig n",
+  "∀ (k t : ℕ) (dig : ℕ →₀ ℕ),\n  ((Finsupp.mapDomain (fun i => if i < k then i else i + t) dig).sum fun x v => v) = dig.sum fun x v => v",
   "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.Sparse.DigitSeries.toFun",
@@ -1903,11 +1913,6 @@
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)],\n  IsLocalization (nonZeroDivisors ℤᵘⁿ_[p])\n    (WithVal\n      (IsDedekindDomain.HeightOneSpectrum.valuation (FractionRing ℤᵘⁿ_[p])\n        (IsDiscreteValuationRing.maximalIdeal ℤᵘⁿ_[p])))",
   "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.digitValue_lt_one",
-  "constType":
-  "∀ {p : ℕ}, 1 < p → ∀ (d : ℕ →₀ ℕ), (∀ (i : ℕ), d i < p) → (d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) < 1",
-  "constCategory": "Theorem"},
  {"references": ["LT.lt", "PNat", "List.casesOn", "Membership.mem"],
   "name":
   "_private.FormalizedSparse.Sparse.0.FormalizedSparse.Sparse.DigitSeries.ofCoeffs_lt.match_1_1",
@@ -1926,13 +1931,9 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x y : ℤᵘⁿ_[p]),\n  (Ideal.Quotient.mk (FormalizedSparse.NullSeriesIdeal p)) ((HahnSeries.single 0) (x * y)) =\n    (Ideal.Quotient.mk (FormalizedSparse.NullSeriesIdeal p)) ((HahnSeries.single 0) x) *\n      (Ideal.Quotient.mk (FormalizedSparse.NullSeriesIdeal p)) ((HahnSeries.single 0) y)",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.finite_bounded_lists",
-  "constType": "∀ (c M : ℕ), {l | l.length ≤ c ∧ ∀ x ∈ l, x < M}.Finite",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.twistSeq_eq_coeff",
+  "name": "FormalizedSparse.RayDecomposition.sum_mapDomain_inj",
   "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : HahnSeries ℚ 𝔽ᵃ_[p]) (m : ℤ) (a : ℕ+) (j : ℕ) (dig : ℕ →₀ ℕ) (n : ℕ),\n  FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig n =\n    x.coeff\n      (1 / ↑↑a *\n        (↑m - (Finsupp.mapDomain (fun i => if i < j - 1 then i else i + n) dig).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))))",
+  "∀ (d : ℕ →₀ ℕ) {φ : ℕ → ℕ}, Function.Injective φ → ((Finsupp.mapDomain φ d).sum fun x v => v) = d.sum fun x v => v",
   "constCategory": "Theorem"},
  {"references":
   ["Lean.PrettyPrinter.UnexpandM",
@@ -1964,11 +1965,6 @@
   "FormalizedSparse._aux_FormalizedSparse_References_WittVector___unexpand_FormalizedSparse_QpUn_1",
   "constType": "PrettyPrinter.Unexpander",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.gapVector_mapDomain_insert",
-  "constType":
-  "∀ (d_base : ℕ →₀ ℕ) (u k N' : ℕ),\n  u < (FormalizedSparse.gapVector d_base).length →\n    FormalizedSparse.gapVector\n        (Finsupp.mapDomain (fun i => if i < (d_base.support.sort fun x1 x2 => x1 ≤ x2).getI u then i else i + k * N')\n          d_base) =\n      (FormalizedSparse.gapVector d_base).set u ((FormalizedSparse.gapVector d_base).getI u + k * N')",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.TScaledPAdicHahnSeries.coeff._proof_2",
   "constType":
@@ -2082,6 +2078,11 @@
   "name": "FormalizedSparse.isQTR_restrict",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {x : ℚ → 𝔽ᵃ_[p]} {a : ℕ+} {b c : ℕ} {M N : ℕ+},\n  FormalizedSparse.IsQTR x a b c M N → ∀ (r : ℤ), FormalizedSparse.IsQTR (fun q => if q ≤ ↑r then x q else 0) a b c M N",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.valued_v_algebraMap_unit_one",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℤᵘⁿ_[p]ˣ), Valued.v ((algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) ↑u) = 1",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.pAdicHahnSeries.instIsScalarTowerOQpUnQpUn",
@@ -2203,6 +2204,11 @@
   "constType": "∀ (p : ℕ) [Fact (Nat.Prime p)], 1 < ↑p",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.ray_explicit_tail_isRay",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {c : ℕ} {m : ℤ} {N : ℕ+} {S : Set ℚ} (d_base : ℕ →₀ ℕ) (P : ℕ),\n  (∀ (i : ℕ), d_base i < p) →\n    (d_base.sum fun x v => v) ≤ c →\n      ∀ (k₀ : ℕ),\n        {q |\n              ∃ k,\n                k₀ ≤ k ∧\n                  q =\n                    1 / ↑↑a *\n                      (↑m -\n                        (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v =>\n                          ↑v * ↑p ^ (-(↑i + 1)))} ⊆\n            S →\n          FormalizedSparse.IsRay p a c m N S\n            {q |\n              ∃ k,\n                k₀ ≤ k ∧\n                  q =\n                    1 / ↑↑a *\n                      (↑m -\n                        (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v =>\n                          ↑v * ↑p ^ (-(↑i + 1)))}",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "Mathlib.Tactic.Ring.Common.mul_zero",
   "constType": "∀ {R : Type u_1} [inst : CommSemiring R] (a : R), a * 0 = 0",
   "constCategory": "Theorem"},
@@ -2259,6 +2265,11 @@
   "name": "FormalizedSparse.QpUn.instAlgebraPadic",
   "constType": "(p : ℕ) → [inst : Fact (Nat.Prime p)] → Algebra ℚ_[p] ℚᵘⁿ_[p]",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.finsupp_eq_of_word_gapVector_eq",
+  "constType":
+  "∀ {d₁ d₂ : ℕ →₀ ℕ},\n  FormalizedSparse.word d₁ = FormalizedSparse.word d₂ →\n    FormalizedSparse.gapVector d₁ = FormalizedSparse.gapVector d₂ → d₁ = d₂",
+  "constCategory": "Theorem"},
  {"references":
   ["Nat.cast",
    "Membership.mem",
@@ -2320,6 +2331,11 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+} {S : Set FormalizedSparse.Sparse.DigitSeries}\n  (hS : ∀ d ∈ S, d.IsP p)\n  (hf2 :\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n      {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x}),\n  FormalizedSparse.MainTheorem.muEquiv hS hf2 = FormalizedSparse.MainTheorem.muEquiv hS hf2",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.set_getI",
+  "constType":
+  "∀ (l : List ℕ) (i v j : ℕ), j < l.length → (l.set i v).getI j = if i = j then v else l.getI j",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "OrderDual",
   "constType": "Type u_2 → Type u_2",
   "constCategory": "Definition"},
@@ -2331,10 +2347,6 @@
   "name": "FormalizedSparse.TScaled.QpUnT._proof_3",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ),\n  IsLocalization (nonZeroDivisors ℤᵘⁿ_[p,T]) (Localization (nonZeroDivisors ℤᵘⁿ_[p,T]))",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.strictMono_insertZeros",
-  "constType": "∀ (s N : ℕ), StrictMono fun j => if j < s then j else j + N",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.pAdicHahnSeries.ZpUn_embd.eq_1",
@@ -2365,14 +2377,14 @@
   "{M : Type u_7} → {α : Sort u_8} → [AddCommMonoid M] → (α → M) → M",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.support_sort_getI_mem",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ),\n  ∀ l < (d.support.sort fun x1 x2 => x1 ≤ x2).length, (d.support.sort fun x1 x2 => x1 ≤ x2).getI l ∈ d.support",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "Not",
   "constType": "Prop → Prop",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.ray_split_for_disjoint",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {c : ℕ} {m : ℤ} {N : ℕ+} {S R : Set ℚ},\n  FormalizedSparse.IsRay p a c m N S R →\n    ∀ (D : Finset ℚ),\n      ∃ head Rt, R = ↑head ∪ Rt ∧ Rt ⊆ R ∧ (Rt = ∅ ∨ FormalizedSparse.IsRay p a c m N S Rt ∧ Disjoint Rt ↑D)",
+  "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.Sparse.DigitSeries.toFun",
    "PNat",
@@ -2397,9 +2409,9 @@
   "constType": "∀ (a : FormalizedSparse.Sparse.DigitSeries), a + 0 = a",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.insertAt_below",
+  "name": "FormalizedSparse.RayDecomposition.ray_enc_affine",
   "constType":
-  "∀ {e : ℕ →₀ ℕ} {P n y : ℕ}, y < P → (Finsupp.mapDomain (fun x => if x < P then x else x + n) e) y = e y",
+  "∀ {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {m : ℤ} {N : ℕ+} (d_base : ℕ →₀ ℕ) (P k : ℕ),\n  1 / ↑↑a *\n      (↑m -\n        (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) =\n    1 / ↑↑a * (↑m - ∑ i ∈ d_base.support with i < P, ↑(d_base i) * ↑p ^ (-(↑i + 1))) -\n      (↑p ^ (-↑↑N)) ^ k * (1 / ↑↑a * ∑ i ∈ d_base.support with P ≤ i, ↑(d_base i) * ↑p ^ (-(↑i + 1)))",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.MainTheorem.Stilde_subset_support",
@@ -2448,11 +2460,6 @@
   "{A : Type u_4} →\n  [inst : CommRing A] →\n    {K : Type u_5} →\n      [inst_1 : Field K] →\n        {L : Type u_7} →\n          [inst_2 : Field L] →\n            [inst_3 : Algebra A K] → [IsFractionRing A K] → {g : A →+* L} → Function.Injective ⇑g → K →+* L",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.finsupp_eq_of_word_gapVector_eq",
-  "constType":
-  "∀ {d₁ d₂ : ℕ →₀ ℕ},\n  FormalizedSparse.word d₁ = FormalizedSparse.word d₂ →\n    FormalizedSparse.gapVector d₁ = FormalizedSparse.gapVector d₂ → d₁ = d₂",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.le_maxIndex_of_mem_support",
   "constType":
   "∀ (f : FormalizedSparse.Sparse.DigitSeries) {n : ℕ+}, f n ≠ 0 → ↑n ≤ f.maxIndex",
@@ -2465,6 +2472,11 @@
   "name": "FormalizedSparse.TScaled.pInvT_pow_T",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ),\n  FormalizedSparse.TScaled.pInvT p T ^ T = (algebraMap ℤᵘⁿ_[p] ℤᵘⁿ_[p,T]) ↑p",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapVector_mapDomain_insert",
+  "constType":
+  "∀ (d_base : ℕ →₀ ℕ) (u k N' : ℕ),\n  u < (FormalizedSparse.gapVector d_base).length →\n    FormalizedSparse.gapVector\n        (Finsupp.mapDomain (fun i => if i < (d_base.support.sort fun x1 x2 => x1 ≤ x2).getI u then i else i + k * N')\n          d_base) =\n      (FormalizedSparse.gapVector d_base).set u ((FormalizedSparse.gapVector d_base).getI u + k * N')",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "WithTop",
@@ -2496,6 +2508,11 @@
   "constType": "{α : Type u} → Set α → Type u",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.finite_bounded_finsupp",
+  "constType":
+  "∀ (B p : ℕ), 0 < p → {d | (∀ (i : ℕ), d i < p) ∧ d.support ⊆ Finset.range B}.Finite",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.NullSeriesIdeal._proof_1",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] {a b : FormalizedSparse.LiftedPAdicHahnSeries p},\n  a ∈ {x | FormalizedSparse.IsNullSeries x} →\n    b ∈ {x | FormalizedSparse.IsNullSeries x} → a + b ∈ {x | FormalizedSparse.IsNullSeries x}",
@@ -2522,6 +2539,11 @@
   "name": "Unit.unit",
   "constType": "Unit",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.singleWitness_val",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ),\n  (FormalizedSparse.val p) (FormalizedSparse.QuasiTwistRecurrent.singleWitness u) = ↑u",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.MainTheorem.fhatCoeff_eq_Cs",
   "constType":
@@ -2611,11 +2633,6 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+} {S : Set FormalizedSparse.Sparse.DigitSeries}\n  (hf2 :\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n      {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x})\n  (s : ↑(FormalizedSparse.MainTheorem.Stilde hf2)),\n  ∃ c,\n    c ≠ 0 ∧\n      Filter.Tendsto (fun N => (algebraMap ℤᵘⁿ_[p,↑T] ℚᵘⁿ_[p,↑T]) (FormalizedSparse.MainTheorem.Cs_partial hf2 s N))\n        Filter.atTop (nhds ((algebraMap ℤᵘⁿ_[p,↑T] ℚᵘⁿ_[p,↑T]) c))",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.set_getI",
-  "constType":
-  "∀ (l : List ℕ) (i v j : ℕ), j < l.length → (l.set i v).getI j = if i = j then v else l.getI j",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.MainTheorem.r0.congr_simp",
   "constType":
   "∀ {p p_1 : ℕ} (e_p : p = p_1) [inst : Fact (Nat.Prime p)] {S S_1 : Set FormalizedSparse.Sparse.DigitSeries}\n  (e_S : S = S_1) {hS : ∀ d ∈ S, d.IsP p} {C C_1 : ℕ+} (e_C : C = C_1) {n n_1 : ℕ+} (e_n : n = n_1)\n  (hSparse : FormalizedSparse.Sparse.IsCNSparse p C n S hS),\n  FormalizedSparse.MainTheorem.r0 hSparse = FormalizedSparse.MainTheorem.r0 ⋯",
@@ -2676,11 +2693,6 @@
   "constType": "∀ (p : ℕ), ∑ i ∈ ⋯.toFinset, ↑(0 i) * ↑p ^ (-↑↑i) = 0",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.ray_split_for_disjoint",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {c : ℕ} {m : ℤ} {N : ℕ+} {S R : Set ℚ},\n  FormalizedSparse.IsRay p a c m N S R →\n    ∀ (D : Finset ℚ),\n      ∃ head Rt, R = ↑head ∪ Rt ∧ Rt ⊆ R ∧ (Rt = ∅ ∨ FormalizedSparse.IsRay p a c m N S Rt ∧ Disjoint Rt ↑D)",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.instIsMaximalLiftedPAdicHahnSeriesNullSeriesIdeal",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)], (FormalizedSparse.NullSeriesIdeal p).IsMaximal",
@@ -2689,11 +2701,6 @@
   "name": "setOf",
   "constType": "{α : Type u} → (α → Prop) → Set α",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.singleWitness_val",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), (FormalizedSparse.val p) (FormalizedSparse.singleWitness u) = ↑u",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_6",
   "constType":
@@ -2793,11 +2800,6 @@
   "name": "Polynomial.C",
   "constType": "{R : Type u} → [inst : Semiring R] → R →+* Polynomial R",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_3",
-  "constType":
-  "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ), ZeroHomClass (ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T]) ℤᵘⁿ_[p] ℤᵘⁿ_[p,T]",
-  "constCategory": "Theorem"},
  {"references":
   ["PNat.val",
    "PNat",
@@ -2811,6 +2813,11 @@
   "name": "FormalizedSparse.Sparse.decDigits",
   "constType": "(p : ℕ) → [Fact (Nat.Prime p)] → ℚ → ℕ+ → Fin p",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_3",
+  "constType":
+  "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ), ZeroHomClass (ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T]) ℤᵘⁿ_[p] ℤᵘⁿ_[p,T]",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.isSparse_deltas",
   "constType":
@@ -2830,15 +2837,14 @@
   "constType": "(α : Type u_5) → [inst : AddGroupWithOne α] → ℤ →+ α",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.recurrence_of_twist",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : HahnSeries ℚ 𝔽ᵃ_[p]) (a : ℕ+) (b c : ℕ) (M N : ℕ+),\n  (∀ m ≥ -↑b,\n      ∀ (j : ℕ) (dig : ℕ →₀ ℕ),\n        0 < j →\n          (∀ (i : ℕ), dig i < p) →\n            (dig.sum fun x v => v) ≤ c →\n              ∀ (n : ℕ),\n                ↑M ≤ n →\n                  FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig (n + ↑N) =\n                    FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig n) →\n    ∀ (w : ℤ),\n      -↑b ≤ w →\n        ∀ (d : ℕ →₀ ℕ),\n          (∀ (i : ℕ), d i < p) →\n            (d.sum fun x v => v) ≤ c →\n              ∀ (k : ℕ),\n                (∀ (i : ℕ), k ≤ i → i < k + ↑M → d i = 0) →\n                  x.coeff (1 / ↑↑a * (↑w - d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1)))) =\n                    x.coeff\n                      (1 / ↑↑a *\n                        (↑w -\n                          (Finsupp.mapDomain (fun i => if i < k + ↑M then i else i + ↑N) d).sum fun i v =>\n                            ↑v * ↑p ^ (-(↑i + 1))))",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.TScaled.exists_teichmuller_series_OQpUnT",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T] (a : ℤᵘⁿ_[p,T]),\n  ∃! c,\n    Filter.Tendsto\n      (fun N =>\n        ∑ k ∈ Finset.range N,\n          (algebraMap ℤᵘⁿ_[p,T] ℚᵘⁿ_[p,T])\n            ((FormalizedSparse.TScaled.OQpUn_embd p T) ((WittVector.teichmuller p) (c k)) *\n              FormalizedSparse.TScaled.pInvT p T ^ k))\n      Filter.atTop (nhds ((algebraMap ℤᵘⁿ_[p,T] ℚᵘⁿ_[p,T]) a))",
   "constCategory": "Theorem"},
+ {"references": ["Min.min", "nonZeroDivisorsLeft", "nonZeroDivisorsRight"],
+  "name": "nonZeroDivisors",
+  "constType": "(M₀ : Type u_1) → [inst : MonoidWithZero M₀] → Submonoid M₀",
+  "constCategory": "Definition"},
  {"references":
   ["PNat",
    "FormalizedSparse.Sparse.DigitSeries.coeffs.match_1",
@@ -2848,22 +2854,18 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.coeffs._sunfold",
   "constType": "(ℕ+ → ℕ) → ℕ → List ℕ",
   "constCategory": "Definition"},
- {"references": ["Min.min", "nonZeroDivisorsLeft", "nonZeroDivisorsRight"],
-  "name": "nonZeroDivisors",
-  "constType": "(M₀ : Type u_1) → [inst : MonoidWithZero M₀] → Submonoid M₀",
-  "constCategory": "Definition"},
  {"references": [],
-  "name": "ExistsUnique",
-  "constType": "{α : Sort u_1} → (α → Prop) → Prop",
+  "name": "Pure.pure",
+  "constType":
+  "{f : Type u → Type v} → [self : Pure f] → {α : Type u} → α → f α",
   "constCategory": "Definition"},
  {"references": [],
   "name": "inferInstance",
   "constType": "{α : Sort u} → [i : α] → α",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "Pure.pure",
-  "constType":
-  "{f : Type u → Type v} → [self : Pure f] → {α : Type u} → α → f α",
+  "name": "ExistsUnique",
+  "constType": "{α : Sort u_1} → (α → Prop) → Prop",
   "constCategory": "Definition"},
  {"references": [],
   "name": "FormalizedSparse.order_type_of_qp_algebraic_of_bounded_support",
@@ -2909,14 +2911,14 @@
   "∀ {α : Type u} {a : α} {n : ℕ} [inst : AddMonoidWithOne α], Mathlib.Meta.NormNum.IsNat a n → a = n.rawCast",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapOfList.eq_2",
+  "constType":
+  "∀ (hd : ℕ) (tl : List ℕ),\n  FormalizedSparse.RayDecomposition.gapOfList (hd :: tl) =\n    hd :: List.zipWith (fun a b => b - a - 1) (hd :: tl).dropLast tl",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.TScaled.rank_QpUnT_over_QpUn",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T], Module.finrank ℚᵘⁿ_[p] ℚᵘⁿ_[p,T] = T",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.main_theorem'",
-  "constType":
-  "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (W : Set ℚ),\n  W ≠ {0} →\n    FormalizedSparse.Sparse.IsSparse p W →\n      FormalizedSparse.IsRepModZ W {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x} → ¬IsAlgebraic ℚ_[p] f",
   "constCategory": "Theorem"},
  {"references":
   ["Lean.Name.mkStr4",
@@ -2944,6 +2946,11 @@
   "FormalizedSparse.TScaled.«_aux_FormalizedSparse_Tscaled___macroRules_FormalizedSparse_TScaled_termℚᵘⁿ_[_,_]_1»",
   "constType": "Macro",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.main_theorem'",
+  "constType":
+  "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (W : Set ℚ),\n  W ≠ {0} →\n    FormalizedSparse.Sparse.IsSparse p W →\n      FormalizedSparse.IsRepModZ W {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x} → ¬IsAlgebraic ℚ_[p] f",
+  "constCategory": "Theorem"},
  {"references": ["PNat", "Function.support", "Set.Finite"],
   "name": "FormalizedSparse.Sparse.DigitSeries.mk._flat_ctor",
   "constType":
@@ -3012,11 +3019,6 @@
   "name": "AdjoinRoot",
   "constType": "{R : Type u_1} → [inst : CommRing R] → Polynomial R → Type u_1",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.ray_enc_affine",
-  "constType":
-  "∀ {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {m : ℤ} {N : ℕ+} (d_base : ℕ →₀ ℕ) (P k : ℕ),\n  1 / ↑↑a *\n      (↑m -\n        (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) =\n    1 / ↑↑a * (↑m - ∑ i ∈ d_base.support with i < P, ↑(d_base i) * ↑p ^ (-(↑i + 1))) -\n      (↑p ^ (-↑↑N)) ^ k * (1 / ↑↑a * ∑ i ∈ d_base.support with P ≤ i, ↑(d_base i) * ↑p ^ (-(↑i + 1)))",
-  "constCategory": "Theorem"},
  {"references":
   ["Valued.mk'._proof_2",
    "Valued.mk'._proof_3",
@@ -3050,21 +3052,15 @@
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+} {S : Set FormalizedSparse.Sparse.DigitSeries}\n  (hf2 :\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n      {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x}),\n  (FormalizedSparse.MainTheorem.Stilde hf2).IsPWO",
   "constCategory": "Theorem"},
- {"references":
-  ["ZMod",
-   "FormalizedSparse.pAdicHahnSeries.fromCoeff",
-   "ite",
-   "FormalizedSparse.singleWitness._proof_4",
-   "FormalizedSparse.Fpbar",
-   "Nat.Prime",
-   "OfNat.ofNat"],
-  "name": "FormalizedSparse.singleWitness",
-  "constType": "{p : ℕ} → [inst : Fact (Nat.Prime p)] → ℚ → 𝕃_[p]",
-  "constCategory": "Definition"},
  {"references": [],
   "name": "FormalizedSparse.MainTheorem.Cs_partial.eq_1",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+} {S : Set FormalizedSparse.Sparse.DigitSeries}\n  (hf2 :\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n      {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x})\n  (s : ↑(FormalizedSparse.MainTheorem.Stilde hf2)) (N : ℕ),\n  FormalizedSparse.MainTheorem.Cs_partial hf2 s N = ∑ w ∈ Finset.range N, FormalizedSparse.MainTheorem.Cs_term hf2 s w",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.singleWitness._proof_4",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), (Function.support fun q => if q = u then 1 else 0).IsPWO",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "HahnSeries.coeff",
@@ -3085,6 +3081,11 @@
   "constType":
   "(p : ℕ) → {R : Type u_1} → [hp : Fact (Nat.Prime p)] → [inst : CommRing R] → R →* WittVector p R",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.twist_of_recurrence",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : HahnSeries ℚ 𝔽ᵃ_[p]) (a : ℕ+) (b c : ℕ) (M N : ℕ+),\n  (∀ (w : ℤ),\n      -↑b ≤ w →\n        ∀ (d : ℕ →₀ ℕ),\n          (∀ (i : ℕ), d i < p) →\n            (d.sum fun x v => v) ≤ c →\n              ∀ (k : ℕ),\n                (∀ (i : ℕ), k ≤ i → i < k + ↑M → d i = 0) →\n                  x.coeff (1 / ↑↑a * (↑w - d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1)))) =\n                    x.coeff\n                      (1 / ↑↑a *\n                        (↑w -\n                          (Finsupp.mapDomain (fun i => if i < k + ↑M then i else i + ↑N) d).sum fun i v =>\n                            ↑v * ↑p ^ (-(↑i + 1))))) →\n    ∀ m ≥ -↑b,\n      ∀ (j : ℕ) (dig : ℕ →₀ ℕ),\n        0 < j →\n          (∀ (i : ℕ), dig i < p) →\n            (dig.sum fun x v => v) ≤ c →\n              ∀ (n : ℕ),\n                ↑M ≤ n →\n                  FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig (n + ↑N) =\n                    FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig n",
+  "constCategory": "Theorem"},
  {"references": ["Multiset.sort", "Finset.val", "DecidableRel"],
   "name": "Finset.sort",
   "constType":
@@ -3169,14 +3170,14 @@
   "{m : Type u → Type v} → [self : Bind m] → {α β : Type u} → m α → (α → m β) → m β",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.instIsScalarTowerLaurentHahn",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)], IsScalarTower 𝔽ᵃ_[p] (LaurentSeries 𝔽ᵃ_[p]) (HahnSeries ℚ 𝔽ᵃ_[p])",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "Set.Finite.subset",
   "constType":
   "∀ {α : Type u} {s : Set α}, s.Finite → ∀ {t : Set α}, t ⊆ s → t.Finite",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.mem_word",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ) (v : ℕ), v ∈ FormalizedSparse.word d ↔ ∃ i ∈ d.support, d i = v",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.QpUnT._proof_1",
@@ -3193,14 +3194,9 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f g : FormalizedSparse.Sparse.DigitSeries},\n  f.IsP p →\n    g.IsP p →\n      ((FormalizedSparse.Sparse.DigitSeries.norm p) f - (FormalizedSparse.Sparse.DigitSeries.norm p) g).isInt = true →\n        f = g",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.gapOfList_length",
+  "name": "FormalizedSparse.QuasiTwistRecurrent.shift_mapDomain_gap",
   "constType":
-  "∀ (pos : List ℕ), (FormalizedSparse.gapOfList pos).length = pos.length",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.sum_mapDomain_inj",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ) {φ : ℕ → ℕ}, Function.Injective φ → ((Finsupp.mapDomain φ d).sum fun x v => v) = d.sum fun x v => v",
+  "∀ (k t : ℕ) (dig : ℕ →₀ ℕ) {m : ℕ},\n  m ≤ t → ∀ (i : ℕ), k ≤ i → i < k + m → (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i = 0",
   "constCategory": "Theorem"},
  {"references":
   ["Finset.sort", "LE.le", "List.map", "DFunLike.coe", "Finsupp.support"],
@@ -3256,11 +3252,6 @@
   "constType":
   "(p : ℕ) → [inst : Fact (Nat.Prime p)] → Algebra (LaurentSeries 𝔽ᵃ_[p]) (HahnSeries ℚ 𝔽ᵃ_[p])",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.derivedSet_rat_finite_of_real_finite",
-  "constType":
-  "∀ {S : Set ℚ}, (derivedSet (Rat.cast '' S)).Finite → (derivedSet S).Finite",
-  "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.Sparse.DigitSeries.pAdd._proof_2",
    "HAdd.hAdd",
@@ -3272,19 +3263,9 @@
   "constType": "ℕ+ → ℕ → ℕ+",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.insertZeros_comp_same",
-  "constType":
-  "∀ (P N' k j : ℕ),\n  ((fun i => if i < P then i else i + j * N') ∘ fun i => if i < P then i else i + k * N') = fun i =>\n    if i < P then i else i + (k + j) * N'",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.Sparse.instAddCommMonoidDigitSeries._proof_4",
   "constType":
   "∀ (a b c : FormalizedSparse.Sparse.DigitSeries), a + b + c = a + (b + c)",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.mapDomain_insert_iterate",
-  "constType":
-  "∀ (e : ℕ →₀ ℕ) (P N s : ℕ),\n  (fun e' => Finsupp.mapDomain (fun x => if x < P then x else x + N) e')^[s] e =\n    Finsupp.mapDomain (fun x => if x < P then x else x + s * N) e",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "Rat.intCast_injective",
@@ -3423,6 +3404,11 @@
   "constType": "Type → Type",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.coeff_agree_of_lt_val",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u : ℤ),\n  ↑↑u < (FormalizedSparse.val p) (f - h) → ∀ q ≤ ↑u, f.coeff q = h.coeff q",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.TScaled.instFaithfulSMulOQpUnT",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [NeZero T], FaithfulSMul ℤᵘⁿ_[p] ℤᵘⁿ_[p,T]",
@@ -3471,6 +3457,11 @@
   "name": "Lean.Name.mkStr1",
   "constType": "String → Name",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.shift_injective",
+  "constType":
+  "∀ (k t : ℕ), Function.Injective fun i => if i < k then i else i + t",
+  "constCategory": "Theorem"},
  {"references": ["Nat.ofDigits._f", "List.brecOn"],
   "name": "Nat.ofDigits",
   "constType": "{α : Type u_1} → [Semiring α] → α → List ℕ → α",
@@ -3508,20 +3499,15 @@
   "constType":
   "(p : ℕ) → [Fact (Nat.Prime p)] → ℕ+ → (b : ℤ) → ℕ → (m : ℤ) → -b ≤ m → ℕ+ → ℕ+ → Set ℚ → Prop",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.insert_pow_mem",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ} {m : ℤ} {hm : -b ≤ m} {M N : ℕ+} {S : Set ℚ},\n  FormalizedSparse.IsAdmissible p a b c m hm M N S →\n    ∀ (P : ℕ),\n      ↑M ≤ P →\n        ∀ (s : ℕ) (e : ℕ →₀ ℕ),\n          (∀ (i : ℕ), e i < p) →\n            (e.sum fun x v => v) ≤ c →\n              1 / ↑↑a * (↑m - e.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ∈ S →\n                (∀ (x : ℕ), P - ↑M ≤ x → x < P → e x = 0) →\n                  have e' := Finsupp.mapDomain (fun x => if x < P then x else x + s * ↑N) e;\n                  (∀ (i : ℕ), e' i < p) ∧\n                    (e'.sum fun x v => v) ≤ c ∧\n                      1 / ↑↑a * (↑m - e'.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ∈ S ∧\n                        ∀ (x : ℕ), P - ↑M ≤ x → x < P → e' x = 0",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.shift_mapDomain_gap",
-  "constType":
-  "∀ (k t : ℕ) (dig : ℕ →₀ ℕ) {m : ℕ},\n  m ≤ t → ∀ (i : ℕ), k ≤ i → i < k + m → (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i = 0",
-  "constCategory": "Theorem"},
  {"references": ["Set.Finite.fintype", "Set", "Set.toFinset", "Set.Finite"],
   "name": "Set.Finite.toFinset",
   "constType": "{α : Type u} → {s : Set α} → s.Finite → Finset α",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.digitVal_split",
+  "constType":
+  "∀ {p : ℕ} [Fact (Nat.Prime p)] (d : ℕ →₀ ℕ) (s n : ℕ),\n  ((Finsupp.mapDomain (fun x => if x < s then x else x + n) d).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) =\n    ∑ i ∈ d.support with i < s, ↑(d i) * ↑p ^ (-(↑i + 1)) +\n      ↑p ^ (-↑n) * ∑ i ∈ d.support with s ≤ i, ↑(d i) * ↑p ^ (-(↑i + 1))",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "Nat.below",
   "constType": "{motive : ℕ → Sort u} → ℕ → Sort (max 1 u)",
@@ -3537,6 +3523,11 @@
   "name": "FormalizedSparse.Sparse.Dom",
   "constType": "(p : ℕ) → [Fact (Nat.Prime p)] → Set ℚ → Set ℚ",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.twistSeq_eq_coeff",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : HahnSeries ℚ 𝔽ᵃ_[p]) (m : ℤ) (a : ℕ+) (j : ℕ) (dig : ℕ →₀ ℕ) (n : ℕ),\n  FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig n =\n    x.coeff\n      (1 / ↑↑a *\n        (↑m - (Finsupp.mapDomain (fun i => if i < j - 1 then i else i + n) dig).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))))",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.MainTheorem.Sd_nonempty",
   "constType":
@@ -3597,6 +3588,11 @@
   "constType": "ParserDescr",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.singleWitness_coeff",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ),\n  (FormalizedSparse.QuasiTwistRecurrent.singleWitness u).coeff = fun q => if q = u then 1 else 0",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "not_false_eq_true",
   "constType": "(¬False) = True",
   "constCategory": "Theorem"},
@@ -3608,6 +3604,11 @@
   "name": "FormalizedSparse.Sparse.IsSparse_of_digit_disjoint₀",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (A : ℕ → Set ℕ),\n  (∀ (n : ℕ), (A n).Nonempty) →\n    (∀ (i j : ℕ), A i ∩ A j ≠ ∅ → i = j) →\n      ∀ (hA3 : ∀ (n : ℕ), (A n).Finite),\n        (∀ (n : ℕ), 0 ∉ A n) →\n          (∃ K, (∀ (n : ℕ), ⋯.toFinset.card ≤ K) ∧ {n | ⋯.toFinset.card = K}.Infinite) →\n            FormalizedSparse.Sparse.IsSparse p {x | ∃ i, ∑ r ∈ ⋯.toFinset, ↑p ^ (-↑r) = x}",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.set_getI_self",
+  "constType":
+  "∀ (l : List ℕ) (i v : ℕ), i < l.length → (l.set i v).getI i = v",
   "constCategory": "Theorem"},
  {"references": ["LE.le", "Filter.map"],
   "name": "Filter.Tendsto",
@@ -3645,6 +3646,11 @@
   "constType": "(p : ℕ) → [inst : Fact (Nat.Prime p)] → Valued.v.RankOne",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapVector_eq",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ),\n  FormalizedSparse.gapVector d =\n    match d.support.sort fun x1 x2 => x1 ≤ x2 with\n    | [] => []\n    | hd :: tl => hd :: List.zipWith (fun a b => b - a - 1) (hd :: tl).dropLast tl",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.MainTheorem.Cs_tendsto",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+} {S : Set FormalizedSparse.Sparse.DigitSeries}\n  (hf2 :\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n      {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x})\n  (s : ↑(FormalizedSparse.MainTheorem.Stilde hf2)),\n  Filter.Tendsto (fun N => (algebraMap ℤᵘⁿ_[p,↑T] ℚᵘⁿ_[p,↑T]) (FormalizedSparse.MainTheorem.Cs_partial hf2 s N))\n    Filter.atTop (nhds ((algebraMap ℤᵘⁿ_[p,↑T] ℚᵘⁿ_[p,↑T]) (FormalizedSparse.MainTheorem.Cs hf2 s)))",
@@ -3664,9 +3670,8 @@
   "constType": "∀ {a b : Prop}, a ∧ b → b",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.shift_comp_shift",
-  "constType":
-  "∀ {k M N n : ℕ},\n  M ≤ n →\n    ∀ (i : ℕ),\n      (fun i => if i < k + M then i else i + N) ((fun i => if i < k then i else i + n) i) =\n        if i < k then i else i + (n + N)",
+  "name": "FormalizedSparse.MainTheorem.isInt_natCast'",
+  "constType": "∀ (k : ℕ), (↑k).isInt = true",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "Unit",
@@ -3733,11 +3738,6 @@
   "(p : ℕ) → [inst : Fact (Nat.Prime p)] → (T : ℕ) → [inst_1 : NeZero T] → 𝕃_[p] →+* 𝕃_[p,T]",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.Sparse.DigitSeries.IsP_norm_injective",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f g : FormalizedSparse.Sparse.DigitSeries},\n  f.IsP p →\n    g.IsP p → (FormalizedSparse.Sparse.DigitSeries.norm p) f = (FormalizedSparse.Sparse.DigitSeries.norm p) g → f = g",
-  "constCategory": "Theorem"},
- {"references": [],
   "name":
   "FormalizedSparse.existsCanonicalExpansionAux.exists_teichmuller_digits",
   "constType":
@@ -3748,10 +3748,20 @@
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (q : ℚ) (hq : FormalizedSparse.Sparse.pDigitSum p q ≠ ⊤),\n  (FormalizedSparse.Sparse.DigitSeries.ofRat p q hq).IsP p",
   "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.Sparse.DigitSeries.IsP_norm_injective",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f g : FormalizedSparse.Sparse.DigitSeries},\n  f.IsP p →\n    g.IsP p → (FormalizedSparse.Sparse.DigitSeries.norm p) f = (FormalizedSparse.Sparse.DigitSeries.norm p) g → f = g",
+  "constCategory": "Theorem"},
  {"references": ["EStateM", "ReaderT", "Unit"],
   "name": "Lean.PrettyPrinter.UnexpandM",
   "constType": "Type → Type",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.digitValue_lt_one",
+  "constType":
+  "∀ {p : ℕ}, 1 < p → ∀ (d : ℕ →₀ ℕ), (∀ (i : ℕ), d i < p) → (d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) < 1",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.instAddCommMonoidDigitSeries._proof_5",
   "constType": "(Function.support fun x => 0).Finite",
@@ -3827,6 +3837,11 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)],\n  closure (integralClosure ℚᵘⁿ_[p] 𝕃_[p]).carrier =\n    closure {f | ∃ f', IsAlgebraic 𝔽ᵃ_[p] f' ∧ ↑(Exists.choose ⋯) = f'.coeff}",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.recurrence_of_twist",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : HahnSeries ℚ 𝔽ᵃ_[p]) (a : ℕ+) (b c : ℕ) (M N : ℕ+),\n  (∀ m ≥ -↑b,\n      ∀ (j : ℕ) (dig : ℕ →₀ ℕ),\n        0 < j →\n          (∀ (i : ℕ), dig i < p) →\n            (dig.sum fun x v => v) ≤ c →\n              ∀ (n : ℕ),\n                ↑M ≤ n →\n                  FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig (n + ↑N) =\n                    FormalizedSparse.Kedlaya.twistSeq p (fun z => x.coeff ((↑m + z) / ↑↑a)) j dig n) →\n    ∀ (w : ℤ),\n      -↑b ≤ w →\n        ∀ (d : ℕ →₀ ℕ),\n          (∀ (i : ℕ), d i < p) →\n            (d.sum fun x v => v) ≤ c →\n              ∀ (k : ℕ),\n                (∀ (i : ℕ), k ≤ i → i < k + ↑M → d i = 0) →\n                  x.coeff (1 / ↑↑a * (↑w - d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1)))) =\n                    x.coeff\n                      (1 / ↑↑a *\n                        (↑w -\n                          (Finsupp.mapDomain (fun i => if i < k + ↑M then i else i + ↑N) d).sum fun i v =>\n                            ↑v * ↑p ^ (-(↑i + 1))))",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "zpow_neg",
   "constType":
   "∀ {α : Type u_1} [inst : DivisionMonoid α] (a : α) (n : ℤ), a ^ (-n) = (a ^ n)⁻¹",
@@ -3866,6 +3881,11 @@
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+} {S : Set FormalizedSparse.Sparse.DigitSeries},\n  (∀ d ∈ S, d.IsP p) →\n    ∀\n      (hf2 :\n        FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n          {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x}),\n      Function.Bijective (FormalizedSparse.MainTheorem.muToStilde hf2)",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.digitVal_double_split",
+  "constType":
+  "∀ {p : ℕ} [Fact (Nat.Prime p)] (d : ℕ →₀ ℕ) (Plo Phi s t N : ℕ),\n  Plo ≤ Phi →\n    ((Finsupp.mapDomain (fun x => (x + if Plo ≤ x then s * N else 0) + if Phi ≤ x then t * N else 0) d).sum fun i v =>\n        ↑v * ↑p ^ (-(↑i + 1))) =\n      ∑ x ∈ d.support with x < Plo, ↑(d x) * ↑p ^ (-(↑x + 1)) +\n          ↑p ^ (-(↑s * ↑N)) * ∑ x ∈ d.support with Plo ≤ x ∧ x < Phi, ↑(d x) * ↑p ^ (-(↑x + 1)) +\n        ↑p ^ (-(↑(s * N) + ↑t * ↑N)) * ∑ x ∈ d.support with Phi ≤ x, ↑(d x) * ↑p ^ (-(↑x + 1))",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "Subtype.val",
   "constType": "{α : Sort u} → {p : α → Prop} → Subtype p → α",
   "constCategory": "Definition"},
@@ -3883,6 +3903,11 @@
   "constType":
   "(p : ℕ) →\n  [inst : Fact (Nat.Prime p)] →\n    (q : ℚ) → FormalizedSparse.Sparse.pDigitSum p q ≠ ⊤ → FormalizedSparse.Sparse.DigitSeries",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.ball_val_mem_nhds",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ), {h | ↑↑u < (FormalizedSparse.val p) (f - h)} ∈ nhds f",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.pAdicHahnSeries.eq_zero_iff_coeff_zero",
   "constType":
@@ -3908,19 +3933,9 @@
   "constType": "ℕ → Finset ℕ+",
   "constCategory": "Definition"},
  {"references": [],
-  "name": "FormalizedSparse.insertAt_above",
-  "constType":
-  "∀ {e : ℕ →₀ ℕ} {P n x : ℕ}, P + n ≤ x → (Finsupp.mapDomain (fun y => if y < P then y else y + n) e) x = e (x - n)",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.LiftedPAdicHahnSeries.fromCoeff.congr_simp",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (s s_1 : ℚ → 𝔽ᵃ_[p]) (e_s : s = s_1) (hspwo : (Function.support s).IsPWO),\n  FormalizedSparse.LiftedPAdicHahnSeries.fromCoeff s hspwo = FormalizedSparse.LiftedPAdicHahnSeries.fromCoeff s_1 ⋯",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.word_mapDomain_strictMono",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ) {φ : ℕ → ℕ}, StrictMono φ → FormalizedSparse.word (Finsupp.mapDomain φ d) = FormalizedSparse.word d",
   "constCategory": "Theorem"},
  {"references":
   ["PNat",
@@ -3948,6 +3963,11 @@
   "constType":
   "∀ (L : List ℕ),\n  FormalizedSparse.Sparse.DigitSeries.coeffs (⇑(FormalizedSparse.Sparse.DigitSeries.ofCoeffs L)) L.length = L",
   "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.support_sort_strictMono",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ) (l₁ l₂ : ℕ),\n  l₁ < l₂ →\n    l₂ < (d.support.sort fun x1 x2 => x1 ≤ x2).length →\n      (d.support.sort fun x1 x2 => x1 ≤ x2).getI l₁ < (d.support.sort fun x1 x2 => x1 ≤ x2).getI l₂",
+  "constCategory": "Theorem"},
  {"references":
   ["PNat",
    "Nat.below",
@@ -3958,11 +3978,6 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.coeffs._f",
   "constType": "(ℕ+ → ℕ) → (x : ℕ) → Nat.below x → List ℕ",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.coeff_agree_of_lt_val",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u : ℤ),\n  ↑↑u < (FormalizedSparse.val p) (f - h) → ∀ q ≤ ↑u, f.coeff q = h.coeff q",
-  "constCategory": "Theorem"},
  {"references":
   ["Lean.Name.mkStr4",
    "Bind.bind",
@@ -3995,6 +4010,11 @@
   "{motive : FormalizedSparse.Sparse.DigitSeries → Sort u} →\n  (t : FormalizedSparse.Sparse.DigitSeries) →\n    ((toFun : ℕ+ → ℕ) →\n        (fin_supp : (Function.support toFun).Finite) → motive { toFun := toFun, fin_supp := fin_supp }) →\n      motive t",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapOfList_getI",
+  "constType":
+  "∀ (pos : List ℕ),\n  ∀ j < pos.length,\n    (FormalizedSparse.RayDecomposition.gapOfList pos).getI j = pos.getI j - if j = 0 then 0 else pos.getI (j - 1) + 1",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.cast_pow_mul_zpow_neg",
   "constType":
   "∀ (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ), ↑p ^ n * ↑p ^ (-↑n) = 1",
@@ -4007,6 +4027,11 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.mem_indices",
   "constType":
   "∀ (n k : ℕ), k.succPNat ∈ FormalizedSparse.Sparse.DigitSeries.indices n ↔ k < n",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.sortedSupportList_inj",
+  "constType":
+  "∀ {pos₁ pos₂ : List ℕ},\n  (∀ (j₁ j₂ : ℕ), j₁ < j₂ → j₂ < pos₁.length → pos₁.getI j₁ < pos₁.getI j₂) →\n    (∀ (j₁ j₂ : ℕ), j₁ < j₂ → j₂ < pos₂.length → pos₂.getI j₁ < pos₂.getI j₂) →\n      FormalizedSparse.RayDecomposition.gapOfList pos₁ = FormalizedSparse.RayDecomposition.gapOfList pos₂ → pos₁ = pos₂",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.pAdd._proof_2",
@@ -4032,11 +4057,6 @@
   "name": "FormalizedSparse.«term𝕃_[_]»",
   "constType": "ParserDescr",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.singleWitness_coeff",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ),\n  (FormalizedSparse.singleWitness u).coeff = fun q => if q = u then 1 else 0",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.gap_add_mem",
   "constType":
@@ -4086,16 +4106,6 @@
   "name": "FormalizedSparse.LiftedPAdicHahnSeries.fromCoeff.eq_1",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (s : ℚ → 𝔽ᵃ_[p]) (hspwo : (Function.support s).IsPWO),\n  FormalizedSparse.LiftedPAdicHahnSeries.fromCoeff s hspwo =\n    { coeff := fun n => (WittVector.teichmuller p) (s n), isPWO_support' := ⋯ }",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.ray_explicit_tail_isRay",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {c : ℕ} {m : ℤ} {N : ℕ+} {S : Set ℚ} (d_base : ℕ →₀ ℕ) (P : ℕ),\n  (∀ (i : ℕ), d_base i < p) →\n    (d_base.sum fun x v => v) ≤ c →\n      ∀ (k₀ : ℕ),\n        {q |\n              ∃ k,\n                k₀ ≤ k ∧\n                  q =\n                    1 / ↑↑a *\n                      (↑m -\n                        (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v =>\n                          ↑v * ↑p ^ (-(↑i + 1)))} ⊆\n            S →\n          FormalizedSparse.IsRay p a c m N S\n            {q |\n              ∃ k,\n                k₀ ≤ k ∧\n                  q =\n                    1 / ↑↑a *\n                      (↑m -\n                        (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v =>\n                          ↑v * ↑p ^ (-(↑i + 1)))}",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.sum_eq_of_word_eq",
-  "constType":
-  "∀ (d' d_word : ℕ →₀ ℕ),\n  FormalizedSparse.word d' = FormalizedSparse.word d_word → (d'.sum fun x v => v) = d_word.sum fun x v => v",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.isAlgebraic_iff_isQTR",
@@ -4182,6 +4192,12 @@
   "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HMul α β γ] → α → β → γ",
   "constCategory": "Definition"},
  {"references": [],
+  "name":
+  "FormalizedSparse.QuasiTwistRecurrent.isAlgebraic_LaurentSeries_of_isAlgebraic_constants",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {g : HahnSeries ℚ 𝔽ᵃ_[p]},\n  IsAlgebraic 𝔽ᵃ_[p] g → IsAlgebraic (LaurentSeries 𝔽ᵃ_[p]) g",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.norm._proof_2",
   "constType":
   "∀ (p : ℕ) [Fact (Nat.Prime p)] (a b : FormalizedSparse.Sparse.DigitSeries),\n  ∑ i ∈ ⋯.toFinset, ↑((a + b) i) * ↑p ^ (-↑↑i) =\n    ∑ i ∈ ⋯.toFinset, ↑(a i) * ↑p ^ (-↑↑i) + ∑ i ∈ ⋯.toFinset, ↑(b i) * ↑p ^ (-↑↑i)",
@@ -4191,6 +4207,11 @@
   "constType":
   "{α : Type u} → {β : Type v} → {γ : outParam (Type w)} → [self : HDiv α β γ] → α → β → γ",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapOfList_length",
+  "constType":
+  "∀ (pos : List ℕ), (FormalizedSparse.RayDecomposition.gapOfList pos).length = pos.length",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "Fin.val",
   "constType": "{n : ℕ} → Fin n → ℕ",
@@ -4218,11 +4239,6 @@
   "name": "Set.Ico",
   "constType": "{α : Type u_1} → [Preorder α] → α → α → Set α",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.sortedSupportList_inj",
-  "constType":
-  "∀ {pos₁ pos₂ : List ℕ},\n  (∀ (j₁ j₂ : ℕ), j₁ < j₂ → j₂ < pos₁.length → pos₁.getI j₁ < pos₁.getI j₂) →\n    (∀ (j₁ j₂ : ℕ), j₁ < j₂ → j₂ < pos₂.length → pos₂.getI j₁ < pos₂.getI j₂) →\n      FormalizedSparse.gapOfList pos₁ = FormalizedSparse.gapOfList pos₂ → pos₁ = pos₂",
-  "constCategory": "Theorem"},
  {"references":
   ["ZMod",
    "Polynomial.X",
@@ -4269,6 +4285,11 @@
   "constType":
   "∀ {ι : Type u_1} {M : Type u_4} {s : Finset ι} {a : ι} [inst : AddCommMonoid M] {f : ι → M} [inst_1 : DecidableEq ι],\n  a ∉ s → ∑ x ∈ insert a s, f x = f a + ∑ x ∈ s, f x",
   "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.digit_lt_of_word_eq",
+  "constType":
+  "∀ {p : ℕ},\n  0 < p →\n    ∀ (d' d_word : ℕ →₀ ℕ),\n      FormalizedSparse.word d' = FormalizedSparse.word d_word → (∀ (i : ℕ), d_word i < p) → ∀ (i : ℕ), d' i < p",
+  "constCategory": "Theorem"},
  {"references": ["FormalizedSparse.Sparse.DigitSeries._sizeOf_1"],
   "name": "FormalizedSparse.Sparse.DigitSeries._sizeOf_inst",
   "constType": "SizeOf FormalizedSparse.Sparse.DigitSeries",
@@ -4284,6 +4305,11 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (W : Set ℚ),\n  W ≠ {0} →\n    (FormalizedSparse.Sparse.IsSparse p W ↔\n      ∃ S,\n        ∃ (hS : ∀ f ∈ S, f.IsP p),\n          ⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S = W ∧\n            ∃ c D, D.Infinite ∧ ∀ n ∈ D, FormalizedSparse.Sparse.IsCNSparse p c n S hS)",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.valued_v_p_zpow",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (n : ℤ), Valued.v (↑p ^ n) = ↑(Multiplicative.ofAdd (-n))",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "congrArg",
   "constType":
   "∀ {α : Sort u} {β : Sort v} {a₁ a₂ : α} (f : α → β), a₁ = a₂ → f a₁ = f a₂",
@@ -4297,6 +4323,16 @@
   "name": "FormalizedSparse.two_gaps_ge_M_absurd",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ} {m : ℤ} {hm : -b ≤ m} {M N : ℕ+} {S : Set ℚ},\n  FormalizedSparse.IsAdmissible p a b c m hm M N S →\n    ∀ (d : ℕ →₀ ℕ),\n      (∀ (i : ℕ), d i < p) →\n        (d.sum fun x v => v) ≤ c →\n          1 / ↑↑a * (↑m - d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ∈ S →\n            ∀ (i j : ℕ),\n              i < j → ↑M ≤ (FormalizedSparse.gapVector d).getI i → ↑M ≤ (FormalizedSparse.gapVector d).getI j → False",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.sum_eq_of_word_eq",
+  "constType":
+  "∀ (d' d_word : ℕ →₀ ℕ),\n  FormalizedSparse.word d' = FormalizedSparse.word d_word → (d'.sum fun x v => v) = d_word.sum fun x v => v",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.mem_support_eq_getI",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ),\n  ∀ x ∈ d.support, ∃ l < (d.support.sort fun x1 x2 => x1 ≤ x2).length, (d.support.sort fun x1 x2 => x1 ≤ x2).getI l = x",
   "constCategory": "Theorem"},
  {"references": ["Set", "LE.le", "Set.PartiallyWellOrderedOn"],
   "name": "Set.IsPWO",
@@ -4421,6 +4457,11 @@
   "{α : Type u_2} → [inst : Preorder α] → {s : Set α} → s.IsWF → s.Nonempty → α",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.MainTheorem.isInt_mul'",
+  "constType":
+  "∀ {a b : ℚ}, a.isInt = true → b.isInt = true → (a * b).isInt = true",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_7",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) (x y : FormalizedSparse.LiftedPAdicHahnSeries p),\n  (x * y).map (FormalizedSparse.TScaled.OQpUn_embd p T).toNonUnitalRingHom =\n    HahnSeries.map x (FormalizedSparse.TScaled.OQpUn_embd p T).toNonUnitalRingHom *\n      HahnSeries.map y (FormalizedSparse.TScaled.OQpUn_embd p T).toNonUnitalRingHom",
@@ -4457,6 +4498,11 @@
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ), HahnSeries.map 0 (FormalizedSparse.TScaled.OQpUn_embd p T) = 0",
   "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapVector_eq_gapOfList",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ),\n  FormalizedSparse.gapVector d = FormalizedSparse.RayDecomposition.gapOfList (d.support.sort fun x1 x2 => x1 ≤ x2)",
+  "constCategory": "Theorem"},
  {"references":
   ["ZMod",
    "AdjoinRoot",
@@ -4470,11 +4516,6 @@
   "constType":
   "(p : ℕ) → [inst : Fact (Nat.Prime p)] → (T : ℕ) → ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T]",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.mem_support_eq_getI",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ),\n  ∀ x ∈ d.support, ∃ l < (d.support.sort fun x1 x2 => x1 ≤ x2).length, (d.support.sort fun x1 x2 => x1 ≤ x2).getI l = x",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.val._proof_8",
   "constType":
@@ -4577,6 +4618,11 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T] {U : Set ℚᵘⁿ_[p,T]},\n  U ∈ nhds 0 → ∃ c, c ≠ 0 ∧ {y | Valued.v y < c} ⊆ U",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.insertAt_below",
+  "constType":
+  "∀ {e : ℕ →₀ ℕ} {P n y : ℕ}, y < P → (Finsupp.mapDomain (fun x => if x < P then x else x + n) e) y = e y",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.TScaled.Lifted_to_TLifted._proof_4",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ), ZeroHomClass (ℤᵘⁿ_[p] →*₀ ℤᵘⁿ_[p,T]) ℤᵘⁿ_[p] ℤᵘⁿ_[p,T]",
@@ -4592,6 +4638,11 @@
   "name": "Real.digits",
   "constType": "ℝ → (b : ℕ) → [NeZero b] → ℕ → Fin b",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.mem_word",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ) (v : ℕ), v ∈ FormalizedSparse.word d ↔ ∃ i ∈ d.support, d i = v",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.sum_apply",
   "constType":
@@ -4708,24 +4759,24 @@
   "constType": "∀ (a b : FormalizedSparse.Sparse.DigitSeries), a + b = b + a",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.main_theorem₀",
-  "constType":
-  "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (S : Set FormalizedSparse.Sparse.DigitSeries)\n  (hS : ∀ f ∈ S, f.IsP p),\n  (∃ c D, D.Infinite ∧ ∀ n ∈ D, FormalizedSparse.Sparse.IsCNSparse p c n S hS) →\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n        {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x} →\n      ¬IsAlgebraic ℚᵘⁿ_[p] f",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.TScaled.QpUn_embd._proof_3",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T],\n  Function.Injective (⇑(algebraMap ℤᵘⁿ_[p,T] ℚᵘⁿ_[p,T]) ∘ ⇑(FormalizedSparse.TScaled.OQpUn_embd p T))",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.support_sort_strictMono",
+  "name": "FormalizedSparse.main_theorem₀",
   "constType":
-  "∀ (d : ℕ →₀ ℕ) (l₁ l₂ : ℕ),\n  l₁ < l₂ →\n    l₂ < (d.support.sort fun x1 x2 => x1 ≤ x2).length →\n      (d.support.sort fun x1 x2 => x1 ≤ x2).getI l₁ < (d.support.sort fun x1 x2 => x1 ≤ x2).getI l₂",
+  "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (S : Set FormalizedSparse.Sparse.DigitSeries)\n  (hS : ∀ f ∈ S, f.IsP p),\n  (∃ c D, D.Infinite ∧ ∀ n ∈ D, FormalizedSparse.Sparse.IsCNSparse p c n S hS) →\n    FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n        {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x} →\n      ¬IsAlgebraic ℚᵘⁿ_[p] f",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.norm_mem_Ico",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (f : FormalizedSparse.Sparse.DigitSeries),\n  f.IsP p → (FormalizedSparse.Sparse.DigitSeries.norm p) f ∈ Set.Ico 0 1",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.coeff_eq_zero_of_lt_val",
+  "constType":
+  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (x : 𝕃_[p]) (q : ℚ), ↑q < (FormalizedSparse.val p) x → x.coeff q = 0",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.coeffs.eq_def",
@@ -4782,6 +4833,11 @@
   "FormalizedSparse._aux_FormalizedSparse_References_WittVector___unexpand_FormalizedSparse_OQpUn_1",
   "constType": "PrettyPrinter.Unexpander",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.mapDomain_digit_lt",
+  "constType":
+  "∀ {p : ℕ} [Fact (Nat.Prime p)] (d : ℕ →₀ ℕ) {φ : ℕ → ℕ},\n  Function.Injective φ → (∀ (i : ℕ), d i < p) → ∀ (j : ℕ), (Finsupp.mapDomain φ d) j < p",
+  "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.TScaled.QpUnT._proof_2",
    "ZMod",
@@ -4882,14 +4938,8 @@
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (q : ℚ),\n  ¬(Function.support (FormalizedSparse.Sparse.decDigits p q)).Infinite →\n    (Function.support (FormalizedSparse.Sparse.decDigits p q)).Finite",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.mem_derivedSet_of_tendsto_seq",
-  "constType":
-  "∀ {α : Type u_1} [inst : TopologicalSpace α] {S : Set α} {x : α} (u : ℕ → α),\n  (∀ (n : ℕ), u n ∈ S) → (∀ (n : ℕ), u n ≠ x) → Filter.Tendsto u Filter.atTop (nhds x) → x ∈ derivedSet S",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.digit_lt_of_word_eq",
-  "constType":
-  "∀ {p : ℕ},\n  0 < p →\n    ∀ (d' d_word : ℕ →₀ ℕ),\n      FormalizedSparse.word d' = FormalizedSparse.word d_word → (∀ (i : ℕ), d_word i < p) → ∀ (i : ℕ), d' i < p",
+  "name": "FormalizedSparse.RayDecomposition.finite_bounded_lists",
+  "constType": "∀ (c M : ℕ), {l | l.length ≤ c ∧ ∀ x ∈ l, x < M}.Finite",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.ofCoeffs.eq_1",
@@ -4981,11 +5031,6 @@
   "∀ (ofCoeffs : List ℕ → FormalizedSparse.Sparse.DigitSeries) (a : ℕ) (L : List ℕ),\n  (Function.support (Function.update (⇑(ofCoeffs L)) L.length.succPNat a)).Finite",
   "constCategory": "Theorem"},
  {"references": [],
-  "name": "FormalizedSparse.isAlgebraic_LaurentSeries_of_isAlgebraic_constants",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] {g : HahnSeries ℚ 𝔽ᵃ_[p]},\n  IsAlgebraic 𝔽ᵃ_[p] g → IsAlgebraic (LaurentSeries 𝔽ᵃ_[p]) g",
-  "constCategory": "Theorem"},
- {"references": [],
   "name": "FormalizedSparse.Sparse.DigitSeries.ofRat._proof_2",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (q : ℚ),\n  FormalizedSparse.Sparse.pDigitSum p q ≠ ⊤ →\n    (Function.support fun n => ↑(FormalizedSparse.Sparse.decDigits p q n)).Finite",
@@ -5008,11 +5053,6 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.shiftBy._proof_4",
   "constType":
   "∀ (f : FormalizedSparse.Sparse.DigitSeries) (m : ℕ),\n  (Function.support fun q => if h : m < ↑q then f ⟨↑q - m, ⋯⟩ else 0).Finite",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.mapDomain_insert_shift",
-  "constType":
-  "∀ {k M N n : ℕ},\n  M ≤ n →\n    ∀ (dig : ℕ →₀ ℕ),\n      Finsupp.mapDomain (fun i => if i < k + M then i else i + N)\n          (Finsupp.mapDomain (fun i => if i < k then i else i + n) dig) =\n        Finsupp.mapDomain (fun i => if i < k then i else i + (n + N)) dig",
   "constCategory": "Theorem"},
  {"references":
   ["nonZeroDivisors",
@@ -5106,20 +5146,10 @@
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : FormalizedSparse.Sparse.DigitSeries),\n  (FormalizedSparse.MainTheorem.Sd p f T d).IsWF",
   "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.real_derivedSet_nonempty_of_infinite_bounded",
-  "constType":
-  "∀ {S : Set ℚ}, S.Infinite → Bornology.IsBounded S → (derivedSet (Rat.cast '' S)).Nonempty",
-  "constCategory": "Theorem"},
  {"references": ["Set", "Membership.mem", "setOf"],
   "name": "Set.preimage",
   "constType": "{α : Type u} → {β : Type v} → (α → β) → Set β → Set α",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.set_getI_self",
-  "constType":
-  "∀ (l : List ℕ) (i v : ℕ), i < l.length → (l.set i v).getI i = v",
-  "constCategory": "Theorem"},
  {"references":
   ["Lean.PrettyPrinter.UnexpandM",
    "Lean.TSyntax.raw",
@@ -5176,6 +5206,11 @@
   "name": "FormalizedSparse.TScaled.Tnorm_eq_toNNReal_valued",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T] (a : ℚᵘⁿ_[p,T]),\n  ‖a‖ = ↑((WithZeroMulInt.toNNReal ⋯) (Valued.v a))",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.infinite_ray_tail_avoids_finite",
+  "constType":
+  "∀ {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {m : ℤ} {N : ℕ+} (d_base : ℕ →₀ ℕ) (P : ℕ),\n  0 < 1 / ↑↑a * ∑ i ∈ d_base.support with P ≤ i, ↑(d_base i) * ↑p ^ (-(↑i + 1)) →\n    ∀ (F : Finset ℚ),\n      ∃ k₀,\n        ∀ (k : ℕ),\n          k₀ ≤ k →\n            1 / ↑↑a *\n                (↑m -\n                  (Finsupp.mapDomain (fun i => if i < P then i else i + k * ↑N) d_base).sum fun i v =>\n                    ↑v * ↑p ^ (-(↑i + 1))) ∉\n              F",
   "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.TScaled.QpUnT._proof_2",
@@ -5284,15 +5319,15 @@
   "constType":
   "{R : Type u_5} → [inst : CommRing R] → (I : Ideal R) → [I.IsMaximal] → Field (R ⧸ I)",
   "constCategory": "Definition"},
- {"references": ["Lean.Name.mkStr1", "Lean.Name.mkStr3", "OfNat.ofNat"],
-  "name": "FormalizedSparse.TScaled.«termℚᵘⁿ_[_,_]»",
-  "constType": "ParserDescr",
-  "constCategory": "Definition"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.valued_v_pInvT",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T],\n  Valued.v (FormalizedSparse.TScaled.pInvTQ p T) = ↑(Multiplicative.ofAdd (-1))",
   "constCategory": "Theorem"},
+ {"references": ["Lean.Name.mkStr1", "Lean.Name.mkStr3", "OfNat.ofNat"],
+  "name": "FormalizedSparse.TScaled.«termℚᵘⁿ_[_,_]»",
+  "constType": "ParserDescr",
+  "constCategory": "Definition"},
  {"references": [],
   "name": "Nat.lt_or_eq_of_le",
   "constType": "∀ {n m : ℕ}, n ≤ m → n < m ∨ n = m",
@@ -5347,24 +5382,6 @@
   "{p : ℕ} →\n  [inst : Fact (Nat.Prime p)] →\n    {f : 𝕃_[p]} →\n      {T : ℕ+} →\n        {S : Set FormalizedSparse.Sparse.DigitSeries} →\n          (hf2 :\n              FormalizedSparse.IsRepModZ (⇑(FormalizedSparse.Sparse.DigitSeries.norm p) '' S)\n                {x | ∃ q ∈ f.support, -1 * ↑↑T * q = x}) →\n            ↑(FormalizedSparse.MainTheorem.Stilde hf2) → ℕ → ℤᵘⁿ_[p,↑T]",
   "constCategory": "Definition"},
  {"references":
-  ["ZMod",
-   "OrderDual",
-   "FormalizedSparse.NullSeriesIdeal",
-   "Valued.mk'",
-   "WithTop",
-   "FormalizedSparse.LiftedPAdicHahnSeries",
-   "FormalizedSparse.val",
-   "FormalizedSparse.pAdicHahnSeries",
-   "Multiplicative",
-   "FormalizedSparse.Fpbar",
-   "FormalizedSparse.OQpUn",
-   "Nat.Prime"],
-  "name":
-  "FormalizedSparse.pAdicHahnSeries.instValuedMultiplicativeOrderDualWithTopRat",
-  "constType":
-  "(p : ℕ) → [inst : Fact (Nat.Prime p)] → Valued 𝕃_[p] (Multiplicative (WithTop ℚ)ᵒᵈ)",
-  "constCategory": "Definition"},
- {"references":
   ["WithZero",
    "IsDiscreteValuationRing.maximalIdeal",
    "FormalizedSparse.pAdicHahnSeries",
@@ -5393,6 +5410,24 @@
   "name": "FormalizedSparse.pAdicHahnSeries.instAlgebraPadic",
   "constType": "(p : ℕ) → [inst : Fact (Nat.Prime p)] → Algebra ℚ_[p] 𝕃_[p]",
   "constCategory": "Definition"},
+ {"references":
+  ["ZMod",
+   "OrderDual",
+   "FormalizedSparse.NullSeriesIdeal",
+   "Valued.mk'",
+   "WithTop",
+   "FormalizedSparse.LiftedPAdicHahnSeries",
+   "FormalizedSparse.val",
+   "FormalizedSparse.pAdicHahnSeries",
+   "Multiplicative",
+   "FormalizedSparse.Fpbar",
+   "FormalizedSparse.OQpUn",
+   "Nat.Prime"],
+  "name":
+  "FormalizedSparse.pAdicHahnSeries.instValuedMultiplicativeOrderDualWithTopRat",
+  "constType":
+  "(p : ℕ) → [inst : Fact (Nat.Prime p)] → Valued 𝕃_[p] (Multiplicative (WithTop ℚ)ᵒᵈ)",
+  "constCategory": "Definition"},
  {"references": ["Norm.norm", "LE.le", "Padic", "Nat.Prime", "OfNat.ofNat"],
   "name": "PadicInt",
   "constType": "(p : ℕ) → [hp : Fact (Nat.Prime p)] → Type",
@@ -5414,11 +5449,6 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.cast_mul_zpow_neg_succ",
   "constType":
   "∀ (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ), ↑p * ↑p ^ (-(↑n + 1)) = ↑p ^ (-↑n)",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.singleWitness_support",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), (FormalizedSparse.singleWitness u).support = {u}",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Sabc_m.congr_simp",
@@ -5571,6 +5601,11 @@
   "∀ (d : ℕ →₀ ℕ), FormalizedSparse.word d = List.map (fun i => d i) (d.support.sort fun x1 x2 => x1 ≤ x2)",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.gapVector_length",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ), (FormalizedSparse.gapVector d).length = d.support.card",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "Std.le_refl._simp_1",
   "constType":
   "∀ {α : Type u} [inst : LE α] [Refl fun x1 x2 => x1 ≤ x2] (a : α), (a ≤ a) = True",
@@ -5588,6 +5623,11 @@
   "constType": "SourceInfo → SyntaxNodeKind → Syntax → Syntax → Syntax",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.digitValue_mapDomain_le",
+  "constType":
+  "∀ {p : ℕ},\n  1 ≤ ↑p →\n    ∀ (d : ℕ →₀ ℕ) (k M N : ℕ),\n      ((Finsupp.mapDomain (fun i => if i < k + M then i else i + N) d).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ≤\n        d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.TScaled.QpUn_embd._proof_1",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)], IsDomain (WittVector p 𝔽ᵃ_[p])",
@@ -5602,16 +5642,6 @@
   "name": "ite",
   "constType": "{α : Sort u} → (c : Prop) → [h : Decidable c] → α → α → α",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.gapOfList_getI",
-  "constType":
-  "∀ (pos : List ℕ),\n  ∀ j < pos.length, (FormalizedSparse.gapOfList pos).getI j = pos.getI j - if j = 0 then 0 else pos.getI (j - 1) + 1",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.singleWitness._proof_4",
-  "constType":
-  "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (u : ℚ), (Function.support fun q => if q = u then 1 else 0).IsPWO",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.instIsDomainOQpUnT",
   "constType":
@@ -5636,6 +5666,15 @@
   "constType":
   "(motive : List ℕ → Sort u_1) → (x : List ℕ) → (Unit → motive []) → ((a : ℕ) → (L : List ℕ) → motive (a :: L)) → motive x",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "Set.mem_insert_iff._simp_1",
+  "constType":
+  "∀ {α : Type u_1} {x a : α} {s : Set α}, (x ∈ insert a s) = (x = a ∨ x ∈ s)",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "Nat.add_left_cancel_iff._simp_1",
+  "constType": "∀ {m k n : ℕ}, (n + m = n + k) = (m = k)",
+  "constCategory": "Theorem"},
  {"references":
   ["Function.leftInverse_surjInv",
    "Function.Bijective.surjective",
@@ -5646,15 +5685,6 @@
   "constType":
   "{α : Sort u} → {β : Sort v} → (f : α → β) → Function.Bijective f → α ≃ β",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "Nat.add_left_cancel_iff._simp_1",
-  "constType": "∀ {m k n : ℕ}, (n + m = n + k) = (m = k)",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "Set.mem_insert_iff._simp_1",
-  "constType":
-  "∀ {α : Type u_1} {x a : α} {s : Set α}, (x ∈ insert a s) = (x = a ∨ x ∈ s)",
-  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.Kedlaya.kedlaya_2001b_ordinal_bound",
   "constType":
@@ -5678,6 +5708,11 @@
   "name": "FormalizedSparse.NullSeriesIdeal._proof_3",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)], 0 ∈ {x | FormalizedSparse.IsNullSeries x}",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.shift_mapDomain_lt",
+  "constType":
+  "∀ {p : ℕ},\n  0 < p →\n    ∀ (k t : ℕ) (dig : ℕ →₀ ℕ),\n      (∀ (i : ℕ), dig i < p) → ∀ (i : ℕ), (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i < p",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.word_length_le",
@@ -5828,6 +5863,11 @@
   "∀ {R : Type u_1} [inst : CommSemiring R] {a₂ b c : R} (a₁ : R), a₂ + b = c → a₁ + a₂ + b = a₁ + c",
   "constCategory": "Theorem"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.support_sort_getI_mem",
+  "constType":
+  "∀ (d : ℕ →₀ ℕ),\n  ∀ l < (d.support.sort fun x1 x2 => x1 ≤ x2).length, (d.support.sort fun x1 x2 => x1 ≤ x2).getI l ∈ d.support",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name": "FormalizedSparse.Kedlaya.intHahnEmbedding._proof_1",
   "constType":
   "∀ (x x_1 : ℤ), (Int.castAddHom ℚ) x ≤ (Int.castAddHom ℚ) x_1 ↔ x ≤ x_1",
@@ -5845,6 +5885,10 @@
   "name": "id",
   "constType": "{α : Sort u} → α → α",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.MainTheorem.isInt_intCast'",
+  "constType": "∀ (k : ℤ), (↑k).isInt = true",
+  "constCategory": "Theorem"},
  {"references": [],
   "name": "FormalizedSparse.TScaled.σ_lift._proof_1",
   "constType":
@@ -5909,6 +5953,11 @@
   "constType":
   "{α : Sort u} → {β : α → Sort v} → [DecidableEq α] → ((a : α) → β a) → (a' : α) → β a' → (a : α) → β a",
   "constCategory": "Definition"},
+ {"references": [],
+  "name": "FormalizedSparse.MainTheorem.isInt_add'",
+  "constType":
+  "∀ {a b : ℚ}, a.isInt = true → b.isInt = true → (a + b).isInt = true",
+  "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.TScaled.QpUnT._proof_2",
    "ZMod",
@@ -5974,9 +6023,19 @@
   "constType": "Macro",
   "constCategory": "Definition"},
  {"references": [],
+  "name": "FormalizedSparse.RayDecomposition.mapDomain_insert_iterate",
+  "constType":
+  "∀ (e : ℕ →₀ ℕ) (P N s : ℕ),\n  (fun e' => Finsupp.mapDomain (fun x => if x < P then x else x + N) e')^[s] e =\n    Finsupp.mapDomain (fun x => if x < P then x else x + s * N) e",
+  "constCategory": "Theorem"},
+ {"references": [],
   "name":
   "FormalizedSparse.QpUn.instRankOneWithZeroMultiplicativeIntV._proof_1",
   "constType": "∀ (p : ℕ) [Fact (Nat.Prime p)], 1 < ↑p",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name": "FormalizedSparse.QuasiTwistRecurrent.mapDomain_insert_shift",
+  "constType":
+  "∀ {k M N n : ℕ},\n  M ≤ n →\n    ∀ (dig : ℕ →₀ ℕ),\n      Finsupp.mapDomain (fun i => if i < k + M then i else i + N)\n          (Finsupp.mapDomain (fun i => if i < k then i else i + n) dig) =\n        Finsupp.mapDomain (fun i => if i < k then i else i + (n + N)) dig",
   "constCategory": "Theorem"},
  {"references":
   ["Lean.PrettyPrinter.UnexpandM",
@@ -6017,11 +6076,6 @@
   "name": "FormalizedSparse.TScaled.Texists_v_sub_lt_subset",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (T : ℕ) [inst_1 : NeZero T] {U : Set ℚᵘⁿ_[p,T]} {x : ℚᵘⁿ_[p,T]},\n  U ∈ nhds x → ∃ c, c ≠ 0 ∧ {y | Valued.v (y - x) < c} ⊆ U",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.digitValue_mapDomain_le",
-  "constType":
-  "∀ {p : ℕ},\n  1 ≤ ↑p →\n    ∀ (d : ℕ →₀ ℕ) (k M N : ℕ),\n      ((Finsupp.mapDomain (fun i => if i < k + M then i else i + N) d).sum fun i v => ↑v * ↑p ^ (-(↑i + 1))) ≤\n        d.sum fun i v => ↑v * ↑p ^ (-(↑i + 1))",
   "constCategory": "Theorem"},
  {"references": [],
   "name": "true_or",
@@ -6086,6 +6140,12 @@
   "constCategory": "Definition"},
  {"references": [],
   "name":
+  "FormalizedSparse.BoundedSupport.derivedSet_rat_finite_of_real_finite",
+  "constType":
+  "∀ {S : Set ℚ}, (derivedSet (Rat.cast '' S)).Finite → (derivedSet S).Finite",
+  "constCategory": "Theorem"},
+ {"references": [],
+  "name":
   "FormalizedSparse.existsCanonicalExpansionAux.norm_eq_toNNReal_valued",
   "constType":
   "∀ {p : ℕ} [inst : Fact (Nat.Prime p)] (a : ℚᵘⁿ_[p]), ‖a‖ = ↑((WithZeroMulInt.toNNReal ⋯) (Valued.v a))",
@@ -6114,11 +6174,6 @@
   "name": "SizeOf.sizeOf",
   "constType": "{α : Sort u} → [self : SizeOf α] → α → ℕ",
   "constCategory": "Definition"},
- {"references": [],
-  "name": "FormalizedSparse.shift_mapDomain_lt",
-  "constType":
-  "∀ {p : ℕ},\n  0 < p →\n    ∀ (k t : ℕ) (dig : ℕ →₀ ℕ),\n      (∀ (i : ℕ), dig i < p) → ∀ (i : ℕ), (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i < p",
-  "constCategory": "Theorem"},
  {"references":
   ["FormalizedSparse.TScaled.QpUnT._proof_2",
    "ZMod",
@@ -6145,9 +6200,4 @@
   "name": "FormalizedSparse.Sparse.DigitSeries.ofFinsupp_norm",
   "constType":
   "∀ (p : ℕ) [inst : Fact (Nat.Prime p)] (d : ℕ →₀ ℕ),\n  (FormalizedSparse.Sparse.DigitSeries.norm p) (FormalizedSparse.Sparse.DigitSeries.ofFinsupp d) =\n    d.sum fun j v => ↑v * ↑p ^ (-(↑j + 1))",
-  "constCategory": "Theorem"},
- {"references": [],
-  "name": "FormalizedSparse.support_sort_mapDomain",
-  "constType":
-  "∀ (d : ℕ →₀ ℕ) {φ : ℕ → ℕ},\n  StrictMono φ →\n    ((Finsupp.mapDomain φ d).support.sort fun x1 x2 => x1 ≤ x2) = List.map φ (d.support.sort fun x1 x2 => x1 ≤ x2)",
   "constCategory": "Theorem"}]

@@ -79,6 +79,8 @@ def IsQTR {p : ℕ} [Fact (Nat.Prime p)] (x : ℚ → 𝔽ᵃ_[p])
             (Finsupp.mapDomain (fun i => if i < k + (M : ℕ) then i else i + (N : ℕ)) d).sum
               fun i v => (v : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ))))
 
+namespace QuasiTwistRecurrent
+
 /-- **Key computational bridge for Proposition 6.3.** Kedlaya's twist value `twistSeq` (built from
 the coefficient function `f_m(z) = x_{(m+z)/a}`) equals the coefficient of `x` at the digit-point
 obtained from `dig` by shifting its tail (positions `≥ j-1`) right by `n`. Concretely, with the
@@ -306,7 +308,11 @@ lemma twist_of_recurrence {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (�
   rw [hddef] at key
   exact key.symm
 
-/-- **Proposition Proposition 6.3: Kedlaya's characterisation through QTR.**
+end QuasiTwistRecurrent
+
+open QuasiTwistRecurrent
+
+/-- **Proposition 6.3: Kedlaya's characterisation through QTR.**
 
 A Hahn series `x = ∑ x_q t^q ∈ 𝔽ᵃ_[p]((t^ℚ))` is algebraic over `𝔽ᵃ_[p]((t))` if and only if the
 coefficient function `F_x = x.coeff` is QTR. This is the rephrasing of `kedlaya_2001a_theorem15`
@@ -323,6 +329,8 @@ theorem isAlgebraic_iff_isQTR {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ
   · -- Backward: QTR ⟹ Kedlaya's (support-bound ∧ twist-periodicity).
     rintro ⟨a, b, c, M, N, _hwf, hsupp, hrec⟩
     exact ⟨a, b, c, hsupp, M, N, twist_of_recurrence x a b c M N hrec⟩
+
+namespace QuasiTwistRecurrent
 
 /-- Helper: a base-`p` fractional digit string `∑ᵢ dᵢ p^{-(i+1)}` with all digits `dᵢ < p`
 has value `< 1` (the standard "`0.q₁q₂⋯ < 1`" bound). Used in `isQTR_restrict` to recover the
@@ -378,7 +386,9 @@ lemma digitValue_mapDomain_le {p : ℕ} (hp : 1 ≤ (p : ℚ)) (d : ℕ →₀ �
   apply zpow_le_zpow_right₀ hp
   split_ifs <;> push_cast <;> omega
 
-/-- **Lemma Lemma 6.7: QTR is preserved under restriction to `(-∞, r]`.**
+end QuasiTwistRecurrent
+
+/-- **Lemma 6.7: QTR is preserved under restriction to `(-∞, r]`.**
 
 For any QTR function `φ : ℚ → 𝔽ᵃ_[p]` and any integer `r`, the restriction `φ_r` of `φ` to
 `(-∞, r]` (i.e. `φ_r q = φ q` for `q ≤ r` and `φ_r q = 0` for `q > r`) is still QTR with the same
@@ -440,6 +450,8 @@ theorem isQTR_restrict {p : ℕ} [Fact (Nat.Prime p)] {x : ℚ → 𝔽ᵃ_[p]}
   · -- Case `q > r`. Then `q' ≥ q > r`, so both restricted values vanish.
     have hq'r : ¬ (1 / (a : ℚ)) * ((w : ℚ) - Vd') ≤ (r : ℚ) := fun hle => hqr (le_trans hqq' hle)
     rw [if_neg hqr, if_neg hq'r]
+
+namespace QuasiTwistRecurrent
 
 /-- **Scalar tower `𝔽ᵃ_[p] → 𝔽ᵃ_[p]⸨X⸩ → 𝔽ᵃ_[p]((t^ℚ))`.** The constant-field algebra map into the
 big Hahn-series ring `HahnSeries ℚ 𝔽ᵃ_[p]` factors through the Laurent series `𝔽ᵃ_[p]⸨X⸩`
@@ -662,7 +674,9 @@ lemma ball_val_mem_nhds {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ) 
       = Multiplicative.ofAdd (OrderDual.toDual (FormalizedSparse.val p (f - y))) from rfl,
     hγ₀, Multiplicative.ofAdd_lt, OrderDual.toDual_lt_toDual] at hy
 
-/-- **Proposition Proposition 6.6: the necessary condition for bounded `p`-adic Hahn series.**
+end QuasiTwistRecurrent
+
+/-- **Proposition 6.6: the necessary condition for bounded `p`-adic Hahn series.**
 
 Let `f = ∑_{q∈ℚ} [f q] p^q ∈ 𝕃_[p]` be a `p`-adic Hahn series with bounded support. If `f` is
 algebraic over `ℚᵘⁿ_[p]`, then the coefficient function `F_f = f.coeff` is QTR. The proof goes

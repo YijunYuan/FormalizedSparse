@@ -37,6 +37,8 @@ p-adic, Hahn series, bounded support, sparse, order type
 
 namespace FormalizedSparse
 
+open RayDecomposition
+
 /-! ## Infrastructure for `isSparse_deltas` (Lemma 6.21)
 
 The sparseness proof builds an explicit witness sequence whose elements are a
@@ -272,6 +274,8 @@ lemma shiftBy_pos_of_ne_zero (f : DigitSeries) (m : ℕ) (q : ℕ+)
 
 end Sparse.DigitSeries
 
+namespace BoundedSupport
+
 /-- Window separation (raw `ℕ` arithmetic): with spacing `Q ≥ 2s+1`, a point `q`
 lies in at most one window `(Q·i, Q·i + s]`. -/
 private lemma window_index_unique {Q s : ℕ} (hQ : 2 * s + 1 ≤ Q) {i i' q : ℕ}
@@ -334,6 +338,10 @@ private lemma Sparse.DigitSeries.eq_of_le_of_Psi_eq {g h : Sparse.DigitSeries}
     have hg0 : g q = 0 := Nat.le_zero.mp (by rw [← hq]; exact hgh q)
     change g q = h q
     rw [hg0]; exact hq.symm
+
+end BoundedSupport
+
+open BoundedSupport
 
 open Sparse in
 /-- Lemma 6.21: the δ-set is sparse.
@@ -698,6 +706,8 @@ The protected §6.3 statements read accumulation points **in ℝ** (via the incl
 carries Bolzano–Weierstrass content. These two helpers connect the ℝ-derived set
 used in the protected statements to the ℚ-internal ray-decomposition machinery. -/
 
+namespace BoundedSupport
+
 /-- Finiteness of the ℝ-derived set of `ι '' S` (where `ι = Rat.cast : ℚ → ℝ`) implies
 finiteness of the ℚ-derived set of `S`. The inclusion `ι` is a continuous injection, so it sends
 each ℚ-accumulation point of `S` to an ℝ-accumulation point of `ι '' S`
@@ -881,6 +891,8 @@ private lemma residue_identity {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {m : �
   rw [eq_neg_iff_add_eq_zero]
   field_simp
   linear_combination (tail) * hmerge
+
+end BoundedSupport
 
 open Sparse in
 /-- Lemma 6.22: bounded QTR support has a sparse representative set mod ℤ.
@@ -1167,6 +1179,8 @@ theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
           rw [Rat.isInt, Rat.isInt, Rat.neg_den]]
     exact hres i k
 
+namespace BoundedSupport
+
 -- Theorem 6.23
 open Bornology in
 /-- Support-split helper for Theorem 6.23.  Given `f : 𝕃_[p]` and a set `S' ⊆ f.support`
@@ -1381,6 +1395,8 @@ private theorem single_one_isAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) 
   -- Finite support ⟹ algebraic over ℚ_[p] ⟹ algebraic over ℚᵘⁿ_[p].
   exact pAdicHahnSeries.alg_QpUn_of_alg_Qp p _ (pAdicHahnSeries.alg_of_fin_supp p _ hfin)
 
+end BoundedSupport
+
 open Bornology in
 /-- **Theorem 6.23.** A `p`-adic Hahn series `f` that is algebraic over `ℚᵘⁿ_[p]`, whose support is
 bounded and has only finitely many accumulation points (measured as the ℝ-derived set of the support
@@ -1473,6 +1489,8 @@ theorem support_accpt_empty_or_infinite_of_qp_algebraic_of_bounded_support
     obtain ⟨x, hx⟩ := hne
     rw [mem_derivedSet] at hx
     exact absurd (Set.Infinite.of_accPt hx) (Set.not_infinite.mpr himg_fin)
+
+namespace BoundedSupport
 
 -- Corollary 6.24
 open Bornology Ordinal in
@@ -1652,6 +1670,8 @@ private theorem derivedSet_real_finite_of_typeLT_lt_omega0_sq {p : ℕ} [Fact (N
   rintro x ⟨a, ha, rfl⟩
   obtain ⟨k, hk, hok⟩ := himg a ha
   exact ⟨⟨k, hk⟩, by rw [hok]⟩
+
+end BoundedSupport
 
 open Bornology Ordinal in
 /-- **Corollary 6.24 (order-type dichotomy).** The order type of the support of a `ℚ_[p]`-algebraic

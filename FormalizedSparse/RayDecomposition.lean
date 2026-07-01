@@ -33,6 +33,7 @@ QTR, ray decomposition, p-adic, Hahn series, bounded support
 namespace FormalizedSparse
 
 open Kedlaya
+open QuasiTwistRecurrent
 
 /-!
 ### The `m`-slice `S_{a,b,c,m}`
@@ -74,7 +75,7 @@ A set `S ⊆ Sabc p a b c` is **`(a,b,c,m,M,N)`-admissible** if it satisfies the
 
 - **(S3)** `S` has only finitely many accumulation points: `(derivedSet S).Finite`.
 
-Note: (S2) is strictly weaker than the QTR recurrence (Def Definition 6.2) because it only requires
+Note: (S2) is strictly weaker than the QTR recurrence (Definition 6.2) because it only requires
 the single element `q ∈ S` itself (not all `w ≥ -b`). -/
 def IsAdmissible (p : ℕ) [Fact (Nat.Prime p)] (a : ℕ+) (b : ℤ) (c : ℕ)
     (m : ℤ) (_hm : -b ≤ m) (M N : ℕ+) (S : Set ℚ) : Prop :=
@@ -131,7 +132,7 @@ noncomputable def gapVector (d : ℕ →₀ ℕ) : List ℕ :=
 ### Structural lemmas
 -/
 
-/-- **Lemma Lemma 6.11**: word length is bounded by `c`.
+/-- **Lemma 6.11**: word length is bounded by `c`.
 
 For every element of `S` (encoded by `d : ℕ →₀ ℕ` with `∑ d ≤ c`), the word of `q` has length
 at most `c`. In particular, only finitely many words occur among elements of `S`.
@@ -160,6 +161,8 @@ The digit-insertion of condition (S2) is a `Finsupp.mapDomain` along the strictl
 reindexing `φ = fun j => if j < k + M then j else j + N`. These helpers record that such a
 reindexing preserves the word, the digit sum and the digit bound.
 -/
+
+namespace RayDecomposition
 
 /-- The digit-insertion reindexing `fun j => if j < s then j else j + N` is strictly monotone. -/
 theorem strictMono_insertZeros (s N : ℕ) :
@@ -384,7 +387,11 @@ theorem mem_support_eq_getI (d : ℕ →₀ ℕ) (x : ℕ) (hx : x ∈ d.support
   obtain ⟨l, hl, hlx⟩ := hx2
   exact ⟨l, hl, by rw [List.getI_eq_getElem (l := d.support.sort (· ≤ ·)) hl]; exact hlx⟩
 
-/-- **Lemma Lemma 6.12**: the gap-addition closure.
+end RayDecomposition
+
+open RayDecomposition
+
+/-- **Lemma 6.12**: the gap-addition closure.
 
 Fix a word `d` (a finsupp encoding a nonzero-digit pattern) and let `G_d ⊆ ℕ^t` be the set of gap
 vectors of elements of `S` with word `d`. If `g ∈ G_d` and the `i`-th gap coordinate `g[i] ≥ M`,
@@ -484,6 +491,8 @@ inside `S`, contradicting (S3). The following helpers package the analytic conte
 value of an `N`-zero insertion, iterated insertion at a fixed threshold, the threshold form of
 condition (S2), and the sequential criterion for membership in `derivedSet`.
 -/
+
+namespace RayDecomposition
 
 /-- Membership in `derivedSet` from a convergent sequence of distinct points of `S`. -/
 theorem mem_derivedSet_of_tendsto_seq {α : Type*} [TopologicalSpace α] {S : Set α} {x : α}
@@ -711,6 +720,8 @@ theorem insert_pow_mem {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : 
       · simp only [Function.comp, if_neg h, if_neg (show ¬ x + (N:ℕ) < P by omega)]; ring] at this
     exact this
 
+end RayDecomposition
+
 /-- The doubly-indexed family `v_{s,t}` of values arising from inserting `s·N` zeros at the
 `i`-th support position and `t·N` zeros at the `j`-th, all lying in `S`. The core of Lemma 6.13:
 two gaps `≥ M` make this family contradict (S3). We package the `i < j` case here; the symmetric
@@ -935,7 +946,7 @@ theorem two_gaps_ge_M_absurd {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
   have hfin : (Set.range w).Finite := hS.2.2.subset hsubset
   exact (Set.infinite_range_of_injective hw_inj) hfin
 
-/-- **Lemma Lemma 6.13**: at most one gap coordinate is `≥ M`.
+/-- **Lemma 6.13**: at most one gap coordinate is `≥ M`.
 
 For every word occurring in `S` and every gap vector `g` of an element of `S` with that word, at
 most one coordinate of `g` is `≥ M`.
@@ -958,6 +969,8 @@ theorem gap_at_most_one_ge_M {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
   rcases lt_or_gt_of_ne hij with h | h
   · exact two_gaps_ge_M_absurd hS d hd_digit hd_sum hq i j h hi hj
   · exact two_gaps_ge_M_absurd hS d hd_digit hd_sum hq j i h hj hi
+
+namespace RayDecomposition
 
 /-- The set of `List ℕ` of length `≤ c` with all entries `< M` is finite (it embeds into the
 length-`≤ c` lists over the finite type `Fin M`). -/
@@ -1025,7 +1038,9 @@ theorem sum_eq_of_word_eq (d' d_word : ℕ →₀ ℕ) (hw : word d' = word d_wo
     d'.sum (fun _ v => v) = d_word.sum (fun _ v => v) := by
   rw [← word_sum d', ← word_sum d_word, hw]
 
-/-- **Lemma Lemma 6.14**: decomposition of the gap set.
+end RayDecomposition
+
+/-- **Lemma 6.14**: decomposition of the gap set.
 
 For any fixed word `d`, the gap set `G_d` (gap vectors of elements of `S` with word `d`)
 decomposes as `G_d = W ∪ A₁ ∪ ⋯ ∪ Aᵣ`, where:
@@ -1299,7 +1314,7 @@ theorem gapSet_decomp {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : �
 ### Rays (Definition 6.15) and the decomposition
 -/
 
-/-- **Definition Definition 6.15**: a ray in `S`.
+/-- **Definition 6.15**: a ray in `S`.
 
 A **ray** in `S` is a subset of `S` of the form
 ```
@@ -1383,6 +1398,8 @@ theorem progression_isRay {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c
   obtain ⟨_, _, hmemk, _⟩ := insert_pow_mem hS Pu hMPu k d_base hd_digit hd_sum hq hrun
   exact hmemk
 
+namespace RayDecomposition
+
 /-- **Reconstruction infrastructure (1/3): `gapOfList` is injective on strictly increasing lists.**
 If two lists `pos₁, pos₂` (whose `getI` is strictly monotone — the case for sorted supports) have
 the same `gapOfList`, they are equal. The sorted support is recovered from its gap vector by the
@@ -1458,7 +1475,9 @@ theorem gapVector_mapDomain_insert (d_base : ℕ →₀ ℕ) (u k N' : ℕ)
     gapOfList_map_insertZeros _ (support_sort_strictMono d_base) u (k * N') hu',
     ← gapVector_eq_gapOfList]
 
-/-- **Corollary Corollary 6.17**: `S` is a union of a finite set and finitely many rays.
+end RayDecomposition
+
+/-- **Corollary 6.17**: `S` is a union of a finite set and finitely many rays.
 
 *Proof sketch*: By `word_length_le`, only finitely many words occur in `S`. For each word `d`,
 apply `gapSet_decomp` to write `G_d = W ∪ A₁ ∪ ⋯ ∪ Aᵣ`. The finite parts `W` give a finite set;
@@ -1651,7 +1670,7 @@ theorem eq_finite_union_rays {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
       obtain ⟨R, hRrays, hyR⟩ := hyR
       exact (hrays_isRay R hRrays).1 hyR
 
-/-- **Lemma `Lemma 6.117`**: two rays are comparable or have finite intersection.
+/-- **Lemma 6.18**: two rays are comparable or have finite intersection.
 
 For two rays `R₁, R₂` in `S`, exactly one holds:
 1. `R₁ ⊆ R₂` or `R₂ ⊆ R₁`; or
@@ -1828,6 +1847,8 @@ theorem rays_sub_or_finite_inter {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : 
   · right; right
     rw [Set.inter_comm]
     exact hfin_of_lt α₂ α₁ lam₂ lam₁ R₂ R₁ hlam₂_nonneg hlam₁_pos hα hmem₂ hmem₁
+
+namespace RayDecomposition
 
 /-- **Composition of two threshold insertions (same threshold).** Inserting `k·N'` zeros then
 `j·N'` zeros at the *same* threshold `P` equals inserting `(k+j)·N'` zeros at `P`. -/
@@ -2019,7 +2040,9 @@ theorem ray_split_for_disjoint {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : �
         rw [Finset.mem_coe] at hqD
         exact hk₀ k hk hqD
 
-/-- **Proposition Proposition 6.19**: `S` is a union of a finite set and finitely many
+end RayDecomposition
+
+/-- **Proposition 6.19**: `S` is a union of a finite set and finitely many
 **pairwise disjoint** rays.
 
 *Proof sketch*: Start from `eq_finite_union_rays`. By `rays_sub_or_finite_inter`, discard any ray
@@ -2140,7 +2163,7 @@ theorem eq_finite_union_disjoint_rays {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} 
 ### Main corollary: QTR sets decompose into rays (Corollary 6.20)
 -/
 
-/-- **Corollary Corollary 6.20**: ray decomposition of bounded QTR sets.
+/-- **Corollary 6.20**: ray decomposition of bounded QTR sets.
 
 Let `U = Function.support x` where `x : ℚ → 𝔽ᵃ_[p]` is QTR with data `(a, b, c, M, N)`.
 If `U` is bounded (as a subset of `ℚ`) and has only finitely many accumulation points, then `U`

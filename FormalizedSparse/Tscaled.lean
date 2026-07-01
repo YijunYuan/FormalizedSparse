@@ -5516,7 +5516,7 @@ noncomputable def σ : 𝕃_[p] ≃+* 𝕃_[p,T] :=
 `(σ f).coeff = f.coeff` for every `f : 𝕃_[p]`.  Equivalently, the natural commutative
 diagram of Proposition 4.9 commutes on coefficients. -/
 theorem σ_coeff_compat (f : 𝕃_[p]) :
-    TScaledPAdicHahnSeries.coeff p T (σ p T f) = pAdicHahnSeries.coeff f := by
+    (σ p T f).coeff = f.coeff := by
   change (exists_canonical_T_expansion p T (σ p T f)).choose.val =
     (exists_canonical_expansion f).choose.val
   set s_sub := (exists_canonical_expansion f).choose with hs_def
@@ -5551,6 +5551,3 @@ theorem σ_coeff_compat (f : 𝕃_[p]) :
 end TScaled
 
 end FormalizedSparse
-
-
-
