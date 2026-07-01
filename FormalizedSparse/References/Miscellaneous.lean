@@ -1,4 +1,32 @@
-import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
+-/
+module
+
+public import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
+
+/-!
+# Miscellaneous helpers for the `p`-adic absolute value
+
+This file collects small helper results used elsewhere in the development, most importantly the
+monoid-with-zero homomorphism `WithZeroRat.toNNReal`. It sends the value group
+`WithZero (Multiplicative ℚ)` of the `p`-adic valuation into `ℝ≥0`, which is what lets us turn the
+`ℚ`-valued valuation on the field of `p`-adic Hahn series into a genuine `ℝ≥0`-valued absolute
+value.
+
+## Main definitions
+
+- `WithZeroRat.toNNReal`: the map `WithZero (Multiplicative ℚ) →*₀ ℝ≥0` sending `0 ↦ 0` and
+  `q ↦ e ^ q` for a fixed base `e`.
+
+## Main statements
+
+- `WithZeroRat.toNNReal_strictMono`: `toNNReal` is strictly monotone whenever `1 < e`.
+-/
+
+@[expose] public section
 
 namespace WithZeroRat
 
@@ -53,9 +81,13 @@ theorem toNNReal_strictMono {e : ℝ≥0} (he : 1 < e) :
 
 end WithZeroRat
 
+/-- The reciprocal `1 / p` of a prime `p` is nonzero in `ℝ≥0`. -/
 @[simp]
 lemma pInv_ne_zero (p : ℕ) [Fact (Nat.Prime p)] : (1 / (p : NNReal)) ≠ 0 := by
   simpa using NeZero.ne p
 
+/-- A prime `p` is nonzero in `ℝ≥0`. -/
 lemma p_ne_zero (p : ℕ) [Fact (Nat.Prime p)] : (p : NNReal) ≠ 0 := by
   simpa using NeZero.ne p
+
+

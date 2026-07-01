@@ -1,21 +1,50 @@
-import FormalizedSparse.References.Kedlaya
-
-/- USER: This file corresponds to the subsection `Quasi-twist-recurrent functions` in section
-`Application: $p$-adic Hahn series with bounded support`. You need to formalize every thing in this
-subsection in this file. I will give you several hints on the formalization:
-1. `thm:28713` is exactly `kedlaya_2001a_theorem15` in `FormalizedSparse.References.Kedlaya`.
-2. `thm:47` is exactly `kedlaya_2017_theorem13_4` in `FormalizedSparse.References.Kedlaya`.
-3. The above two results are literal translation of the original results in Kedlaya's papers. In his
-paper, Kedlaya prefers to use the phrase `integral`, but you shold note that integral over a field
-is the same as algebraic over a field.
-4. The above results are admitted. You can use them directly without proving them.
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
 -/
+module
+
+public import FormalizedSparse.References.Kedlaya
+
+/-!
+# Quasi-twist-recurrent functions
+
+This file formalizes the subsection *Quasi-twist-recurrent functions* of Section 6 (Application:
+`p`-adic Hahn series with bounded support). It introduces quasi-twist-recurrent (QTR) functions and
+proves, via Kedlaya's integrality criterion, that the coefficient function of a `ℚᵘⁿ_[p]`-algebraic
+`p`-adic Hahn series with bounded support is QTR.
+
+## Main definitions
+
+- `FormalizedSparse.IsQTR`: the quasi-twist-recurrent condition (Definition 6.2).
+
+## Main statements
+
+- `FormalizedSparse.isAlgebraic_iff_isQTR`: a Hahn series over `𝔽̄_p((t^ℚ))` is algebraic over
+  `𝔽̄_p((t))` iff its coefficient function is QTR (Proposition 6.3).
+- `FormalizedSparse.isQTR_of_isAlgebraic`: the coefficient function of a `ℚᵘⁿ_[p]`-algebraic
+  `p`-adic Hahn series with bounded support is QTR (Proposition 6.6).
+
+## Implementation notes
+
+The two external inputs are Kedlaya's results, admitted in `FormalizedSparse.References.Kedlaya`:
+Theorem 6.1 is `kedlaya_2001a_theorem15` and Theorem 6.4 is `kedlaya_2017_theorem13_4`. These are
+faithful translations of Kedlaya's theorems; where Kedlaya writes *integral* we use *algebraic*, as
+the two notions coincide over a field.
+
+## Tags
+
+quasi-twist-recurrent, QTR, p-adic, Hahn series, bounded support
+-/
+
+@[expose] public section
 
 namespace FormalizedSparse
 
 open LaurentSeries
 
-/-- **Definition `def:16557`: quasi-twist-recurrent (QTR) functions.**
+/-- **Definition 6.2: quasi-twist-recurrent (QTR) functions.**
 
 A function `x : ℚ → 𝔽ᵃ_[p]` is *quasi-twist-recurrent* with respect to the data
 `(a, b, c, M, N) ∈ ℤ>0 × ℕ × ℕ × ℤ>0 × ℤ>0` if its support is a well-ordered subset of `ℚ`
@@ -50,7 +79,7 @@ def IsQTR {p : ℕ} [Fact (Nat.Prime p)] (x : ℚ → 𝔽ᵃ_[p])
             (Finsupp.mapDomain (fun i => if i < k + (M : ℕ) then i else i + (N : ℕ)) d).sum
               fun i v => (v : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ))))
 
-/-- **Key computational bridge for `prop:54845`.** Kedlaya's twist value `twistSeq` (built from
+/-- **Key computational bridge for Proposition 6.3.** Kedlaya's twist value `twistSeq` (built from
 the coefficient function `f_m(z) = x_{(m+z)/a}`) equals the coefficient of `x` at the digit-point
 obtained from `dig` by shifting its tail (positions `≥ j-1`) right by `n`. Concretely, with the
 reindexing `s_{j-1,n} i = if i < j-1 then i else i+n`,
@@ -124,7 +153,7 @@ second shift amount `n` is at least the gap length `M`. Precomposing the "insert
 length-`M` gap starting at `k`" map `i ↦ if i < k+M then i else i+N` with the "shift the tail past
 `k` right by `n`" map `i ↦ if i < k then i else i+n` yields the single shift
 `i ↦ if i < k then i else i+(n+N)`. This is the function-level identity behind the QTR
-recurrence ⟷ Kedlaya twist-periodicity bridge (`prop:54845`). -/
+recurrence ⟷ Kedlaya twist-periodicity bridge (Proposition 6.3). -/
 lemma shift_comp_shift {k M N n : ℕ} (hMn : M ≤ n) (i : ℕ) :
     (fun i => if i < k + M then i else i + N) ((fun i => if i < k then i else i + n) i)
       = (if i < k then i else i + (n + N)) := by
@@ -146,7 +175,7 @@ lemma mapDomain_insert_shift {k M N n : ℕ} (hMn : M ≤ n) (dig : ℕ →₀ �
 
 /-- Helper: the digit bound `dig i < p` is preserved by the tail-shift reindexing `s_{k,t}`.
 Every value of `mapDomain s_{k,t} dig` is either an old digit (`< p`) or `0` (`< p`, using
-`0 < p`). Side condition for both directions of `prop:54845`. -/
+`0 < p`). Side condition for both directions of Proposition 6.3. -/
 lemma shift_mapDomain_lt {p : ℕ} (hp : 0 < p) (k t : ℕ) (dig : ℕ →₀ ℕ)
     (hdig : ∀ i, dig i < p) (i : ℕ) :
     (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i < p := by
@@ -156,7 +185,7 @@ lemma shift_mapDomain_lt {p : ℕ} (hp : 0 < p) (k t : ℕ) (dig : ℕ →₀ �
   · rw [Finsupp.mapDomain_notin_range _ _ h]; exact hp
 
 /-- Helper: the digit sum `∑ dig i` is preserved by the tail-shift reindexing `s_{k,t}` (it is
-injective). Side condition for both directions of `prop:54845`. -/
+injective). Side condition for both directions of Proposition 6.3. -/
 lemma shift_mapDomain_sum (k t : ℕ) (dig : ℕ →₀ ℕ) :
     (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig).sum (fun _ v => v)
       = dig.sum (fun _ v => v) := by
@@ -165,7 +194,7 @@ lemma shift_mapDomain_sum (k t : ℕ) (dig : ℕ →₀ ℕ) :
 /-- Helper: the tail-shift `s_{k,t}` leaves a length-`t` zero gap at position `k`, hence a
 length-`m` gap for any `m ≤ t`. Concretely, positions `k ≤ i < k+m` are not in the range of
 `s_{k,t}`, so `mapDomain s_{k,t} dig` vanishes there. This is the gap hypothesis fed to the QTR
-recurrence in the backward direction of `prop:54845`. -/
+recurrence in the backward direction of Proposition 6.3. -/
 lemma shift_mapDomain_gap (k t : ℕ) (dig : ℕ →₀ ℕ) {m : ℕ} (hm : m ≤ t) :
     ∀ i, k ≤ i → i < k + m →
       (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i = 0 := by
@@ -277,11 +306,11 @@ lemma twist_of_recurrence {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (�
   rw [hddef] at key
   exact key.symm
 
-/-- **Proposition `prop:54845`: Kedlaya's characterisation through QTR.**
+/-- **Proposition Proposition 6.3: Kedlaya's characterisation through QTR.**
 
 A Hahn series `x = ∑ x_q t^q ∈ 𝔽ᵃ_[p]((t^ℚ))` is algebraic over `𝔽ᵃ_[p]((t))` if and only if the
 coefficient function `F_x = x.coeff` is QTR. This is the rephrasing of `kedlaya_2001a_theorem15`
-(`thm:28713`) via the remark that integrality over a field is the same as algebraicity. -/
+(Theorem 6.1) via the remark that integrality over a field is the same as algebraicity. -/
 theorem isAlgebraic_iff_isQTR {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (𝔽ᵃ_[p])) :
     IsAlgebraic (𝔽ᵃ_[p])⸨X⸩ x ↔
       ∃ (a : ℕ+) (b c : ℕ) (M N : ℕ+), IsQTR x.coeff a b c M N := by
@@ -349,7 +378,7 @@ lemma digitValue_mapDomain_le {p : ℕ} (hp : 1 ≤ (p : ℚ)) (d : ℕ →₀ �
   apply zpow_le_zpow_right₀ hp
   split_ifs <;> push_cast <;> omega
 
-/-- **Lemma `lem:36014`: QTR is preserved under restriction to `(-∞, r]`.**
+/-- **Lemma Lemma 6.7: QTR is preserved under restriction to `(-∞, r]`.**
 
 For any QTR function `φ : ℚ → 𝔽ᵃ_[p]` and any integer `r`, the restriction `φ_r` of `φ` to
 `(-∞, r]` (i.e. `φ_r q = φ q` for `q ≤ r` and `φ_r q = 0` for `q > r`) is still QTR with the same
@@ -470,162 +499,14 @@ theorem coeff_eq_zero_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) (q
   rw [hval, WithTop.coe_lt_coe] at hq
   exact absurd ((FormalizedSparse.support_IsPWO x).isWF.min_le _ hmem) (not_le.mpr hq)
 
-/-- Valuation of `p ^ n` in `ℚᵘⁿ_[p]` is `ofAdd(-n)`. Local reproof of the (private) reference
-fact `valued_v_p_zpow`, needed to reprove `nullSeries_no_unit_leading` below. -/
-private lemma valued_v_p_zpow' {p : ℕ} [Fact (Nat.Prime p)] (n : ℤ) :
-    Valued.v ((p : QpUn p) ^ n) =
-      ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
-  have hvp : Valued.v ((p : QpUn p)) =
-      ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [show ((p : QpUn p)) = algebraMap (OQpUn p) (QpUn p) (p : OQpUn p) from by push_cast; rfl]
-    rw [QpUn.valued_algebraMap]
-    have hpe : (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).asIdeal =
-        Ideal.span {(p : OQpUn p)} := (WittVector.irreducible p).maximalIdeal_eq
-    rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
-      (WittVector.p_nonzero p _) hpe]
-    rfl
-  have hzpow : Valued.v ((p : QpUn p) ^ n) = (Valued.v ((p : QpUn p))) ^ n := map_zpow₀ Valued.v _ _
-  rw [hzpow, hvp, ← WithZero.coe_zpow]
-  congr 1; rw [← ofAdd_zsmul n (-1 : ℤ)]; congr 1; ring
-
-/-- The image of a unit of `ℤᵘⁿ_[p]` under `algebraMap` to `ℚᵘⁿ_[p]` has valuation `1`. Local
-reproof of the (private) reference fact `valued_v_algebraMap_unit_one`. -/
-private lemma valued_v_algebraMap_unit_one' {p : ℕ} [Fact (Nat.Prime p)] (u : (OQpUn p)ˣ) :
-    Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) = 1 := by
-  have h1 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.val
-  have h2 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.inv
-  have h3 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-            Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) = 1 := by
-    rw [← Valuation.map_mul, ← map_mul, u.val_inv]; simp
-  by_contra h_ne_one
-  have h1_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) < 1 := lt_of_le_of_ne h1 h_ne_one
-  have h_lt : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) *
-            Valued.v (algebraMap (OQpUn p) (QpUn p) u.inv) < 1 :=
-    lt_of_le_of_lt (le_trans (mul_le_mul' (le_refl _) h2) (le_of_eq (mul_one _))) h1_lt
-  rw [h3] at h_lt; exact lt_irrefl _ h_lt
-
-/-- **Local reproof of the (private) reference lemma `null_series_no_unit_leading`.** A lifted
-`p`-adic Hahn series `Δ ∈ NullSeriesIdeal` cannot have a unit coefficient at the minimum of its
-support. Proof: the partial sum of the `IsNullSeries` net at the leading point `q` has its `n = 0`
-term of valuation `ofAdd 0` (a unit, valuation `1`), strictly dominating the tail (each later term
-has valuation `≤ ofAdd(-1)`); by the strict ultrametric the partial sum has valuation `ofAdd 0`,
-contradicting convergence to `0`. The reference proof is `private`; this is a faithful local
-reproof from the public `IsNullSeries`/`finprop`/`mem_nhds_zero_v_lt` API plus the two helpers
-above. -/
-private lemma nullSeries_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
-    {Δ : LiftedPAdicHahnSeries p} (hΔ : Δ ∈ NullSeriesIdeal p)
-    {q : ℚ} (hq_unit : IsUnit (Δ.coeff q))
-    (hq_lead : ∀ q' < q, Δ.coeff q' = 0) : False := by
-  change IsNullSeries Δ at hΔ
-  have htend := hΔ q
-  have hpn_val := valued_v_p_zpow' (p := p)
-  have h_lead_val : Valued.v ((p : QpUn p) ^ (0 : ℤ) *
-      algebraMap (OQpUn p) (QpUn p) (Δ.coeff q)) =
-      ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    rw [Valuation.map_mul, hpn_val 0]
-    have hval : Valued.v (algebraMap (OQpUn p) (QpUn p) (Δ.coeff q)) = 1 := by
-      rcases hq_unit with ⟨u, hu⟩
-      rw [← hu, valued_v_algebraMap_unit_one' u]
-    rw [hval, mul_one]; rfl
-  have hq_ne : Δ.coeff q ≠ 0 := by
-    intro h; rw [h] at hq_unit; exact not_isUnit_zero hq_unit
-  have h_zero_in : ∀ M : ℕ, q ≤ (M : ℚ) →
-      (0 : ℤ) ∈ Set.Finite.toFinset (finprop Δ q M) := by
-    intro M hMq
-    apply (Set.Finite.mem_toFinset (hs := finprop Δ q M) (a := 0)).2
-    exact ⟨by simpa using hMq, by simpa using hq_ne⟩
-  have h_sum_eq : ∀ M : ℕ, q ≤ (M : ℚ) →
-      Valued.v (∑ n : Set.Finite.toFinset (finprop Δ q M),
-          (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) =
-        ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-    intro M hMq
-    rw [show (∑ n : Set.Finite.toFinset (finprop Δ q M),
-            (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) =
-        ∑ n ∈ Set.Finite.toFinset (finprop Δ q M),
-          (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n)) from
-        Finset.sum_attach (s := Set.Finite.toFinset (finprop Δ q M))
-          (f := fun n : ℤ => (p : QpUn p) ^ n *
-            algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n)))]
-    have h_in : (0 : ℤ) ∈ Set.Finite.toFinset (finprop Δ q M) := h_zero_in M hMq
-    rw [show Set.Finite.toFinset (finprop Δ q M) =
-        insert (0 : ℤ) ((Set.Finite.toFinset (finprop Δ q M)).erase 0) from
-        (Finset.insert_erase h_in).symm]
-    rw [Finset.sum_insert (Finset.notMem_erase _ _), Valuation.map_add_eq_of_lt_left]
-    · have h_eq_zero : (q + ((0 : ℤ) : ℚ)) = q := by push_cast; ring
-      rw [h_eq_zero]; exact h_lead_val
-    · have h_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finprop Δ q M)).erase 0,
-            (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) ≤
-          ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-        apply Valuation.map_sum_le
-        intro n hn_mem
-        have hn_in_finset : n ∈ Set.Finite.toFinset (finprop Δ q M) :=
-          (Finset.mem_erase.mp hn_mem).2
-        have hn_data : q + (n : ℚ) ≤ (M : ℚ) ∧ Δ.coeff (q + n) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := finprop Δ q M) (a := n)).1 hn_in_finset
-        have hn_pos : 1 ≤ n := by
-          rcases Int.lt_or_le n 0 with hlt | hle
-          · exfalso; apply hn_data.2; apply hq_lead
-            have hncast : ((n : ℚ)) < 0 := by exact_mod_cast hlt
-            linarith
-          · have hn_ne_zero : n ≠ 0 := Finset.ne_of_mem_erase hn_mem
-            omega
-        rw [Valuation.map_mul, hpn_val n]
-        have h_alg_le : Valued.v (algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) ≤ 1 :=
-          (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one (Δ.coeff (q + n))
-        calc ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) *
-                Valued.v (algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n)))
-            ≤ ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) * 1 :=
-              mul_le_mul' (le_refl _) h_alg_le
-          _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
-          _ ≤ ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-              rw [WithZero.coe_le_coe]; exact Multiplicative.ofAdd_le.mpr (by omega)
-      apply lt_of_le_of_lt h_bound
-      have h_eq_zero : (q + ((0 : ℤ) : ℚ)) = q := by push_cast; ring
-      rw [h_eq_zero, h_lead_val, WithZero.coe_lt_coe]
-      exact Multiplicative.ofAdd_lt.mpr (by omega)
-  have h_nhds :
-      {x : QpUn p | Valued.v x <
-          ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
-        nhds (0 : QpUn p) :=
-    mem_nhds_zero_v_lt WithZero.coe_ne_zero
-  have h_evtl_close : ∀ᶠ M : ℕ in Filter.atTop,
-      Valued.v (∑ n : Set.Finite.toFinset (finprop Δ q M),
-          (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) <
-        ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) :=
-    htend h_nhds
-  have h_evtl_M_ge : ∀ᶠ M : ℕ in Filter.atTop, q ≤ (M : ℚ) := by
-    filter_upwards [Filter.eventually_ge_atTop ⌈q⌉₊] with M hM
-    have h1 : (q : ℚ) ≤ (⌈q⌉₊ : ℚ) := Nat.le_ceil q
-    have h2 : ((⌈q⌉₊ : ℕ) : ℚ) ≤ ((M : ℕ) : ℚ) := by exact_mod_cast hM
-    linarith
-  obtain ⟨M, hMge, hMclose⟩ := (h_evtl_M_ge.and h_evtl_close).exists
-  rw [h_sum_eq M hMge] at hMclose
-  exact lt_irrefl _ hMclose
-
-/-- A Teichmüller difference `teich a - teich b` (`a ≠ b`) is a unit of `ℤᵘⁿ_[p]`. Local reproof of
-the (private) reference fact `teich_sub_isUnit`, used to certify the leading coefficient of the
-canonical difference in `coeff_agree_of_lt_val`. -/
-private lemma teich_sub_isUnit' {p : ℕ} [Fact (Nat.Prime p)] {a b : Fpbar p} (h : a ≠ b) :
-    IsUnit (WittVector.teichmuller p a - WittVector.teichmuller p b) := by
-  apply WittVector.isUnit_of_coeff_zero_ne_zero
-  intro h0
-  have h_imp : ∀ i < 1,
-      ((WittVector.teichmuller p) a - (WittVector.teichmuller p) b).coeff i = 0 := by
-    intro i hi; interval_cases i; exact h0
-  have h_eq : ((WittVector.teichmuller p) a).coeff 0 = ((WittVector.teichmuller p) b).coeff 0 :=
-    (WittVector.le_coeff_eq_iff_le_sub_coeff_eq_zero (n := 1)).mpr h_imp 0 (by omega)
-  rw [WittVector.teichmuller_coeff_zero, WittVector.teichmuller_coeff_zero] at h_eq
-  exact h h_eq
-
-/-- **Obligation (B) of `prop:167`'s Step 4.** If `val (f - h) > u`, then `F_f` and `F_h` agree on
-`(-∞, u]`. Contrapositive: take the minimal disagreement point `q₀ ≤ u`. The lifted canonical
-difference `Δ = from_coeff F_f - from_coeff F_h` and the canonical representative `C = canon (f-h)`
-both reduce to `f - h`, so `Δ - C` is a null series. Below `q₀` both `F_f, F_h` agree (so `Δ`
+/-- **Obligation (B) of Proposition 6.6's Step 4.** If `val (f - h) > u`, then `F_f` and `F_h`
+agree on `(-∞, u]`. Contrapositive: take the minimal disagreement point `q₀ ≤ u`. The lifted
+canonical difference `Δ = fromCoeff F_f - fromCoeff F_h` and the canonical representative
+`C = canon (f-h)` both reduce to `f - h`, so `Δ - C` is a null series. Below `q₀` both `F_f, F_h`
+agree (so `Δ`
 vanishes) and `C` vanishes (since `q' ≤ q₀ < val (f - h)` via `coeff_eq_zero_of_lt_val`); at `q₀`,
 `(Δ - C).coeff q₀ = teich (F_f q₀) - teich (F_h q₀)` is a unit. This contradicts
-`nullSeries_no_unit_leading`. -/
+`null_series_no_unit_leading`. -/
 lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u : ℤ)
     (hval : (((u : ℚ) : WithTop ℚ)) < FormalizedSparse.val p (f - h)) :
     ∀ q : ℚ, q ≤ (u : ℚ) → f.coeff q = h.coeff q := by
@@ -653,10 +534,10 @@ lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u :
       (not_le.mpr hq')
   -- The lifted canonical difference `Δ` and the canonical representative `C` of `f - h`.
   set Δ : LiftedPAdicHahnSeries p :=
-    LiftedPAdicHahnSeries.from_coeff f.coeff (FormalizedSparse.support_IsPWO f)
-      - LiftedPAdicHahnSeries.from_coeff h.coeff (FormalizedSparse.support_IsPWO h) with hΔdef
+    LiftedPAdicHahnSeries.fromCoeff f.coeff (FormalizedSparse.support_IsPWO f)
+      - LiftedPAdicHahnSeries.fromCoeff h.coeff (FormalizedSparse.support_IsPWO h) with hΔdef
   set C : LiftedPAdicHahnSeries p :=
-    LiftedPAdicHahnSeries.from_coeff (f - h).coeff (FormalizedSparse.support_IsPWO (f - h))
+    LiftedPAdicHahnSeries.fromCoeff (f - h).coeff (FormalizedSparse.support_IsPWO (f - h))
     with hCdef
   -- Coefficient formulas: `Δ.coeff = teich∘f.coeff - teich∘h.coeff`, `C.coeff = teich∘(f-h).coeff`.
   have hΔcoeff : ∀ q : ℚ, Δ.coeff q
@@ -666,12 +547,12 @@ lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u :
   -- `mkLp Δ = mkLp C = f - h`, so `Δ - C` is a null series.
   have hmkΔ : Ideal.Quotient.mk (NullSeriesIdeal p) Δ = f - h := by
     rw [hΔdef, map_sub]
-    change pAdicHahnSeries.from_coeff f.coeff _ - pAdicHahnSeries.from_coeff h.coeff _ = f - h
-    rw [pAdicHahnSeries.from_coeff_of_coeff_eq_self, pAdicHahnSeries.from_coeff_of_coeff_eq_self]
+    change pAdicHahnSeries.fromCoeff f.coeff _ - pAdicHahnSeries.fromCoeff h.coeff _ = f - h
+    rw [pAdicHahnSeries.fromCoeff_of_coeff_eq_self, pAdicHahnSeries.fromCoeff_of_coeff_eq_self]
   have hmkC : Ideal.Quotient.mk (NullSeriesIdeal p) C = f - h := by
     rw [hCdef]
-    change pAdicHahnSeries.from_coeff (f - h).coeff _ = f - h
-    rw [pAdicHahnSeries.from_coeff_of_coeff_eq_self]
+    change pAdicHahnSeries.fromCoeff (f - h).coeff _ = f - h
+    rw [pAdicHahnSeries.fromCoeff_of_coeff_eq_self]
   have hnull : Δ - C ∈ NullSeriesIdeal p := by
     rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, hmkΔ, hmkC, sub_self]
   -- `C` vanishes at and below `q₀`: each such point is `< val (f - h)`.
@@ -685,19 +566,19 @@ lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u :
     have : (Δ - C).coeff q₀
         = WittVector.teichmuller p (f.coeff q₀) - WittVector.teichmuller p (h.coeff q₀) := by
       rw [HahnSeries.coeff_sub', Pi.sub_apply, hΔcoeff, hCvanish q₀ le_rfl, sub_zero]
-    rw [this]; exact teich_sub_isUnit' hq₀ne
+    rw [this]; exact pAdicHahnSeries.teich_sub_isUnit hq₀ne
   -- `(Δ - C).coeff` vanishes strictly below `q₀` (agreement of `Δ` + vanishing of `C`).
   have hlead : ∀ q' < q₀, (Δ - C).coeff q' = 0 := by
     intro q' hq'
     rw [HahnSeries.coeff_sub', Pi.sub_apply, hCvanish q' (le_of_lt hq'), sub_zero,
       hΔcoeff, hq₀min q' hq', sub_self]
-  exact nullSeries_no_unit_leading hnull hunit hlead
+  exact null_series_no_unit_leading hnull hunit hlead
 
 /-- A single-point witness `δ_u ∈ 𝕃_[p]` with support `{u}` and unit leading coefficient: the
 canonical Teichmüller series of the indicator of `{u}`. It realises the value `val(δ_u) = u`,
 used to exhibit the valuation ball `{h | u < val(f - h)}` as a neighbourhood of `f`. -/
 noncomputable def singleWitness {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) : 𝕃_[p] :=
-  pAdicHahnSeries.from_coeff (fun q => if q = u then 1 else 0) (by
+  pAdicHahnSeries.fromCoeff (fun q => if q = u then 1 else 0) (by
     apply Set.Finite.isPWO; apply Set.Finite.subset (Set.finite_singleton u)
     intro q hq
     simp only [Function.mem_support, ne_eq, ite_eq_right_iff, Classical.not_imp] at hq
@@ -706,7 +587,7 @@ noncomputable def singleWitness {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) : 𝕃_
 /-- The coefficient function of `singleWitness u` is the indicator of `{u}`. -/
 lemma singleWitness_coeff {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) :
     (singleWitness (p := p) u).coeff = fun q => if q = u then 1 else 0 := by
-  unfold singleWitness; rw [pAdicHahnSeries.coeff_of_from_coeff_eq_self]
+  unfold singleWitness; rw [pAdicHahnSeries.coeff_of_fromCoeff_eq_self]
 
 /-- The support of `singleWitness u` is exactly `{u}`. -/
 lemma singleWitness_support {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) :
@@ -725,12 +606,12 @@ lemma singleWitness_ne {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) : singleWitness 
   have h1 : (singleWitness (p := p) u).coeff u = (1 : Fpbar p) := by rw [singleWitness_coeff]; simp
   rw [h0] at h1
   have hz : (0 : 𝕃_[p]).coeff u = 0 := by
-    have hco := pAdicHahnSeries.coeff_of_from_coeff_eq_self (p := p) (0 : ℚ → Fpbar p) (by simp)
-    have h0eq : pAdicHahnSeries.from_coeff (0 : ℚ → Fpbar p) (by simp) = (0 : 𝕃_[p]) := by
-      have hlift : LiftedPAdicHahnSeries.from_coeff (p := p) 0 (by simp) = 0 := by
-        simpa [LiftedPAdicHahnSeries.from_coeff] using
+    have hco := pAdicHahnSeries.coeff_of_fromCoeff_eq_self (p := p) (0 : ℚ → Fpbar p) (by simp)
+    have h0eq : pAdicHahnSeries.fromCoeff (0 : ℚ → Fpbar p) (by simp) = (0 : 𝕃_[p]) := by
+      have hlift : LiftedPAdicHahnSeries.fromCoeff (p := p) 0 (by simp) = 0 := by
+        simpa [LiftedPAdicHahnSeries.fromCoeff] using
           Eq.symm (Pi.zero_def : (0 : ℚ → ℤᵘⁿ_[p]) = 0)
-      simpa [pAdicHahnSeries.from_coeff] using
+      simpa [pAdicHahnSeries.fromCoeff] using
         congrArg (Ideal.Quotient.mk (NullSeriesIdeal p)) hlift
     rw [← h0eq, hco]; rfl
   rw [hz] at h1; exact one_ne_zero h1.symm
@@ -749,7 +630,7 @@ lemma singleWitness_val {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) :
   rw [singleWitness_support] at hmem
   exact Set.mem_singleton_iff.mp hmem
 
-/-- **Obligation (A) of `prop:167`'s Step 4.** The valuation ball `{h | u < val(f - h)}` is a
+/-- **Obligation (A) of Proposition 6.6's Step 4.** The valuation ball `{h | u < val(f - h)}` is a
 neighbourhood of `f` in `𝕃_[p]`. Proof: `singleWitness u` realises the value group element
 `γ₀ = ofAdd(toDual u)`, so the standard valuation-ball-is-a-neighbourhood argument (the
 `Valued.mem_nhds`/`Valued.v.restrict` apparatus) applies, and the order-dual encoding turns
@@ -781,19 +662,19 @@ lemma ball_val_mem_nhds {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ) 
       = Multiplicative.ofAdd (OrderDual.toDual (FormalizedSparse.val p (f - y))) from rfl,
     hγ₀, Multiplicative.ofAdd_lt, OrderDual.toDual_lt_toDual] at hy
 
-/-- **Proposition `prop:167`: the necessary condition for bounded `p`-adic Hahn series.**
+/-- **Proposition Proposition 6.6: the necessary condition for bounded `p`-adic Hahn series.**
 
 Let `f = ∑_{q∈ℚ} [f q] p^q ∈ 𝕃_[p]` be a `p`-adic Hahn series with bounded support. If `f` is
 algebraic over `ℚᵘⁿ_[p]`, then the coefficient function `F_f = f.coeff` is QTR. The proof goes
-through `kedlaya_2017_theorem13_4` (`thm:47`), `isAlgebraic_iff_isQTR` (`prop:54845`) and
-`isQTR_restrict` (`lem:36014`). -/
+through `kedlaya_2017_theorem13_4` (Theorem 6.4), `isAlgebraic_iff_isQTR` (Proposition 6.3) and
+`isQTR_restrict` (Lemma 6.7). -/
 theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
     (f : 𝕃_[p]) (halg : IsAlgebraic ℚᵘⁿ_[p] f) (hbdd : Bornology.IsBounded f.support) :
     ∃ (a : ℕ+) (b c : ℕ) (M N : ℕ+), IsQTR f.coeff a b c M N := by
   -- Step 1: `f` lies in the integral closure of `ℚᵘⁿ_[p]` in `𝕃_[p]`.
   have hf_int : f ∈ integralClosure ℚᵘⁿ_[p] 𝕃_[p] := by
     rw [mem_integralClosure_iff, ← isAlgebraic_iff_isIntegral]; exact halg
-  -- Step 2: hence `f` is in the closure of the set of algebraic approximants (Kedlaya thm:47).
+  -- Step 2: hence `f` is in the closure of the set of algebraic approximants (Kedlaya Theorem 6.4).
   have hf_clos : f ∈ closure { g : 𝕃_[p] | ∃ g' : HahnSeries ℚ (𝔽ᵃ_[p]),
       IsAlgebraic 𝔽ᵃ_[p] g' ∧ (exists_canonical_expansion g).choose.val = g'.coeff} := by
     rw [← Kedlaya.kedlaya_2017_theorem13_4 p]
@@ -815,10 +696,10 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
     have hmem : q ∈ f.support := by
       simp only [pAdicHahnSeries.support, Function.mem_support]; exact hne
     exact absurd (hu q hmem) (not_le.mpr hq)
-  -- Step 4 (Kedlaya thm:47, the topological heart): from `f ∈ closure {approximants}` and the
+  -- Step 4 (Kedlaya Theorem 6.4, the topological heart): from `f ∈ closure {approximants}` and the
   -- support bound, extract an approximant `g` whose canonical coefficients `g'.coeff` (with `g'`
   -- algebraic over `𝔽ᵃ_[p]`) agree with `F_f` on `(-∞, u]`. It splits into two facts about the
-  -- valuation topology on `𝕃_[p]`, each a consequence of the (private) canonical isometry
+  -- valuation topology on `𝕃_[p]`, each a consequence of the canonical isometry
   -- `val (x - y) = orderTop (canon x - canon y)` of `PAdicHahnSeries.lean`:
   --   (A) the open ball `{h | u < val (f - h)}` is a neighbourhood of `f`;
   --   (B) `u < val (f - h)` forces `F_f` and `F_h` to agree on `(-∞, u]` (the minimal point of
@@ -842,8 +723,8 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
     have h2 : g.coeff q = g'.coeff q := by
       rw [show g.coeff = (exists_canonical_expansion g).choose.val from rfl, hg'coeff]
     rw [h1, h2]
-  -- Step 5 (final assembly): `g'.coeff` is QTR by `prop:54845` (after lifting algebraicity to
-  -- `𝔽ᵃ_[p]⸨X⸩`); its restriction to `(-∞, u]` is QTR by `lem:36014`; and that restriction is
+  -- Step 5 (final assembly): `g'.coeff` is QTR by Proposition 6.3 (after lifting algebraicity to
+  -- `𝔽ᵃ_[p]⸨X⸩`); its restriction to `(-∞, u]` is QTR by Lemma 6.7; and that restriction is
   -- exactly `F_f` since `F_f` agrees with `g'.coeff` below `u` and vanishes above it.
   obtain ⟨a, b, c, M, N, hg'QTR⟩ :=
     (isAlgebraic_iff_isQTR g').mp (isAlgebraic_LaurentSeries_of_isAlgebraic_constants hg'alg)
@@ -857,3 +738,5 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
   exact ⟨a, b, c, M, N, hrestr⟩
 
 end FormalizedSparse
+
+

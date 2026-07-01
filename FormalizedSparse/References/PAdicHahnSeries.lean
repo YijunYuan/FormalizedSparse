@@ -1,22 +1,64 @@
-import FormalizedSparse.References.WittVector
-import Mathlib.RingTheory.HahnSeries.Multiplication
-import Mathlib.RingTheory.HahnSeries.Summable
-import Mathlib.RingTheory.WittVector.TeichmullerSeries
-import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
-import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
-import Mathlib.FieldTheory.Finite.Basic
-import Mathlib.FieldTheory.Finiteness
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
+-/
+module
+
+public import FormalizedSparse.References.WittVector
+public import Mathlib.Analysis.Normed.Unbundled.SpectralNorm
+public import Mathlib.FieldTheory.Finite.Basic
+public import Mathlib.FieldTheory.Finiteness
+public import Mathlib.FieldTheory.IntermediateField.Adjoin.Basic
+public import Mathlib.RingTheory.HahnSeries.Multiplication
+public import Mathlib.RingTheory.HahnSeries.Summable
+public import Mathlib.RingTheory.WittVector.TeichmullerSeries
+
+/-!
+# The field `𝕃_[p]` of `p`-adic Hahn series
+
+This file defines the field `𝕃_[p]` of `p`-adic Hahn series and develops its basic theory. Following
+the paper, `𝕃_[p]` is realized as a quotient of the ring `W(𝔽ᵃ_[p])((t^ℚ))` of "lifted" Hahn series
+by the ideal of **null series**, together with the resulting valuation, coefficient function, and
+Teichmüller-style canonical expansion.
+
+## Main definitions
+
+- `FormalizedSparse.LiftedPAdicHahnSeries` (`W(𝔽ᵃ_[p])((t^ℚ))`): Hahn series over `ℤᵘⁿ_[p]` with
+  value group `ℚ`.
+- `FormalizedSparse.LiftedPAdicHahnSeries.fromCoeff`: build a lifted Hahn series from a
+  well-ordered-support coefficient function via `f ↦ ∑ₖ [f(k)] tᵏ`.
+- `FormalizedSparse.IsNullSeries`: the null-series condition `∀ g, ∑ₙ a_{g+n} pⁿ = 0`.
+- `FormalizedSparse.PAdicHahnSeries` (`𝕃_[p]`): the field of `p`-adic Hahn series, the quotient by
+  the null-series ideal.
+
+## Implementation notes
+
+Since `WithVal` is a structure in this mathlib version, `𝕃_[p]` is no longer definitionally equal to
+its underlying quotient; the bridge lemmas in this file mediate between the two representations.
+
+## References
+
+- S. Wang, Y. Yuan, *p-adic Hahn series with sparse support*.
+
+## Tags
+
+p-adic, Hahn series, null series, valuation, Teichmüller lift
+-/
+
+@[expose] public section
 
 namespace FormalizedSparse
 
 open WittVector
 
--- The ring of equal-characteristic Hahn series `W(𝔽ₚ^⁻)((t^ℚ))` over `W(𝔽ₚ^⁻)` with value group `ℚ`
+/-- The ring `W(𝔽ᵃ_[p])((t^ℚ))` of "lifted" `p`-adic Hahn series: Hahn series over `ℤᵘⁿ_[p]` with
+value group `ℚ`. The field `𝕃_[p]` is a quotient of this ring by the null-series ideal. -/
 abbrev LiftedPAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] := HahnSeries ℚ (ℤᵘⁿ_[p])
 namespace LiftedPAdicHahnSeries
--- Define an element of W(𝔽ₚ^⁻)((t^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support
--- by the formula f ↦ ∑ₖ [f(k)]tᵏ
-noncomputable def from_coeff {p : ℕ} [Fact (Nat.Prime p)]
+/-- Build a lifted Hahn series from a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with well-ordered
+support, via the Teichmüller lift `f ↦ ∑ₖ [f(k)] tᵏ`. -/
+noncomputable def fromCoeff {p : ℕ} [Fact (Nat.Prime p)]
 (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO) :
 LiftedPAdicHahnSeries p where
   coeff := fun n => teichmuller p (s n)
@@ -29,7 +71,9 @@ LiftedPAdicHahnSeries p where
     · simp
 end LiftedPAdicHahnSeries
 
-abbrev finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : ℚ) (N : ℕ) :
+/-- The set of integer shifts `n` with `g + n ≤ N` at which `x` has a nonzero coefficient is finite.
+This finiteness witness indexes the partial sums appearing in the null-series condition. -/
+abbrev finiteBelow {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : ℚ) (N : ℕ) :
   Finite {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} := by
   by_cases hs : Set.Nonempty x.support
   · let m : ℚ := x.isWF_support.min hs
@@ -58,13 +102,17 @@ abbrev finprop {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g :
       simp [hcoeff (g + n)]
     simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
 
--- An element ∑ₖ aₖ tᵏof W(𝔽ₚ^⁻)((t^ℚ)) called a `null series` if ∀ g ∈ ℚ, ∑ₙ a_{g+n}pⁿ = 0
 open Topology Filter in
+/-- An element `∑ₖ aₖ tᵏ` of `W(𝔽ᵃ_[p])((t^ℚ))` is a **null series** if for every `g : ℚ` the
+partial sums `∑ₙ a_{g+n} pⁿ` converge to `0`. Null series form the ideal whose quotient is
+`𝕃_[p]`. -/
 def IsNullSeries {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) : Prop :=
-  ∀ g : ℚ, Filter.Tendsto (fun M => (∑ n : Set.Finite.toFinset (finprop x g M),
+  ∀ g : ℚ, Filter.Tendsto (fun M => (∑ n : Set.Finite.toFinset (finiteBelow x g M),
       (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)))) atTop (𝓝 0)
 
-@[reducible] noncomputable def finpropInt {p : ℕ} [Fact (Nat.Prime p)]
+/-- The integer-bounded variant of `finiteBelow`: the set of shifts `n ≤ K` at which `x` has a
+nonzero coefficient at `g + n` is finite. -/
+@[reducible] noncomputable def finiteBelowInt {p : ℕ} [Fact (Nat.Prime p)]
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (K : ℤ) :
     Finite {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} := by
   by_cases hs : Set.Nonempty x.support
@@ -88,9 +136,12 @@ def IsNullSeries {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) : 
       simp [hcoeff (g + n)]
     simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
 
+/-- The partial sum `∑_{n ≤ K} a_{g+n} pⁿ` in `ℚᵘⁿ_[p]` of the coefficients of `x` at shifts
+`n ≤ K` above `g`. These partial sums are the finite truncations whose limit defines the
+coefficient function on `𝕃_[p]`. -/
 noncomputable def intPartial {p : ℕ} [Fact (Nat.Prime p)]
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (K : ℤ) : QpUn p :=
-  ∑ n : Set.Finite.toFinset (finpropInt x g K),
+  ∑ n : Set.Finite.toFinset (finiteBelowInt x g K),
     (p : QpUn p) ^ n.1 * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))
 
 -- The valuation of `p : QpUn p` is `ofAdd(-1)`; a uniformizer fact reused throughout.
@@ -107,8 +158,8 @@ private lemma valued_v_p {p : ℕ} [Fact (Nat.Prime p)] :
     (WittVector.p_nonzero p _) hpe]
   rfl
 
--- The valuation of `(p : QpUn p)^n` is `ofAdd(-n)` for integer `n`.
-private lemma valued_v_p_zpow {p : ℕ} [Fact (Nat.Prime p)] (n : ℤ) :
+/-- The valuation of `(p : ℚᵘⁿ_[p])^n` is `ofAdd(-n)` for integer `n`. -/
+lemma valued_v_p_zpow {p : ℕ} [Fact (Nat.Prime p)] (n : ℤ) :
     Valued.v ((p : QpUn p)^n) =
       ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
   have hzpow : Valued.v ((p : QpUn p)^n) = (Valued.v ((p : QpUn p)))^n :=
@@ -122,6 +173,9 @@ private lemma valued_v_p_zpow {p : ℕ} [Fact (Nat.Prime p)] (n : ℤ) :
 -- A basic neighborhood of `0`: `{y | Valued.v y < c}` for `c ≠ 0`. In v4.31 the valued nhds
 -- basis is phrased via the value group `ValueGroup₀`, so we exhibit the value-group class of
 -- `(p : QpUn p) ^ (-log c)`, whose valuation is `c`.
+/-- The open ball `{y | v(y) < c}` around `0` is a neighbourhood of `0` in `ℚᵘⁿ_[p]`, for any
+nonzero threshold `c`. This packages the valuation topology's basic neighbourhood filter for use in
+the null-series convergence arguments. -/
 lemma mem_nhds_zero_v_lt {p : ℕ} [Fact (Nat.Prime p)]
     {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
     {y : QpUn p | Valued.v y < c} ∈ nhds (0 : QpUn p) := by
@@ -196,8 +250,8 @@ private lemma valued_v_term_le {p : ℕ} [Fact (Nat.Prime p)] (a : OQpUn p) (n :
         mul_le_mul' (le_refl _) h_alg
     _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
 
--- For a unit `u : (OQpUn p)ˣ`, `Valued.v (algebraMap ... u.val) = 1`.
-private lemma valued_v_algebraMap_unit_one {p : ℕ} [Fact (Nat.Prime p)] (u : (OQpUn p)ˣ) :
+/-- For a unit `u : (ℤᵘⁿ_[p])ˣ`, its image in `ℚᵘⁿ_[p]` has valuation `1`. -/
+lemma valued_v_algebraMap_unit_one {p : ℕ} [Fact (Nat.Prime p)] (u : (OQpUn p)ˣ) :
     Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) = 1 := by
   have h1 : Valued.v (algebraMap (OQpUn p) (QpUn p) u.val) ≤ 1 :=
     (IsDiscreteValuationRing.maximalIdeal (OQpUn p)).valuation_le_one u.val
@@ -221,26 +275,26 @@ private lemma valued_v_algebraMap_unit_one {p : ℕ} [Fact (Nat.Prime p)] (u : (
   exact lt_irrefl _ h_lt
 
 -- For `K ≤ K'`, the difference `intPartial K' - intPartial K` equals the sum over the
--- set-difference of the finpropInt index sets.
+-- set-difference of the finiteBelowInt index sets.
 private lemma intPartial_diff_eq_sdiff_sum {p : ℕ} [Fact (Nat.Prime p)]
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (K K' : ℤ) (h : K ≤ K') :
     intPartial x g K' - intPartial x g K =
-      ∑ n ∈ (Set.Finite.toFinset (finpropInt x g K') \
-              Set.Finite.toFinset (finpropInt x g K)),
+      ∑ n ∈ (Set.Finite.toFinset (finiteBelowInt x g K') \
+              Set.Finite.toFinset (finiteBelowInt x g K)),
         (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) := by
-  have hsub : Set.Finite.toFinset (finpropInt x g K) ⊆
-      Set.Finite.toFinset (finpropInt x g K') := by
+  have hsub : Set.Finite.toFinset (finiteBelowInt x g K) ⊆
+      Set.Finite.toFinset (finiteBelowInt x g K') := by
     intro n hn
     have hn_mem : n ∈ {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} :=
       (Set.Finite.mem_toFinset _).mp hn
     exact (Set.Finite.mem_toFinset _).mpr ⟨le_trans hn_mem.1 h, hn_mem.2⟩
-  have e1 : intPartial x g K' = ∑ n ∈ Set.Finite.toFinset (finpropInt x g K'),
+  have e1 : intPartial x g K' = ∑ n ∈ Set.Finite.toFinset (finiteBelowInt x g K'),
       (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g K'))
+    Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt x g K'))
       (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + m)))
-  have e2 : intPartial x g K = ∑ n ∈ Set.Finite.toFinset (finpropInt x g K),
+  have e2 : intPartial x g K = ∑ n ∈ Set.Finite.toFinset (finiteBelowInt x g K),
       (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g K))
+    Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt x g K))
       (f := fun m : ℤ => (p : QpUn p) ^ m * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + m)))
   rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
 
@@ -254,13 +308,13 @@ private lemma partial_sum_valuation_cauchy {p : ℕ} [Fact (Nat.Prime p)]
   rw [intPartial_diff_eq_sdiff_sum x g' K₁ K₂ h]
   apply Valuation.map_sum_le
   intro n hn
-  have hn_mem : n ∈ Set.Finite.toFinset (finpropInt x g' K₂) ∧
-      n ∉ Set.Finite.toFinset (finpropInt x g' K₁) := Finset.mem_sdiff.mp hn
+  have hn_mem : n ∈ Set.Finite.toFinset (finiteBelowInt x g' K₂) ∧
+      n ∉ Set.Finite.toFinset (finiteBelowInt x g' K₁) := Finset.mem_sdiff.mp hn
   have hn1 : n ≤ K₂ ∧ x.coeff (g' + n) ≠ 0 :=
-    (Set.Finite.mem_toFinset (hs := finpropInt x g' K₂)).mp hn_mem.1
+    (Set.Finite.mem_toFinset (hs := finiteBelowInt x g' K₂)).mp hn_mem.1
   have hn2 : ¬ (n ≤ K₁ ∧ x.coeff (g' + n) ≠ 0) := by
     intro h'
-    exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := finpropInt x g' K₁)).mpr h')
+    exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := finiteBelowInt x g' K₁)).mpr h')
   have hn_gt : K₁ < n := by
     by_contra hle
     push Not at hle
@@ -279,11 +333,11 @@ private lemma partial_sum_valuation_cauchy {p : ℕ} [Fact (Nat.Prime p)]
 -- between the `ℕ`-atTop and `ℤ`-atTop framings.
 private lemma partialSum_eq_intPartial {p : ℕ} [Fact (Nat.Prime p)]
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
-    (∑ n : Set.Finite.toFinset (finprop x g M),
+    (∑ n : Set.Finite.toFinset (finiteBelow x g M),
         (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))) =
       intPartial x g ⌊(M : ℚ) - g⌋ := by
-  have hset_eq : Set.Finite.toFinset (finprop x g M) =
-      Set.Finite.toFinset (finpropInt x g ⌊(M : ℚ) - g⌋) := by
+  have hset_eq : Set.Finite.toFinset (finiteBelow x g M) =
+      Set.Finite.toFinset (finiteBelowInt x g ⌊(M : ℚ) - g⌋) := by
     ext n
     simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
     constructor
@@ -298,18 +352,18 @@ private lemma partialSum_eq_intPartial {p : ℕ} [Fact (Nat.Prime p)]
       linarith
   unfold intPartial
   -- Both sides sum the same function over the same Finset (after rewriting).
-  rw [show (∑ n : Set.Finite.toFinset (finprop x g M),
+  rw [show (∑ n : Set.Finite.toFinset (finiteBelow x g M),
         (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))) =
-      ∑ n ∈ Set.Finite.toFinset (finprop x g M),
+      ∑ n ∈ Set.Finite.toFinset (finiteBelow x g M),
         (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) from
-      Finset.sum_attach (s := Set.Finite.toFinset (finprop x g M))
+      Finset.sum_attach (s := Set.Finite.toFinset (finiteBelow x g M))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)))]
-  rw [show (∑ n : Set.Finite.toFinset (finpropInt x g ⌊(M : ℚ) - g⌋),
+  rw [show (∑ n : Set.Finite.toFinset (finiteBelowInt x g ⌊(M : ℚ) - g⌋),
         (p : QpUn p) ^ n.1 * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))) =
-      ∑ n ∈ Set.Finite.toFinset (finpropInt x g ⌊(M : ℚ) - g⌋),
+      ∑ n ∈ Set.Finite.toFinset (finiteBelowInt x g ⌊(M : ℚ) - g⌋),
         (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)) from
-      Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x g ⌊(M : ℚ) - g⌋))
+      Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt x g ⌊(M : ℚ) - g⌋))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n)))]
   rw [hset_eq]
@@ -331,7 +385,7 @@ private lemma null_series_tail_bound {p : ℕ} [Fact (Nat.Prime p)]
         nhds (0 : QpUn p) :=
     mem_nhds_zero_v_lt WithZero.coe_ne_zero
   have hev_close : ∀ᶠ M : ℕ in Filter.atTop,
-      Valued.v (∑ n : Set.Finite.toFinset (finprop x g M),
+      Valued.v (∑ n : Set.Finite.toFinset (finiteBelow x g M),
           (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))) <
         ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _) :=
     hx g hnhds
@@ -424,18 +478,18 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
     intro n
     exact Set.Finite.mem_toFinset _
   -- Step 2: rewrite `intPartial (c*x) g K` as a sum over `OuterExt`.
-  have h_outer_sub : Set.Finite.toFinset (finpropInt (c * x) g K) ⊆ OuterExt := by
+  have h_outer_sub : Set.Finite.toFinset (finiteBelowInt (c * x) g K) ⊆ OuterExt := by
     intro n hn
     have hn_data : n ≤ K ∧ (c * x).coeff (g + n) ≠ 0 :=
-      (Set.Finite.mem_toFinset (hs := finpropInt (c * x) g K)).mp hn
+      (Set.Finite.mem_toFinset (hs := finiteBelowInt (c * x) g K)).mp hn
     have hcoeff_ne := hn_data.2
     have hsupp : g + (n : ℚ) ∈ (c * x).support := (HahnSeries.mem_support _ _).mpr hcoeff_ne
     have hsubset : (c * x).support ⊆ c.support + x.support := HahnSeries.support_mul_subset
     exact (hOuterExt_mem n).mpr ⟨hn_data.1, hsubset hsupp⟩
   have h_intPartial_attach : intPartial (c * x) g K =
-      ∑ n ∈ Set.Finite.toFinset (finpropInt (c * x) g K),
+      ∑ n ∈ Set.Finite.toFinset (finiteBelowInt (c * x) g K),
         (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) ((c * x).coeff (g + n)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (finpropInt (c * x) g K))
+    Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt (c * x) g K))
       (f := fun n : ℤ => (p : QpUn p) ^ n *
         algebraMap (OQpUn p) (QpUn p) ((c * x).coeff (g + n)))
   have h_extend_eq : intPartial (c * x) g K =
@@ -448,7 +502,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
       (hOuterExt_mem n).mp hn_outer
     have h_ne_orig : ¬ (n ≤ K ∧ (c * x).coeff (g + n) ≠ 0) := by
       intro h
-      exact hn_orig ((Set.Finite.mem_toFinset (hs := finpropInt (c * x) g K)).mpr h)
+      exact hn_orig ((Set.Finite.mem_toFinset (hs := finiteBelowInt (c * x) g K)).mpr h)
     have hcx_zero : (c * x).coeff (g + n) = 0 := by
       by_contra hne
       exact h_ne_orig ⟨h_ext_data.1, hne⟩
@@ -487,18 +541,18 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
     rw [show (∑ a ∈ AOf, algebraMap (OQpUn p) (QpUn p) (c.coeff a) *
           intPartial x (g - a) K) =
         ∑ a ∈ AOf, algebraMap (OQpUn p) (QpUn p) (c.coeff a) *
-          ∑ n ∈ Set.Finite.toFinset (finpropInt x (g - a) K),
+          ∑ n ∈ Set.Finite.toFinset (finiteBelowInt x (g - a) K),
             (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g - a + n)) from by
       apply Finset.sum_congr rfl
       intro a _
       congr 1
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt x (g - a) K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt x (g - a) K))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) (x.coeff (g - a + n)))]
     rw [show (∑ a ∈ AOf, algebraMap (OQpUn p) (QpUn p) (c.coeff a) *
-          ∑ n ∈ Set.Finite.toFinset (finpropInt x (g - a) K),
+          ∑ n ∈ Set.Finite.toFinset (finiteBelowInt x (g - a) K),
             (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g - a + n))) =
-        ∑ a ∈ AOf, ∑ n ∈ Set.Finite.toFinset (finpropInt x (g - a) K),
+        ∑ a ∈ AOf, ∑ n ∈ Set.Finite.toFinset (finiteBelowInt x (g - a) K),
             (p : QpUn p) ^ n * (algebraMap (OQpUn p) (QpUn p) (c.coeff a) *
               algebraMap (OQpUn p) (QpUn p) (x.coeff (g - a + n))) from by
       apply Finset.sum_congr rfl
@@ -508,7 +562,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
       intro n _
       ring]
     have h_sigma_eq2 := Finset.sum_sigma (s := AOf)
-      (t := fun a => Set.Finite.toFinset (finpropInt x (g - a) K))
+      (t := fun a => Set.Finite.toFinset (finiteBelowInt x (g - a) K))
       (f := fun p_sig : Sigma (fun _ : ℚ => ℤ) =>
         (p : QpUn p) ^ p_sig.2 *
           (algebraMap (OQpUn p) (QpUn p) (c.coeff p_sig.1) *
@@ -525,7 +579,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
         Finset.mem_addAntidiagonal.mp hs_data.2
       refine Finset.mem_sigma.mpr ⟨?_, ?_⟩
       · exact Finset.mem_image.mpr ⟨s, hs, rfl⟩
-      · refine (Set.Finite.mem_toFinset (hs := finpropInt x (g - s.2.1) K)).mpr
+      · refine (Set.Finite.mem_toFinset (hs := finiteBelowInt x (g - s.2.1) K)).mpr
             ⟨h_outer_data.1, ?_⟩
         have hb_eq : g - s.2.1 + (s.1 : ℚ) = s.2.2 := by linarith [h_anti_data.2.2]
         rw [hb_eq]
@@ -560,7 +614,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
       have ht_data := Finset.mem_sigma.mp ht
       have ht_a_in : t.1 ∈ AOf := ht_data.1
       have ht_n_data : t.2 ≤ K ∧ x.coeff (g - t.1 + t.2) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt x (g - t.1) K)).mp ht_data.2
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt x (g - t.1) K)).mp ht_data.2
       obtain ⟨s_orig, hs_orig, hs_eq⟩ := Finset.mem_image.mp ht_a_in
       have hs_orig_data := Finset.mem_sigma.mp hs_orig
       have h_anti_orig := Finset.mem_addAntidiagonal.mp hs_orig_data.2
@@ -596,7 +650,8 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
     _ = Valued.v (intPartial x (g - a) K) := one_mul _
     _ ≤ ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := h_inner_le
 
--- [Proposition 3, Poonen1993] : The null series form an ideal of W(𝔽ₚ^⁻)((t^ℚ)).
+/-- The ideal of null series in `W(𝔽ᵃ_[p])((t^ℚ))`. That the null series form an ideal is
+[Poonen, Proposition 3]; the field `𝕃_[p]` is the quotient by this ideal. -/
 def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSeries p) where
   carrier := {x | IsNullSeries x}
   add_mem' := by
@@ -605,9 +660,9 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
     change IsNullSeries y at hy
     change IsNullSeries (x + y)
     intro g
-    let sx : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finprop x g M)
-    let sy : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finprop y g M)
-    let sxy : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finprop (x + y) g M)
+    let sx : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finiteBelow x g M)
+    let sy : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finiteBelow y g M)
+    let sxy : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (finiteBelow (x + y) g M)
     let su : ℕ → Finset ℤ := fun M => sx M ∪ sy M
     let fx : ℕ → ℤ → QpUn p := fun M n =>
       (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))
@@ -618,14 +673,14 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
     have hsxy_sub : ∀ M, sxy M ⊆ su M := by
       intro M n hn
       have hn' : g + n ≤ M ∧ (x + y).coeff (g + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finprop (x + y) g M) (a := n)).1 hn
+        (Set.Finite.mem_toFinset (hs := finiteBelow (x + y) g M) (a := n)).1 hn
       have hmem : g + n ∈ (x + y).support := (HahnSeries.mem_support (x + y) (g + n)).2 hn'.2
       have hunion := HahnSeries.support_add_subset (x := x) (y := y) hmem
       rcases hunion with hxmem | hymem
       · exact Finset.mem_union_left _ <|
-          (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).2 ⟨hn'.1, hxmem⟩
+          (Set.Finite.mem_toFinset (hs := finiteBelow x g M) (a := n)).2 ⟨hn'.1, hxmem⟩
       · exact Finset.mem_union_right _ <|
-          (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).2 ⟨hn'.1, hymem⟩
+          (Set.Finite.mem_toFinset (hs := finiteBelow y g M) (a := n)).2 ⟨hn'.1, hymem⟩
     have hsumx (M : ℕ) : Finset.sum (su M) (fx M) = Finset.sum (sx M) (fx M) := by
       symm
       apply Finset.sum_subset
@@ -634,11 +689,11 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
       · intro n hnu hnsx
         have hny : n ∈ sy M := (Finset.mem_union.mp hnu).resolve_left hnsx
         have hmem : g + n ≤ M ∧ y.coeff (g + n) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).1 hny
+          (Set.Finite.mem_toFinset (hs := finiteBelow y g M) (a := n)).1 hny
         have hxzero : x.coeff (g + n) = 0 := by
           by_contra hxne
           exact hnsx <|
-            (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).2 ⟨hmem.1, hxne⟩
+            (Set.Finite.mem_toFinset (hs := finiteBelow x g M) (a := n)).2 ⟨hmem.1, hxne⟩
         simp [hxzero]
     have hsumy (M : ℕ) : Finset.sum (su M) (fy M) = Finset.sum (sy M) (fy M) := by
       symm
@@ -648,11 +703,11 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
       · intro n hnu hnsy
         have hnx : n ∈ sx M := (Finset.mem_union.mp hnu).resolve_right hnsy
         have hmem : g + n ≤ M ∧ x.coeff (g + n) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).1 hnx
+          (Set.Finite.mem_toFinset (hs := finiteBelow x g M) (a := n)).1 hnx
         have hyzero : y.coeff (g + n) = 0 := by
           by_contra hyne
           exact hnsy <|
-            (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).2 ⟨hmem.1, hyne⟩
+            (Set.Finite.mem_toFinset (hs := finiteBelow y g M) (a := n)).2 ⟨hmem.1, hyne⟩
         simp [hyzero]
     have hsumxy (M : ℕ) : Finset.sum (su M) (fxy M) = Finset.sum (sxy M) (fxy M) := by
       symm
@@ -661,10 +716,10 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
       · intro n hnu hnsxy
         have hcoeff : (x + y).coeff (g + n) = 0 := by
           by_contra hne
-          exact hnsxy <| (Set.Finite.mem_toFinset (hs := finprop (x + y) g M) (a := n)).2 ⟨by
+          exact hnsxy <| (Set.Finite.mem_toFinset (hs := finiteBelow (x + y) g M) (a := n)).2 ⟨by
             rcases Finset.mem_union.mp hnu with hnx | hny
-            · exact (Set.Finite.mem_toFinset (hs := finprop x g M) (a := n)).1 hnx |>.1
-            · exact (Set.Finite.mem_toFinset (hs := finprop y g M) (a := n)).1 hny |>.1, hne⟩
+            · exact (Set.Finite.mem_toFinset (hs := finiteBelow x g M) (a := n)).1 hnx |>.1
+            · exact (Set.Finite.mem_toFinset (hs := finiteBelow y g M) (a := n)).1 hny |>.1, hne⟩
         simp [hcoeff]
     have hfun :
         (fun M => Finset.sum (sxy M) (fxy M)) =
@@ -681,29 +736,29 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
         _ = Finset.sum (sx M) (fx M) + Finset.sum (sy M) (fy M) := by
           rw [hsumx M, hsumy M]
     have hxmain :
-        (fun M => ∑ n ∈ (Set.Finite.toFinset (finprop x g M)).attach,
+        (fun M => ∑ n ∈ (Set.Finite.toFinset (finiteBelow x g M)).attach,
             (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))) =
           fun M => Finset.sum (sx M) (fx M) := by
       funext M
       dsimp [sx, fx]
-      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finprop x g M))
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finiteBelow x g M))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n))))
     have hymain :
-        (fun M => ∑ n ∈ (Set.Finite.toFinset (finprop y g M)).attach,
+        (fun M => ∑ n ∈ (Set.Finite.toFinset (finiteBelow y g M)).attach,
             (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (y.coeff (g + n))) =
           fun M => Finset.sum (sy M) (fy M) := by
       funext M
       dsimp [sy, fy]
-      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finprop y g M))
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finiteBelow y g M))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (y.coeff (g + n))))
     have hmain :
         (fun M =>
-          ∑ n : Set.Finite.toFinset (finprop (x + y) g M),
+          ∑ n : Set.Finite.toFinset (finiteBelow (x + y) g M),
             (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) ((x + y).coeff (g + n))) =
           fun M => Finset.sum (sxy M) (fxy M) := by
       funext M
       dsimp [sxy, fxy]
-      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finprop (x + y) g M))
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (finiteBelow (x + y) g M))
         (f := fun n : ℤ =>
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) ((x + y).coeff (g + n))))
     have hx' : Filter.Tendsto (fun M => Finset.sum (sx M) (fx M)) Filter.atTop (nhds 0) := by
@@ -723,7 +778,7 @@ def NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] : Ideal (LiftedPAdicHahnSerie
     intro g
     -- Goal: Tendsto (fun M => partialSum (c*x) g M) atTop (𝓝 0).
     -- Step 1: rewrite partialSum (c*x) g M as intPartial (c*x) g ⌊M - g⌋.
-    have hpartial_eq : (fun M : ℕ => ∑ n : Set.Finite.toFinset (finprop (c * x) g M),
+    have hpartial_eq : (fun M : ℕ => ∑ n : Set.Finite.toFinset (finiteBelow (c * x) g M),
         (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) ((c * x).coeff (g + n))) =
       fun M : ℕ => intPartial (c * x) g ⌊(M : ℚ) - g⌋ := by
       funext M
@@ -813,14 +868,14 @@ private lemma one_notMem_NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] :
   have htend := h_NS 0
   -- The partial-sum sequence is constantly `1` for every `M : ℕ`.
   have h_partial_sum_one : ∀ M : ℕ,
-      (∑ n : Set.Finite.toFinset (finprop (1 : LiftedPAdicHahnSeries p) 0 M),
+      (∑ n : Set.Finite.toFinset (finiteBelow (1 : LiftedPAdicHahnSeries p) 0 M),
           (p : QpUn p) ^ n.val *
             algebraMap (OQpUn p) (QpUn p)
               ((1 : LiftedPAdicHahnSeries p).coeff (0 + (n.val : ℚ))))
         = 1 := by
     intro M
-    set S := Set.Finite.toFinset (finprop (1 : LiftedPAdicHahnSeries p) 0 M) with hS_def
-    -- The finprop set at `g = 0` is `{0}` for any `M : ℕ`, since `(1).coeff q = 0`
+    set S := Set.Finite.toFinset (finiteBelow (1 : LiftedPAdicHahnSeries p) 0 M) with hS_def
+    -- The finiteBelow set at `g = 0` is `{0}` for any `M : ℕ`, since `(1).coeff q = 0`
     -- whenever `q ≠ 0` and `0 ≤ M` makes `n = 0` admissible.
     have hS_eq : S = ({0} : Finset ℤ) := by
       ext n
@@ -854,7 +909,7 @@ private lemma one_notMem_NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] :
   have h_tend_one :
       Filter.Tendsto
         (fun M : ℕ =>
-          ∑ n : Set.Finite.toFinset (finprop (1 : LiftedPAdicHahnSeries p) 0 M),
+          ∑ n : Set.Finite.toFinset (finiteBelow (1 : LiftedPAdicHahnSeries p) 0 M),
             (p : QpUn p) ^ n.val *
               algebraMap (OQpUn p) (QpUn p)
                 ((1 : LiftedPAdicHahnSeries p).coeff (0 + (n.val : ℚ))))
@@ -1007,19 +1062,19 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
   · -- K ≤ K' case: ‖intPartial K - intPartial K'‖ = ‖intPartial K' - intPartial K‖
     rw [norm_sub_rev, intPartial_diff_eq_sdiff_sum α g K K' hKK']
     -- Show valuation bound
-    have hval_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K') \
-            Set.Finite.toFinset (finpropInt α g K)),
+    have hval_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelowInt α g K') \
+            Set.Finite.toFinset (finiteBelowInt α g K)),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n))) ≤
         ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := by
       apply Valuation.map_sum_le
       intro n hn
-      have hn_mem : n ∈ Set.Finite.toFinset (finpropInt α g K') ∧
-          n ∉ Set.Finite.toFinset (finpropInt α g K) := Finset.mem_sdiff.mp hn
+      have hn_mem : n ∈ Set.Finite.toFinset (finiteBelowInt α g K') ∧
+          n ∉ Set.Finite.toFinset (finiteBelowInt α g K) := Finset.mem_sdiff.mp hn
       have hn1 : n ≤ K' ∧ α.coeff (g + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt α g K')).mp hn_mem.1
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt α g K')).mp hn_mem.1
       have hn2 : ¬ (n ≤ K ∧ α.coeff (g + n) ≠ 0) := by
         intro h
-        exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := finpropInt α g K)).mpr h)
+        exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mpr h)
       have hn_gt : K < n := by
         by_contra hle
         push Not at hle
@@ -1038,8 +1093,8 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
     -- Convert valuation bound to norm bound
     rw [hnorm_eq]
     have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p)
-        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K') \
-            Set.Finite.toFinset (finpropInt α g K)),
+        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelowInt α g K') \
+            Set.Finite.toFinset (finiteBelowInt α g K)),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)))) ≤
         WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) :=
@@ -1064,26 +1119,26 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
         omega
       exact h_le.trans_lt hN
     have h_combined : WithZeroMulInt.toNNReal (p_ne_zero p)
-        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K') \
-              Set.Finite.toFinset (finpropInt α g K)),
+        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelowInt α g K') \
+              Set.Finite.toFinset (finiteBelowInt α g K)),
             (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)))) < ε :=
       h_nnreal_le.trans_lt h_pow_lt
     exact_mod_cast h_combined
   · -- K' ≤ K case: diff is over T(K) \ T(K'), bound at K' + 1
     rw [intPartial_diff_eq_sdiff_sum α g K' K hKK']
-    have hval_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K) \
-            Set.Finite.toFinset (finpropInt α g K')),
+    have hval_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelowInt α g K) \
+            Set.Finite.toFinset (finiteBelowInt α g K')),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n))) ≤
         ((Multiplicative.ofAdd (-(K' + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := by
       apply Valuation.map_sum_le
       intro n hn
-      have hn_mem : n ∈ Set.Finite.toFinset (finpropInt α g K) ∧
-          n ∉ Set.Finite.toFinset (finpropInt α g K') := Finset.mem_sdiff.mp hn
+      have hn_mem : n ∈ Set.Finite.toFinset (finiteBelowInt α g K) ∧
+          n ∉ Set.Finite.toFinset (finiteBelowInt α g K') := Finset.mem_sdiff.mp hn
       have hn1 : n ≤ K ∧ α.coeff (g + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt α g K)).mp hn_mem.1
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mp hn_mem.1
       have hn2 : ¬ (n ≤ K' ∧ α.coeff (g + n) ≠ 0) := by
         intro h
-        exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := finpropInt α g K')).mpr h)
+        exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K')).mpr h)
       have hn_gt : K' < n := by
         by_contra hle
         push Not at hle
@@ -1099,8 +1154,8 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
       exact h1.trans h2
     rw [hnorm_eq]
     have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p)
-        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K) \
-            Set.Finite.toFinset (finpropInt α g K')),
+        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelowInt α g K) \
+            Set.Finite.toFinset (finiteBelowInt α g K')),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)))) ≤
         WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(K' + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) :=
@@ -1123,8 +1178,8 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
         omega
       exact h_le.trans_lt hN
     have h_combined : WithZeroMulInt.toNNReal (p_ne_zero p)
-        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finpropInt α g K) \
-              Set.Finite.toFinset (finpropInt α g K')),
+        (Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelowInt α g K) \
+              Set.Finite.toFinset (finiteBelowInt α g K')),
             (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)))) < ε :=
       h_nnreal_le.trans_lt h_pow_lt
     exact_mod_cast h_combined
@@ -1396,7 +1451,8 @@ lemma exists_teichmuller_digits (y : ℚᵘⁿ_[p]) :
       have htoNN : WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) =
           (p : NNReal)^(-(K + 1)) := by
-        rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero, WithZero.unzero_coe]
+        rw [WithZeroMulInt.toNNReal_neg_apply (p_ne_zero p) WithZero.coe_ne_zero,
+          WithZero.unzero_coe]
         congr 1
       rw [htoNN] at h_nnreal_le
       -- Bound by ((p : NNReal)⁻¹)^N
@@ -1919,7 +1975,7 @@ set_option maxHeartbeats 250000 in
 **Existence of a Teichmuller-style canonical expansion**.
 
 For every `α : LiftedPAdicHahnSeries p`, there exists `s : ℚ → Fpbar p` with
-PWO support such that `α - LiftedPAdicHahnSeries.from_coeff s hspwo` is a null
+PWO support such that `α - LiftedPAdicHahnSeries.fromCoeff s hspwo` is a null
 series (i.e. lies in `NullSeriesIdeal p`).
 
 The construction (per Poonen1993, p. 6):
@@ -1935,7 +1991,7 @@ support-PWO bound combining `Set.IsPWO.add` with
 theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     (α : LiftedPAdicHahnSeries p) :
     ∃ (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO),
-      α - LiftedPAdicHahnSeries.from_coeff s hspwo ∈ NullSeriesIdeal p := by
+      α - LiftedPAdicHahnSeries.fromCoeff s hspwo ∈ NullSeriesIdeal p := by
   classical
   -- ============================================================
   -- SETUP: hp_ne, hpn_val
@@ -2105,7 +2161,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
           apply Finset.sum_eq_zero
           intro n _
           have hn_mem : n.1 ≤ K ∧ α.coeff (γ + n.1) ≠ 0 :=
-            (Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mp n.2
+            (Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mp n.2
           exfalso
           apply h_sl_e
           exact ⟨n.1, hn_mem.2⟩
@@ -2138,19 +2194,19 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
               ((Multiplicative.ofAdd (-m : ℤ) : Multiplicative ℤ) : WithZero _) := by
           intro K hK
           simp only [intPartial]
-          rw [show (∑ n : Set.Finite.toFinset (finpropInt α γ K),
+          rw [show (∑ n : Set.Finite.toFinset (finiteBelowInt α γ K),
                 (p : QpUn p) ^ n.1 *
                   algebraMap (OQpUn p) (QpUn p) (α.coeff (γ + n))) =
-              ∑ n ∈ Set.Finite.toFinset (finpropInt α γ K),
+              ∑ n ∈ Set.Finite.toFinset (finiteBelowInt α γ K),
                 (p : QpUn p) ^ n *
                   algebraMap (OQpUn p) (QpUn p) (α.coeff (γ + n)) from
-              Finset.sum_attach (s := Set.Finite.toFinset (finpropInt α γ K))
+              Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt α γ K))
                 (f := fun n : ℤ => (p : QpUn p) ^ n *
                   algebraMap (OQpUn p) (QpUn p) (α.coeff (γ + n)))]
           apply Valuation.map_sum_le
           intro n hn
           have hn_mem : n ≤ K ∧ α.coeff (γ + n) ≠ 0 :=
-            (Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mp hn
+            (Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mp hn
           have hn_in_slice : n ∈ slice := hn_mem.2
           have hm_le_n : m ≤ n := hm_min n hn_in_slice
           rw [Valuation.map_mul, hpn_val n]
@@ -2222,11 +2278,11 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     existsCanonicalExpansionAux.support_isPWO_of_subset_support_add_natRange α hsupp_sub
   refine ⟨s, hspwo, ?_⟩
   -- ============================================================
-  -- IsNullSeries (α - from_coeff s)
+  -- IsNullSeries (α - fromCoeff s)
   -- ============================================================
-  change IsNullSeries (α - LiftedPAdicHahnSeries.from_coeff s hspwo)
+  change IsNullSeries (α - LiftedPAdicHahnSeries.fromCoeff s hspwo)
   intro g
-  set β : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s hspwo with hβ_def
+  set β : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s hspwo with hβ_def
   set γ : ℚ := Int.fract g with hγ_def
   set n₀ : ℤ := ⌊g⌋ with hn₀_def
   have hg_eq : g = γ + (n₀ : ℚ) := by
@@ -2249,16 +2305,16 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
             (p : QpUn p) ^ k * algebraMap (OQpUn p) (QpUn p) (teichmuller p (t (γ' + k))) := by
     intro γ' β' t m hβ'_coeff hm K hK
     have h_step1 : intPartial β' γ' K =
-        ∑ n ∈ Set.Finite.toFinset (finpropInt β' γ' K),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelowInt β' γ' K),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (γ' + n)) := by
       simp only [intPartial]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt β' γ' K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt β' γ' K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (γ' + n)))
     rw [h_step1]
-    have h_subset : Set.Finite.toFinset (finpropInt β' γ' K) ⊆ Finset.Icc m K := by
+    have h_subset : Set.Finite.toFinset (finiteBelowInt β' γ' K) ⊆ Finset.Icc m K := by
       intro n hn
       have hn_mem : n ≤ K ∧ β'.coeff (γ' + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt β' γ' K)).mp hn
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt β' γ' K)).mp hn
       have h_t_ne : t (γ' + n) ≠ 0 := by
         intro h_zero
         apply hn_mem.2
@@ -2269,7 +2325,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
         push Not at h_lt
         exact h_t_ne (hm n h_lt)
       exact Finset.mem_Icc.mpr ⟨h_n_ge, hn_mem.1⟩
-    have h_extend : ∑ n ∈ Set.Finite.toFinset (finpropInt β' γ' K),
+    have h_extend : ∑ n ∈ Set.Finite.toFinset (finiteBelowInt β' γ' K),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (γ' + n)) =
         ∑ n ∈ Finset.Icc m K,
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (γ' + n)) := by
@@ -2279,7 +2335,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       have h_β_zero : β'.coeff (γ' + n) = 0 := by
         by_contra hne
         apply hn_not
-        exact (Set.Finite.mem_toFinset (hs := finpropInt β' γ' K)).mpr ⟨hn_Icc.2, hne⟩
+        exact (Set.Finite.mem_toFinset (hs := finiteBelowInt β' γ' K)).mpr ⟨hn_Icc.2, hne⟩
       rw [h_β_zero]
       simp
     rw [h_extend]
@@ -2326,20 +2382,20 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intPartial β' g K = (p : QpUn p) ^ (-n₀) * intPartial β' γ (K + n₀) := by
     intro β' K
     have hL : intPartial β' g K =
-        ∑ n ∈ Set.Finite.toFinset (finpropInt β' g K),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelowInt β' g K),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (g + n)) := by
       simp only [intPartial]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt β' g K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt β' g K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (g + n)))
     have hR : intPartial β' γ (K + n₀) =
-        ∑ n ∈ Set.Finite.toFinset (finpropInt β' γ (K + n₀)),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelowInt β' γ (K + n₀)),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (γ + n)) := by
       simp only [intPartial]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt β' γ (K + n₀)))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt β' γ (K + n₀)))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β'.coeff (γ + n)))
     rw [hL, hR]
-    have h_image : Set.Finite.toFinset (finpropInt β' γ (K + n₀)) =
-        (Set.Finite.toFinset (finpropInt β' g K)).image (fun n : ℤ => n + n₀) := by
+    have h_image : Set.Finite.toFinset (finiteBelowInt β' γ (K + n₀)) =
+        (Set.Finite.toFinset (finiteBelowInt β' g K)).image (fun n : ℤ => n + n₀) := by
       ext n'
       simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_setOf_eq]
       constructor
@@ -2413,25 +2469,25 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   have h_intPartial_sub : ∀ K : ℤ,
       intPartial (α - β) g K = intPartial α g K - intPartial β g K := by
     intro K
-    set T_α : Finset ℤ := Set.Finite.toFinset (finpropInt α g K) with hT_α_def
-    set T_β : Finset ℤ := Set.Finite.toFinset (finpropInt β g K) with hT_β_def
-    set T_d : Finset ℤ := Set.Finite.toFinset (finpropInt (α - β) g K) with hT_d_def
+    set T_α : Finset ℤ := Set.Finite.toFinset (finiteBelowInt α g K) with hT_α_def
+    set T_β : Finset ℤ := Set.Finite.toFinset (finiteBelowInt β g K) with hT_β_def
+    set T_d : Finset ℤ := Set.Finite.toFinset (finiteBelowInt (α - β) g K) with hT_d_def
     set T_U : Finset ℤ := T_α ∪ T_β with hT_U_def
     have e_α : intPartial α g K =
         ∑ n ∈ T_α, (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)) := by
       simp only [intPartial, hT_α_def]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt α g K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt α g K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)))
     have e_β : intPartial β g K =
         ∑ n ∈ T_β, (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β.coeff (g + n)) := by
       simp only [intPartial, hT_β_def]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt β g K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt β g K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β.coeff (g + n)))
     have e_d : intPartial (α - β) g K =
         ∑ n ∈ T_d, (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n)) := by
       simp only [intPartial, hT_d_def]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt (α - β) g K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt (α - β) g K))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n)))
     have h_α_sub_U : T_α ⊆ T_U := Finset.subset_union_left
@@ -2439,7 +2495,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     have h_d_sub_U : T_d ⊆ T_U := by
       intro n hn
       have hn_mem : n ≤ K ∧ (α - β).coeff (g + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt (α - β) g K)).mp hn
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt (α - β) g K)).mp hn
       have h_sub_eq : (α - β).coeff (g + n) = α.coeff (g + n) - β.coeff (g + n) := rfl
       rw [h_sub_eq] at hn_mem
       by_cases h_α_z : α.coeff (g + n) = 0
@@ -2448,9 +2504,9 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
           apply hn_mem.2
           rw [h_α_z, h_β_z, sub_self]
         exact Finset.mem_union_right T_α
-          ((Set.Finite.mem_toFinset (hs := finpropInt β g K)).mpr ⟨hn_mem.1, h_β_ne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt β g K)).mpr ⟨hn_mem.1, h_β_ne⟩)
       · exact Finset.mem_union_left T_β
-          ((Set.Finite.mem_toFinset (hs := finpropInt α g K)).mpr ⟨hn_mem.1, h_α_z⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mpr ⟨hn_mem.1, h_α_z⟩)
     have he_α_U : ∑ n ∈ T_α,
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (g + n)) =
         ∑ n ∈ T_U,
@@ -2459,12 +2515,12 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intro n hn_U hn_not_α
       have hn_le_K : n ≤ K := by
         rcases Finset.mem_union.mp hn_U with h_α_mem | h_β_mem
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α g K)).mp h_α_mem).1
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt β g K)).mp h_β_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mp h_α_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt β g K)).mp h_β_mem).1
       have h_α_z : α.coeff (g + n) = 0 := by
         by_contra hne
         exact hn_not_α
-          ((Set.Finite.mem_toFinset (hs := finpropInt α g K)).mpr ⟨hn_le_K, hne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mpr ⟨hn_le_K, hne⟩)
       rw [h_α_z]
       simp
     have he_β_U : ∑ n ∈ T_β,
@@ -2475,12 +2531,12 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intro n hn_U hn_not_β
       have hn_le_K : n ≤ K := by
         rcases Finset.mem_union.mp hn_U with h_α_mem | h_β_mem
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α g K)).mp h_α_mem).1
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt β g K)).mp h_β_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mp h_α_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt β g K)).mp h_β_mem).1
       have h_β_z : β.coeff (g + n) = 0 := by
         by_contra hne
         exact hn_not_β
-          ((Set.Finite.mem_toFinset (hs := finpropInt β g K)).mpr ⟨hn_le_K, hne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt β g K)).mpr ⟨hn_le_K, hne⟩)
       rw [h_β_z]
       simp
     have he_d_U : ∑ n ∈ T_d,
@@ -2493,12 +2549,12 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intro n hn_U hn_not_d
       have hn_le_K : n ≤ K := by
         rcases Finset.mem_union.mp hn_U with h_α_mem | h_β_mem
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α g K)).mp h_α_mem).1
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt β g K)).mp h_β_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α g K)).mp h_α_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt β g K)).mp h_β_mem).1
       have h_d_z : (α - β).coeff (g + n) = 0 := by
         by_contra hne
         exact hn_not_d
-          ((Set.Finite.mem_toFinset (hs := finpropInt (α - β) g K)).mpr ⟨hn_le_K, hne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt (α - β) g K)).mpr ⟨hn_le_K, hne⟩)
       rw [h_d_z]
       simp
     rw [e_d, he_d_U, e_α, he_α_U, e_β, he_β_U]
@@ -2521,12 +2577,12 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     filter_upwards with K
     exact (h_intPartial_sub K).symm
   -- ============================================================
-  -- Phase 1: bridge finprop ⇄ intPartial
+  -- Phase 1: bridge finiteBelow ⇄ intPartial
   -- ============================================================
-  have h_finprop_eq_finpropInt :
+  have h_finiteBelow_eq_finiteBelowInt :
       ∀ (x : LiftedPAdicHahnSeries p) (M : ℕ),
-        (Set.Finite.toFinset (finprop x g M) : Finset ℤ) =
-        (Set.Finite.toFinset (finpropInt x g ⌊((M : ℚ) - g)⌋) : Finset ℤ) := by
+        (Set.Finite.toFinset (finiteBelow x g M) : Finset ℤ) =
+        (Set.Finite.toFinset (finiteBelowInt x g ⌊((M : ℚ) - g)⌋) : Finset ℤ) := by
     intro x M
     ext n
     simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
@@ -2540,34 +2596,34 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       have hineq : (n : ℚ) ≤ (M : ℚ) - g :=
         le_trans (by exact_mod_cast h1) (Int.floor_le ((M : ℚ) - g))
       linarith
-  have h_finprop_to_intPartial :
-      (fun M : ℕ => ∑ n : Set.Finite.toFinset (finprop (α - β) g M),
+  have h_finiteBelow_to_intPartial :
+      (fun M : ℕ => ∑ n : Set.Finite.toFinset (finiteBelow (α - β) g M),
         (p : QpUn p) ^ n.val *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n))) =
       fun M : ℕ => intPartial (α - β) g ⌊((M : ℚ) - g)⌋ := by
     funext M
     simp only [intPartial]
     have h_attach_α := Finset.sum_attach
-      (s := Set.Finite.toFinset (finprop (α - β) g M))
+      (s := Set.Finite.toFinset (finiteBelow (α - β) g M))
       (f := fun n : ℤ => (p : QpUn p) ^ n *
         algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n)))
     have h_attach_β := Finset.sum_attach
-      (s := Set.Finite.toFinset (finpropInt (α - β) g ⌊((M : ℚ) - g)⌋))
+      (s := Set.Finite.toFinset (finiteBelowInt (α - β) g ⌊((M : ℚ) - g)⌋))
       (f := fun n : ℤ => (p : QpUn p) ^ n *
         algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n)))
-    rw [show (∑ n : Set.Finite.toFinset (finprop (α - β) g M),
+    rw [show (∑ n : Set.Finite.toFinset (finiteBelow (α - β) g M),
         (p : QpUn p) ^ n.val *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n))) =
-      ∑ n ∈ Set.Finite.toFinset (finprop (α - β) g M),
+      ∑ n ∈ Set.Finite.toFinset (finiteBelow (α - β) g M),
         (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n)) from h_attach_α]
-    rw [show (∑ n : Set.Finite.toFinset (finpropInt (α - β) g ⌊((M : ℚ) - g)⌋),
+    rw [show (∑ n : Set.Finite.toFinset (finiteBelowInt (α - β) g ⌊((M : ℚ) - g)⌋),
         (p : QpUn p) ^ n.1 *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n))) =
-      ∑ n ∈ Set.Finite.toFinset (finpropInt (α - β) g ⌊((M : ℚ) - g)⌋),
+      ∑ n ∈ Set.Finite.toFinset (finiteBelowInt (α - β) g ⌊((M : ℚ) - g)⌋),
         (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - β).coeff (g + n)) from h_attach_β]
-    rw [h_finprop_eq_finpropInt (α - β) M]
+    rw [h_finiteBelow_eq_finiteBelowInt (α - β) M]
   have h_φ : Filter.Tendsto (fun M : ℕ => ⌊((M : ℚ) - g)⌋) Filter.atTop Filter.atTop := by
     apply Filter.tendsto_atTop_atTop.mpr
     intro b
@@ -2580,7 +2636,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   -- ============================================================
   -- Compose to get the goal
   -- ============================================================
-  rw [h_finprop_to_intPartial]
+  rw [h_finiteBelow_to_intPartial]
   exact h_intPartial_zero.comp h_φ
 
 set_option maxHeartbeats 220000 in
@@ -2588,18 +2644,18 @@ set_option maxHeartbeats 220000 in
 /--
 **Uniqueness of the Teichmuller-style canonical expansion**.
 
-If `s, s'` both have PWO support and `from_coeff s ≡ from_coeff s'` modulo
+If `s, s'` both have PWO support and `fromCoeff s ≡ fromCoeff s'` modulo
 `NullSeriesIdeal p`, then `s = s'`.
 -/
 theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     {s s' : ℚ → Fpbar p}
     (hspwo : (Function.support s).IsPWO) (hspwo' : (Function.support s').IsPWO)
-    (h : LiftedPAdicHahnSeries.from_coeff s hspwo -
-         LiftedPAdicHahnSeries.from_coeff s' hspwo' ∈ NullSeriesIdeal p) :
+    (h : LiftedPAdicHahnSeries.fromCoeff s hspwo -
+         LiftedPAdicHahnSeries.fromCoeff s' hspwo' ∈ NullSeriesIdeal p) :
     s = s' := by
   classical
-  set α : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s hspwo with hα_def
-  set α' : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s' hspwo' with hα'_def
+  set α : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s hspwo with hα_def
+  set α' : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s' hspwo' with hα'_def
   -- Unfold null series
   change IsNullSeries (α - α') at h
   -- p ≠ 0 in QpUn p
@@ -2685,16 +2741,16 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
             (p : QpUn p) ^ k * algebraMap (OQpUn p) (QpUn p) (teichmuller p (t (γ + k))) := by
     intro β t m hβ_coeff hm K hK
     have h_step1 : intPartial β γ K =
-        ∑ n ∈ Set.Finite.toFinset (finpropInt β γ K),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelowInt β γ K),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β.coeff (γ + n)) := by
       simp only [intPartial]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt β γ K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt β γ K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β.coeff (γ + n)))
     rw [h_step1]
-    have h_subset : Set.Finite.toFinset (finpropInt β γ K) ⊆ Finset.Icc m K := by
+    have h_subset : Set.Finite.toFinset (finiteBelowInt β γ K) ⊆ Finset.Icc m K := by
       intro n hn
       have hn_mem : n ≤ K ∧ β.coeff (γ + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt β γ K)).mp hn
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt β γ K)).mp hn
       have h_t_ne : t (γ + n) ≠ 0 := by
         intro h_zero
         apply hn_mem.2
@@ -2705,7 +2761,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
         push Not at h_lt
         exact h_t_ne (hm n h_lt)
       exact Finset.mem_Icc.mpr ⟨h_n_ge, hn_mem.1⟩
-    have h_extend : ∑ n ∈ Set.Finite.toFinset (finpropInt β γ K),
+    have h_extend : ∑ n ∈ Set.Finite.toFinset (finiteBelowInt β γ K),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β.coeff (γ + n)) =
         ∑ n ∈ Finset.Icc m K,
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (β.coeff (γ + n)) := by
@@ -2715,7 +2771,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       have h_β_zero : β.coeff (γ + n) = 0 := by
         by_contra hne
         apply hn_not
-        exact (Set.Finite.mem_toFinset (hs := finpropInt β γ K)).mpr ⟨hn_Icc.2, hne⟩
+        exact (Set.Finite.mem_toFinset (hs := finiteBelowInt β γ K)).mpr ⟨hn_Icc.2, hne⟩
       rw [h_β_zero]
       simp
     rw [h_extend]
@@ -2754,26 +2810,26 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intPartial (α - α') γ K = intPartial α γ K - intPartial α' γ K := by
     intro K
     -- Setup: index sets and union
-    set T_α : Finset ℤ := Set.Finite.toFinset (finpropInt α γ K) with hT_α_def
-    set T_α' : Finset ℤ := Set.Finite.toFinset (finpropInt α' γ K) with hT_α'_def
-    set T_d : Finset ℤ := Set.Finite.toFinset (finpropInt (α - α') γ K) with hT_d_def
+    set T_α : Finset ℤ := Set.Finite.toFinset (finiteBelowInt α γ K) with hT_α_def
+    set T_α' : Finset ℤ := Set.Finite.toFinset (finiteBelowInt α' γ K) with hT_α'_def
+    set T_d : Finset ℤ := Set.Finite.toFinset (finiteBelowInt (α - α') γ K) with hT_d_def
     set T_U : Finset ℤ := T_α ∪ T_α' with hT_U_def
     -- Convert each intPartial to plain Finset.sum
     have e_α : intPartial α γ K =
         ∑ n ∈ T_α, (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (γ + n)) := by
       simp only [intPartial, hT_α_def]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt α γ K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt α γ K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (γ + n)))
     have e_α' : intPartial α' γ K =
         ∑ n ∈ T_α', (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α'.coeff (γ + n)) := by
       simp only [intPartial, hT_α'_def]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt α' γ K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt α' γ K))
         (f := fun n : ℤ => (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α'.coeff (γ + n)))
     have e_d : intPartial (α - α') γ K =
         ∑ n ∈ T_d, (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n)) := by
       simp only [intPartial, hT_d_def]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (finpropInt (α - α') γ K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (finiteBelowInt (α - α') γ K))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n)))
     -- Subset claims
@@ -2782,7 +2838,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     have h_d_sub_U : T_d ⊆ T_U := by
       intro n hn
       have hn_mem : n ≤ K ∧ (α - α').coeff (γ + n) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := finpropInt (α - α') γ K)).mp hn
+        (Set.Finite.mem_toFinset (hs := finiteBelowInt (α - α') γ K)).mp hn
       have h_sub_eq : (α - α').coeff (γ + n) = α.coeff (γ + n) - α'.coeff (γ + n) := rfl
       rw [h_sub_eq] at hn_mem
       by_cases h_α_z : α.coeff (γ + n) = 0
@@ -2791,9 +2847,9 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
           apply hn_mem.2
           rw [h_α_z, h_α'_z, sub_self]
         exact Finset.mem_union_right T_α
-          ((Set.Finite.mem_toFinset (hs := finpropInt α' γ K)).mpr ⟨hn_mem.1, h_α'_ne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt α' γ K)).mpr ⟨hn_mem.1, h_α'_ne⟩)
       · exact Finset.mem_union_left T_α'
-          ((Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mpr ⟨hn_mem.1, h_α_z⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mpr ⟨hn_mem.1, h_α_z⟩)
     -- Extend each sum to T_U
     have he_α_U : ∑ n ∈ T_α,
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (α.coeff (γ + n)) =
@@ -2803,12 +2859,12 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intro n hn_U hn_not_α
       have hn_le_K : n ≤ K := by
         rcases Finset.mem_union.mp hn_U with h_α_mem | h_α'_mem
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mp h_α_mem).1
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α' γ K)).mp h_α'_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mp h_α_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α' γ K)).mp h_α'_mem).1
       have h_α_z : α.coeff (γ + n) = 0 := by
         by_contra hne
         exact hn_not_α
-          ((Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mpr ⟨hn_le_K, hne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mpr ⟨hn_le_K, hne⟩)
       rw [h_α_z]
       simp
     have he_α'_U : ∑ n ∈ T_α',
@@ -2819,12 +2875,12 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intro n hn_U hn_not_α'
       have hn_le_K : n ≤ K := by
         rcases Finset.mem_union.mp hn_U with h_α_mem | h_α'_mem
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mp h_α_mem).1
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α' γ K)).mp h_α'_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mp h_α_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α' γ K)).mp h_α'_mem).1
       have h_α'_z : α'.coeff (γ + n) = 0 := by
         by_contra hne
         exact hn_not_α'
-          ((Set.Finite.mem_toFinset (hs := finpropInt α' γ K)).mpr ⟨hn_le_K, hne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt α' γ K)).mpr ⟨hn_le_K, hne⟩)
       rw [h_α'_z]
       simp
     have he_d_U : ∑ n ∈ T_d,
@@ -2837,12 +2893,12 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
       intro n hn_U hn_not_d
       have hn_le_K : n ≤ K := by
         rcases Finset.mem_union.mp hn_U with h_α_mem | h_α'_mem
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α γ K)).mp h_α_mem).1
-        · exact ((Set.Finite.mem_toFinset (hs := finpropInt α' γ K)).mp h_α'_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α γ K)).mp h_α_mem).1
+        · exact ((Set.Finite.mem_toFinset (hs := finiteBelowInt α' γ K)).mp h_α'_mem).1
       have h_d_z : (α - α').coeff (γ + n) = 0 := by
         by_contra hne
         exact hn_not_d
-          ((Set.Finite.mem_toFinset (hs := finpropInt (α - α') γ K)).mpr ⟨hn_le_K, hne⟩)
+          ((Set.Finite.mem_toFinset (hs := finiteBelowInt (α - α') γ K)).mpr ⟨hn_le_K, hne⟩)
       rw [h_d_z]
       simp
     -- Combine
@@ -2868,11 +2924,11 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   -- Show y_d = 0 (using IsNullSeries)
   -- ============================================================
   have h_yd_zero : y_d = 0 := by
-    -- Bridge: ∑ finprop x γ M = intPartial x γ ⌊M - γ⌋
-    have h_finprop_eq_finpropInt :
+    -- Bridge: ∑ finiteBelow x γ M = intPartial x γ ⌊M - γ⌋
+    have h_finiteBelow_eq_finiteBelowInt :
         ∀ (x : LiftedPAdicHahnSeries p) (M : ℕ),
-          (Set.Finite.toFinset (finprop x γ M) : Finset ℤ) =
-          (Set.Finite.toFinset (finpropInt x γ ⌊((M : ℚ) - γ)⌋) : Finset ℤ) := by
+          (Set.Finite.toFinset (finiteBelow x γ M) : Finset ℤ) =
+          (Set.Finite.toFinset (finiteBelowInt x γ ⌊((M : ℚ) - γ)⌋) : Finset ℤ) := by
       intro x M
       ext n
       simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
@@ -2886,38 +2942,38 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
         have hineq : (n : ℚ) ≤ (M : ℚ) - γ :=
           le_trans (by exact_mod_cast h1) (Int.floor_le ((M : ℚ) - γ))
         linarith
-    -- Bridge the finprop sum to intPartial form
-    have h_finprop_to_intPartial :
-        (fun M : ℕ => ∑ n : Set.Finite.toFinset (finprop (α - α') γ M),
+    -- Bridge the finiteBelow sum to intPartial form
+    have h_finiteBelow_to_intPartial :
+        (fun M : ℕ => ∑ n : Set.Finite.toFinset (finiteBelow (α - α') γ M),
           (p : QpUn p) ^ n.val *
             algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n))) =
         fun M : ℕ => intPartial (α - α') γ ⌊((M : ℚ) - γ)⌋ := by
       funext M
       simp only [intPartial]
       have h_attach_α := Finset.sum_attach
-        (s := Set.Finite.toFinset (finprop (α - α') γ M))
+        (s := Set.Finite.toFinset (finiteBelow (α - α') γ M))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n)))
       have h_attach_β := Finset.sum_attach
-        (s := Set.Finite.toFinset (finpropInt (α - α') γ ⌊((M : ℚ) - γ)⌋))
+        (s := Set.Finite.toFinset (finiteBelowInt (α - α') γ ⌊((M : ℚ) - γ)⌋))
         (f := fun n : ℤ => (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n)))
-      rw [show (∑ n : Set.Finite.toFinset (finprop (α - α') γ M),
+      rw [show (∑ n : Set.Finite.toFinset (finiteBelow (α - α') γ M),
           (p : QpUn p) ^ n.val *
             algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n))) =
-        ∑ n ∈ Set.Finite.toFinset (finprop (α - α') γ M),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelow (α - α') γ M),
           (p : QpUn p) ^ n *
             algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n)) from h_attach_α]
-      rw [show (∑ n : Set.Finite.toFinset (finpropInt (α - α') γ ⌊((M : ℚ) - γ)⌋),
+      rw [show (∑ n : Set.Finite.toFinset (finiteBelowInt (α - α') γ ⌊((M : ℚ) - γ)⌋),
           (p : QpUn p) ^ n.1 *
             algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n))) =
-        ∑ n ∈ Set.Finite.toFinset (finpropInt (α - α') γ ⌊((M : ℚ) - γ)⌋),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelowInt (α - α') γ ⌊((M : ℚ) - γ)⌋),
           (p : QpUn p) ^ n *
             algebraMap (OQpUn p) (QpUn p) ((α - α').coeff (γ + n)) from h_attach_β]
-      rw [h_finprop_eq_finpropInt (α - α') M]
+      rw [h_finiteBelow_eq_finiteBelowInt (α - α') M]
     -- Apply hypothesis at γ
     have h_at_γ := h γ
-    rw [h_finprop_to_intPartial] at h_at_γ
+    rw [h_finiteBelow_to_intPartial] at h_at_γ
     -- h_at_γ : Tendsto (fun M => intPartial (α - α') γ ⌊M - γ⌋) atTop (𝓝 0)
     -- Compose: φ M = ⌊(M : ℚ) - γ⌋, φ → ∞
     have h_φ : Filter.Tendsto (fun M : ℕ => ⌊((M : ℚ) - γ)⌋) Filter.atTop Filter.atTop := by
@@ -2946,45 +3002,46 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
   exact existsCanonicalExpansionAux.teichmuller_digits_unique
     Bs Bs' m_s m_s' hm_s hm_s' htendsto_s htendsto_s'
 
--- [Proposition 4, Poonen1993] : Every element of pAdicHahnSeries p has a unique representative
--- in W(𝔽ₚ^⁻)((t^ℚ)) of the form ∑ₖ [aₖ] tᵏ
+/-- **[Poonen, Proposition 4].** Every element of `𝕃_[p]` has a unique canonical representative: a
+well-ordered-support coefficient function `s : ℚ → 𝔽ᵃ_[p]` whose Teichmüller lift `∑ₖ [s(k)] tᵏ`
+represents it. This canonical `s` underlies the `coeff` and `support` functions on `𝕃_[p]`. -/
 theorem exists_canonical_expansion {p : ℕ} [Fact (Nat.Prime p)] :
   ∀ A : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p),
     ∃! (s : {f : ℚ → Fpbar p // (Function.support f).IsPWO}),
       Ideal.Quotient.ringCon (NullSeriesIdeal p)
-      A.out (LiftedPAdicHahnSeries.from_coeff s.val s.prop) := by
+      A.out (LiftedPAdicHahnSeries.fromCoeff s.val s.prop) := by
   intro A
   -- Apply the existence helper to `α := A.out`.
   obtain ⟨s, hspwo, hα⟩ := exists_canonical_representative (A.out)
   refine ⟨⟨s, hspwo⟩, ?_, ?_⟩
-  · -- Existence: `A.out - from_coeff s ∈ NullSeriesIdeal` ↔ the relation holds.
+  · -- Existence: `A.out - fromCoeff s ∈ NullSeriesIdeal` ↔ the relation holds.
     -- `Ideal.Quotient.ringCon` is the relation `a ≡ b ↔ a - b ∈ I` (for an
     -- additive group), so we just unfold it.
     -- The relation is what `Quotient.exact` gives us from `mk a = mk b`.
     have hmk :
         (Ideal.Quotient.mk (NullSeriesIdeal p)) (A.out) =
           (Ideal.Quotient.mk (NullSeriesIdeal p))
-            (LiftedPAdicHahnSeries.from_coeff s hspwo) :=
+            (LiftedPAdicHahnSeries.fromCoeff s hspwo) :=
       Ideal.Quotient.eq.mpr hα
     exact Quotient.exact hmk
   · -- Uniqueness: any `⟨s', hspwo'⟩` satisfying the relation has `s = s'`.
     rintro ⟨s', hspwo'⟩ h'
-    -- `h'` says `A.out - from_coeff s' ∈ NullSeriesIdeal p` (modulo
+    -- `h'` says `A.out - fromCoeff s' ∈ NullSeriesIdeal p` (modulo
     -- unfolding the `ringCon` relation).
     have hα' :
-        A.out - LiftedPAdicHahnSeries.from_coeff s' hspwo' ∈ NullSeriesIdeal p := by
+        A.out - LiftedPAdicHahnSeries.fromCoeff s' hspwo' ∈ NullSeriesIdeal p := by
       have hmk' :
           (Ideal.Quotient.mk (NullSeriesIdeal p)) (A.out) =
             (Ideal.Quotient.mk (NullSeriesIdeal p))
-              (LiftedPAdicHahnSeries.from_coeff s' hspwo') :=
+              (LiftedPAdicHahnSeries.fromCoeff s' hspwo') :=
         Quotient.sound h'
       exact Ideal.Quotient.eq.mp hmk'
-    -- Subtract: `from_coeff s - from_coeff s'` is in the ideal.
-    -- We have `(A.out - from_coeff s') - (A.out - from_coeff s) = from_coeff s - from_coeff s'`
+    -- Subtract: `fromCoeff s - fromCoeff s'` is in the ideal.
+    -- We have `(A.out - fromCoeff s') - (A.out - fromCoeff s) = fromCoeff s - fromCoeff s'`
     -- via `sub_sub_sub_cancel_left`.
     have hsub :
-        LiftedPAdicHahnSeries.from_coeff s hspwo -
-          LiftedPAdicHahnSeries.from_coeff s' hspwo' ∈ NullSeriesIdeal p := by
+        LiftedPAdicHahnSeries.fromCoeff s hspwo -
+          LiftedPAdicHahnSeries.fromCoeff s' hspwo' ∈ NullSeriesIdeal p := by
       have h1 := (NullSeriesIdeal p).sub_mem hα' hα
       simpa [sub_sub_sub_cancel_left] using h1
     -- Apply uniqueness helper at the function level, then lift to subtypes.
@@ -2992,7 +3049,8 @@ theorem exists_canonical_expansion {p : ℕ} [Fact (Nat.Prime p)] :
     subst hfun
     rfl
 
--- The support of a p-adic Hahn series is well-ordered.
+/-- The support of a `p`-adic Hahn series (the support of its canonical coefficient function) is
+partially well-ordered — the defining well-orderedness property of Hahn series. -/
 theorem support_IsPWO {p : ℕ} [Fact (Nat.Prime p)]
   (x : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) :
   (exists_canonical_expansion x).choose.val.support.IsPWO := by
@@ -3000,7 +3058,8 @@ theorem support_IsPWO {p : ℕ} [Fact (Nat.Prime p)]
   convert (exists_canonical_expansion x).choose.prop
   simp
 
--- When p-adic Hahn series x ≠ 0, its support is nonempty.
+/-- A nonzero `p`-adic Hahn series has nonempty support, so its valuation (the minimum of the
+support) is well-defined. -/
 theorem support_nonempty_of_nonzero
     (p : ℕ) [inst : Fact (Nat.Prime p)]
     (x : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (h : ¬x = 0) :
@@ -3009,11 +3068,11 @@ theorem support_nonempty_of_nonzero
   simp only [Subtype.forall, Function.support_nonempty_iff, ne_eq, not_not] at h
   have := (exists_canonical_expansion x).choose_spec.1
   simp only [Subtype.forall, h] at this
-  suffices h' : (@LiftedPAdicHahnSeries.from_coeff p _ 0 (by simp)) = 0 by
+  suffices h' : (@LiftedPAdicHahnSeries.fromCoeff p _ 0 (by simp)) = 0 by
     simp only [h'] at this
     rw [← Quotient.out_eq x]
     exact Quotient.sound this
-  simpa [LiftedPAdicHahnSeries.from_coeff] using Eq.symm Pi.zero_def
+  simpa [LiftedPAdicHahnSeries.fromCoeff] using Eq.symm Pi.zero_def
 
 -- Helper for `val.map_one'`: the minimum of the canonical expansion's support of `1` is `0`.
 -- Strategy: `s := Pi.single 0 1` is a canonical-expansion candidate for `1`; uniqueness
@@ -3031,7 +3090,7 @@ private lemma val_one_eq_zero (p : ℕ) [Fact (Nat.Prime p)] :
   have hs_pwo : (Function.support s).IsPWO := by
     rw [hs_supp]; exact Set.isPWO_singleton 0
   have h_from_eq :
-      LiftedPAdicHahnSeries.from_coeff s hs_pwo = (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) := by
+      LiftedPAdicHahnSeries.fromCoeff s hs_pwo = (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])) := by
     apply HahnSeries.ext
     funext n
     change (teichmuller p) (s n) = (HahnSeries.single (0 : ℚ) (1 : ℤᵘⁿ_[p])).coeff n
@@ -3041,19 +3100,19 @@ private lemma val_one_eq_zero (p : ℕ) [Fact (Nat.Prime p)] :
       exact map_one (teichmuller p)
     · rw [hs_def, Pi.single_eq_of_ne hn, HahnSeries.coeff_single_of_ne hn]
       exact WittVector.teichmuller_zero p
-  have h_from_one : LiftedPAdicHahnSeries.from_coeff s hs_pwo = (1 : LiftedPAdicHahnSeries p) := by
+  have h_from_one : LiftedPAdicHahnSeries.fromCoeff s hs_pwo = (1 : LiftedPAdicHahnSeries p) := by
     rw [h_from_eq]; exact HahnSeries.single_zero_one
   have h_mk_eq :
       (Ideal.Quotient.mk (NullSeriesIdeal p)) A.out =
       (Ideal.Quotient.mk (NullSeriesIdeal p))
-          (LiftedPAdicHahnSeries.from_coeff s hs_pwo) := by
+          (LiftedPAdicHahnSeries.fromCoeff s hs_pwo) := by
     have h1 : (Ideal.Quotient.mk (NullSeriesIdeal p)) A.out = A := Quotient.out_eq A
     have h2 : (Ideal.Quotient.mk (NullSeriesIdeal p))
-        (LiftedPAdicHahnSeries.from_coeff s hs_pwo) = A := by
+        (LiftedPAdicHahnSeries.fromCoeff s hs_pwo) = A := by
       rw [h_from_one, (Ideal.Quotient.mk _).map_one, hA_def]
     rw [h1, h2]
   have h_rel : (Ideal.Quotient.ringCon (NullSeriesIdeal p)) A.out
-      (LiftedPAdicHahnSeries.from_coeff s hs_pwo) := Quotient.exact h_mk_eq
+      (LiftedPAdicHahnSeries.fromCoeff s hs_pwo) := Quotient.exact h_mk_eq
   have h_choose_eq : (exists_canonical_expansion A).choose = ⟨s, hs_pwo⟩ := by
     have huniq := (exists_canonical_expansion A).choose_spec.2 ⟨s, hs_pwo⟩
     exact (huniq h_rel).symm
@@ -3070,11 +3129,13 @@ private lemma val_one_eq_zero (p : ℕ) [Fact (Nat.Prime p)] :
 
 -- A null series cannot have a unit-valued leading coefficient. The "engine" lemma
 -- powering the strict-ultrametric arguments in `val.map_add_le_max'` and `val.map_mul'`.
--- Mirrors the `h_sum_eq`-then-tendsto-contradiction pattern of `exists_canonical_representative`
--- : if `Δ.coeff q` is a unit, the partial sums of `IsNullSeries Δ` at `g := q`
--- have valuation = `ofAdd(0)` for all M ≥ ⌈q⌉ (strict ultrametric: n=0 term dominates), but
--- `Tendsto _ (𝓝 0)` requires the valuation to eventually drop below `ofAdd(0)`. Contradiction.
-private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
+/-- A nonzero null series cannot have a unit as its leading (lowest-support) coefficient.
+
+If `Δ.coeff q` is a unit and `Δ` vanishes strictly below `q`, then the partial sums of
+`IsNullSeries Δ` at `g := q` have valuation `ofAdd(0)` for all `M ≥ ⌈q⌉` (by the strict ultrametric
+inequality the `n = 0` term dominates), yet convergence to `0` requires the valuation to eventually
+drop below `ofAdd(0)` — a contradiction. -/
+lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
     {Δ : LiftedPAdicHahnSeries p} (hΔ : Δ ∈ NullSeriesIdeal p)
     {q : ℚ} (hq_unit : IsUnit (Δ.coeff q))
     (hq_lead : ∀ q' < q, Δ.coeff q' = 0) : False := by
@@ -3105,30 +3166,30 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
   -- For M ≥ ⌈q⌉, `n = 0` is in the index set (since `Δ.coeff q ≠ 0`), and the n < 0 indices
   -- are excluded by `hq_lead`.
   have h_zero_in : ∀ M : ℕ, q ≤ (M : ℚ) →
-      (0 : ℤ) ∈ Set.Finite.toFinset (finprop Δ q M) := by
+      (0 : ℤ) ∈ Set.Finite.toFinset (finiteBelow Δ q M) := by
     intro M hMq
-    apply (Set.Finite.mem_toFinset (hs := finprop Δ q M) (a := 0)).2
+    apply (Set.Finite.mem_toFinset (hs := finiteBelow Δ q M) (a := 0)).2
     refine ⟨?_, ?_⟩
     · simpa using hMq
     · simpa using hq_ne
   -- For each M ≥ ⌈q⌉, the partial sum's valuation equals ofAdd(0).
   have h_sum_eq : ∀ M : ℕ, q ≤ (M : ℚ) →
-      Valued.v (∑ n : Set.Finite.toFinset (finprop Δ q M),
+      Valued.v (∑ n : Set.Finite.toFinset (finiteBelow Δ q M),
           (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) =
         ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
     intro M hMq
     -- Convert the indexed-attach sum into a Finset sum so we can split off the 0 index.
-    rw [show (∑ n : Set.Finite.toFinset (finprop Δ q M),
+    rw [show (∑ n : Set.Finite.toFinset (finiteBelow Δ q M),
             (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) =
-        ∑ n ∈ Set.Finite.toFinset (finprop Δ q M),
+        ∑ n ∈ Set.Finite.toFinset (finiteBelow Δ q M),
           (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n)) from
-        Finset.sum_attach (s := Set.Finite.toFinset (finprop Δ q M))
+        Finset.sum_attach (s := Set.Finite.toFinset (finiteBelow Δ q M))
           (f := fun n : ℤ => (p : QpUn p) ^ n *
             algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n)))]
     -- Insert n = 0.
-    have h_in : (0 : ℤ) ∈ Set.Finite.toFinset (finprop Δ q M) := h_zero_in M hMq
-    rw [show Set.Finite.toFinset (finprop Δ q M) =
-        insert (0 : ℤ) ((Set.Finite.toFinset (finprop Δ q M)).erase 0) from
+    have h_in : (0 : ℤ) ∈ Set.Finite.toFinset (finiteBelow Δ q M) := h_zero_in M hMq
+    rw [show Set.Finite.toFinset (finiteBelow Δ q M) =
+        insert (0 : ℤ) ((Set.Finite.toFinset (finiteBelow Δ q M)).erase 0) from
         (Finset.insert_erase h_in).symm]
     rw [Finset.sum_insert (Finset.notMem_erase _ _)]
     -- Apply strict ultrametric: the n=0 term dominates, the rest has smaller valuation.
@@ -3140,16 +3201,16 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
       exact h_lead_val
     · -- Goal: Valued.v (rest) < Valued.v (n=0 term).
       -- Each term in the rest has valuation ≤ ofAdd(-1) < ofAdd(0) = Valued.v(n=0 term).
-      have h_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finprop Δ q M)).erase 0,
+      have h_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (finiteBelow Δ q M)).erase 0,
             (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) ≤
           ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
         apply Valuation.map_sum_le
         intro n hn_mem
         have hn_ne_zero : n ≠ 0 := Finset.ne_of_mem_erase hn_mem
-        have hn_in_finset : n ∈ Set.Finite.toFinset (finprop Δ q M) :=
+        have hn_in_finset : n ∈ Set.Finite.toFinset (finiteBelow Δ q M) :=
           (Finset.mem_erase.mp hn_mem).2
         have hn_data : q + (n : ℚ) ≤ (M : ℚ) ∧ Δ.coeff (q + n) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := finprop Δ q M) (a := n)).1 hn_in_finset
+          (Set.Finite.mem_toFinset (hs := finiteBelow Δ q M) (a := n)).1 hn_in_finset
         -- Show n ≥ 1 (since n ≠ 0 and n < 0 is excluded by hq_lead).
         have hn_pos : 1 ≤ n := by
           rcases Int.lt_or_le n 0 with hlt | hle
@@ -3186,7 +3247,7 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
         nhds (0 : QpUn p) :=
     mem_nhds_zero_v_lt WithZero.coe_ne_zero
   have h_evtl_close : ∀ᶠ M : ℕ in Filter.atTop,
-      Valued.v (∑ n : Set.Finite.toFinset (finprop Δ q M),
+      Valued.v (∑ n : Set.Finite.toFinset (finiteBelow Δ q M),
           (p : QpUn p) ^ n.val * algebraMap (OQpUn p) (QpUn p) (Δ.coeff (q + n))) <
         ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) :=
     htend h_nhds
@@ -3200,13 +3261,13 @@ private lemma null_series_no_unit_leading {p : ℕ} [Fact (Nat.Prime p)]
   rw [h_sum_eq M hMge] at hMclose
   exact lt_irrefl _ hMclose
 
-/-- The leading coefficient of a `from_coeff`-built series at the minimum of its support
+/-- The leading coefficient of a `fromCoeff`-built series at the minimum of its support
 is a unit in `W(Fpbar p)`. -/
 private lemma canonical_leading_coeff_isUnit
     {p : ℕ} [Fact (Nat.Prime p)]
     {s : ℚ → Fpbar p} (hspwo : (Function.support s).IsPWO)
     (hsne : (Function.support s).Nonempty) :
-    IsUnit ((LiftedPAdicHahnSeries.from_coeff s hspwo).coeff
+    IsUnit ((LiftedPAdicHahnSeries.fromCoeff s hspwo).coeff
       (hspwo.isWF.min hsne)) := by
   set q₀ := hspwo.isWF.min hsne with hq₀_def
   have hq₀_in : q₀ ∈ Function.support s := hspwo.isWF.min_mem hsne
@@ -3218,7 +3279,7 @@ private lemma canonical_leading_coeff_isUnit
 
 /-- For any nonzero element `A` of the quotient `𝕃_[p]`,
 there exists an inverse `B` with `A * B = 1`. The proof uses the canonical expansion to obtain
-a representative `f := from_coeff s_A`, applies `canonical_leading_coeff_isUnit` to show
+a representative `f := fromCoeff s_A`, applies `canonical_leading_coeff_isUnit` to show
 `IsUnit f.leadingCoeff`, then concludes `IsUnit f` via Mathlib's `HahnSeries.isUnit_iff`,
 and finally projects the Mathlib-supplied inverse to the quotient. -/
 private lemma exists_inverse_of_nonzero
@@ -3228,7 +3289,7 @@ private lemma exists_inverse_of_nonzero
   set s_A : ℚ → Fpbar p := (exists_canonical_expansion A).choose.val with hs_A_def
   have hspwo : (Function.support s_A).IsPWO := (exists_canonical_expansion A).choose.prop
   have hsne : (Function.support s_A).Nonempty := support_nonempty_of_nonzero p A hA
-  set f : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_A hspwo with hf_def
+  set f : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_A hspwo with hf_def
   -- f represents A in the quotient.
   have hmk_f : (Ideal.Quotient.mk (NullSeriesIdeal p)) f = A := by
     have h := (exists_canonical_expansion A).choose_spec.1
@@ -3289,6 +3350,8 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : (NullSeriesIdeal p).IsMaximal := by
 
 -- The valuation of a p-adic Hahn series x is defined to be the minimum of the support of x.
 open Classical in
+/-- The **valuation** on `𝕃_[p]`, sending a nonzero series to the minimum of its support (and `0`
+to `⊤`). This is the additive valuation making `𝕃_[p]` a valued field. -/
 noncomputable def val
   (p : ℕ) [Fact (Nat.Prime p)] :
   AddValuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithTop ℚ) := {
@@ -3309,7 +3372,7 @@ noncomputable def val
     -- Cases: x = 0, y = 0 — trivial since `⊤ * a = ⊤`.
     -- Main case (x ≠ 0, y ≠ 0): show x*y ≠ 0 first via `null_series_no_unit_leading`,
     -- then show qxy = qx + qy by deriving both inequalities from the helper applied
-    -- to `Δ := from_coeff s_x * from_coeff s_y - from_coeff s_{xy}`.
+    -- to `Δ := fromCoeff s_x * fromCoeff s_y - fromCoeff s_{xy}`.
     intro x y
     by_cases hx : x = 0
     · -- x = 0 case: val(0 * y) = val(0) = ⊤. In `Multiplicative (WithTop ℚ)ᵒᵈ`, ⊤ is the
@@ -3333,10 +3396,10 @@ noncomputable def val
         have hsy_ne : (Function.support s_y).Nonempty := support_nonempty_of_nonzero p y hy
         set qx : ℚ := hs_x_pwo.isWF.min hsx_ne with hqx_def
         set qy : ℚ := hs_y_pwo.isWF.min hsy_ne with hqy_def
-        -- Helpers: mk(from_coeff s_z) = z (for z = x, y).
-        set fx : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_x hs_x_pwo
+        -- Helpers: mk(fromCoeff s_z) = z (for z = x, y).
+        set fx : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_x hs_x_pwo
             with hfx_def
-        set fy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_y hs_y_pwo
+        set fy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_y hs_y_pwo
             with hfy_def
         have hmk_fx : (Ideal.Quotient.mk (NullSeriesIdeal p)) fx = x := by
           have h := (exists_canonical_expansion x).choose_spec.1
@@ -3430,7 +3493,7 @@ noncomputable def val
         have hsxy_ne : (Function.support s_xy).Nonempty :=
             support_nonempty_of_nonzero p (x * y) hxy_ne
         set qxy : ℚ := hs_xy_pwo.isWF.min hsxy_ne with hqxy_def
-        set fxy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_xy hs_xy_pwo
+        set fxy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_xy hs_xy_pwo
             with hfxy_def
         have hmk_fxy : (Ideal.Quotient.mk (NullSeriesIdeal p)) fxy = x * y := by
           have h := (exists_canonical_expansion (x * y)).choose_spec.1
@@ -3454,7 +3517,6 @@ noncomputable def val
           -- For q' < qxy: similar (both 0).
           have hsxy_qxy_ne : s_xy qxy ≠ 0 := hs_xy_pwo.isWF.min_mem hsxy_ne
           have h_Δ_coeff_qxy : (fx * fy - fxy).coeff qxy = -teichmuller p (s_xy qxy) := by
-            change (fx * fy - fxy).coeff qxy = _
             rw [HahnSeries.coeff_sub']
             change (fx * fy).coeff qxy - fxy.coeff qxy = _
             rw [h_prod_coeff_lt qxy h_not]
@@ -3495,7 +3557,6 @@ noncomputable def val
             exact absurd h_le (not_le.mpr h_not)
           have h_Δ_coeff_q : (fx * fy - fxy).coeff (qx + qy) =
               teichmuller p (s_x qx) * teichmuller p (s_y qy) := by
-            change (fx * fy - fxy).coeff (qx + qy) = _
             rw [HahnSeries.coeff_sub']
             change (fx * fy).coeff (qx + qy) - fxy.coeff (qx + qy) = _
             rw [h_prod_coeff_q]
@@ -3570,7 +3631,7 @@ noncomputable def val
         -- (then translate to the dual ordering in `Multiplicative (WithTop ℚ)ᵒᵈ`).
         --
         -- Strategy: use that
-        --   `Δ := from_coeff s_x + from_coeff s_y - from_coeff s_{x+y}`
+        --   `Δ := fromCoeff s_x + fromCoeff s_y - fromCoeff s_{x+y}`
         -- is a null series (since all three differ from x.out, y.out, (x+y).out by null series,
         -- plus (x+y).out - x.out - y.out is also a null series, since both reduce to `x+y` in the
         -- quotient).
@@ -3632,12 +3693,12 @@ noncomputable def val
           exact absurd h_le (not_le.mpr hqxy_lt_qy)
         -- s_xy qxy ≠ 0 (qxy is in supp s_xy, in fact at the min).
         have hsxy_qxy_ne : s_xy qxy ≠ 0 := hs_xy_pwo.isWF.min_mem hsxy_ne
-        -- Build Δ := from_coeff s_x + from_coeff s_y - from_coeff s_xy.
-        set fx : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_x hs_x_pwo
+        -- Build Δ := fromCoeff s_x + fromCoeff s_y - fromCoeff s_xy.
+        set fx : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_x hs_x_pwo
             with hfx_def
-        set fy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_y hs_y_pwo
+        set fy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_y hs_y_pwo
             with hfy_def
-        set fxy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_xy hs_xy_pwo
+        set fxy : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_xy hs_xy_pwo
             with hfxy_def
         set Δ : LiftedPAdicHahnSeries p := fx + fy - fxy with hΔ_def
         -- Show Δ ∈ NullSeriesIdeal p via decomposition into four null elements.
@@ -3730,22 +3791,25 @@ noncomputable def val
         exact (null_series_no_unit_leading hΔ hΔ_coeff_qxy_unit hΔ_lead).elim
 }
 
--- In mathlib v4.31 `WithVal v` became a structure (was a transparent type synonym), so it is no
--- longer defeq to the underlying ring. We therefore define `𝕃_[p]` as the bare quotient (matching
--- the v4.28 behaviour of `WithVal (val p)`) and install the valuation topology by hand below.
+/-- The field `𝕃_[p]` of **`p`-adic Hahn series**: the quotient of `W(𝔽ᵃ_[p])((t^ℚ))` by the
+null-series ideal.
+
+Implementation note: in mathlib v4.31 `WithVal v` became a structure (previously a transparent type
+synonym), so it is no longer defeq to the underlying ring. We therefore define `𝕃_[p]` as the bare
+quotient (matching the earlier behaviour of `WithVal (val p)`) and install the valuation topology by
+hand below. -/
 abbrev pAdicHahnSeries (p : ℕ) [Fact (Nat.Prime p)] : Type _ :=
   (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)
 
-notation "𝕃_[" p "]" => pAdicHahnSeries p
+@[inherit_doc] notation "𝕃_[" p "]" => pAdicHahnSeries p
 
 namespace pAdicHahnSeries
--- Given a p-adic Hahn series x, write x = ∑ₖ [aₖ] pᵏ where aₖ ∈ 𝔽ₚ^⁻, then the `coefficients` of x
--- is defined to be the function k ↦ aₖ, where k∈ 𝔽ₚ^-.
+/-- The **coefficient function** of a `p`-adic Hahn series `x`: writing `x = ∑ₖ [aₖ] pᵏ` in its
+canonical expansion (with `aₖ ∈ 𝔽ᵃ_[p]`), this is the function `k ↦ aₖ`. -/
 noncomputable def coeff {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
   ℚ → Fpbar p := (exists_canonical_expansion x).choose.val
 
--- The `support` of a p-adic Hahn series x is defined to be the support of the coefficients function
--- of x.
+/-- The **support** of a `p`-adic Hahn series `x`: the support of its coefficient function. -/
 noncomputable def support {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) : Set ℚ :=
   (exists_canonical_expansion x).choose.val.support
 
@@ -3770,7 +3834,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
 /-- Helper: in `WittVector p (Fpbar p) = ℤᵘⁿ_[p]`, the Teichmüller lifts of two distinct
 elements differ by a unit. The argument uses the residue-field map (the `0`-th coefficient
 in characteristic `p`) and `WittVector.isUnit_of_coeff_zero_ne_zero`. -/
-private lemma teich_sub_isUnit {p : ℕ} [Fact (Nat.Prime p)]
+lemma teich_sub_isUnit {p : ℕ} [Fact (Nat.Prime p)]
     {a b : Fpbar p} (h : a ≠ b) :
     IsUnit (teichmuller p a - teichmuller p b) := by
   apply WittVector.isUnit_of_coeff_zero_ne_zero
@@ -3786,7 +3850,7 @@ set_option synthInstance.maxHeartbeats 220000 in
 -- Heartbeat ceilings raised: the proof contains many `set` bindings over the canonical-expansion
 -- choose_spec apparatus and exercises typeclass synthesis through the WithVal alias when calling
 -- `Quotient.sound` on the choose_spec relation; the default budgets fall short.
-/-- The canonical-section map `x ↦ LPHS.from_coeff x.coeff (support_IsPWO x)` is an
+/-- The canonical-section map `x ↦ LPHS.fromCoeff x.coeff (support_IsPWO x)` is an
 isometry from the val-topology on 𝕃_[p] to the orderTop-topology on LPHS p:
 `HahnSeries.orderTop (canonical(x) - canonical(y)) = val(x - y)` for all `x, y ∈ 𝕃_[p]`.
 
@@ -3798,8 +3862,8 @@ applied to differing s_x, s_y values at q_Δ), and once to show that `(f_x - f_y
 (else `Δ.coeff q_z = -teich(s_z q_z)` is a unit, contradicting `null_series_no_unit_leading`). -/
 private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p]) :
     HahnSeries.orderTop
-      (LiftedPAdicHahnSeries.from_coeff (coeff x) (support_IsPWO x) -
-       LiftedPAdicHahnSeries.from_coeff (coeff y) (support_IsPWO y)) =
+      (LiftedPAdicHahnSeries.fromCoeff (coeff x) (support_IsPWO x) -
+       LiftedPAdicHahnSeries.fromCoeff (coeff y) (support_IsPWO y)) =
     (val p) (x - y) := by
   -- Setup canonical reps in LPHS.
   set s_x : ℚ → Fpbar p := coeff x with hs_x_def
@@ -3808,11 +3872,11 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
   have hs_x_pwo : (Function.support s_x).IsPWO := support_IsPWO x
   have hs_y_pwo : (Function.support s_y).IsPWO := support_IsPWO y
   have hs_z_pwo : (Function.support s_z).IsPWO := support_IsPWO (x - y)
-  set f_x : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_x hs_x_pwo
+  set f_x : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_x hs_x_pwo
     with hf_x_def
-  set f_y : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_y hs_y_pwo
+  set f_y : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_y hs_y_pwo
     with hf_y_def
-  set f_z : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.from_coeff s_z hs_z_pwo
+  set f_z : LiftedPAdicHahnSeries p := LiftedPAdicHahnSeries.fromCoeff s_z hs_z_pwo
     with hf_z_def
   -- f_x, f_y, f_z represent x, y, x - y in the quotient.
   have hf_x_repr : (Ideal.Quotient.mk (NullSeriesIdeal p)) f_x = x := by
@@ -3838,7 +3902,7 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
       simp only [map_sub, hf_x_repr, hf_y_repr, hf_z_repr]
       ring
     exact (Ideal.Quotient.eq_zero_iff_mem).mp h_mk_zero
-  -- Coefficient-level computations (def-eq via LPHS.from_coeff).
+  -- Coefficient-level computations (def-eq via LPHS.fromCoeff).
   have hcoeff_fx : ∀ q, f_x.coeff q = teichmuller p (s_x q) := fun q => rfl
   have hcoeff_fy : ∀ q, f_y.coeff q = teichmuller p (s_y q) := fun q => rfl
   have hcoeff_fz : ∀ q, f_z.coeff q = teichmuller p (s_z q) := fun q => rfl
@@ -3969,52 +4033,54 @@ private lemma canonical_isometry (p : ℕ) [Fact (Nat.Prime p)] (x y : 𝕃_[p])
     -- Conclude.
     congr 1
 
--- Define an element of W(𝔽ₚ^⁻)((p^ℚ)) from a function ℚ → 𝔽ₚ^⁻ with well-ordered support by the
--- formula f ↦ ∑ₖ [f(k)]pᵏ
-noncomputable def from_coeff {p : ℕ} [Fact (Nat.Prime p)]
+/-- Build a `p`-adic Hahn series in `𝕃_[p]` from a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with
+well-ordered support, via the Teichmüller lift `f ↦ ∑ₖ [f(k)] pᵏ` followed by the quotient map. -/
+noncomputable def fromCoeff {p : ℕ} [Fact (Nat.Prime p)]
     (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO) :
     (𝕃_[p]) :=
-  Ideal.Quotient.mk (NullSeriesIdeal p) (LiftedPAdicHahnSeries.from_coeff s hspwo)
+  Ideal.Quotient.mk (NullSeriesIdeal p) (LiftedPAdicHahnSeries.fromCoeff s hspwo)
 
--- The `coefficients` of the p-adic Hahn series obtained from a function ℚ → 𝔽ₚ^⁻ by
--- the `from_coeff` construction is the original function.
-theorem coeff_of_from_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
+/-- Round-trip: the coefficient function of the series built from `s` via `fromCoeff` is `s`
+itself. -/
+theorem coeff_of_fromCoeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     (s : ℚ → Fpbar p) (hspwo : s.support.IsPWO) :
-    (from_coeff s hspwo).coeff = s := by
+    (fromCoeff s hspwo).coeff = s := by
   have hEq :
-      ⟨s, hspwo⟩ = (exists_canonical_expansion (from_coeff s hspwo)).choose := by
-    apply (exists_canonical_expansion (from_coeff s hspwo)).choose_spec.2
-    exact Quotient.exact (Quotient.out_eq (from_coeff s hspwo))
+      ⟨s, hspwo⟩ = (exists_canonical_expansion (fromCoeff s hspwo)).choose := by
+    apply (exists_canonical_expansion (fromCoeff s hspwo)).choose_spec.2
+    exact Quotient.exact (Quotient.out_eq (fromCoeff s hspwo))
   exact (congrArg Subtype.val hEq).symm
 
--- The converse of the above theorem.
-theorem from_coeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
+/-- Round-trip (converse): rebuilding a series from its own coefficient function recovers the
+series. Together with `coeff_of_fromCoeff_eq_self` this shows `𝕃_[p]` is faithfully described by its
+coefficient functions. -/
+theorem fromCoeff_of_coeff_eq_self {p : ℕ} [Fact (Nat.Prime p)]
     (x : 𝕃_[p]) :
-    from_coeff x.coeff (support_IsPWO x) = x := by
-  simp only [from_coeff, coeff]
+    fromCoeff x.coeff (support_IsPWO x) = x := by
+  simp only [fromCoeff, coeff]
   set s := (exists_canonical_expansion x).choose
   have h := (exists_canonical_expansion x).choose_spec.1
   dsimp at h
   obtain ⟨y, hy⟩ := h
   have : Ideal.Quotient.mk (NullSeriesIdeal p)
-      (LiftedPAdicHahnSeries.from_coeff s.val s.prop) =
+      (LiftedPAdicHahnSeries.fromCoeff s.val s.prop) =
     Ideal.Quotient.mk (NullSeriesIdeal p) x.out := by
     apply Quotient.sound
     change (Ideal.Quotient.ringCon (NullSeriesIdeal p))
-      (LiftedPAdicHahnSeries.from_coeff s.val s.prop) x.out
+      (LiftedPAdicHahnSeries.fromCoeff s.val s.prop) x.out
     exact ⟨-y, by dsimp; rw [neg_vadd_eq_iff]; dsimp at hy; exact hy.symm⟩
   rw [this]; exact Quotient.out_eq x
 
--- An element of 𝕃_[p] is zero iff all its coefficients are zero.
+/-- A `p`-adic Hahn series is zero iff all of its coefficients vanish. -/
 theorem eq_zero_iff_coeff_zero {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
   x = 0 ↔ ∀ q ∈ x.support, x.coeff q = 0 := by
-  have hfrom_zero : from_coeff (p := p) 0 (by simp) = (0 : 𝕃_[p]) := by
-    have hlift_zero : LiftedPAdicHahnSeries.from_coeff (p := p) 0 (by simp) = 0 := by
-      simpa [LiftedPAdicHahnSeries.from_coeff] using Eq.symm (Pi.zero_def : (0 : ℚ → ℤᵘⁿ_[p]) = 0)
-    simpa [from_coeff] using congrArg (Ideal.Quotient.mk (NullSeriesIdeal p)) hlift_zero
+  have hfrom_zero : fromCoeff (p := p) 0 (by simp) = (0 : 𝕃_[p]) := by
+    have hlift_zero : LiftedPAdicHahnSeries.fromCoeff (p := p) 0 (by simp) = 0 := by
+      simpa [LiftedPAdicHahnSeries.fromCoeff] using Eq.symm (Pi.zero_def : (0 : ℚ → ℤᵘⁿ_[p]) = 0)
+    simpa [fromCoeff] using congrArg (Ideal.Quotient.mk (NullSeriesIdeal p)) hlift_zero
   have hcoeff_zero : (0 : 𝕃_[p]).coeff = 0 := by
     rw [← hfrom_zero]
-    exact coeff_of_from_coeff_eq_self 0 (by simp)
+    exact coeff_of_fromCoeff_eq_self 0 (by simp)
   constructor
   · intro hx q _
     simpa [hx] using congrArg (fun f : ℚ → Fpbar p => f q) hcoeff_zero
@@ -4025,7 +4091,8 @@ theorem eq_zero_iff_coeff_zero {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) :
       simpa [support, coeff, Function.mem_support] using hq
     exact hq_ne (hx q hq)
 
--- The embedding of `ℤᵘⁿ_[p]` into `𝕃_[p]`, a ↦ image of a·t⁰
+/-- The ring embedding `ℤᵘⁿ_[p] → 𝕃_[p]` sending `a` to the class of the constant series
+`a · t⁰`. -/
 noncomputable def ZpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℤᵘⁿ_[p] →+* 𝕃_[p] where
   toFun a := Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 a)
   map_one' := by simp
@@ -4042,6 +4109,7 @@ noncomputable def ZpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℤᵘⁿ_[p] →+*
       Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single 0 a + HahnSeries.single 0 b)
     rw [HahnSeries.single_add]
 
+/-- The embedding `ZpUn_embd : ℤᵘⁿ_[p] → 𝕃_[p]` is injective. -/
 lemma ZpUn_embd_injective {p : ℕ} [Fact (Nat.Prime p)] :
   Function.Injective (ZpUn_embd (p := p)) := by
   intro a b hab
@@ -4057,7 +4125,7 @@ lemma ZpUn_embd_injective {p : ℕ} [Fact (Nat.Prime p)] :
   have hmem := hmem0
   rw [hsingle] at hmem
   let s : ℕ → Finset ℤ := fun M =>
-    Set.Finite.toFinset (finprop (HahnSeries.single (0 : ℚ) (a - b)) 0 M)
+    Set.Finite.toFinset (finiteBelow (HahnSeries.single (0 : ℚ) (a - b)) 0 M)
   let f : ℕ → QpUn p := fun M =>
     Finset.sum (s M).attach fun n =>
       (p : QpUn p) ^ n.val *
@@ -4082,7 +4150,8 @@ lemma ZpUn_embd_injective {p : ℕ} [Fact (Nat.Prime p)] :
           rcases Set.mem_singleton_iff.mp hn with rfl
           simp [hsub]
       have hs : s M = ({0} : Finset ℤ) := by
-        have hs' := (Set.Finite.toFinset_inj (hs := finprop (HahnSeries.single (0 : ℚ) (a - b)) 0 M)
+        have hs' := (Set.Finite.toFinset_inj
+            (hs := finiteBelow (HahnSeries.single (0 : ℚ) (a - b)) 0 M)
           (ht := Set.finite_singleton (0 : ℤ))).2 hset
         change Set.Finite.toFinset _ = ({0} : Finset ℤ)
         rw [hs', Set.Finite.toFinset_singleton]
@@ -4105,6 +4174,7 @@ lemma ZpUn_embd_injective {p : ℕ} [Fact (Nat.Prime p)] :
   exact sub_eq_zero.mp <|
     (IsFractionRing.injective (R := OQpUn p) (K := QpUn p)) (by simpa using hmap)
 
+/-- The field embedding `ℚᵘⁿ_[p] → 𝕃_[p]`, extending `ZpUn_embd` to fraction fields. -/
 noncomputable def QpUn_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚᵘⁿ_[p] →+* 𝕃_[p] :=
   IsFractionRing.map (j := ZpUn_embd (p := p)) ZpUn_embd_injective
 
@@ -4123,6 +4193,8 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] 𝕃_[p]
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : IsScalarTower ℚ_[p] ℚᵘⁿ_[p] 𝕃_[p] :=
   IsScalarTower.of_algebraMap_smul fun _ ↦ congrFun rfl
 
+/-- Algebraicity transfers upward along the base field extension: a `p`-adic Hahn series algebraic
+over `ℚ_[p]` is also algebraic over the larger field `ℚᵘⁿ_[p]`. -/
 lemma alg_QpUn_of_alg_Qp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) :
   IsAlgebraic ℚ_[p] f → IsAlgebraic ℚᵘⁿ_[p] f := by
   intro h
@@ -4207,7 +4279,7 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
   · obtain ⟨k₀, hk₀⟩ := hgZ
     apply tendsto_atTop_of_eventually_const (i₀ := 1)
     intro M hM
-    set S := Set.Finite.toFinset (finprop x g M)
+    set S := Set.Finite.toFinset (finiteBelow x g M)
     have hmem : ∀ n : ℤ, n ∈ S ↔ (n = -k₀ ∨ n = 1 - k₀) := by
       intro n
       simp only [S, Set.Finite.mem_toFinset, Set.mem_setOf_eq]
@@ -4282,7 +4354,7 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
   · push Not at hgZ
     apply Filter.Tendsto.congr (f₁ := fun _ : ℕ => (0 : QpUn p)) ?_ tendsto_const_nhds
     intro M
-    have hempty : Set.Finite.toFinset (finprop x g M) = (∅ : Finset ℤ) := by
+    have hempty : Set.Finite.toFinset (finiteBelow x g M) = (∅ : Finset ℤ) := by
       ext n
       simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.notMem_empty,
         iff_false, not_and]
@@ -4296,12 +4368,12 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
         apply hgZ (1 - n)
         push_cast; linarith
       exact hne (hcoeff_other _ h0 h1)
-    rw [show (∑ n : Set.Finite.toFinset (finprop x g M),
+    rw [show (∑ n : Set.Finite.toFinset (finiteBelow x g M),
         (p : QpUn p) ^ n.val *
           algebraMap (OQpUn p) (QpUn p) (x.coeff (g + n.val))) =
-        ∑ n ∈ Set.Finite.toFinset (finprop x g M), (p : QpUn p) ^ n *
+        ∑ n ∈ Set.Finite.toFinset (finiteBelow x g M), (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) (x.coeff (g + (n : ℚ))) from
-      Finset.sum_attach (s := Set.Finite.toFinset (finprop x g M)) (f := fun n : ℤ =>
+      Finset.sum_attach (s := Set.Finite.toFinset (finiteBelow x g M)) (f := fun n : ℤ =>
         (p : QpUn p) ^ n *
           algebraMap (OQpUn p) (QpUn p) (x.coeff (g + (n : ℚ))))]
     rw [hempty, Finset.sum_empty]
@@ -4489,7 +4561,7 @@ private lemma sub_single_coeff (p : ℕ) [Fact (Nat.Prime p)]
     (f : 𝕃_[p]) (q : ℚ) :
     ((f - (mkLp (HahnSeries.single q (teichmuller p (f.coeff q))) : 𝕃_[p])).coeff) =
       Function.update f.coeff q 0 := by
-  have hfeq : f = from_coeff f.coeff (support_IsPWO f) := (from_coeff_of_coeff_eq_self f).symm
+  have hfeq : f = fromCoeff f.coeff (support_IsPWO f) := (fromCoeff_of_coeff_eq_self f).symm
   have hpwo : (Function.update f.coeff q 0).support.IsPWO := by
     apply Set.IsPWO.mono (support_IsPWO f)
     intro n hn
@@ -4500,9 +4572,9 @@ private lemma sub_single_coeff (p : ℕ) [Fact (Nat.Prime p)]
     · rw [Function.update_of_ne hnq] at hn
       exact hn
   have hfrom_sub :
-      LiftedPAdicHahnSeries.from_coeff f.coeff (support_IsPWO f) -
+      LiftedPAdicHahnSeries.fromCoeff f.coeff (support_IsPWO f) -
         HahnSeries.single q ((teichmuller p) (f.coeff q)) =
-      LiftedPAdicHahnSeries.from_coeff (Function.update f.coeff q 0) hpwo := by
+      LiftedPAdicHahnSeries.fromCoeff (Function.update f.coeff q 0) hpwo := by
     apply HahnSeries.ext
     funext n
     rw [HahnSeries.coeff_sub']
@@ -4518,15 +4590,15 @@ private lemma sub_single_coeff (p : ℕ) [Fact (Nat.Prime p)]
       ring
   have hsub_eq :
       f - (mkLp (HahnSeries.single q ((teichmuller p) (f.coeff q))) : 𝕃_[p]) =
-      from_coeff (Function.update f.coeff q 0) hpwo := by
+      fromCoeff (Function.update f.coeff q 0) hpwo := by
     have key : f - (mkLp (HahnSeries.single q ((teichmuller p) (f.coeff q))) : 𝕃_[p]) =
-        (mkLp (LiftedPAdicHahnSeries.from_coeff f.coeff (support_IsPWO f)) : 𝕃_[p]) -
+        (mkLp (LiftedPAdicHahnSeries.fromCoeff f.coeff (support_IsPWO f)) : 𝕃_[p]) -
         (mkLp (HahnSeries.single q ((teichmuller p) (f.coeff q))) : 𝕃_[p]) := by
       congr 1
     rw [key, ← mkLp_sub, hfrom_sub]
     rfl
   rw [hsub_eq]
-  exact coeff_of_from_coeff_eq_self _ _
+  exact coeff_of_fromCoeff_eq_self _ _
 
 /- Helper: For `q ∈ f.support`,
 `(f - mkLp(single q (teich (f.coeff q)))).support ⊂ f.support`. -/
@@ -4555,7 +4627,8 @@ private lemma support_sub_single_ssubset (p : ℕ) [Fact (Nat.Prime p)]
     rw [Function.mem_support] at hq_in_g
     simp [Function.update_self] at hq_in_g
 
--- If an element of `𝕃_[p]` has finite support, then it is algebraic over `ℚ_[p]`.
+/-- A `p`-adic Hahn series with finite support is algebraic over `ℚ_[p]`: a finite-support series is
+a `ℚ_[p]`-linear combination of finitely many Teichmüller monomials, each algebraic over `ℚ_[p]`. -/
 lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.support.Finite) :
   IsAlgebraic ℚ_[p] f := by
   classical
@@ -4612,3 +4685,9 @@ lemma alg_of_fin_supp (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf : f.supp
 end pAdicHahnSeries
 
 end FormalizedSparse
+
+
+
+
+
+

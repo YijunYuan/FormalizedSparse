@@ -1,56 +1,86 @@
-import FormalizedSparse.References.Miscellaneous
-import Mathlib.Analysis.Normed.Field.WithAbs
-import Mathlib.NumberTheory.Padics.Complex
-import Mathlib.RingTheory.Valuation.Discrete.Basic
-import Mathlib.RingTheory.Valuation.Discrete.IsDiscreteValuationRing
-import Mathlib.RingTheory.Valuation.Discrete.RankOne
-import Mathlib.RingTheory.DedekindDomain.AdicValuation
-import Mathlib.Topology.Algebra.Valued.WithVal
-import Mathlib.RingTheory.WittVector.Compare
-import Mathlib.RingTheory.WittVector.DiscreteValuationRing
-import Mathlib.RingTheory.WittVector.Teichmuller
-import Mathlib.RingTheory.WittVector.Complete
-import Mathlib.Topology.Algebra.Nonarchimedean.AdicTopology
-import Mathlib.RingTheory.AdicCompletion.Topology
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
+-/
+module
+
+public import FormalizedSparse.References.Miscellaneous
+public import Mathlib.Analysis.Normed.Field.WithAbs
+public import Mathlib.NumberTheory.Padics.Complex
+public import Mathlib.RingTheory.AdicCompletion.Topology
+public import Mathlib.RingTheory.DedekindDomain.AdicValuation
+public import Mathlib.RingTheory.Valuation.Discrete.Basic
+public import Mathlib.RingTheory.Valuation.Discrete.IsDiscreteValuationRing
+public import Mathlib.RingTheory.Valuation.Discrete.RankOne
+public import Mathlib.RingTheory.WittVector.Compare
+public import Mathlib.RingTheory.WittVector.Complete
+public import Mathlib.RingTheory.WittVector.DiscreteValuationRing
+public import Mathlib.RingTheory.WittVector.Teichmuller
+public import Mathlib.Topology.Algebra.Nonarchimedean.AdicTopology
+public import Mathlib.Topology.Algebra.Valued.WithVal
 
 /-!
 # Completed maximal unramified extension of ℚ_[p]
 
-This file contains our implimentation of the completed maximal unramified extension of ℚ_[p],
-denoted `ℚᵘⁿ_[p]` in this file. Since currently the ramification theory in Lean's Mathlib is not yet
-developed, we use the Witt vector construction to define `ℚᵘⁿ_[p]`:
+This file contains our implementation of the completed maximal unramified extension of `ℚ_[p]`,
+denoted `ℚᵘⁿ_[p]`. Since the ramification theory in mathlib is not yet developed, we use the Witt
+vector construction:
 
-- The algebraic closure of `𝔽ₚ` is `𝔽ᵃ_[p]`.
-- Let `ℤᵘⁿ_[p]` be the ring of Witt vectors over `𝔽ᵃ_[p]`, which is the ring of integers of the
-maximal unramified extension of ℚ_[p].
-- Let `ℚᵘⁿ_[p]` be the fraction field of `ℤᵘⁿ_[p]`, equipped with the topology induced by the
-valuation corresponding to the unique maximal ideal of `ℤᵘⁿ_[p]`.
-- Various properties of `ℚᵘⁿ_[p]` (e.g. `CompleteSpace`, `RankOne` valuation, etc.) are proved in
-the file. These are standard material in algebraic number theory, so we won't give detailed comments
-on the proofs.
+- the algebraic closure of `𝔽ₚ` is `𝔽ᵃ_[p]`;
+- `ℤᵘⁿ_[p]` is the ring of Witt vectors over `𝔽ᵃ_[p]`, i.e. the ring of integers of the maximal
+  unramified extension of `ℚ_[p]`;
+- `ℚᵘⁿ_[p]` is the fraction field of `ℤᵘⁿ_[p]`, equipped with the topology induced by the valuation
+  corresponding to the unique maximal ideal of `ℤᵘⁿ_[p]`.
+
+## Main definitions
+
+- `FormalizedSparse.Fpbar` (`𝔽ᵃ_[p]`): the algebraic closure of `𝔽ₚ`.
+- `FormalizedSparse.OQpUn` (`ℤᵘⁿ_[p]`): the Witt vectors over `𝔽ᵃ_[p]`.
+- `FormalizedSparse.QpUn` (`ℚᵘⁿ_[p]`): the fraction field of `ℤᵘⁿ_[p]` with its valuation topology.
+- `FormalizedSparse.QpUn.Qp_embd`: the valuation-preserving embedding `ℚ_[p] → ℚᵘⁿ_[p]`.
+
+## Main statements
+
+- `FormalizedSparse.injective_teichmuller`: the Teichmüller lift `𝔽ᵃ_[p] → ℤᵘⁿ_[p]` is injective.
+- `FormalizedSparse.QpUn.Qp_embd_keep_val`: the embedding `ℚ_[p] → ℚᵘⁿ_[p]` preserves the valuation.
+- The valuation on `ℚᵘⁿ_[p]` is rank-one discrete, making `ℚᵘⁿ_[p]` a complete nontrivially normed
+  field. These are standard facts of algebraic number theory, so the proofs are only lightly
+  commented.
+
+## Notation
+
+- `𝔽ᵃ_[p]`, `ℤᵘⁿ_[p]`, `ℚᵘⁿ_[p]` for the three objects above.
+
+## Tags
+
+p-adic, Witt vector, unramified extension, valuation
 -/
+
+@[expose] public section
 
 namespace FormalizedSparse
 
 open WittVector
 
--- The algebraic closure of `𝔽ₚ`
+/-- The algebraic closure `𝔽ᵃ_[p]` of the finite field `𝔽ₚ`. -/
 abbrev Fpbar (p : ℕ) [Fact (Nat.Prime p)] := AlgebraicClosure (ZMod p)
-notation "𝔽ᵃ_[" p "]" => Fpbar p
+@[inherit_doc] notation "𝔽ᵃ_[" p "]" => Fpbar p
 
--- The ring of integers of the completion of the maximal unramified extension of `ℚₚ`,
--- which is the same as `W(𝔽ₚ^⁻)`.
+/-- The ring of integers `ℤᵘⁿ_[p]` of the completed maximal unramified extension of `ℚ_[p]`,
+realized as the Witt vectors `W(𝔽ᵃ_[p])`. -/
 abbrev OQpUn (p : ℕ) [Fact (Nat.Prime p)] := WittVector p (Fpbar p)
-notation "ℤᵘⁿ_[" p "]" => OQpUn p
+@[inherit_doc] notation "ℤᵘⁿ_[" p "]" => OQpUn p
 
--- Equip QpUn p with the topology induced by the valuation QpUnVal p.
+/-- The completed maximal unramified extension `ℚᵘⁿ_[p]` of `ℚ_[p]`, defined as the fraction field
+of `ℤᵘⁿ_[p]` equipped with the topology induced by the valuation of its maximal ideal. -/
 abbrev QpUn (p : ℕ) [Fact (Nat.Prime p)] :=
   WithVal ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation ((FractionRing (ℤᵘⁿ_[p]))))
-notation "ℚᵘⁿ_[" p "]" => QpUn p
+@[inherit_doc] notation "ℚᵘⁿ_[" p "]" => QpUn p
 
--- The Teichmuller lift is injective.
+/-- The Teichmüller lift `𝔽ᵃ_[p] → ℤᵘⁿ_[p]` is injective. -/
 theorem injective_teichmuller (p : ℕ) [Fact (Nat.Prime p)] :
-  Function.Injective (teichmuller p : 𝔽ᵃ_[p] → ℤᵘⁿ_[p]) := by
+    Function.Injective (teichmuller p : 𝔽ᵃ_[p] → ℤᵘⁿ_[p]) := by
   intro a b hab
   simp only [teichmuller, MonoidHom.coe_mk, OneHom.coe_mk, teichmullerFun, mk'.injEq] at hab
   apply_fun (fun x => x 0) at hab
@@ -63,9 +93,9 @@ open IsDedekindDomain IsDedekindDomain.HeightOneSpectrum IsDiscreteValuationRing
 noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] :
   Valued (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ)) := inferInstance
 
--- `Valued.v` of the image of `r : ℤᵘⁿ_[p]` equals the `intValuation` of `r`.
--- (In v4.31 `WithVal` is a structure, so `Valued.v` is the `comap` of the base valuation
--- along `WithVal.equiv`; this lemma packages the bridge once for all the proofs below.)
+/-- The valuation `Valued.v` of the image of `r : ℤᵘⁿ_[p]` in `ℚᵘⁿ_[p]` equals the `intValuation`
+of `r`. Since `WithVal` is a structure in this mathlib version, `Valued.v` is the `comap` of the
+base valuation along `WithVal.equiv`; this lemma packages that bridge once for all proofs below. -/
 theorem valued_algebraMap (p : ℕ) [Fact (Nat.Prime p)] (r : ℤᵘⁿ_[p]) :
     Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) r) =
       (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).intValuation r := by
@@ -185,6 +215,8 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
   exact hRange
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p].
+/-- The canonical ring embedding `ℚ_[p] → ℚᵘⁿ_[p]`, induced by the Teichmüller-style map
+`ℤ_[p] → ℤᵘⁿ_[p]` on rings of integers and extended to fraction fields. -/
 noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘⁿ_[p] :=
   @IsFractionRing.map ℤ_[p] ℤᵘⁿ_[p] ℚ_[p] ℚᵘⁿ_[p] _ _ _ _ _ _ _ _ _
     ((WittVector.map (algebraMap (ZMod p) (AlgebraicClosure (ZMod p)))).comp
@@ -200,8 +232,10 @@ noncomputable def Qp_embd {p : ℕ} [Fact (Nat.Prime p)] : ℚ_[p] →+* ℚᵘ�
   )
 
 -- The embedding from ℚ_[p] to ℚᵘⁿ_[p] keeps the valuation.
+/-- The embedding `Qp_embd : ℚ_[p] → ℚᵘⁿ_[p]` preserves the valuation: the multiplicative `p`-adic
+valuation of `x` agrees with the valuation of its image. -/
 lemma Qp_embd_keep_val (p : ℕ) [Fact (Nat.Prime p)] :
-  ∀ x : ℚ_[p], Padic.mulValuation x = Valued.v (Qp_embd x) := by
+    ∀ x : ℚ_[p], Padic.mulValuation x = Valued.v (Qp_embd x) := by
   intro x
   by_cases hx : x = 0
   · simp [hx, Qp_embd, map_zero]
@@ -278,3 +312,7 @@ noncomputable instance (p : ℕ) [Fact (Nat.Prime p)] : Algebra ℚ_[p] (ℚᵘ�
 end QpUn
 
 end FormalizedSparse
+
+
+
+

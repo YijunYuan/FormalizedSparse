@@ -1,16 +1,43 @@
-import FormalizedSparse.MainTheorem
-import FormalizedSparse.RayDecomposition
-import Mathlib.Topology.DerivedSet
-
-/- USER: This file corresponds to the subsection
-`Sparse representatives and finiteness of bounded QTR supports`. You need to formalize every thing
-in this subsection in this file. I have already formalized the statement of the main theorem
-`thm:29057` as follows (``). You should not change the statement of it.
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
 -/
+module
+
+public import FormalizedSparse.MainTheorem
+public import FormalizedSparse.RayDecomposition
+public import Mathlib.Topology.DerivedSet
+
+/-!
+# Sparse representatives and finiteness of bounded QTR supports
+
+This file formalizes the subsection *Sparse representatives and finiteness of bounded QTR supports*
+of Section 6 (Application: `p`-adic Hahn series with bounded support). It proves that a bounded QTR
+support admits a sparse set of representatives, and combines this with the main transcendence
+theorem to conclude that a `ℚ_[p]`-algebraic `p`-adic Hahn series with bounded support and finitely
+many accumulation points must have finite support.
+
+## Main statements
+
+- `FormalizedSparse.isSparse_deltas` (Lemma 6.21): the explicit witness sequence built from
+  pairwise-disjoint digit blocks is sparse.
+- `FormalizedSparse.finite_support_of_qpun_algebraic_of_bounded_support` (Theorem 6.23): a
+  `ℚ_[p]`-algebraic `p`-adic Hahn series whose support is bounded and has finitely many
+  accumulation points has finite support.
+- `FormalizedSparse.order_type_of_qp_algebraic_of_bounded_support` (Corollary 6.24): the order type
+  of such a support is either finite or at least `ω²`.
+
+## Tags
+
+p-adic, Hahn series, bounded support, sparse, order type
+-/
+
+@[expose] public section
 
 namespace FormalizedSparse
 
-/-! ## Infrastructure for `isSparse_deltas` (lem:57121)
+/-! ## Infrastructure for `isSparse_deltas` (Lemma 6.21)
 
 The sparseness proof builds an explicit witness sequence whose elements are a
 single digit *block* placed in pairwise-disjoint *islands* far apart along the
@@ -309,7 +336,7 @@ private lemma Sparse.DigitSeries.eq_of_le_of_Psi_eq {g h : Sparse.DigitSeries}
     rw [hg0]; exact hq.symm
 
 open Sparse in
-/-- `lem:57121`: the δ-set is sparse.
+/-- Lemma 6.21: the δ-set is sparse.
 Let `N ≥ 1`, `r`, and `δ : Fin r → ℚ` with each `δ i` a nonzero rational in `[0,1)`
 having a finite base-`p` expansion (the §6 finsupp digit model `d : ℕ →₀ ℕ`, where
 `d j` = digit `q_{j+1}`, `d j < p`, value `∑ d j · p^{-(j+1)}` — same model as
@@ -663,7 +690,7 @@ theorem isSparse_deltas {p : ℕ} [Fact (Nat.Prime p)] (N : ℕ+) (r : ℕ) (hr 
           rw [Equiv.apply_symm_apply]
         rw [hi]
 
-/-! ## The ℚ/ℝ derived-set bridge (`lem:derivedset-rat-real`, `lem:infinite-support-has-real-accpt`)
+/-! ## The ℚ/ℝ derived-set bridge
 
 The protected §6.3 statements read accumulation points **in ℝ** (via the inclusion
 `ι : ℚ → ℝ`), which is the faithful/sound reading: a bounded infinite well-ordered
@@ -671,12 +698,11 @@ The protected §6.3 statements read accumulation points **in ℝ** (via the incl
 carries Bolzano–Weierstrass content. These two helpers connect the ℝ-derived set
 used in the protected statements to the ℚ-internal ray-decomposition machinery. -/
 
-/-- `lem:derivedset-rat-real`: finiteness of the ℝ-derived set of `ι '' S` (where
-`ι = Rat.cast : ℚ → ℝ`) implies finiteness of the ℚ-derived set of `S`. The
-inclusion `ι` is a continuous injection, so it sends each ℚ-accumulation point of
-`S` to an ℝ-accumulation point of `ι '' S` (`Continuous.image_derivedSet`), giving
-an injection `derivedSet S ↪ derivedSet (ι '' S)`; a finite target forces a finite
-source. -/
+/-- Finiteness of the ℝ-derived set of `ι '' S` (where `ι = Rat.cast : ℚ → ℝ`) implies
+finiteness of the ℚ-derived set of `S`. The inclusion `ι` is a continuous injection, so it sends
+each ℚ-accumulation point of `S` to an ℝ-accumulation point of `ι '' S`
+(`Continuous.image_derivedSet`), giving an injection `derivedSet S ↪ derivedSet (ι '' S)`; a finite
+target forces a finite source. -/
 theorem derivedSet_rat_finite_of_real_finite {S : Set ℚ}
     (h : (derivedSet ((Rat.cast : ℚ → ℝ) '' S)).Finite) : (derivedSet S).Finite := by
   have hsub : (Rat.cast : ℚ → ℝ) '' derivedSet S ⊆ derivedSet ((Rat.cast : ℚ → ℝ) '' S) :=
@@ -684,7 +710,7 @@ theorem derivedSet_rat_finite_of_real_finite {S : Set ℚ}
   have hfin : ((Rat.cast : ℚ → ℝ) '' derivedSet S).Finite := h.subset hsub
   exact (Set.finite_image_iff (Rat.cast_injective.injOn)).mp hfin
 
-/-- `lem:infinite-support-has-real-accpt`: an infinite bounded `S ⊆ ℚ` has a
+/-- An infinite bounded `S ⊆ ℚ` has a
 nonempty ℝ-derived set of its image `ι '' S` (`ι = Rat.cast`). Boundedness puts
 `ι '' S` inside a compact closed ball of ℝ; injectivity keeps the image infinite;
 Bolzano–Weierstrass (`Set.Infinite.exists_accPt_of_subset_isCompact`) then yields
@@ -710,7 +736,7 @@ theorem real_derivedSet_nonempty_of_infinite_bounded {S : Set ℚ}
     (ProperSpace.isCompact_closedBall (0 : ℝ) r) hsub
   exact ⟨x, mem_derivedSet.mpr hx⟩
 
-/-! ## Arithmetic helpers for `exists_sparse_rep` (lem:42556)
+/-! ## Arithmetic helpers for `exists_sparse_rep` (Lemma 6.22)
 
 The sparse-representative construction needs four elementary facts:
 
@@ -732,31 +758,15 @@ private lemma isInt_eq_zero_of_bounded {x : ℚ} (hx : x.isInt = true)
   have h2' : x.num < (1 : ℤ) := by exact_mod_cast h2
   rw [show x.num = 0 by omega]; simp
 
-/-- `Rat.isInt` of an integer cast. -/
-private lemma isInt_intCast' (k : ℤ) : ((k : ℚ)).isInt = true := by rw [Rat.isInt]; simp
-
-/-- `Rat.isInt` is closed under addition. -/
-private lemma isInt_add' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
-    (a + b).isInt = true := by
-  have ha' := Rat.eq_num_of_isInt ha; have hb' := Rat.eq_num_of_isInt hb
-  rw [ha', hb', show (a.num : ℚ) + (b.num : ℚ) = ((a.num + b.num : ℤ) : ℚ) by push_cast; ring]
-  exact isInt_intCast' _
-
-/-- `Rat.isInt` is closed under subtraction. -/
-private lemma isInt_sub' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
-    (a - b).isInt = true := by
-  have ha' := Rat.eq_num_of_isInt ha; have hb' := Rat.eq_num_of_isInt hb
-  rw [ha', hb', show (a.num : ℚ) - (b.num : ℚ) = ((a.num - b.num : ℤ) : ℚ) by push_cast; ring]
-  exact isInt_intCast' _
-
 /-- `p^E · ∑ᵢ cᵢ·p^{-(i+1)}` is an integer once `E` dominates every index `i` (i.e. `i+1 ≤ E`).
 This clears the finite-expansion denominators when multiplying `q − λ` by `T = a·p^E`. -/
 private lemma isInt_pow_mul_digitSum {p : ℕ} [Fact (Nat.Prime p)] (F : Finset ℕ)
     (c : ℕ → ℕ) (E : ℕ) (hE : ∀ i ∈ F, i + 1 ≤ E) :
     ((p : ℚ) ^ E * ∑ i ∈ F, (c i : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ))).isInt = true := by
   rw [Finset.mul_sum]
-  refine Finset.sum_induction _ (fun y : ℚ => y.isInt = true) (fun _ _ => isInt_add') ?_ ?_
-  · rw [show (0 : ℚ) = ((0 : ℤ) : ℚ) by simp]; exact isInt_intCast' 0
+  refine Finset.sum_induction _ (fun y : ℚ => y.isInt = true)
+    (fun _ _ => MainTheorem.isInt_add') ?_ ?_
+  · rw [show (0 : ℚ) = ((0 : ℤ) : ℚ) by simp]; exact MainTheorem.isInt_intCast' 0
   · intro i hi
     have hpne : (p : ℚ) ≠ 0 := by exact_mod_cast (Fact.out : Nat.Prime p).ne_zero
     have hEi : i + 1 ≤ E := hE i hi
@@ -771,7 +781,7 @@ private lemma isInt_pow_mul_digitSum {p : ℕ} [Fact (Nat.Prime p)] (F : Finset 
       omega
     rw [hkey, hk, zpow_natCast,
       show (c i : ℚ) * (p : ℚ) ^ k = (((c i * p ^ k : ℕ) : ℤ) : ℚ) by push_cast; ring]
-    exact isInt_intCast' _
+    exact MainTheorem.isInt_intCast' _
 
 /-- A `p`-digit `DigitSeries` `g` is the §6 finsupp digit model: there is `d : ℕ →₀ ℕ` with
 `d j < p` for all `j` and `g.norm p = ∑ⱼ d j · p^{-(j+1)}` — the exact shape `isSparse_deltas`'s
@@ -837,7 +847,7 @@ private lemma ray_pos_slope_of_infinite {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+
     exact hinf (Set.finite_singleton α)
   · exact hlampos
 
-/-- The residue identity at the heart of `lem:42556` (`lam = 0`).  With `T = a·p^E` and shift
+/-- The residue identity at the heart of Lemma 6.22 (`lam = 0`).  With `T = a·p^E` and shift
 `N·K − E ≥ 0`, the `j`-th survivor `q = enc(j+K)` of an explicit ray satisfies
 `−1·T·(q − 0) − δ·p^{−Nj} = −p^E·(m − head)`, manifestly an integer (`head` = the below-`P`
 digit-value mass, `δ = tail·p^{−(NK−E)}`).  This is `ray_enc_affine` plus `p`-power bookkeeping. -/
@@ -873,7 +883,7 @@ private lemma residue_identity {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {m : �
   linear_combination (tail) * hmerge
 
 open Sparse in
-/-- `lem:42556`: bounded QTR support has a sparse representative set mod ℤ.
+/-- Lemma 6.22: bounded QTR support has a sparse representative set mod ℤ.
 Let `f : 𝕃_[p]` be `ℚᵘⁿ_[p]`-algebraic with bounded support admitting finitely many
 but at least one accumulation point. Then there exist `S' ⊆ f.support`, `lam : ℚ`,
 `T : ℕ+`, and a set `W` such that `f.support \ S'` is finite and `-T(S'-lam)` has a
@@ -894,24 +904,24 @@ theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
       W ≠ {0} ∧ IsSparse p W ∧
       IsRepModZ W { x : ℚ | ∃ q ∈ S', x = -1 * (T : ℚ) * (q - lam) } := by
   -- Bridge the ℝ-derived-set hypotheses to the ℚ-internal form the ray layer
-  -- consumes: `hacc_fin` (ℝ) ⟹ ℚ-derived set finite (`lem:derivedset-rat-real`).
+  -- consumes: `hacc_fin` (ℝ) ⟹ ℚ-derived set finite (`derivedSet_rat_finite_of_real_finite`).
   have hacc_fin_Q : (derivedSet f.support).Finite :=
     derivedSet_rat_finite_of_real_finite hacc_fin
-  -- By prop:167 (`isQTR_of_isAlgebraic_of_bddSupport`), `f.coeff` is QTR for some
+  -- By Proposition 6.6 (`isQTR_of_isAlgebraic_of_bddSupport`), `f.coeff` is QTR for some
   -- `a,b,c,M,N`.
   obtain ⟨a, b, c, M, N, hqtr⟩ := isQTR_of_isAlgebraic_of_bddSupport f halg hbdd
-  -- `qtr_ray_decomposition` (coro:48108) writes `f.support = E ⊔ ⨆ rays` with `E` finite
+  -- `qtr_ray_decomposition` (Corollary 6.20) writes `f.support = E ⊔ ⨆ rays` with `E` finite
   -- and finitely many pairwise-disjoint rays, each carrying its admissibility data.
   obtain ⟨E, rays, hrays_data, hrays_disj, hsupp_eq⟩ :=
     qtr_ray_decomposition hqtr hbdd hacc_fin_Q
-  -- REMAINING (deep §6.3 core, blueprint `lem:42556`): from the ray decomposition build the
+  -- REMAINING (deep §6.3 core, blueprint Lemma 6.22): from the ray decomposition build the
   -- sparse representative set.  We take `lam = 0`: since `T = a·p^E` clears every finite-expansion
   -- denominator, `T·α_l` is already an integer, so the residue `-T·q ≡ δ_l p^{-Nj} (mod ℤ)` needs
   -- no reference point.  Each *infinite* ray `R_l` has positive slope
   -- (`ray_pos_slope_of_infinite`),
   -- giving a nonzero `δ_l = tail_l·p^{-(NK-E)} ∈ (0,1)` with a finite base-`p` expansion; deleting
   -- the first `K = E` points of each infinite ray gives `S'` (a finite deletion plus the finite/
-  -- degenerate rays and `↑E`), and `isSparse_deltas` (lem:57121) yields the sparse `W`.
+  -- degenerate rays and `↑E`), and `isSparse_deltas` (Lemma 6.21) yields the sparse `W`.
   classical
   -- `f.support` is infinite (the ℝ-derived set is nonempty ⟹ image infinite ⟹ support infinite).
   have hsupp_inf : f.support.Infinite := by
@@ -1016,7 +1026,7 @@ theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
   have hδ_fin : ∀ i, ∃ d : ℕ →₀ ℕ, (∀ j, d j < p) ∧
       δ i = d.sum fun j v => (v : ℚ) * (p : ℚ) ^ (-(j + 1 : ℤ)) :=
     fun i => digitSeries_finsupp_model (gR i) (hgR_isP i)
-  -- The sparse set `W` and its sparseness (`isSparse_deltas`, lem:57121).
+  -- The sparse set `W` and its sparseness (`isSparse_deltas`, Lemma 6.21).
   set W : Set ℚ := { w : ℚ | ∃ (i : Fin s) (k : ℕ), w = δ i * (p : ℚ) ^ (-(N : ℤ) * k) } with hW_def
   have hW_sparse : IsSparse p W := isSparse_deltas N s hs_pos δ hδ_mem hδ_ne hδ_fin
   have hW_ne : W ≠ {0} := by
@@ -1094,9 +1104,9 @@ theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
     rw [show ∀ x : ℚ, (-x).isInt = x.isInt from fun x => by
           rw [Rat.isInt, Rat.isInt, Rat.neg_den]]
     rw [mul_sub]
-    apply isInt_sub'
+    apply MainTheorem.isInt_sub'
     · rw [show (p : ℚ) ^ Edeg * (mR i : ℚ) = (((p ^ Edeg : ℕ) : ℤ) * mR i : ℤ) by push_cast; ring]
-      exact isInt_intCast' _
+      exact MainTheorem.isInt_intCast' _
     · rw [hhead_def]
       apply isInt_pow_mul_digitSum
       intro ii hii
@@ -1142,7 +1152,7 @@ theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
               = (δ i' * (p : ℚ) ^ (-(N : ℤ) * k') - (-1 * (T : ℚ) * (enc i (j + Kdel) - 0)))
                 - (δ i * (p : ℚ) ^ (-(N : ℤ) * j) - (-1 * (T : ℚ) * (enc i (j + Kdel) - 0)))
               by ring]
-        exact isInt_sub' ha' ha
+        exact MainTheorem.isInt_sub' ha' ha
       have hm1 := hW_Ico _ (⟨i', k', rfl⟩ : δ i' * (p : ℚ) ^ (-(N : ℤ) * k') ∈ W)
       have hm2 := hW_Ico _ (⟨i, j, rfl⟩ : δ i * (p : ℚ) ^ (-(N : ℤ) * j) ∈ W)
       have hz := isInt_eq_zero_of_bounded hdiff
@@ -1157,13 +1167,13 @@ theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
           rw [Rat.isInt, Rat.isInt, Rat.neg_den]]
     exact hres i k
 
--- thm:29075
+-- Theorem 6.23
 open Bornology in
-/-- Support-split helper for `thm:29075`.  Given `f : 𝕃_[p]` and a set `S' ⊆ f.support`
+/-- Support-split helper for Theorem 6.23.  Given `f : 𝕃_[p]` and a set `S' ⊆ f.support`
 whose complement `f.support \ S'` is finite, splits `f = f_good + f_bad` along the
 partition, where `f_good` carries the coefficients on `f.support ∩ S'` (its support is
 exactly `f.support ∩ S' = S'`, since `S' ⊆ f.support`) and `f_bad` carries the finite
-remainder.  Built at the lift level (`LiftedPAdicHahnSeries.from_coeff` + the quotient
+remainder.  Built at the lift level (`LiftedPAdicHahnSeries.fromCoeff` + the quotient
 map by `NullSeriesIdeal`) since the canonical-expansion `coeff` is not additive — this
 mirrors the (now-archived) `Application.lean` decomposition but uses only public API. -/
 private theorem support_split_decomp {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
@@ -1194,12 +1204,12 @@ private theorem support_split_decomp {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p
   have hs_good_pwo : (Function.support s_good).IsPWO := hG_pwo.mono hs_good_sub
   have hs_bad_pwo : (Function.support s_bad).IsPWO := hB_pwo.mono hs_bad_sub
   -- The two parts.
-  set f_good : 𝕃_[p] := pAdicHahnSeries.from_coeff s_good hs_good_pwo with hfgood
-  set f_bad : 𝕃_[p] := pAdicHahnSeries.from_coeff s_bad hs_bad_pwo with hfbad
+  set f_good : 𝕃_[p] := pAdicHahnSeries.fromCoeff s_good hs_good_pwo with hfgood
+  set f_bad : 𝕃_[p] := pAdicHahnSeries.fromCoeff s_bad hs_bad_pwo with hfbad
   have hf_good_coeff : f_good.coeff = s_good :=
-    pAdicHahnSeries.coeff_of_from_coeff_eq_self s_good hs_good_pwo
+    pAdicHahnSeries.coeff_of_fromCoeff_eq_self s_good hs_good_pwo
   have hf_bad_coeff : f_bad.coeff = s_bad :=
-    pAdicHahnSeries.coeff_of_from_coeff_eq_self s_bad hs_bad_pwo
+    pAdicHahnSeries.coeff_of_fromCoeff_eq_self s_bad hs_bad_pwo
   -- `f_bad` has finite support.
   have hf_bad_supp : f_bad.support ⊆ Bset := by
     change Function.support f_bad.coeff ⊆ Bset
@@ -1224,9 +1234,9 @@ private theorem support_split_decomp {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p
   -- Decomposition `f = f_good + f_bad`, proved at the lift level then projected.
   have hf_decomp : f = f_good + f_bad := by
     have hL_eq :
-        LiftedPAdicHahnSeries.from_coeff s_good hs_good_pwo +
-          LiftedPAdicHahnSeries.from_coeff s_bad hs_bad_pwo =
-        LiftedPAdicHahnSeries.from_coeff f.coeff (support_IsPWO f) := by
+        LiftedPAdicHahnSeries.fromCoeff s_good hs_good_pwo +
+          LiftedPAdicHahnSeries.fromCoeff s_bad hs_bad_pwo =
+        LiftedPAdicHahnSeries.fromCoeff f.coeff (support_IsPWO f) := by
       apply HahnSeries.ext
       funext q
       change (WittVector.teichmuller p) (s_good q) + (WittVector.teichmuller p) (s_bad q) =
@@ -1254,15 +1264,15 @@ private theorem support_split_decomp {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p
           rw [hs_g, hs_b, hfc, WittVector.teichmuller_zero]; ring
     -- Project the lift-level equality through the quotient map.
     have hproj :
-        f_good + f_bad = pAdicHahnSeries.from_coeff f.coeff (support_IsPWO f) := by
+        f_good + f_bad = pAdicHahnSeries.fromCoeff f.coeff (support_IsPWO f) := by
       change
         (Ideal.Quotient.mk (NullSeriesIdeal p))
-            (LiftedPAdicHahnSeries.from_coeff s_good hs_good_pwo) +
+            (LiftedPAdicHahnSeries.fromCoeff s_good hs_good_pwo) +
           (Ideal.Quotient.mk (NullSeriesIdeal p))
-            (LiftedPAdicHahnSeries.from_coeff s_bad hs_bad_pwo) = _
+            (LiftedPAdicHahnSeries.fromCoeff s_bad hs_bad_pwo) = _
       rw [← (Ideal.Quotient.mk (NullSeriesIdeal p)).map_add, hL_eq]
       rfl
-    rw [hproj, pAdicHahnSeries.from_coeff_of_coeff_eq_self f]
+    rw [hproj, pAdicHahnSeries.fromCoeff_of_coeff_eq_self f]
   exact ⟨f_good, f_bad, hf_decomp, hf_good_supp, hf_bad_supp_fin⟩
 
 open Bornology in
@@ -1271,10 +1281,10 @@ multiplying by the monomial `single c 1` (a unit of `𝕃_[p]`, equal to `p`-pow
 `c ∈ ℤ` but valid for any rational shift) translates the canonical-expansion support by
 `c`:  `support (single c 1 · x) = (· + c) '' x.support`.
 
-PROOF IDEA (canonical-expansion uniqueness).  Write `x = from_coeff s` with `s = x.coeff`
+PROOF IDEA (canonical-expansion uniqueness).  Write `x = fromCoeff s` with `s = x.coeff`
 its (unique, Teichmüller-rep) canonical coefficients.  At the lift level, the HahnSeries
-coefficient of `single c 1 * (Lifted.from_coeff s)` at `a` is `s (a - c)`
-(`HahnSeries.coeff_single_mul`, `one_mul`), i.e. the lift equals `Lifted.from_coeff
+coefficient of `single c 1 * (Lifted.fromCoeff s)` at `a` is `s (a - c)`
+(`HahnSeries.coeff_single_mul`, `one_mul`), i.e. the lift equals `Lifted.fromCoeff
 (fun a => s (a - c))`.  The shifted coefficient function `fun a => s (a-c)` has the same
 *values* as `s` (just reindexed), so it is still a valid canonical (Teichmüller-rep)
 coefficient family, and its support is `(· + c) '' (Function.support s) = (·+c) '' x.support`,
@@ -1304,33 +1314,33 @@ private theorem support_single_mul_shift {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ
     -- image of a PWO set under the monotone `(· + c)` is PWO
     apply hs_pwo.image_of_monotone
     intro a b hab; simpa using add_le_add_right hab c
-  -- The lift of `single c 1 * x` equals `Lifted.from_coeff sShift`.
+  -- The lift of `single c 1 * x` equals `Lifted.fromCoeff sShift`.
   have hlift_eq :
       HahnSeries.single c (1 : ℤᵘⁿ_[p]) *
-          LiftedPAdicHahnSeries.from_coeff s hs_pwo
-        = LiftedPAdicHahnSeries.from_coeff sShift hsShift_pwo := by
+          LiftedPAdicHahnSeries.fromCoeff s hs_pwo
+        = LiftedPAdicHahnSeries.fromCoeff sShift hsShift_pwo := by
     apply HahnSeries.ext
     funext a
     rw [HahnSeries.coeff_single_mul, one_mul]
     rfl
-  -- `x = mkLp (Lifted.from_coeff s)` since `s = x.coeff` is the canonical family.
-  have hx_eq : x = pAdicHahnSeries.from_coeff s hs_pwo :=
-    (pAdicHahnSeries.from_coeff_of_coeff_eq_self x).symm
+  -- `x = mkLp (Lifted.fromCoeff s)` since `s = x.coeff` is the canonical family.
+  have hx_eq : x = pAdicHahnSeries.fromCoeff s hs_pwo :=
+    (pAdicHahnSeries.fromCoeff_of_coeff_eq_self x).symm
   -- Multiply through the quotient ring-hom and identify the product's canonical family.
   have hprod_eq :
       (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))) * x
-        = pAdicHahnSeries.from_coeff sShift hsShift_pwo := by
+        = pAdicHahnSeries.fromCoeff sShift hsShift_pwo := by
     rw [hx_eq]
     change
       (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))) *
-          (Ideal.Quotient.mk (NullSeriesIdeal p)) (LiftedPAdicHahnSeries.from_coeff s hs_pwo)
+          (Ideal.Quotient.mk (NullSeriesIdeal p)) (LiftedPAdicHahnSeries.fromCoeff s hs_pwo)
         = (Ideal.Quotient.mk (NullSeriesIdeal p))
-            (LiftedPAdicHahnSeries.from_coeff sShift hsShift_pwo)
+            (LiftedPAdicHahnSeries.fromCoeff sShift hsShift_pwo)
     rw [← (Ideal.Quotient.mk (NullSeriesIdeal p)).map_mul, hlift_eq]
   -- Conclude on supports.
   rw [hprod_eq]
-  change Function.support (pAdicHahnSeries.from_coeff sShift hsShift_pwo).coeff = _
-  rw [pAdicHahnSeries.coeff_of_from_coeff_eq_self sShift hsShift_pwo, hsupp_shift]
+  change Function.support (pAdicHahnSeries.fromCoeff sShift hsShift_pwo).coeff = _
+  rw [pAdicHahnSeries.coeff_of_fromCoeff_eq_self sShift hsShift_pwo, hsupp_shift]
   rfl
 
 open Bornology in
@@ -1347,8 +1357,8 @@ private theorem single_one_isAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) 
   have ht_supp : Function.support t ⊆ {c} := by
     rw [ht_def]; exact Pi.support_single_subset
   have ht_pwo : (Function.support t).IsPWO := (Set.finite_singleton c).subset ht_supp |>.isPWO
-  -- The lift `single c 1` equals `Lifted.from_coeff t` (`teichmuller p 1 = 1`).
-  have hlift : HahnSeries.single c (1 : ℤᵘⁿ_[p]) = LiftedPAdicHahnSeries.from_coeff t ht_pwo := by
+  -- The lift `single c 1` equals `Lifted.fromCoeff t` (`teichmuller p 1 = 1`).
+  have hlift : HahnSeries.single c (1 : ℤᵘⁿ_[p]) = LiftedPAdicHahnSeries.fromCoeff t ht_pwo := by
     apply HahnSeries.ext
     funext a
     change (HahnSeries.single c (1 : ℤᵘⁿ_[p])).coeff a = (WittVector.teichmuller p) (t a)
@@ -1357,22 +1367,31 @@ private theorem single_one_isAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) 
       rw [HahnSeries.coeff_single_same, ht_def, Pi.single_eq_same, map_one]
     · rw [HahnSeries.coeff_single_of_ne hac, ht_def, Pi.single_eq_of_ne hac,
         WittVector.teichmuller_zero]
-  -- Hence the monomial `= from_coeff t`, whose support is `Function.support t ⊆ {c}`, finite.
+  -- Hence the monomial `= fromCoeff t`, whose support is `Function.support t ⊆ {c}`, finite.
   have hmono_eq :
       Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))
-        = pAdicHahnSeries.from_coeff t ht_pwo := by
+        = pAdicHahnSeries.fromCoeff t ht_pwo := by
     rw [hlift]; rfl
   have hfin : (pAdicHahnSeries.support (Ideal.Quotient.mk (NullSeriesIdeal p)
       (HahnSeries.single c (1 : ℤᵘⁿ_[p])))).Finite := by
     rw [hmono_eq]
-    change (Function.support (pAdicHahnSeries.from_coeff t ht_pwo).coeff).Finite
-    rw [pAdicHahnSeries.coeff_of_from_coeff_eq_self t ht_pwo]
+    change (Function.support (pAdicHahnSeries.fromCoeff t ht_pwo).coeff).Finite
+    rw [pAdicHahnSeries.coeff_of_fromCoeff_eq_self t ht_pwo]
     exact (Set.finite_singleton c).subset ht_supp
   -- Finite support ⟹ algebraic over ℚ_[p] ⟹ algebraic over ℚᵘⁿ_[p].
   exact pAdicHahnSeries.alg_QpUn_of_alg_Qp p _ (pAdicHahnSeries.alg_of_fin_supp p _ hfin)
 
 open Bornology in
-theorem fintie_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime p)]
+/-- **Theorem 6.23.** A `p`-adic Hahn series `f` that is algebraic over `ℚᵘⁿ_[p]`, whose support is
+bounded and has only finitely many accumulation points (measured as the ℝ-derived set of the support
+under `ℚ ↪ ℝ`), has finite support.
+
+The proof is by contradiction: if the support were infinite, boundedness and finitely many
+accumulation points would let the ray-decomposition machinery (`exists_sparse_rep`) extract a
+nonzero sparse set of representatives of `-T · S'` modulo `ℤ` for a cofinite piece `S'` of the
+support, so
+the main transcendence theorem forces `f` to be transcendental — contradicting algebraicity. -/
+theorem finite_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime p)]
   (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚᵘⁿ_[p] f) (hf2 : IsBounded f.support)
   (hf3 : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite) :
   f.support.Finite := by
@@ -1382,7 +1401,7 @@ theorem fintie_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat
   -- Bolzano–Weierstrass over ℝ: an infinite bounded support has an ℝ-accumulation point.
   have hne : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Nonempty :=
     real_derivedSet_nonempty_of_infinite_bounded hinf hf2
-  -- The sparse-representative reduction (lem:42556).
+  -- The sparse-representative reduction (Lemma 6.22).
   obtain ⟨S', lam, T, W, hS'sub, hdiff_fin, hW_ne, hW_sparse, hRep⟩ :=
     exists_sparse_rep f hf1 hf2 hf3 hne
   -- Split `f = f_good + f_bad` along `support = S' ⊔ (support \ S')`.
@@ -1422,35 +1441,42 @@ theorem fintie_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat
   -- `main_theorem` makes `g` transcendental over ℚᵘⁿ_p — contradiction.
   exact (main_theorem p g T W hW_ne hW_sparse hRep') hg_alg
 
--- coro:11594
 open Bornology in
+/-- **Corollary 6.24 (accumulation-point dichotomy).** For a `p`-adic Hahn series `f` that is
+algebraic over `ℚ_[p]` with bounded support, the set of accumulation points of its support (taken in
+ℝ via `ℚ ↪ ℝ`) is either empty or infinite — it can never be a nonempty finite set.
+
+This is the contrapositive of Theorem 6.23 read over ℝ: a nonempty finite ℝ-derived set would make
+`f` (which is `ℚ_[p]`-, hence `ℚᵘⁿ_[p]`-algebraic) have bounded support with finitely many
+accumulation points, forcing `f.support` finite; but a finite set has empty ℝ-derived set, so the
+derived set cannot be nonempty and finite. -/
 theorem support_accpt_empty_or_infinite_of_qp_algebraic_of_bounded_support
   {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚ_[p] f) (hf2 : IsBounded f.support) :
   (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)) = ∅ ∨
   (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Infinite
   := by
-  -- Contrapositive of thm:29075 over ℝ.  If the ℝ-derived set is nonempty and finite,
+  -- Contrapositive of Theorem 6.23 over ℝ.  If the ℝ-derived set is nonempty and finite,
   -- then `f` (being ℚ_p-algebraic, hence ℚᵘⁿ_p-algebraic) has bounded support with
-  -- finitely many ℝ-accumulation points, so thm:29075 makes `f.support` finite; then
+  -- finitely many ℝ-accumulation points, so Theorem 6.23 makes `f.support` finite; then
   -- its image is finite and has empty ℝ-derived set (ℝ is T₁) — contradicting nonempty.
   rcases Set.eq_empty_or_nonempty (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)) with hempty | hne
   · exact Or.inl hempty
   · refine Or.inr ?_
     by_contra hnotinf
     rw [Set.not_infinite] at hnotinf
-    -- ℚ_p-algebraic ⟹ ℚᵘⁿ_p-algebraic, feed thm:29075.
+    -- ℚ_p-algebraic ⟹ ℚᵘⁿ_p-algebraic, feed Theorem 6.23.
     have halg_un : IsAlgebraic ℚᵘⁿ_[p] f := pAdicHahnSeries.alg_QpUn_of_alg_Qp p f hf1
     have hsupp_fin : f.support.Finite :=
-      fintie_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hnotinf
+      finite_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hnotinf
     -- A finite support has finite image; a finite set has empty ℝ-derived set.
     have himg_fin : ((Rat.cast : ℚ → ℝ) '' f.support).Finite := hsupp_fin.image _
     obtain ⟨x, hx⟩ := hne
     rw [mem_derivedSet] at hx
     exact absurd (Set.Infinite.of_accPt hx) (Set.not_infinite.mpr himg_fin)
 
--- coro:11594
+-- Corollary 6.24
 open Bornology Ordinal in
-/-- `lem:ordertype-bridge` (forward Cantor–Bendixson direction).  For a support set
+/-- **Order-type bridge (forward Cantor–Bendixson direction).**  For a support set
 `S = f.support ⊆ ℚ`, a small intrinsic order type forces few ℝ-accumulation points:
 if `typeLT S < ω²` then the ℝ-derived set `derivedSet (ι '' S)` is finite.
 
@@ -1628,19 +1654,26 @@ private theorem derivedSet_real_finite_of_typeLT_lt_omega0_sq {p : ℕ} [Fact (N
   exact ⟨⟨k, hk⟩, by rw [hok]⟩
 
 open Bornology Ordinal in
+/-- **Corollary 6.24 (order-type dichotomy).** The order type of the support of a `ℚ_[p]`-algebraic
+`p`-adic Hahn series with bounded support is either finite (`< ω`) or at least `ω²` — the
+intermediate order types `ω ≤ · < ω²` are never realized.
+
+The proof splits on whether `typeLT f.support < ω²`. If so, the order-type bridge shows the support
+has only finitely many ℝ-accumulation points, so Theorem 6.23 makes the support finite, giving a
+finite order type `< ω`. Otherwise the order type is `≥ ω²` by assumption. -/
 theorem order_type_of_qp_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime p)]
   (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚ_[p] f) (hf2 : IsBounded f.support) :
   typeLT f.support < omega0 ∨ typeLT f.support ≥ omega0^2 := by
   -- Dichotomy on whether the intrinsic order type is `< ω²`.
   rcases lt_or_ge (typeLT f.support) (omega0 ^ 2) with hlt | hge
   · -- `typeLT < ω²`: the forward bridge gives finitely many ℝ-accumulation points, so by
-    -- thm:29075 (via ℚᵘⁿ) the support is finite, hence `typeLT < ω`.
+    -- Theorem 6.23 (via ℚᵘⁿ) the support is finite, hence `typeLT < ω`.
     refine Or.inl ?_
     have hfin_acc : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite :=
       derivedSet_real_finite_of_typeLT_lt_omega0_sq f hlt
     have halg_un : IsAlgebraic ℚᵘⁿ_[p] f := pAdicHahnSeries.alg_QpUn_of_alg_Qp p f hf1
     have hsupp_fin : f.support.Finite :=
-      fintie_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hfin_acc
+      finite_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hfin_acc
     -- A finite linear order has order type `< ω`.
     have : Finite f.support := hsupp_fin
     exact Ordinal.card_lt_aleph0.mp
@@ -1649,3 +1682,7 @@ theorem order_type_of_qp_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime
     exact Or.inr hge
 
 end FormalizedSparse
+
+
+
+

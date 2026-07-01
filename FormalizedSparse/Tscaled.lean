@@ -1,15 +1,43 @@
-import FormalizedSparse.References.PAdicHahnSeries
-import Mathlib.RingTheory.AdjoinRoot
-import Mathlib.RingTheory.Polynomial.Eisenstein.Basic
-import Mathlib.RingTheory.Localization.Finiteness
-import Mathlib.Topology.Algebra.Module.FiniteDimension
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
+-/
+module
+
+public import FormalizedSparse.References.PAdicHahnSeries
+public import Mathlib.RingTheory.AdjoinRoot
+public import Mathlib.RingTheory.Localization.Finiteness
+public import Mathlib.RingTheory.Polynomial.Eisenstein.Basic
+public import Mathlib.Topology.Algebra.Module.FiniteDimension
 
 /-!
-# T-scaled realization of p-adic Hahn series
+# T-scaled realization of `p`-adic Hahn series
 
-This file is the formalization of Section 3 of this paper. Most of the proofs are similar to those
-in `PAdicHahnSeries.lean`.
+This file formalizes Section 4 of the paper. It builds the `T`-scaled realization of `𝕃_[p]`,
+obtained by adjoining a `T`-th root `p^(1/T)` of `p`, and establishes the isomorphism
+`𝕃_[p] ≅ W(𝔽ᵃ_[p])((t^ℚ))[p^(1/T)] / N_T`. Most proofs parallel those in `PAdicHahnSeries.lean`.
+
+## Main definitions
+
+- `FormalizedSparse.TScaled.OQpUnT` (`ℤᵘⁿ_[p,T]`): the ring `W(𝔽ᵃ_[p])[p^(1/T)]` via `AdjoinRoot`.
+- `FormalizedSparse.TScaled.TScaledNullSeries`: the `T`-null-series ideal `N_T`.
+
+## Main statements
+
+- `FormalizedSparse.TScaled.sigma_iso`: the isomorphism
+  `σ : 𝕃_[p] → W(𝔽ᵃ_[p])[p^(1/T)]((t^ℚ)) / N_T`.
+
+## Notation
+
+- `ℤᵘⁿ_[p,T]`, `ℚᵘⁿ_[p,T]` for the `T`-scaled rings introduced here.
+
+## Tags
+
+p-adic, Hahn series, T-scaled, adjoin root, null series
 -/
+
+@[expose] public section
 
 open WittVector
 
@@ -356,7 +384,8 @@ noncomputable example : Valued (ℚᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))
 noncomputable def pInvTQ : ℚᵘⁿ_[p,T] :=
   algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T)
 
--- The valuation of `pInvTQ p T` is `ofAdd(-1)` — the analogue of `valued_v_p`.
+/-- The valuation of the uniformizer `pInvTQ p T` (a `T`-th root of `p`) is `ofAdd(-1)` — the
+`T`-scaled analogue of `valued_v_p`. -/
 lemma valued_v_pInvT :
     Valued.v (pInvTQ p T) =
       ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
@@ -370,7 +399,7 @@ lemma valued_v_pInvT :
     (pInvT_ne_zero p T) hpe]
   rfl
 
--- The valuation of `(pInvTQ)^n` is `ofAdd(-n)` for integer `n`.
+/-- The valuation of `(pInvTQ p T)^n` is `ofAdd(-n)` for integer `n`. -/
 lemma valued_v_pInvT_zpow (n : ℤ) :
     Valued.v ((pInvTQ p T) ^ n) =
       ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
@@ -385,7 +414,8 @@ lemma valued_v_pInvT_zpow (n : ℤ) :
 -- v4.31 `WithVal`-migration helpers (analogues of those in `PAdicHahnSeries.lean`): the valued
 -- nhds basis is now phrased via `MonoidWithZeroHom.ValueGroup₀`, so we package the bridges once.
 
--- A basic neighborhood of `0`: `{y | Valued.v y < c}` for `c ≠ 0`.
+/-- The open ball `{y | v(y) < c}` is a neighbourhood of `0` in `ℚᵘⁿ_[p,T]` for any nonzero `c` —
+the `T`-scaled analogue of `mem_nhds_zero_v_lt`. -/
 lemma Tmem_nhds_zero_v_lt {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
     {y : ℚᵘⁿ_[p,T] | Valued.v y < c} ∈ nhds (0 : ℚᵘⁿ_[p,T]) := by
   rw [Valued.mem_nhds]
@@ -400,7 +430,8 @@ lemma Tmem_nhds_zero_v_lt {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
     Valuation.embedding_restrict, hva] at hy
   exact hy
 
--- From `U ∈ nhds 0` recover a valuation bound `c ≠ 0` with `{y | Valued.v y < c} ⊆ U`.
+/-- Every neighbourhood `U` of `0` in `ℚᵘⁿ_[p,T]` contains a valuation ball `{y | v(y) < c}` for
+some nonzero `c`. -/
 lemma Texists_v_lt_subset {U : Set (ℚᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚᵘⁿ_[p,T])) :
     ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᵘⁿ_[p,T] | Valued.v y < c} ⊆ U := by
   rw [Valued.mem_nhds] at hU
@@ -413,8 +444,8 @@ lemma Texists_v_lt_subset {U : Set (ℚᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚ�
   rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero]
   exact hy
 
--- From a witness `w` with `Valued.v w = c ≠ 0`, the ball `{y | Valued.v (y - x) < c}` is a
--- neighborhood of `x`.
+/-- Given a witness `w` with `v(w) = c ≠ 0`, the ball `{y | v(y - x) < c}` is a neighbourhood of
+`x` in `ℚᵘⁿ_[p,T]`. -/
 lemma Tmem_nhds_v_sub_lt {x w : ℚᵘⁿ_[p,T]} {c : WithZero (Multiplicative ℤ)}
     (hc : c ≠ 0) (hw : Valued.v w = c) :
     {y : ℚᵘⁿ_[p,T] | Valued.v (y - x) < c} ∈ nhds x := by
@@ -428,7 +459,8 @@ lemma Tmem_nhds_v_sub_lt {x w : ℚᵘⁿ_[p,T]} {c : WithZero (Multiplicative �
     Valuation.embedding_restrict, hw] at hy
   exact hy
 
--- From `U ∈ nhds x` recover `c ≠ 0` with `{y | Valued.v (y - x) < c} ⊆ U`.
+/-- Every neighbourhood `U` of `x` in `ℚᵘⁿ_[p,T]` contains a ball `{y | v(y - x) < c}` for some
+nonzero `c`. -/
 lemma Texists_v_sub_lt_subset {U : Set (ℚᵘⁿ_[p,T])} {x : ℚᵘⁿ_[p,T]} (hU : U ∈ nhds x) :
     ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᵘⁿ_[p,T] | Valued.v (y - x) < c} ⊆ U := by
   rw [Valued.mem_nhds] at hU
@@ -588,7 +620,7 @@ namespace TLiftedPAdicHahnSeries
 
 /-- Build a T-lifted Hahn series from a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with
 well-ordered support, using the composition Teichmüller-lift then `OQpUn_embd`. -/
-noncomputable def from_coeff (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO) :
+noncomputable def fromCoeff (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO) :
     TLiftedPAdicHahnSeries p T where
   coeff n := OQpUn_embd p T (teichmuller p (s n))
   isPWO_support' := by
@@ -618,14 +650,14 @@ noncomputable def Lifted_to_TLifted :
 
 /-! ### Definition 2.4 — `IsTNullSeries` -/
 
-/-- T-shifted analogue of `finprop` (line 21).
+/-- T-shifted analogue of `finiteBelow` (line 21).
 
 For `g ∈ ℚ` and `M ∈ ℕ`, the index set of integers `n` such that `g + n/T ≤ M` and the
 coefficient `x.coeff (g + n/T)` is non-zero is finite.
 
 The well-orderedness of the support transfers via the order-preserving rescaling
 `q ↦ g + q/T` (recall `T ≠ 0` from `[NeZero T]`). -/
-@[reducible] def Tfinprop (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
+@[reducible] def TfiniteBelow (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
     Finite {n : ℤ | g + (n : ℚ) / T ≤ M ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
@@ -676,15 +708,15 @@ This mirrors `IsNullSeries` (line 55) verbatim with two substitutions:
 * `(p : QpUn p)` is replaced by `pInvTQ p T` (the T-th root of `p` in `ℚᵘⁿ_[p,T]`);
 * coefficient indices are shifted by `1/T` rather than `1`. -/
 def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
-  ∀ g : ℚ, Filter.Tendsto (fun M : ℕ => ∑ n : Set.Finite.toFinset (Tfinprop p T x g M),
+  ∀ g : ℚ, Filter.Tendsto (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
       (pInvTQ p T) ^ (n.val : ℤ) *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) atTop (𝓝 0)
 
 /-! ### Helpers for `smul_mem'` — T-scaled ports of Poonen1993 helpers (Lemma 4.6 (1)) -/
 
-/-- T-scaled analogue of `finpropInt` (line 61). Indexes integers `n ≤ K` whose
+/-- T-scaled analogue of `finiteBelowInt` (line 61). Indexes integers `n ≤ K` whose
 shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
-@[reducible] private noncomputable def TfinpropInt
+@[reducible] private noncomputable def TfiniteBelowInt
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) :
     Finite {n : ℤ | n ≤ K ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
   have hT_pos : (0 : ℚ) < T := by
@@ -721,7 +753,7 @@ shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
 /-- T-scaled analogue of `intPartial` (line 84). -/
 private noncomputable def TintPartial
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) : ℚᵘⁿ_[p,T] :=
-  ∑ n : Set.Finite.toFinset (TfinpropInt p T x g K),
+  ∑ n : Set.Finite.toFinset (TfiniteBelowInt p T x g K),
     (pInvTQ p T) ^ (n.1 : ℤ) *
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))
 
@@ -767,26 +799,26 @@ private lemma Tvalued_v_algebraMap_unit_one (u : (ℤᵘⁿ_[p,T])ˣ) :
 private lemma TintPartial_diff_eq_sdiff_sum
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K K' : ℤ) (h : K ≤ K') :
     TintPartial p T x g K' - TintPartial p T x g K =
-      ∑ n ∈ (Set.Finite.toFinset (TfinpropInt p T x g K') \
-              Set.Finite.toFinset (TfinpropInt p T x g K)),
+      ∑ n ∈ (Set.Finite.toFinset (TfiniteBelowInt p T x g K') \
+              Set.Finite.toFinset (TfiniteBelowInt p T x g K)),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) := by
-  have hsub : Set.Finite.toFinset (TfinpropInt p T x g K) ⊆
-      Set.Finite.toFinset (TfinpropInt p T x g K') := by
+  have hsub : Set.Finite.toFinset (TfiniteBelowInt p T x g K) ⊆
+      Set.Finite.toFinset (TfiniteBelowInt p T x g K') := by
     intro n hn
     have hn_mem : n ∈ {n : ℤ | n ≤ K ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} :=
       (Set.Finite.mem_toFinset _).mp hn
     exact (Set.Finite.mem_toFinset _).mpr ⟨le_trans hn_mem.1 h, hn_mem.2⟩
-  have e1 : TintPartial p T x g K' = ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T x g K'),
+  have e1 : TintPartial p T x g K' = ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x g K'),
       (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T x g K'))
+    Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T x g K'))
       (f := fun m : ℤ => (pInvTQ p T) ^ m *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
-  have e2 : TintPartial p T x g K = ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T x g K),
+  have e2 : TintPartial p T x g K = ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x g K),
       (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T x g K))
+    Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T x g K))
       (f := fun m : ℤ => (pInvTQ p T) ^ m *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
   rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
@@ -799,16 +831,16 @@ private lemma Tpartial_sum_valuation_cauchy
   rw [TintPartial_diff_eq_sdiff_sum p T x g' K₁ K₂ h]
   apply Valuation.map_sum_le
   intro n hn
-  have hn_mem : n ∈ Set.Finite.toFinset (TfinpropInt p T x g' K₂) ∧
-      n ∉ Set.Finite.toFinset (TfinpropInt p T x g' K₁) := Finset.mem_sdiff.mp hn
+  have hn_mem : n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x g' K₂) ∧
+      n ∉ Set.Finite.toFinset (TfiniteBelowInt p T x g' K₁) := Finset.mem_sdiff.mp hn
   have hn1 : n ≤ K₂ ∧ x.coeff (g' + (n : ℚ) / T) ≠ 0 :=
-    (Set.Finite.mem_toFinset (hs := TfinpropInt p T x g' K₂)).mp hn_mem.1
+    (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T x g' K₂)).mp hn_mem.1
   have hn2 : ¬ (n ≤ K₁ ∧ x.coeff (g' + (n : ℚ) / T) ≠ 0) := by
     intro h'
-    exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := TfinpropInt p T x g' K₁)).mpr h')
+    exact hn_mem.2 ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T x g' K₁)).mpr h')
   have hn_gt : K₁ < n := by
     by_contra hle
-    push_neg at hle
+    push Not at hle
     exact hn2 ⟨hle, hn1.2⟩
   have h1 := Tvalued_v_term_le p T (x.coeff (g' + (n : ℚ) / T)) n
   have h2 : ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) :
@@ -824,7 +856,7 @@ The natural-number partial sum equals the integer-cutoff `TintPartial` at
 `K = ⌊T · (M - g)⌋`. -/
 private lemma TpartialSum_eq_intPartial
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
-    (∑ n : Set.Finite.toFinset (Tfinprop p T x g M),
+    (∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) =
       TintPartial p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋ := by
@@ -833,9 +865,9 @@ private lemma TpartialSum_eq_intPartial
     exact_mod_cast Nat.pos_of_ne_zero hT
   have hT_eq : ∀ n : ℤ, (T : ℚ) * ((n : ℚ) / T) = n := by
     intro n; rw [mul_div_assoc']; field_simp
-  have hset_eq : Set.Finite.toFinset (Tfinprop p T x g M) =
+  have hset_eq : Set.Finite.toFinset (TfiniteBelow p T x g M) =
       Set.Finite.toFinset
-        (TfinpropInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋) := by
+        (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋) := by
     ext n
     simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
     constructor
@@ -858,25 +890,25 @@ private lemma TpartialSum_eq_intPartial
         rw [div_le_iff₀ hT_pos]; linarith
       linarith
   unfold TintPartial
-  rw [show (∑ n : Set.Finite.toFinset (Tfinprop p T x g M),
+  rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) =
-      ∑ n ∈ Set.Finite.toFinset (Tfinprop p T x g M),
+      ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T x g M),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) from
-      Finset.sum_attach (s := Set.Finite.toFinset (Tfinprop p T x g M))
+      Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T x g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
   rw [show (∑ n : Set.Finite.toFinset
-            (TfinpropInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
+            (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ (n.1 : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))) =
       ∑ n ∈ Set.Finite.toFinset
-          (TfinpropInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
+          (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) from
       Finset.sum_attach (s := Set.Finite.toFinset
-          (TfinpropInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋))
+          (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
   rw [hset_eq]
@@ -895,7 +927,7 @@ private lemma Tnull_series_tail_bound
         nhds (0 : ℚᵘⁿ_[p,T]) :=
     Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   have hev_close : ∀ᶠ M : ℕ in Filter.atTop,
-      Valued.v (∑ n : Set.Finite.toFinset (Tfinprop p T x g M),
+      Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) <
         ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _) :=
@@ -981,20 +1013,20 @@ private lemma TintPartial_mul_valuation_bound
       n ≤ K ∧ g + (n : ℚ) / T ∈ c.support + x.support := by
     intro n
     exact Set.Finite.mem_toFinset _
-  have h_outer_sub : Set.Finite.toFinset (TfinpropInt p T (c * x) g K) ⊆ OuterExt := by
+  have h_outer_sub : Set.Finite.toFinset (TfiniteBelowInt p T (c * x) g K) ⊆ OuterExt := by
     intro n hn
     have hn_data : n ≤ K ∧ (c * x).coeff (g + (n : ℚ) / T) ≠ 0 :=
-      (Set.Finite.mem_toFinset (hs := TfinpropInt p T (c * x) g K)).mp hn
+      (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T (c * x) g K)).mp hn
     have hcoeff_ne := hn_data.2
     have hsupp : g + (n : ℚ) / T ∈ (c * x).support :=
       (HahnSeries.mem_support _ _).mpr hcoeff_ne
     have hsubset : (c * x).support ⊆ c.support + x.support := HahnSeries.support_mul_subset
     exact (hOuterExt_mem n).mpr ⟨hn_data.1, hsubset hsupp⟩
   have h_intPartial_attach : TintPartial p T (c * x) g K =
-      ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T (c * x) g K),
+      ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T (c * x) g K),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) :=
-    Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T (c * x) g K))
+    Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T (c * x) g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)))
   have h_extend_eq : TintPartial p T (c * x) g K =
@@ -1008,7 +1040,7 @@ private lemma TintPartial_mul_valuation_bound
     have h_ne_orig : ¬ (n ≤ K ∧ (c * x).coeff (g + (n : ℚ) / T) ≠ 0) := by
       intro h
       exact hn_orig
-        ((Set.Finite.mem_toFinset (hs := TfinpropInt p T (c * x) g K)).mpr h)
+        ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T (c * x) g K)).mpr h)
     have hcx_zero : (c * x).coeff (g + (n : ℚ) / T) = 0 := by
       by_contra hne
       exact h_ne_orig ⟨h_ext_data.1, hne⟩
@@ -1047,20 +1079,20 @@ private lemma TintPartial_mul_valuation_bound
     rw [show (∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
           TintPartial p T x (g - a) K) =
         ∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
-          ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T x (g - a) K),
+          ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K),
             (pInvTQ p T) ^ n *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T)) from by
       apply Finset.sum_congr rfl
       intro a _
       congr 1
-      exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T x (g - a) K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T)))]
     rw [show (∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
-          ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T x (g - a) K),
+          ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K),
             (pInvTQ p T) ^ n *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T))) =
-        ∑ a ∈ AOf, ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T x (g - a) K),
+        ∑ a ∈ AOf, ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K),
             (pInvTQ p T) ^ n *
               (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
                 algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
@@ -1072,7 +1104,7 @@ private lemma TintPartial_mul_valuation_bound
       intro n _
       ring]
     have h_sigma_eq2 := Finset.sum_sigma (s := AOf)
-      (t := fun a => Set.Finite.toFinset (TfinpropInt p T x (g - a) K))
+      (t := fun a => Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K))
       (f := fun p_sig : Sigma (fun _ : ℚ => ℤ) =>
         (pInvTQ p T) ^ p_sig.2 *
           (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff p_sig.1) *
@@ -1091,7 +1123,7 @@ private lemma TintPartial_mul_valuation_bound
         Finset.mem_addAntidiagonal.mp hs_data.2
       refine Finset.mem_sigma.mpr ⟨?_, ?_⟩
       · exact Finset.mem_image.mpr ⟨s, hs, rfl⟩
-      · refine (Set.Finite.mem_toFinset (hs := TfinpropInt p T x (g - s.2.1) K)).mpr
+      · refine (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T x (g - s.2.1) K)).mpr
             ⟨h_outer_data.1, ?_⟩
         have hb_eq : g - s.2.1 + (s.1 : ℚ) / T = s.2.2 := by linarith [h_anti_data.2.2]
         rw [hb_eq]
@@ -1125,7 +1157,7 @@ private lemma TintPartial_mul_valuation_bound
       have ht_data := Finset.mem_sigma.mp ht
       have ht_a_in : t.1 ∈ AOf := ht_data.1
       have ht_n_data : t.2 ≤ K ∧ x.coeff (g - t.1 + (t.2 : ℚ) / T) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := TfinpropInt p T x (g - t.1) K)).mp ht_data.2
+        (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T x (g - t.1) K)).mp ht_data.2
       obtain ⟨s_orig, hs_orig, hs_eq⟩ := Finset.mem_image.mp ht_a_in
       have hs_orig_data := Finset.mem_sigma.mp hs_orig
       have h_anti_orig := Finset.mem_addAntidiagonal.mp hs_orig_data.2
@@ -1174,9 +1206,9 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     change IsTNullSeries p T b at hb
     change IsTNullSeries p T (a + b)
     intro g
-    let sa : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (Tfinprop p T a g M)
-    let sb : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (Tfinprop p T b g M)
-    let sab : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (Tfinprop p T (a + b) g M)
+    let sa : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (TfiniteBelow p T a g M)
+    let sb : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (TfiniteBelow p T b g M)
+    let sab : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (TfiniteBelow p T (a + b) g M)
     let su : ℕ → Finset ℤ := fun M => sa M ∪ sb M
     let fa : ℕ → ℤ → ℚᵘⁿ_[p,T] := fun _ n =>
       (pInvTQ p T) ^ n * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (a.coeff (g + (n : ℚ) / T))
@@ -1187,26 +1219,26 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     have hsab_sub : ∀ M, sab M ⊆ su M := by
       intro M n hn
       have hn' : g + (n : ℚ) / T ≤ M ∧ (a + b).coeff (g + (n : ℚ) / T) ≠ 0 :=
-        (Set.Finite.mem_toFinset (hs := Tfinprop p T (a + b) g M) (a := n)).1 hn
+        (Set.Finite.mem_toFinset (hs := TfiniteBelow p T (a + b) g M) (a := n)).1 hn
       have hmem : g + (n : ℚ) / T ∈ (a + b).support :=
         (HahnSeries.mem_support (a + b) _).2 hn'.2
       have hunion := HahnSeries.support_add_subset (x := a) (y := b) hmem
       rcases hunion with hxmem | hymem
       · exact Finset.mem_union_left _ <|
-          (Set.Finite.mem_toFinset (hs := Tfinprop p T a g M) (a := n)).2 ⟨hn'.1, hxmem⟩
+          (Set.Finite.mem_toFinset (hs := TfiniteBelow p T a g M) (a := n)).2 ⟨hn'.1, hxmem⟩
       · exact Finset.mem_union_right _ <|
-          (Set.Finite.mem_toFinset (hs := Tfinprop p T b g M) (a := n)).2 ⟨hn'.1, hymem⟩
+          (Set.Finite.mem_toFinset (hs := TfiniteBelow p T b g M) (a := n)).2 ⟨hn'.1, hymem⟩
     have hsuma (M : ℕ) : Finset.sum (su M) (fa M) = Finset.sum (sa M) (fa M) := by
       symm; apply Finset.sum_subset
       · intro n hn; exact Finset.mem_union_left _ hn
       · intro n hnu hnsa
         have hnb : n ∈ sb M := (Finset.mem_union.mp hnu).resolve_left hnsa
         have hmem : g + (n : ℚ) / T ≤ M ∧ b.coeff (g + (n : ℚ) / T) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := Tfinprop p T b g M) (a := n)).1 hnb
+          (Set.Finite.mem_toFinset (hs := TfiniteBelow p T b g M) (a := n)).1 hnb
         have hxzero : a.coeff (g + (n : ℚ) / T) = 0 := by
           by_contra hxne
           exact hnsa <|
-            (Set.Finite.mem_toFinset (hs := Tfinprop p T a g M) (a := n)).2 ⟨hmem.1, hxne⟩
+            (Set.Finite.mem_toFinset (hs := TfiniteBelow p T a g M) (a := n)).2 ⟨hmem.1, hxne⟩
         simp [hxzero]
     have hsumb (M : ℕ) : Finset.sum (su M) (fb M) = Finset.sum (sb M) (fb M) := by
       symm; apply Finset.sum_subset
@@ -1214,11 +1246,11 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
       · intro n hnu hnsb
         have hna : n ∈ sa M := (Finset.mem_union.mp hnu).resolve_right hnsb
         have hmem : g + (n : ℚ) / T ≤ M ∧ a.coeff (g + (n : ℚ) / T) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := Tfinprop p T a g M) (a := n)).1 hna
+          (Set.Finite.mem_toFinset (hs := TfiniteBelow p T a g M) (a := n)).1 hna
         have hyzero : b.coeff (g + (n : ℚ) / T) = 0 := by
           by_contra hyne
           exact hnsb <|
-            (Set.Finite.mem_toFinset (hs := Tfinprop p T b g M) (a := n)).2 ⟨hmem.1, hyne⟩
+            (Set.Finite.mem_toFinset (hs := TfiniteBelow p T b g M) (a := n)).2 ⟨hmem.1, hyne⟩
         simp [hyzero]
     have hsumab (M : ℕ) : Finset.sum (su M) (fab M) = Finset.sum (sab M) (fab M) := by
       symm; apply Finset.sum_subset
@@ -1227,10 +1259,11 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
         have hcoeff : (a + b).coeff (g + (n : ℚ) / T) = 0 := by
           by_contra hne
           exact hnsab <|
-            (Set.Finite.mem_toFinset (hs := Tfinprop p T (a + b) g M) (a := n)).2 ⟨by
+            (Set.Finite.mem_toFinset (hs := TfiniteBelow p T (a + b) g M) (a := n)).2 ⟨by
               rcases Finset.mem_union.mp hnu with hna | hnb
-              · exact (Set.Finite.mem_toFinset (hs := Tfinprop p T a g M) (a := n)).1 hna |>.1
-              · exact (Set.Finite.mem_toFinset (hs := Tfinprop p T b g M) (a := n)).1 hnb |>.1, hne⟩
+              · exact (Set.Finite.mem_toFinset (hs := TfiniteBelow p T a g M) (a := n)).1 hna |>.1
+              · exact (Set.Finite.mem_toFinset (hs := TfiniteBelow p T b g M) (a := n)).1 hnb |>.1,
+              hne⟩
         simp [hcoeff]
     have hfun :
         (fun M => Finset.sum (sab M) (fab M)) =
@@ -1247,33 +1280,33 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
         _ = Finset.sum (sa M) (fa M) + Finset.sum (sb M) (fb M) := by
           rw [hsuma M, hsumb M]
     have hxmain :
-        (fun M => ∑ n : Set.Finite.toFinset (Tfinprop p T a g M),
+        (fun M => ∑ n : Set.Finite.toFinset (TfiniteBelow p T a g M),
             (pInvTQ p T) ^ (n.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (a.coeff (g + (n.val : ℚ) / T))) =
           fun M => Finset.sum (sa M) (fa M) := by
       funext M
       dsimp [sa, fa]
-      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (Tfinprop p T a g M))
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T a g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (a.coeff (g + (n : ℚ) / T))))
     have hymain :
-        (fun M => ∑ n : Set.Finite.toFinset (Tfinprop p T b g M),
+        (fun M => ∑ n : Set.Finite.toFinset (TfiniteBelow p T b g M),
             (pInvTQ p T) ^ (n.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (b.coeff (g + (n.val : ℚ) / T))) =
           fun M => Finset.sum (sb M) (fb M) := by
       funext M
       dsimp [sb, fb]
-      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (Tfinprop p T b g M))
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T b g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (b.coeff (g + (n : ℚ) / T))))
     have hmain :
-        (fun M : ℕ => ∑ n : Set.Finite.toFinset (Tfinprop p T (a + b) g M),
+        (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (a + b) g M),
             (pInvTQ p T) ^ (n.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((a + b).coeff (g + (n.val : ℚ) / T))) =
           fun M => Finset.sum (sab M) (fab M) := by
       funext M
       dsimp [sab, fab]
-      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (Tfinprop p T (a + b) g M))
+      simpa using (Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T (a + b) g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((a + b).coeff (g + (n : ℚ) / T))))
     have ha' : Filter.Tendsto (fun M => Finset.sum (sa M) (fa M)) Filter.atTop (nhds 0) := by
@@ -1293,8 +1326,8 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     -- Mirrors `NullSeriesIdeal.smul_mem'` (lean:658–742).
     -- Mechanical translation strategy: replace every occurrence of `(p : QpUn p)` with
     -- `pInvTQ p T`, every `valued_v_p` with `valued_v_pInvT` (now proved), every
-    -- `valued_v_p_zpow` with `valued_v_pInvT_zpow` (now proved), every `finprop` with
-    -- `Tfinprop`, every `(g + n)` with `(g + (n : ℚ) / T)`.
+    -- `valued_v_p_zpow` with `valued_v_pInvT_zpow` (now proved), every `finiteBelow` with
+    -- `TfiniteBelow`, every `(g + n)` with `(g + (n : ℚ) / T)`.
     --
     -- However, the Poonen proof relies on several intermediate helpers that have not yet
     -- been ported to the T-scaled setting:
@@ -1318,7 +1351,7 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     change IsTNullSeries p T x at hx
     intro g
     -- Step 1: rewrite the partial sum as `TintPartial (c*x) g ⌊T·(M - g)⌋`.
-    have hpartial_eq : (fun M : ℕ => ∑ n : Set.Finite.toFinset (Tfinprop p T (c * x) g M),
+    have hpartial_eq : (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (c * x) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n.val : ℚ) / T))) =
       fun M : ℕ => TintPartial p T (c * x) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋ := by
@@ -1459,19 +1492,19 @@ private lemma one_notMem_TNullSeriesIdeal :
   have htend := h_NS 0
   -- The partial-sum sequence is constantly `1` for every `M : ℕ`.
   have h_partial_sum_one : ∀ M : ℕ,
-      (∑ n : Set.Finite.toFinset (Tfinprop p T (1 : TLiftedPAdicHahnSeries p T) 0 M),
+      (∑ n : Set.Finite.toFinset (TfiniteBelow p T (1 : TLiftedPAdicHahnSeries p T) 0 M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
               ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n.val : ℚ) / T)))
         = 1 := by
     intro M
-    set S := Set.Finite.toFinset (Tfinprop p T (1 : TLiftedPAdicHahnSeries p T) 0 M)
+    set S := Set.Finite.toFinset (TfiniteBelow p T (1 : TLiftedPAdicHahnSeries p T) 0 M)
       with hS_def
     have hT_pos : (0 : ℚ) < T := by
       have hT : T ≠ 0 := NeZero.ne T
       exact_mod_cast Nat.pos_of_ne_zero hT
     have hT_ne : (T : ℚ) ≠ 0 := ne_of_gt hT_pos
-    -- The Tfinprop set at `g = 0` is `{0}` for any `M : ℕ`, since
+    -- The TfiniteBelow set at `g = 0` is `{0}` for any `M : ℕ`, since
     -- `(1).coeff q = 0` whenever `q ≠ 0`, and `n = 0` is admissible (since `0 ≤ M`).
     have hS_eq : S = ({0} : Finset ℤ) := by
       ext n
@@ -1511,7 +1544,7 @@ private lemma one_notMem_TNullSeriesIdeal :
   have h_tend_one :
       Filter.Tendsto
         (fun M : ℕ =>
-          ∑ n : Set.Finite.toFinset (Tfinprop p T (1 : TLiftedPAdicHahnSeries p T) 0 M),
+          ∑ n : Set.Finite.toFinset (TfiniteBelow p T (1 : TLiftedPAdicHahnSeries p T) 0 M),
             (pInvTQ p T) ^ (n.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
                 ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n.val : ℚ) / T)))
@@ -1780,6 +1813,8 @@ private lemma Tvalued_v_surjective :
     (FractionRing (ℤᵘⁿ_[p,T])) x
   exact ⟨WithVal.toVal _ y, by rw [WithVal.valued_toVal]; exact hy⟩
 
+/-- The norm on `ℚᵘⁿ_[p,T]` is the real number `toNNReal (v a)`: the rank-one valuation `v` composed
+with the base-`p` embedding of the value group into `ℝ≥0`. -/
 -- v4.31: `‖·‖` on the `Valued.toNormedField` is `RankOne.hom (Valued.v.restrict ·)`, no longer
 -- defeq to `toNNReal (Valued.v ·)`; bridge through the rank-one `hom` plus surjectivity.
 lemma Tnorm_eq_toNNReal_valued (a : ℚᵘⁿ_[p,T]) :
@@ -1793,8 +1828,9 @@ lemma Tnorm_eq_toNNReal_valued (a : ℚᵘⁿ_[p,T]) :
      Valuation.IsRankOneDiscrete.valueGroup₀_equiv_withZeroMulInt_restrict_apply_of_surjective
        (Tvalued_v_surjective p T) a]
 
--- Lift an element of `ℚᵘⁿ_[p,T]` with valuation `≤ 1` to `ℤᵘⁿ_[p,T]` (routing through the
--- `FractionRing` to avoid the `whnf` timeout on the `WithVal` structure).
+/-- An element of `ℚᵘⁿ_[p,T]` with valuation `≤ 1` lifts to the ring of integers `ℤᵘⁿ_[p,T]`; i.e.
+the valuation ring is exactly the closed unit ball. -/
+-- Routes through the `FractionRing` to avoid the `whnf` timeout on the `WithVal` structure.
 lemma Texists_lift_of_valued_le_one {z : ℚᵘⁿ_[p,T]} (hz : Valued.v z ≤ 1) :
     ∃ a : ℤᵘⁿ_[p,T], algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a = z := by
   have hz' : ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation
@@ -2245,7 +2281,7 @@ private lemma Tteichmuller_digits_unique
       rw [Finset.mem_Icc] at hk
       have hk_lt : k < m₀ := by
         by_contra hge
-        push_neg at hge
+        push Not at hge
         exact hk_not (Finset.mem_Icc.mpr ⟨hge, hk.2⟩)
       rw [hb k hk_lt, TTeichmuller_zero, map_zero, mul_zero]
   have hsum_eq_b' : ∀ K : ℤ, ∑ k ∈ Finset.Icc m₀' K,
@@ -2263,7 +2299,7 @@ private lemma Tteichmuller_digits_unique
       rw [Finset.mem_Icc] at hk
       have hk_lt : k < m₀' := by
         by_contra hge
-        push_neg at hge
+        push Not at hge
         exact hk_not (Finset.mem_Icc.mpr ⟨hge, hk.2⟩)
       rw [hb' k hk_lt, TTeichmuller_zero, map_zero, mul_zero]
   -- Step 5. Bridge sum to algebraMap of Spart.
@@ -2604,7 +2640,7 @@ private lemma Tteichmuller_digits_unique
   intro k
   by_cases hk : k < m
   · rw [hb_below k hk, hb'_below k hk]
-  · push_neg at hk
+  · push Not at hk
     have hk_eq : k = m + ((k - m).toNat : ℤ) := by
       rw [Int.toNat_of_nonneg (by linarith)]
       ring
@@ -2942,28 +2978,28 @@ private lemma Th_intPartial_eq_Icc
               (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (t (γ' + (k : ℚ) / T)))) := by
   intro K hK
   have h_step1 : TintPartial p T β' γ' K =
-      ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T β' γ' K),
+      ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) := by
     simp only [TintPartial]
-    exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T β' γ' K))
+    exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)))
   rw [h_step1]
-  have h_subset : Set.Finite.toFinset (TfinpropInt p T β' γ' K) ⊆ Finset.Icc m K := by
+  have h_subset : Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K) ⊆ Finset.Icc m K := by
     intro n hn
     have hn_mem : n ≤ K ∧ β'.coeff (γ' + (n : ℚ) / T) ≠ 0 :=
-      (Set.Finite.mem_toFinset (hs := TfinpropInt p T β' γ' K)).mp hn
+      (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β' γ' K)).mp hn
     have h_t_ne : t (γ' + (n : ℚ) / T) ≠ 0 := by
       intro h_zero
       apply hn_mem.2
       rw [hβ' (γ' + (n : ℚ) / T), h_zero, WittVector.teichmuller_zero, map_zero]
     have h_n_ge : m ≤ n := by
       by_contra h_lt
-      push_neg at h_lt
+      push Not at h_lt
       exact h_t_ne (hm n h_lt)
     exact Finset.mem_Icc.mpr ⟨h_n_ge, hn_mem.1⟩
-  have h_extend : ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T β' γ' K),
+  have h_extend : ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) =
       ∑ n ∈ Finset.Icc m K,
@@ -2975,7 +3011,7 @@ private lemma Th_intPartial_eq_Icc
     have h_β_zero : β'.coeff (γ' + (n : ℚ) / T) = 0 := by
       by_contra hne
       apply hn_not
-      exact (Set.Finite.mem_toFinset (hs := TfinpropInt p T β' γ' K)).mpr ⟨hn_Icc.2, hne⟩
+      exact (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β' γ' K)).mpr ⟨hn_Icc.2, hne⟩
     rw [h_β_zero]
     simp
   rw [h_extend]
@@ -2988,29 +3024,29 @@ private lemma Th_intPartial_eq_Icc
 private lemma Th_intPartial_sub
     (α β : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) :
     TintPartial p T (α - β) g K = TintPartial p T α g K - TintPartial p T β g K := by
-  set T_α : Finset ℤ := Set.Finite.toFinset (TfinpropInt p T α g K) with hT_α_def
-  set T_β : Finset ℤ := Set.Finite.toFinset (TfinpropInt p T β g K) with hT_β_def
-  set T_d : Finset ℤ := Set.Finite.toFinset (TfinpropInt p T (α - β) g K) with hT_d_def
+  set T_α : Finset ℤ := Set.Finite.toFinset (TfiniteBelowInt p T α g K) with hT_α_def
+  set T_β : Finset ℤ := Set.Finite.toFinset (TfiniteBelowInt p T β g K) with hT_β_def
+  set T_d : Finset ℤ := Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g K) with hT_d_def
   set T_U : Finset ℤ := T_α ∪ T_β with hT_U_def
   have e_α : TintPartial p T α g K =
       ∑ n ∈ T_α, (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) := by
     simp only [TintPartial, hT_α_def]
-    exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T α g K))
+    exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T α g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)))
   have e_β : TintPartial p T β g K =
       ∑ n ∈ T_β, (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) := by
     simp only [TintPartial, hT_β_def]
-    exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T β g K))
+    exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)))
   have e_d : TintPartial p T (α - β) g K =
       ∑ n ∈ T_d, (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) := by
     simp only [TintPartial, hT_d_def]
-    exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T (α - β) g K))
+    exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
   have h_α_sub_U : T_α ⊆ T_U := Finset.subset_union_left
@@ -3018,7 +3054,7 @@ private lemma Th_intPartial_sub
   have h_d_sub_U : T_d ⊆ T_U := by
     intro n hn
     have hn_mem : n ≤ K ∧ (α - β).coeff (g + (n : ℚ) / T) ≠ 0 :=
-      (Set.Finite.mem_toFinset (hs := TfinpropInt p T (α - β) g K)).mp hn
+      (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T (α - β) g K)).mp hn
     have h_sub_eq : (α - β).coeff (g + (n : ℚ) / T) =
         α.coeff (g + (n : ℚ) / T) - β.coeff (g + (n : ℚ) / T) := rfl
     rw [h_sub_eq] at hn_mem
@@ -3028,9 +3064,9 @@ private lemma Th_intPartial_sub
         apply hn_mem.2
         rw [h_α_z, h_β_z, sub_self]
       exact Finset.mem_union_right T_α
-        ((Set.Finite.mem_toFinset (hs := TfinpropInt p T β g K)).mpr ⟨hn_mem.1, h_β_ne⟩)
+        ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β g K)).mpr ⟨hn_mem.1, h_β_ne⟩)
     · exact Finset.mem_union_left T_β
-        ((Set.Finite.mem_toFinset (hs := TfinpropInt p T α g K)).mpr ⟨hn_mem.1, h_α_z⟩)
+        ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α g K)).mpr ⟨hn_mem.1, h_α_z⟩)
   have he_α_U : ∑ n ∈ T_α,
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) =
@@ -3041,12 +3077,12 @@ private lemma Th_intPartial_sub
     intro n hn_U hn_not_α
     have hn_le_K : n ≤ K := by
       rcases Finset.mem_union.mp hn_U with h_α_mem | h_β_mem
-      · exact ((Set.Finite.mem_toFinset (hs := TfinpropInt p T α g K)).mp h_α_mem).1
-      · exact ((Set.Finite.mem_toFinset (hs := TfinpropInt p T β g K)).mp h_β_mem).1
+      · exact ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α g K)).mp h_α_mem).1
+      · exact ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β g K)).mp h_β_mem).1
     have h_α_z : α.coeff (g + (n : ℚ) / T) = 0 := by
       by_contra hne
       exact hn_not_α
-        ((Set.Finite.mem_toFinset (hs := TfinpropInt p T α g K)).mpr ⟨hn_le_K, hne⟩)
+        ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α g K)).mpr ⟨hn_le_K, hne⟩)
     rw [h_α_z]
     simp
   have he_β_U : ∑ n ∈ T_β,
@@ -3059,12 +3095,12 @@ private lemma Th_intPartial_sub
     intro n hn_U hn_not_β
     have hn_le_K : n ≤ K := by
       rcases Finset.mem_union.mp hn_U with h_α_mem | h_β_mem
-      · exact ((Set.Finite.mem_toFinset (hs := TfinpropInt p T α g K)).mp h_α_mem).1
-      · exact ((Set.Finite.mem_toFinset (hs := TfinpropInt p T β g K)).mp h_β_mem).1
+      · exact ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α g K)).mp h_α_mem).1
+      · exact ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β g K)).mp h_β_mem).1
     have h_β_z : β.coeff (g + (n : ℚ) / T) = 0 := by
       by_contra hne
       exact hn_not_β
-        ((Set.Finite.mem_toFinset (hs := TfinpropInt p T β g K)).mpr ⟨hn_le_K, hne⟩)
+        ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β g K)).mpr ⟨hn_le_K, hne⟩)
     rw [h_β_z]
     simp
   have he_d_U : ∑ n ∈ T_d,
@@ -3077,12 +3113,12 @@ private lemma Th_intPartial_sub
     intro n hn_U hn_not_d
     have hn_le_K : n ≤ K := by
       rcases Finset.mem_union.mp hn_U with h_α_mem | h_β_mem
-      · exact ((Set.Finite.mem_toFinset (hs := TfinpropInt p T α g K)).mp h_α_mem).1
-      · exact ((Set.Finite.mem_toFinset (hs := TfinpropInt p T β g K)).mp h_β_mem).1
+      · exact ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α g K)).mp h_α_mem).1
+      · exact ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T β g K)).mp h_β_mem).1
     have h_d_z : (α - β).coeff (g + (n : ℚ) / T) = 0 := by
       by_contra hne
       exact hn_not_d
-        ((Set.Finite.mem_toFinset (hs := TfinpropInt p T (α - β) g K)).mpr ⟨hn_le_K, hne⟩)
+        ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T (α - β) g K)).mpr ⟨hn_le_K, hne⟩)
     rw [h_d_z]
     simp
   rw [e_d, he_d_U, e_α, he_α_U, e_β, he_β_U]
@@ -3117,7 +3153,7 @@ private lemma Th_key
   have h_k_in : k ∈ {j : ℤ | m_b ≤ j ∧ b j ≠ 0} := by
     refine ⟨?_, hbk⟩
     by_contra h_nge
-    push_neg at h_nge
+    push Not at h_nge
     exact hbk (hb_vanish k h_nge)
   have hbset_ne : ({j : ℤ | m_b ≤ j ∧ b j ≠ 0}).Nonempty := ⟨k, h_k_in⟩
   have hbset_bdd : BddBelow {j : ℤ | m_b ≤ j ∧ b j ≠ 0} :=
@@ -3227,7 +3263,7 @@ private lemma Th_key
         apply Finset.sum_eq_zero
         intro n _
         have hn_mem : n.1 ≤ K ∧ α.coeff (γ + (n.1 : ℚ) / T) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := TfinpropInt p T α γ K)).mp n.2
+          (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α γ K)).mp n.2
         exfalso
         apply h_sl_e
         exact ⟨n.1, hn_mem.2⟩
@@ -3266,19 +3302,19 @@ private lemma Th_key
             ((Multiplicative.ofAdd (-m : ℤ) : Multiplicative ℤ) : WithZero _) := by
         intro K _
         simp only [TintPartial]
-        rw [show (∑ n : Set.Finite.toFinset (TfinpropInt p T α γ K),
+        rw [show (∑ n : Set.Finite.toFinset (TfiniteBelowInt p T α γ K),
               (pInvTQ p T) ^ n.1 *
                 algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (γ + (n.1 : ℚ) / T))) =
-            ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T α γ K),
+            ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T α γ K),
               (pInvTQ p T) ^ n *
                 algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (γ + (n : ℚ) / T)) from
-            Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T α γ K))
+            Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T α γ K))
               (f := fun n : ℤ => (pInvTQ p T) ^ n *
                 algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (γ + (n : ℚ) / T)))]
         apply Valuation.map_sum_le
         intro n hn
         have hn_mem : n ≤ K ∧ α.coeff (γ + (n : ℚ) / T) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := TfinpropInt p T α γ K)).mp hn
+          (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α γ K)).mp hn
         have hn_in_slice : n ∈ slice := hn_mem.2
         have hm_le_n : m ≤ n := hm_min n hn_in_slice
         rw [Valuation.map_mul, valued_v_pInvT_zpow (p := p) (T := T) n]
@@ -3324,11 +3360,11 @@ open scoped Pointwise in
 /-- **Phase 3A-iii main assembly.**  T-analogue of
 `exists_canonical_representative` (lines 1841–2515).  Given a T-lifted Hahn
 series `α`, there exists a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with PWO support so
-that `α - from_coeff p T s` is a T-null-series. -/
+that `α - fromCoeff p T s` is a T-null-series. -/
 theorem Texists_canonical_T_representative
     (α : TLiftedPAdicHahnSeries p T) :
     ∃ (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO),
-      α - TLiftedPAdicHahnSeries.from_coeff p T s hspwo ∈ TNullSeriesIdeal p T := by
+      α - TLiftedPAdicHahnSeries.fromCoeff p T s hspwo ∈ TNullSeriesIdeal p T := by
   classical
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
@@ -3420,9 +3456,9 @@ theorem Texists_canonical_T_representative
   have hspwo : (Function.support s).IsPWO :=
     Tsupport_isPWO_of_subset_support_add_natRange p T α hsupp_sub
   refine ⟨s, hspwo, ?_⟩
-  change IsTNullSeries p T (α - TLiftedPAdicHahnSeries.from_coeff p T s hspwo)
+  change IsTNullSeries p T (α - TLiftedPAdicHahnSeries.fromCoeff p T s hspwo)
   intro g
-  set β : TLiftedPAdicHahnSeries p T := TLiftedPAdicHahnSeries.from_coeff p T s hspwo with hβ_def
+  set β : TLiftedPAdicHahnSeries p T := TLiftedPAdicHahnSeries.fromCoeff p T s hspwo with hβ_def
   set γ : ℚ := Int.fract ((T : ℚ) * g) / T with hγ_def
   set n₀ : ℤ := ⌊(T : ℚ) * g⌋ with hn₀_def
   have hg_eq : g = γ + (n₀ : ℚ) / T := by
@@ -3479,24 +3515,24 @@ theorem Texists_canonical_T_representative
       TintPartial p T β' g K = (pInvTQ p T) ^ (-n₀) * TintPartial p T β' γ (K + n₀) := by
     intro β' K
     have hL : TintPartial p T β' g K =
-        ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T β' g K),
+        ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' g K),
           (pInvTQ p T) ^ n *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (g + (n : ℚ) / T)) := by
       simp only [TintPartial]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T β' g K))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β' g K))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (g + (n : ℚ) / T)))
     have hR : TintPartial p T β' γ (K + n₀) =
-        ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T β' γ (K + n₀)),
+        ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)),
           (pInvTQ p T) ^ n *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ + (n : ℚ) / T)) := by
       simp only [TintPartial]
-      exact Finset.sum_attach (s := Set.Finite.toFinset (TfinpropInt p T β' γ (K + n₀)))
+      exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ + (n : ℚ) / T)))
     rw [hL, hR]
-    have h_image : Set.Finite.toFinset (TfinpropInt p T β' γ (K + n₀)) =
-        (Set.Finite.toFinset (TfinpropInt p T β' g K)).image (fun n : ℤ => n + n₀) := by
+    have h_image : Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)) =
+        (Set.Finite.toFinset (TfiniteBelowInt p T β' g K)).image (fun n : ℤ => n + n₀) := by
       ext n'
       simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_setOf_eq]
       constructor
@@ -3576,11 +3612,11 @@ theorem Texists_canonical_T_representative
     rw [Filter.EventuallyEq]
     filter_upwards with K
     exact (Th_intPartial_sub p T α β g K).symm
-  -- Bridge finprop ⇄ finpropInt (T-shifted)
-  have h_finprop_eq_finpropInt :
+  -- Bridge finiteBelow ⇄ finiteBelowInt (T-shifted)
+  have h_finiteBelow_eq_finiteBelowInt :
       ∀ (x : TLiftedPAdicHahnSeries p T) (M : ℕ),
-        (Set.Finite.toFinset (Tfinprop p T x g M) : Finset ℤ) =
-        (Set.Finite.toFinset (TfinpropInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋) : Finset ℤ) := by
+        (Set.Finite.toFinset (TfiniteBelow p T x g M) : Finset ℤ) =
+        (Set.Finite.toFinset (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋) : Finset ℤ) := by
     intro x M
     ext n
     simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
@@ -3609,8 +3645,8 @@ theorem Texists_canonical_T_representative
         field_simp
       rw [hT_eq] at h2'
       linarith
-  have h_finprop_to_intPartial :
-      (fun M : ℕ => ∑ n : Set.Finite.toFinset (Tfinprop p T (α - β) g M),
+  have h_finiteBelow_to_intPartial :
+      (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - β) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
             ((α - β).coeff (g + (n.val : ℚ) / T))) =
@@ -3618,27 +3654,27 @@ theorem Texists_canonical_T_representative
     funext M
     simp only [TintPartial]
     have h_attach_α := Finset.sum_attach
-      (s := Set.Finite.toFinset (Tfinprop p T (α - β) g M))
+      (s := Set.Finite.toFinset (TfiniteBelow p T (α - β) g M))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
     have h_attach_β := Finset.sum_attach
-      (s := Set.Finite.toFinset (TfinpropInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋))
+      (s := Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
         algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
-    rw [show (∑ n : Set.Finite.toFinset (Tfinprop p T (α - β) g M),
+    rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - β) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n.val : ℚ) / T))) =
-      ∑ n ∈ Set.Finite.toFinset (Tfinprop p T (α - β) g M),
+      ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T (α - β) g M),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) from h_attach_α]
     rw [show (∑ n : Set.Finite.toFinset
-          (TfinpropInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
+          (TfiniteBelowInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ (n.1 : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n.1 : ℚ) / T))) =
-      ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
+      ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) from h_attach_β]
-    rw [h_finprop_eq_finpropInt (α - β) M]
+    rw [h_finiteBelow_eq_finiteBelowInt (α - β) M]
   have h_φ : Filter.Tendsto (fun M : ℕ => ⌊(T : ℚ) * ((M : ℚ) - g)⌋) Filter.atTop
       Filter.atTop := by
     apply Filter.tendsto_atTop_atTop.mpr
@@ -3657,7 +3693,7 @@ theorem Texists_canonical_T_representative
     rw [hT_eq] at h_mul
     exact_mod_cast h_mul
   -- Compose
-  rw [h_finprop_to_intPartial]
+  rw [h_finiteBelow_to_intPartial]
   exact h_intPartial_zero.comp h_φ
 
 /-! ### Phase 3B: uniqueness of canonical T-representative -/
@@ -3668,8 +3704,8 @@ expansions are equal. -/
 theorem Tunique_canonical_T_representative
     {s s' : ℚ → Fpbar p}
     (hspwo : (Function.support s).IsPWO) (hspwo' : (Function.support s').IsPWO)
-    (h : TLiftedPAdicHahnSeries.from_coeff p T s hspwo
-        - TLiftedPAdicHahnSeries.from_coeff p T s' hspwo'
+    (h : TLiftedPAdicHahnSeries.fromCoeff p T s hspwo
+        - TLiftedPAdicHahnSeries.fromCoeff p T s' hspwo'
         ∈ TNullSeriesIdeal p T) :
     s = s' := by
   classical
@@ -3678,9 +3714,9 @@ theorem Tunique_canonical_T_representative
     exact_mod_cast Nat.pos_of_ne_zero hT
   have hT_ne : (T : ℚ) ≠ 0 := ne_of_gt hT_pos
   set α  : TLiftedPAdicHahnSeries p T :=
-    TLiftedPAdicHahnSeries.from_coeff p T s  hspwo  with hα_def
+    TLiftedPAdicHahnSeries.fromCoeff p T s  hspwo  with hα_def
   set α' : TLiftedPAdicHahnSeries p T :=
-    TLiftedPAdicHahnSeries.from_coeff p T s' hspwo' with hα'_def
+    TLiftedPAdicHahnSeries.fromCoeff p T s' hspwo' with hα'_def
   change IsTNullSeries p T (α - α') at h
   have hp_ne : pInvTQ p T ≠ 0 := by
     unfold pInvTQ
@@ -3804,12 +3840,12 @@ theorem Tunique_canonical_T_representative
       filter_upwards with K
       exact h_intPartial_sub K
     exact tendsto_nhds_unique hy_d' h_diff
-  -- `y_d = 0` follows from `IsTNullSeries` via the T-shifted `finprop` bridge.
+  -- `y_d = 0` follows from `IsTNullSeries` via the T-shifted `finiteBelow` bridge.
   have h_yd_zero : y_d = 0 := by
-    have h_finprop_eq_finpropInt :
+    have h_finiteBelow_eq_finiteBelowInt :
         ∀ (x : TLiftedPAdicHahnSeries p T) (M : ℕ),
-          (Set.Finite.toFinset (Tfinprop p T x γ M) : Finset ℤ) =
-          (Set.Finite.toFinset (TfinpropInt p T x γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋) : Finset ℤ) := by
+          (Set.Finite.toFinset (TfiniteBelow p T x γ M) : Finset ℤ) =
+          (Set.Finite.toFinset (TfiniteBelowInt p T x γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋) : Finset ℤ) := by
       intro x M
       ext n
       simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
@@ -3836,8 +3872,8 @@ theorem Tunique_canonical_T_representative
           field_simp
         rw [hT_eq] at h2'
         linarith
-    have h_finprop_to_intPartial :
-        (fun M : ℕ => ∑ n : Set.Finite.toFinset (Tfinprop p T (α - α') γ M),
+    have h_finiteBelow_to_intPartial :
+        (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
               ((α - α').coeff (γ + (n.val : ℚ) / T))) =
@@ -3845,29 +3881,29 @@ theorem Tunique_canonical_T_representative
       funext M
       simp only [TintPartial]
       have h_attach_α := Finset.sum_attach
-        (s := Set.Finite.toFinset (Tfinprop p T (α - α') γ M))
+        (s := Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)))
       have h_attach_β := Finset.sum_attach
-        (s := Set.Finite.toFinset (TfinpropInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋))
+        (s := Set.Finite.toFinset (TfiniteBelowInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)))
-      rw [show (∑ n : Set.Finite.toFinset (Tfinprop p T (α - α') γ M),
+      rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n.val : ℚ) / T))) =
-        ∑ n ∈ Set.Finite.toFinset (Tfinprop p T (α - α') γ M),
+        ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M),
           (pInvTQ p T) ^ n *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)) from h_attach_α]
       rw [show (∑ n : Set.Finite.toFinset
-            (TfinpropInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋),
+            (TfiniteBelowInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋),
           (pInvTQ p T) ^ (n.1 : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n.1 : ℚ) / T))) =
-        ∑ n ∈ Set.Finite.toFinset (TfinpropInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋),
+        ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋),
           (pInvTQ p T) ^ n *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)) from h_attach_β]
-      rw [h_finprop_eq_finpropInt (α - α') M]
+      rw [h_finiteBelow_eq_finiteBelowInt (α - α') M]
     have h_at_γ := h γ
-    rw [h_finprop_to_intPartial] at h_at_γ
+    rw [h_finiteBelow_to_intPartial] at h_at_γ
     have h_φ : Filter.Tendsto (fun M : ℕ => ⌊(T : ℚ) * ((M : ℚ) - γ)⌋) Filter.atTop
         Filter.atTop := by
       apply Filter.tendsto_atTop_atTop.mpr
@@ -3919,28 +3955,28 @@ theorem exists_canonical_T_expansion :
     ∀ A : (TLiftedPAdicHahnSeries p T) ⧸ (TNullSeriesIdeal p T),
       ∃! (s : {f : ℚ → Fpbar p // (Function.support f).IsPWO}),
         Ideal.Quotient.ringCon (TNullSeriesIdeal p T)
-          A.out (TLiftedPAdicHahnSeries.from_coeff p T s.val s.prop) := by
+          A.out (TLiftedPAdicHahnSeries.fromCoeff p T s.val s.prop) := by
   intro A
   obtain ⟨s, hspwo, hα⟩ := Texists_canonical_T_representative (p := p) (T := T) A.out
   refine ⟨⟨s, hspwo⟩, ?_, ?_⟩
   · have hmk :
         (Ideal.Quotient.mk (TNullSeriesIdeal p T)) A.out =
           (Ideal.Quotient.mk (TNullSeriesIdeal p T))
-            (TLiftedPAdicHahnSeries.from_coeff p T s hspwo) :=
+            (TLiftedPAdicHahnSeries.fromCoeff p T s hspwo) :=
       Ideal.Quotient.eq.mpr hα
     exact Quotient.exact hmk
   · rintro ⟨s', hspwo'⟩ h'
     have hα' :
-        A.out - TLiftedPAdicHahnSeries.from_coeff p T s' hspwo' ∈ TNullSeriesIdeal p T := by
+        A.out - TLiftedPAdicHahnSeries.fromCoeff p T s' hspwo' ∈ TNullSeriesIdeal p T := by
       have hmk' :
           (Ideal.Quotient.mk (TNullSeriesIdeal p T)) A.out =
             (Ideal.Quotient.mk (TNullSeriesIdeal p T))
-              (TLiftedPAdicHahnSeries.from_coeff p T s' hspwo') :=
+              (TLiftedPAdicHahnSeries.fromCoeff p T s' hspwo') :=
         Quotient.sound h'
       exact Ideal.Quotient.eq.mp hmk'
     have hsub :
-        TLiftedPAdicHahnSeries.from_coeff p T s hspwo -
-          TLiftedPAdicHahnSeries.from_coeff p T s' hspwo' ∈ TNullSeriesIdeal p T := by
+        TLiftedPAdicHahnSeries.fromCoeff p T s hspwo -
+          TLiftedPAdicHahnSeries.fromCoeff p T s' hspwo' ∈ TNullSeriesIdeal p T := by
       have h1 := (TNullSeriesIdeal p T).sub_mem hα' hα
       simpa [sub_sub_sub_cancel_left] using h1
     have hfun : s = s' :=
@@ -3959,7 +3995,7 @@ private lemma Tsupport_nonempty_of_nonzero
   simp only [Subtype.forall, Function.support_nonempty_iff, ne_eq, not_not] at h
   have := (exists_canonical_T_expansion p T x).choose_spec.1
   simp only [Subtype.forall, h] at this
-  suffices h' : (TLiftedPAdicHahnSeries.from_coeff p T (0 : ℚ → Fpbar p) (by simp)) = 0 by
+  suffices h' : (TLiftedPAdicHahnSeries.fromCoeff p T (0 : ℚ → Fpbar p) (by simp)) = 0 by
     simp only [h'] at this
     rw [← Quotient.out_eq x]
     exact Quotient.sound this
@@ -3999,45 +4035,45 @@ private lemma Tnull_series_no_unit_leading
   -- index helper: q + (0 : ℤ)/T = q
   have h_zero_idx : (q + (((0 : ℤ) : ℚ)) / T) = q := by push_cast; ring
   have h_zero_in : ∀ M : ℕ, q ≤ (M : ℚ) →
-      (0 : ℤ) ∈ Set.Finite.toFinset (Tfinprop p T Δ q M) := by
+      (0 : ℤ) ∈ Set.Finite.toFinset (TfiniteBelow p T Δ q M) := by
     intro M hMq
-    apply (Set.Finite.mem_toFinset (hs := Tfinprop p T Δ q M) (a := 0)).2
+    apply (Set.Finite.mem_toFinset (hs := TfiniteBelow p T Δ q M) (a := 0)).2
     refine ⟨?_, ?_⟩
     · rw [h_zero_idx]; exact hMq
     · rw [h_zero_idx]; exact hq_ne
   have h_sum_eq : ∀ M : ℕ, q ≤ (M : ℚ) →
-      Valued.v (∑ n : Set.Finite.toFinset (Tfinprop p T Δ q M),
+      Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p T Δ q M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) =
         ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
     intro M hMq
-    rw [show (∑ n : Set.Finite.toFinset (Tfinprop p T Δ q M),
+    rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T Δ q M),
             (pInvTQ p T) ^ (n.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) =
-        ∑ n ∈ Set.Finite.toFinset (Tfinprop p T Δ q M),
+        ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T Δ q M),
           (pInvTQ p T) ^ n *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)) from
-        Finset.sum_attach (s := Set.Finite.toFinset (Tfinprop p T Δ q M))
+        Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T Δ q M))
           (f := fun n : ℤ => (pInvTQ p T) ^ n *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)))]
-    have h_in : (0 : ℤ) ∈ Set.Finite.toFinset (Tfinprop p T Δ q M) := h_zero_in M hMq
-    rw [show Set.Finite.toFinset (Tfinprop p T Δ q M) =
-        insert (0 : ℤ) ((Set.Finite.toFinset (Tfinprop p T Δ q M)).erase 0) from
+    have h_in : (0 : ℤ) ∈ Set.Finite.toFinset (TfiniteBelow p T Δ q M) := h_zero_in M hMq
+    rw [show Set.Finite.toFinset (TfiniteBelow p T Δ q M) =
+        insert (0 : ℤ) ((Set.Finite.toFinset (TfiniteBelow p T Δ q M)).erase 0) from
         (Finset.insert_erase h_in).symm]
     rw [Finset.sum_insert (Finset.notMem_erase _ _)]
     rw [Valuation.map_add_eq_of_lt_left]
     · rw [h_zero_idx]; exact h_lead_val
-    · have h_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (Tfinprop p T Δ q M)).erase 0,
+    · have h_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (TfiniteBelow p T Δ q M)).erase 0,
             (pInvTQ p T) ^ n *
               algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T))) ≤
           ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
         apply Valuation.map_sum_le
         intro n hn_mem
         have hn_ne_zero : n ≠ 0 := Finset.ne_of_mem_erase hn_mem
-        have hn_in_finset : n ∈ Set.Finite.toFinset (Tfinprop p T Δ q M) :=
+        have hn_in_finset : n ∈ Set.Finite.toFinset (TfiniteBelow p T Δ q M) :=
           (Finset.mem_erase.mp hn_mem).2
         have hn_data : q + (n : ℚ) / T ≤ (M : ℚ) ∧ Δ.coeff (q + (n : ℚ) / T) ≠ 0 :=
-          (Set.Finite.mem_toFinset (hs := Tfinprop p T Δ q M) (a := n)).1 hn_in_finset
+          (Set.Finite.mem_toFinset (hs := TfiniteBelow p T Δ q M) (a := n)).1 hn_in_finset
         have hn_pos : 1 ≤ n := by
           rcases Int.lt_or_le n 0 with hlt | hle
           · exfalso
@@ -4070,7 +4106,7 @@ private lemma Tnull_series_no_unit_leading
         nhds (0 : ℚᵘⁿ_[p,T]) :=
     Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   have h_evtl_close : ∀ᶠ M : ℕ in Filter.atTop,
-      Valued.v (∑ n : Set.Finite.toFinset (Tfinprop p T Δ q M),
+      Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p T Δ q M),
           (pInvTQ p T) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) <
         ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) :=
@@ -4091,7 +4127,7 @@ apply to `ℤᵘⁿ_[p,T]`). -/
 private lemma Tcanonical_leading_coeff_isUnit
     {s : ℚ → Fpbar p} (hspwo : (Function.support s).IsPWO)
     (hsne : (Function.support s).Nonempty) :
-    IsUnit ((TLiftedPAdicHahnSeries.from_coeff p T s hspwo).coeff
+    IsUnit ((TLiftedPAdicHahnSeries.fromCoeff p T s hspwo).coeff
       (hspwo.isWF.min hsne)) := by
   set q₀ := hspwo.isWF.min hsne with hq₀_def
   have hq₀_in : q₀ ∈ Function.support s := hspwo.isWF.min_mem hsne
@@ -4122,7 +4158,7 @@ private lemma Texists_inverse_of_nonzero
   have hsne : (Function.support s_A).Nonempty :=
     Tsupport_nonempty_of_nonzero p T A hA
   set f : TLiftedPAdicHahnSeries p T :=
-    TLiftedPAdicHahnSeries.from_coeff p T s_A hspwo with hf_def
+    TLiftedPAdicHahnSeries.fromCoeff p T s_A hspwo with hf_def
   have hmk_f : (Ideal.Quotient.mk (TNullSeriesIdeal p T)) f = A := by
     have h := (exists_canonical_T_expansion p T A).choose_spec.1
     have h_eq : (Ideal.Quotient.mk (TNullSeriesIdeal p T)) A.out =
@@ -4725,7 +4761,7 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
       ((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero _) := by
     have hT_ne : T ≠ 0 := NeZero.ne T
     by_contra h_not_lt
-    push_neg at h_not_lt
+    push Not at h_not_lt
     have h_pow_le : (((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero _))^T ≤
         (Valued.v (QpUn_proj p T j c))^T :=
       pow_le_pow_left₀ (le_of_lt h_rhs_pos) h_not_lt T
@@ -4752,14 +4788,14 @@ private lemma continuous_QpUn_proj (j : Fin T) :
 -- partial sum at base g + r/T. Reindex via n = T*m + r.
 private lemma TLifted_partial_sum_split
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
-    (∑ n : Set.Finite.toFinset (Tfinprop p T (Lifted_to_TLifted p T x) g M),
+    (∑ n : Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
             ((Lifted_to_TLifted p T x).coeff (g + (n.val : ℚ) / T)))
     =
     ∑ r : Fin T, (pInvTQ p T) ^ (r.val : ℕ) *
       algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (∑ m : Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M),
+        (∑ m : Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M),
             ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
                 (x.coeff ((g + (r.val : ℚ) / T) + (m.val : ℚ)))) := by
@@ -4770,7 +4806,7 @@ private lemma TLifted_partial_sum_split
   have hpInvTQ_ne : (pInvTQ p T) ≠ 0 := pInvTQ_ne_zero p T
   -- Convert sums-over-attach to sums-over-finset.
   rw [Finset.univ_eq_attach, Finset.sum_attach
-    (Set.Finite.toFinset (Tfinprop p T (Lifted_to_TLifted p T x) g M))
+    (Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M))
     (fun n => (pInvTQ p T) ^ (n : ℤ) *
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
         ((Lifted_to_TLifted p T x).coeff (g + (n : ℚ) / T)))]
@@ -4778,18 +4814,18 @@ private lemma TLifted_partial_sum_split
   have h_RHS : ∀ r : Fin T,
       (pInvTQ p T) ^ (r.val : ℕ) *
         algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-          (∑ m : Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M),
+          (∑ m : Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M),
             ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m.val : ℤ) *
               algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
                 (x.coeff ((g + (r.val : ℚ) / T) + (m.val : ℚ)))) =
-      ∑ m ∈ Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M),
+      ∑ m ∈ Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M),
         (pInvTQ p T) ^ ((T : ℤ) * (m : ℤ) + (r.val : ℤ)) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
             ((Lifted_to_TLifted p T x).coeff
               (g + (((T : ℤ) * (m : ℤ) + (r.val : ℤ) : ℤ) : ℚ) / T)) := by
     intro r
     rw [Finset.univ_eq_attach, Finset.sum_attach
-      (Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M))
+      (Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M))
       (fun m => ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m : ℤ) *
         algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ))))]
     rw [map_sum]
@@ -4837,7 +4873,7 @@ private lemma TLifted_partial_sum_split
   -- Apply Finset.sum_sigma to combine the RHS into a sum over a sigma type,
   -- then use Finset.sum_bij with the bijection n ↔ (r, m) where n = T*m + r.val.
   rw [← Finset.sum_sigma Finset.univ
-      (fun r : Fin T => Set.Finite.toFinset (finprop x (g + (r.val : ℚ) / T) M))
+      (fun r : Fin T => Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M))
       (fun rm : Σ _ : Fin T, ℤ =>
         (pInvTQ p T) ^ ((T : ℤ) * rm.2 + (rm.1.val : ℤ)) *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
@@ -4847,7 +4883,7 @@ private lemma TLifted_partial_sum_split
   classical
   have hT_natpos : (0 : ℕ) < T := Nat.pos_of_neZero T
   refine Finset.sum_bij
-      (fun n (_ : n ∈ Set.Finite.toFinset (Tfinprop p T (Lifted_to_TLifted p T x) g M)) =>
+      (fun n (_ : n ∈ Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M)) =>
         (⟨⟨(n.emod (T : ℤ)).toNat, ?_⟩, n.ediv (T : ℤ)⟩ : Σ _ : Fin T, ℤ)) ?_ ?_ ?_ ?_
   · -- (n.emod T).toNat < T
     have hmod_nn : 0 ≤ n.emod (T : ℤ) := Int.emod_nonneg n hT_ne
@@ -4959,13 +4995,13 @@ private lemma TLifted_partial_sum_split
 -- Opaque abbreviations for the K₀-side and K-side partial sums. Wrapping
 -- the sums in `noncomputable def`s prevents Lean from re-elaborating the
 -- `Set.Finite.toFinset`-based index sets on every defeq check during the long
--- `Tendsto.comp` / `tendsto_finset_sum` chains used in Lemma 4.8 below.
+-- `Tendsto.comp` / `tendsto_finsetSum` chains used in Lemma 4.8 below.
 
 /-- K₀-side partial sum (Poonen `S_M(h; x)`).  Definitionally matches the body of
 `IsNullSeries x` at base `h`, step `M`. -/
 private noncomputable def S_partial
     (x : LiftedPAdicHahnSeries p) (h : ℚ) (M : ℕ) : ℚᵘⁿ_[p] :=
-  ∑ n : Set.Finite.toFinset (finprop x h M),
+  ∑ n : Set.Finite.toFinset (finiteBelow x h M),
     ((p : ℕ) : ℚᵘⁿ_[p]) ^ (n.val : ℤ) *
       algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff (h + n.val))
 
@@ -4973,7 +5009,7 @@ private noncomputable def S_partial
 `IsTNullSeries (Lifted_to_TLifted p T x)` at base `g`, step `M`. -/
 private noncomputable def T_partial
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) : ℚᵘⁿ_[p,T] :=
-  ∑ n : Set.Finite.toFinset (Tfinprop p T (Lifted_to_TLifted p T x) g M),
+  ∑ n : Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M),
     (pInvTQ p T) ^ (n.val : ℤ) *
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
         ((Lifted_to_TLifted p T x).coeff (g + (n.val : ℚ) / T))
@@ -5004,7 +5040,7 @@ private lemma tendsto_T_partial_of_null
   rw [hf]
   have hzero : (0 : ℚᵘⁿ_[p,T]) = ∑ _r : Fin T, (0 : ℚᵘⁿ_[p,T]) := by simp
   rw [hzero]
-  refine tendsto_finset_sum _ ?_
+  refine tendsto_finsetSum _ ?_
   intro r _
   -- For each r: π^r · ι̃(S_partial p x (g + r/T) M) → π^r · 0 = 0.
   have h_inner : Filter.Tendsto
@@ -5047,12 +5083,13 @@ private lemma tendsto_S_partial_of_T_null
     simp
   exact h_proj.congr h_eq
 
--- **Lemma 4.7.**  Pulling back along the inclusion
--- `Lifted_to_TLifted : LiftedPAdicHahnSeries p ↪ TLiftedPAdicHahnSeries p T` gives
--- `TNullSeriesIdeal ∩ LiftedPAdicHahnSeries = NullSeriesIdeal`.
--- via the opaque-abbreviation strategy (see `S_partial`, `T_partial`, and the four
+-- Proved via the opaque-abbreviation strategy (see `S_partial`, `T_partial`, and the four
 -- supporting private lemmas above).
 open Topology Filter in
+/-- **Lemma 4.7.** Pulling back the `T`-null-series ideal along the inclusion
+`Lifted_to_TLifted : W(𝔽ᵃ_[p])((t^ℚ)) ↪ W(𝔽ᵃ_[p])[p^{1/T}]((t^ℚ))` recovers the null-series ideal:
+`TNullSeriesIdeal ∩ image = NullSeriesIdeal`. This compatibility is what lets the isomorphism `σ`
+descend to the quotient. -/
 theorem TNullSeriesIdeal_inter_image :
     ∀ x : LiftedPAdicHahnSeries p,
       Lifted_to_TLifted p T x ∈ TNullSeriesIdeal p T ↔ x ∈ NullSeriesIdeal p := by
@@ -5090,7 +5127,7 @@ private lemma LiftedPAdic_shift_coeff (δ : ℚ) (z : LiftedPAdicHahnSeries p) (
 /-- The i-th `R₀`-coordinate projection of `y : TLifted` viewed as a `LiftedPAdic`
 Hahn series. Coefficient at `q` is `OQpUn_proj p T i (y.coeff q)`. Support is
 `⊆ y.support` because `OQpUn_proj` sends 0 to 0. -/
-private noncomputable def s_proj
+private noncomputable def sProj
     (y : TLiftedPAdicHahnSeries p T) (i : Fin T) : LiftedPAdicHahnSeries p where
   coeff q := OQpUn_proj p T i (y.coeff q)
   isPWO_support' := by
@@ -5100,22 +5137,22 @@ private noncomputable def s_proj
     change OQpUn_proj p T i (y.coeff q) = 0
     rw [show y.coeff q = 0 from h_y_zero, map_zero]
 
-private lemma s_proj_coeff
+private lemma sProj_coeff
     (y : TLiftedPAdicHahnSeries p T) (i : Fin T) (q : ℚ) :
-    (s_proj p T y i).coeff q = OQpUn_proj p T i (y.coeff q) := rfl
+    (sProj p T y i).coeff q = OQpUn_proj p T i (y.coeff q) := rfl
 
 /-- The "linear-shift element": `pInvT^i` at index 0 minus `1` at index `i.val/T`.
 This element has at most two non-zero coefficients, and lies in `TNullSeriesIdeal`. -/
-private noncomputable def linear_shift_elt
+private noncomputable def linearShiftElt
     (i : Fin T) : TLiftedPAdicHahnSeries p T :=
   HahnSeries.single 0 ((pInvT p T) ^ (i.val)) -
     HahnSeries.single ((i.val : ℚ) / T) 1
 
 omit [NeZero T] in
-/-- For `i = 0`, `linear_shift_elt 0 = 0`. -/
-private lemma linear_shift_elt_eq_zero_of_zero (i : Fin T) (hi : i.val = 0) :
-    linear_shift_elt p T i = 0 := by
-  unfold linear_shift_elt
+/-- For `i = 0`, `linearShiftElt 0 = 0`. -/
+private lemma linearShiftElt_eq_zero_of_zero (i : Fin T) (hi : i.val = 0) :
+    linearShiftElt p T i = 0 := by
+  unfold linearShiftElt
   rw [hi]
   simp
 
@@ -5135,66 +5172,66 @@ private lemma zero_ne_iT (i : Fin T) (hi : i.val ≠ 0) :
     · exact absurd hT_zero hT_pos.ne'
   exact_mod_cast hi_q
 
-/-- Coefficient of `linear_shift_elt` at index `0`: `(pInvT)^i` (when `i.val ≠ 0`). -/
-private lemma linear_shift_elt_coeff_zero (i : Fin T) (hi : i.val ≠ 0) :
-    (linear_shift_elt p T i).coeff 0 = (pInvT p T) ^ (i.val) := by
-  unfold linear_shift_elt
+/-- Coefficient of `linearShiftElt` at index `0`: `(pInvT)^i` (when `i.val ≠ 0`). -/
+private lemma linearShiftElt_coeff_zero (i : Fin T) (hi : i.val ≠ 0) :
+    (linearShiftElt p T i).coeff 0 = (pInvT p T) ^ (i.val) := by
+  unfold linearShiftElt
   rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_same,
     HahnSeries.coeff_single_of_ne (zero_ne_iT T i hi)]
   ring
 
-/-- Coefficient of `linear_shift_elt` at index `i.val/T`: `-1` (when `i.val ≠ 0`). -/
-private lemma linear_shift_elt_coeff_iT (i : Fin T) (hi : i.val ≠ 0) :
-    (linear_shift_elt p T i).coeff ((i.val : ℚ) / T) = -1 := by
-  unfold linear_shift_elt
+/-- Coefficient of `linearShiftElt` at index `i.val/T`: `-1` (when `i.val ≠ 0`). -/
+private lemma linearShiftElt_coeff_iT (i : Fin T) (hi : i.val ≠ 0) :
+    (linearShiftElt p T i).coeff ((i.val : ℚ) / T) = -1 := by
+  unfold linearShiftElt
   rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_same,
     HahnSeries.coeff_single_of_ne (zero_ne_iT T i hi).symm]
   ring
 
 omit [NeZero T] in
-/-- Coefficient of `linear_shift_elt` is zero outside the support `{0, i.val/T}`. -/
-private lemma linear_shift_elt_coeff_other
+/-- Coefficient of `linearShiftElt` is zero outside the support `{0, i.val/T}`. -/
+private lemma linearShiftElt_coeff_other
     (i : Fin T) (q : ℚ) (h0 : q ≠ 0) (hi : q ≠ (i.val : ℚ) / T) :
-    (linear_shift_elt p T i).coeff q = 0 := by
-  unfold linear_shift_elt
+    (linearShiftElt p T i).coeff q = 0 := by
+  unfold linearShiftElt
   rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_of_ne h0,
     HahnSeries.coeff_single_of_ne hi, sub_zero]
 
-/-- K-side partial sum for `linear_shift_elt` at base `g`, step `M`.  Definitionally matches
-the body of `IsTNullSeries (linear_shift_elt p T i)` at `(g, M)`.  Wrapping the sum in an
+/-- K-side partial sum for `linearShiftElt` at base `g`, step `M`.  Definitionally matches
+the body of `IsTNullSeries (linearShiftElt p T i)` at `(g, M)`.  Wrapping the sum in an
 opaque `private noncomputable def` prevents Lean from re-elaborating the
 `Set.Finite.toFinset`-based index sets on every defeq check. -/
-private noncomputable def linear_shift_partial
+private noncomputable def linearShiftPartial
     (i : Fin T) (g : ℚ) (M : ℕ) : ℚᵘⁿ_[p,T] :=
-  ∑ n : Set.Finite.toFinset (Tfinprop p T (linear_shift_elt p T i) g M),
+  ∑ n : Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M),
     (pInvTQ p T) ^ (n.val : ℤ) *
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-        ((linear_shift_elt p T i).coeff (g + (n.val : ℚ) / T))
+        ((linearShiftElt p T i).coeff (g + (n.val : ℚ) / T))
 
--- **Bridge.** Unfolding `IsTNullSeries (linear_shift_elt p T i)` to the opaque partial-sum
+-- **Bridge.** Unfolding `IsTNullSeries (linearShiftElt p T i)` to the opaque partial-sum
 -- form.
 open Topology Filter in
-private lemma isTNullSeries_linear_shift_elt_iff (i : Fin T) :
-    IsTNullSeries p T (linear_shift_elt p T i)
-      ↔ ∀ g, Filter.Tendsto (fun M => linear_shift_partial p T i g M)
+private lemma isTNullSeries_linearShiftElt_iff (i : Fin T) :
+    IsTNullSeries p T (linearShiftElt p T i)
+      ↔ ∀ g, Filter.Tendsto (fun M => linearShiftPartial p T i g M)
           Filter.atTop (𝓝 0) := Iff.rfl
 
-/-- **The key analytic fact.**  For every `g`, the partial sum of `linear_shift_elt i`
+/-- **The key analytic fact.**  For every `g`, the partial sum of `linearShiftElt i`
 at base `g` is eventually zero (for `M ≥ ⌈i.val/T⌉`).  The proof case-splits on whether
 `gT ∈ ℤ`: if no, the support condition forces an empty index set; if yes, the index
 set is `{n_0, n_1}` with `n_1 = n_0 + i.val`, and the two terms cancel exactly. -/
-private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
-    ∀ᶠ M : ℕ in Filter.atTop, linear_shift_partial p T i g M = 0 := by
+private lemma linearShiftPartial_eventually_zero (i : Fin T) (g : ℚ) :
+    ∀ᶠ M : ℕ in Filter.atTop, linearShiftPartial p T i g M = 0 := by
   by_cases hi : i.val = 0
-  · -- Case `i.val = 0`: linear_shift_elt = 0, so coefficient is identically zero.
-    have h_pt : ∀ q : ℚ, (linear_shift_elt p T i).coeff q = 0 := by
+  · -- Case `i.val = 0`: linearShiftElt = 0, so coefficient is identically zero.
+    have h_pt : ∀ q : ℚ, (linearShiftElt p T i).coeff q = 0 := by
       intro q
-      unfold linear_shift_elt
+      unfold linearShiftElt
       rw [hi]
       simp
     apply Filter.Eventually.of_forall
     intro M
-    unfold linear_shift_partial
+    unfold linearShiftPartial
     apply Finset.sum_eq_zero
     rintro n -
     rw [h_pt, map_zero, mul_zero]
@@ -5211,12 +5248,12 @@ private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
     linarith
   have hi_ne_zero_q : (0 : ℚ) ≠ (i.val : ℚ) / T := zero_ne_iT T i hi
   -- Convert attach sum to ordinary sum.
-  unfold linear_shift_partial
+  unfold linearShiftPartial
   rw [Finset.univ_eq_attach, Finset.sum_attach
-    (Set.Finite.toFinset (Tfinprop p T (linear_shift_elt p T i) g M))
+    (Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M))
     (fun n => (pInvTQ p T) ^ (n : ℤ) *
       algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-        ((linear_shift_elt p T i).coeff (g + (n : ℚ) / T)))]
+        ((linearShiftElt p T i).coeff (g + (n : ℚ) / T)))]
   -- Now case-split on whether `gT ∈ ℤ`.
   by_cases hgT : ∃ k : ℤ, g + (k : ℚ) / T = 0
   · -- Case `gT ∈ ℤ`: there is `n_0` with `g + n_0/T = 0`. Set `n_1 = n_0 + i.val`.
@@ -5238,8 +5275,8 @@ private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
         have : (i.val : ℚ) = (i.val : ℚ) / T * T := by field_simp
         rw [this, h_div_zero, zero_mul]
       exact hi (by exact_mod_cast hi_zero)
-    -- Show Tfinprop = {n_0, n_1}.
-    have h_finprop : Set.Finite.toFinset (Tfinprop p T (linear_shift_elt p T i) g M)
+    -- Show TfiniteBelow = {n_0, n_1}.
+    have h_finiteBelow : Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M)
         = ({n_0, n_1} : Finset ℤ) := by
       ext n
       simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq,
@@ -5247,10 +5284,10 @@ private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
       constructor
       · rintro ⟨_, h_coeff⟩
         by_contra h_not
-        push_neg at h_not
+        push Not at h_not
         obtain ⟨hn_0', hn_1'⟩ := h_not
         apply h_coeff
-        apply linear_shift_elt_coeff_other p T i
+        apply linearShiftElt_coeff_other p T i
         · intro h_eq_0
           apply hn_0'
           have h_arg : g + (n : ℚ) / T = g + (n_0 : ℚ) / T := by rw [h_eq_0, hn_0]
@@ -5270,15 +5307,15 @@ private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
       · rintro (rfl | rfl)
         · refine ⟨?_, ?_⟩
           · rw [hn_0]; exact_mod_cast Nat.zero_le M
-          · rw [hn_0, linear_shift_elt_coeff_zero p T i hi]
+          · rw [hn_0, linearShiftElt_coeff_zero p T i hi]
             exact pow_ne_zero _ (pInvT_ne_zero p T)
         · refine ⟨?_, ?_⟩
           · rw [hn_1]; exact hi_le_M
-          · rw [hn_1, linear_shift_elt_coeff_iT p T i hi]
+          · rw [hn_1, linearShiftElt_coeff_iT p T i hi]
             exact neg_ne_zero.mpr one_ne_zero
-    rw [h_finprop, Finset.sum_pair hn_0_ne_n_1]
-    rw [hn_0, hn_1, linear_shift_elt_coeff_zero p T i hi,
-      linear_shift_elt_coeff_iT p T i hi]
+    rw [h_finiteBelow, Finset.sum_pair hn_0_ne_n_1]
+    rw [hn_0, hn_1, linearShiftElt_coeff_zero p T i hi,
+      linearShiftElt_coeff_iT p T i hi]
     -- Goal: (pInvTQ)^n_0 * algMap(pInvT^i) + (pInvTQ)^n_1 * algMap(-1) = 0
     have h_alg_pInvT_pow : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((pInvT p T) ^ (i.val))
         = (pInvTQ p T) ^ (i.val : ℤ) := by
@@ -5292,14 +5329,14 @@ private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
         = (pInvTQ p T) ^ (n_1 : ℤ) by
       rw [← zpow_add₀ (pInvTQ_ne_zero p T), hn_1_def]]
     ring
-  · -- Case `gT ∉ ℤ`: Tfinprop is empty.
-    have h_empty : Set.Finite.toFinset (Tfinprop p T (linear_shift_elt p T i) g M) = ∅ := by
+  · -- Case `gT ∉ ℤ`: TfiniteBelow is empty.
+    have h_empty : Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M) = ∅ := by
       ext n
       simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.notMem_empty,
         iff_false, not_and]
       intro _ h_coeff
       apply h_coeff
-      apply linear_shift_elt_coeff_other p T i
+      apply linearShiftElt_coeff_other p T i
       · intro h_eq
         apply hgT
         exact ⟨n, h_eq⟩
@@ -5312,63 +5349,63 @@ private lemma linear_shift_partial_eventually_zero (i : Fin T) (g : ℚ) :
         rw [h_split, h_eq, sub_self]
     rw [h_empty, Finset.sum_empty]
 
-/-- **Sub-lemma:** `linear_shift_elt i ∈ TNullSeriesIdeal` for every `i : Fin T`. -/
-private lemma linear_shift_elt_mem_TNullSeriesIdeal (i : Fin T) :
-    linear_shift_elt p T i ∈ TNullSeriesIdeal p T := by
-  rw [show (linear_shift_elt p T i ∈ TNullSeriesIdeal p T)
-      ↔ IsTNullSeries p T (linear_shift_elt p T i) from Iff.rfl]
-  rw [isTNullSeries_linear_shift_elt_iff]
+/-- **Sub-lemma:** `linearShiftElt i ∈ TNullSeriesIdeal` for every `i : Fin T`. -/
+private lemma linearShiftElt_mem_TNullSeriesIdeal (i : Fin T) :
+    linearShiftElt p T i ∈ TNullSeriesIdeal p T := by
+  rw [show (linearShiftElt p T i ∈ TNullSeriesIdeal p T)
+      ↔ IsTNullSeries p T (linearShiftElt p T i) from Iff.rfl]
+  rw [isTNullSeries_linearShiftElt_iff]
   intro g
   -- The partial sum is eventually zero, so it tends to 0.
   refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℚᵘⁿ_[p,T])))
-  filter_upwards [linear_shift_partial_eventually_zero p T i g] with M hM
+  filter_upwards [linearShiftPartial_eventually_zero p T i g] with M hM
   exact hM.symm
 
 /-- The reconstruction of `x` from `y`: the `R₀`-projection-shift of `y`. -/
-private noncomputable def x_from_y
+private noncomputable def xFromY
     (y : TLiftedPAdicHahnSeries p T) : LiftedPAdicHahnSeries p :=
-  ∑ i : Fin T, LiftedPAdic_shift (p := p) ((i.val : ℚ) / T) (s_proj p T y i)
+  ∑ i : Fin T, LiftedPAdic_shift (p := p) ((i.val : ℚ) / T) (sProj p T y i)
 
 /-- **The key coefficient identity:** for every `q ∈ ℚ`,
-`(y - ι(x_from_y y)).coeff q = Σ_i (linear_shift_elt i * ι(s_proj y i)).coeff q`. -/
+`(y - ι(xFromY y)).coeff q = Σ_i (linearShiftElt i * ι(sProj y i)).coeff q`. -/
 private lemma coeff_identity_n
     (y : TLiftedPAdicHahnSeries p T) (q : ℚ) :
-    (y - Lifted_to_TLifted p T (x_from_y p T y)).coeff q
+    (y - Lifted_to_TLifted p T (xFromY p T y)).coeff q
       = ∑ i : Fin T,
-          (linear_shift_elt p T i * Lifted_to_TLifted p T (s_proj p T y i)).coeff q := by
-  -- RHS = Σ_i ((pInvT)^i * OQpUn_embd((s_proj y i).coeff q)
-  --             - OQpUn_embd((s_proj y i).coeff (q - i/T)))
+          (linearShiftElt p T i * Lifted_to_TLifted p T (sProj p T y i)).coeff q := by
+  -- RHS = Σ_i ((pInvT)^i * OQpUn_embd((sProj y i).coeff q)
+  --             - OQpUn_embd((sProj y i).coeff (q - i/T)))
   have h_term : ∀ i : Fin T,
-      (linear_shift_elt p T i * Lifted_to_TLifted p T (s_proj p T y i)).coeff q
+      (linearShiftElt p T i * Lifted_to_TLifted p T (sProj p T y i)).coeff q
         = (pInvT p T) ^ i.val * OQpUn_embd p T (OQpUn_proj p T i (y.coeff q))
             - OQpUn_embd p T (OQpUn_proj p T i (y.coeff (q - (i.val : ℚ) / T))) := by
     intro i
-    unfold linear_shift_elt
+    unfold linearShiftElt
     rw [show ((HahnSeries.single 0 ((pInvT p T) ^ (i.val))
           - HahnSeries.single ((i.val : ℚ) / T) 1)
-        * Lifted_to_TLifted p T (s_proj p T y i))
+        * Lifted_to_TLifted p T (sProj p T y i))
         = HahnSeries.single 0 ((pInvT p T) ^ (i.val))
-            * Lifted_to_TLifted p T (s_proj p T y i)
+            * Lifted_to_TLifted p T (sProj p T y i)
           - HahnSeries.single ((i.val : ℚ) / T) (1 : ℤᵘⁿ_[p,T])
-            * Lifted_to_TLifted p T (s_proj p T y i) from by ring]
+            * Lifted_to_TLifted p T (sProj p T y i) from by ring]
     rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_mul, HahnSeries.coeff_single_mul,
       sub_zero, one_mul]
-    rw [Lifted_to_TLifted_coeff, Lifted_to_TLifted_coeff, s_proj_coeff, s_proj_coeff]
+    rw [Lifted_to_TLifted_coeff, Lifted_to_TLifted_coeff, sProj_coeff, sProj_coeff]
   -- LHS expands via OQpUn_basis_decomp.
   rw [HahnSeries.coeff_sub, Lifted_to_TLifted_coeff]
-  unfold x_from_y
+  unfold xFromY
   rw [HahnSeries.coeff_sum, map_sum]
-  -- LHS: y.coeff q - Σ_i OQpUn_embd ((s_proj y i).coeff (q - i/T))
+  -- LHS: y.coeff q - Σ_i OQpUn_embd ((sProj y i).coeff (q - i/T))
   -- Apply OQpUn_basis_decomp to y.coeff q:
   conv_lhs => rw [OQpUn_basis_decomp p T (y.coeff q)]
   rw [← Finset.sum_sub_distrib]
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [h_term i]
   -- Goal: (pInvT p T) ^ i.val * OQpUn_embd .. y.coeff q
-  --   - OQpUn_embd ((LiftedPAdic_shift (i.val/T) (s_proj y i)).coeff q)
+  --   - OQpUn_embd ((LiftedPAdic_shift (i.val/T) (sProj y i)).coeff q)
   --   = (pInvT p T) ^ i.val * OQpUn_embd .. y.coeff q
   --   - OQpUn_embd (OQpUn_proj i (y.coeff (q - i.val/T)))
-  -- Reduces to: LiftedPAdic_shift δ z .coeff q = z.coeff (q - δ), and s_proj.coeff = OQpUn_proj.
+  -- Reduces to: LiftedPAdic_shift δ z .coeff q = z.coeff (q - δ), and sProj.coeff = OQpUn_proj.
   rfl
 
 /-- **Lemma 4.8.**  The image of `Lifted_to_TLifted` together with `TNullSeriesIdeal` spans
@@ -5377,28 +5414,28 @@ for every `y ∈ TLiftedPAdicHahnSeries p T`, there exist `x ∈ LiftedPAdicHahn
 `n ∈ TNullSeriesIdeal p T` with `y = Lifted_to_TLifted x + n`.
 
 The proof uses the linear-shift-element trick. We set
-`x := Σ_i shift_{i/T} (s_proj y i)` and `n := y - ι(x)`, where `s_proj y i` is the i-th
-`R₀`-coordinate projection of `y`.  Coefficient-wise, `n = Σ_i (linear_shift_elt i) · ι(s_proj y i)`
-and each summand lies in `TNullSeriesIdeal` because `linear_shift_elt i ∈ TNullSeriesIdeal`
+`x := Σ_i shift_{i/T} (sProj y i)` and `n := y - ι(x)`, where `sProj y i` is the i-th
+`R₀`-coordinate projection of `y`.  Coefficient-wise, `n = Σ_i (linearShiftElt i) · ι(sProj y i)`
+and each summand lies in `TNullSeriesIdeal` because `linearShiftElt i ∈ TNullSeriesIdeal`
 (its partial sum is eventually zero) and `TNullSeriesIdeal` is closed under multiplication. -/
 theorem range_lifted_add_TNull :
     ∀ y : TLiftedPAdicHahnSeries p T,
       ∃ x : LiftedPAdicHahnSeries p, ∃ n : TLiftedPAdicHahnSeries p T,
         n ∈ TNullSeriesIdeal p T ∧ y = Lifted_to_TLifted p T x + n := by
   intro y
-  refine ⟨x_from_y p T y, y - Lifted_to_TLifted p T (x_from_y p T y), ?_, ?_⟩
+  refine ⟨xFromY p T y, y - Lifted_to_TLifted p T (xFromY p T y), ?_, ?_⟩
   · -- n ∈ TNullSeriesIdeal
     have h_decomp :
-        y - Lifted_to_TLifted p T (x_from_y p T y)
+        y - Lifted_to_TLifted p T (xFromY p T y)
           = ∑ i : Fin T,
-              linear_shift_elt p T i * Lifted_to_TLifted p T (s_proj p T y i) := by
+              linearShiftElt p T i * Lifted_to_TLifted p T (sProj p T y i) := by
       ext q
       rw [coeff_identity_n p T y q, HahnSeries.coeff_sum]
     rw [h_decomp]
     apply Submodule.sum_mem
     intro i _
     exact (TNullSeriesIdeal p T).mul_mem_right _
-      (linear_shift_elt_mem_TNullSeriesIdeal p T i)
+      (linearShiftElt_mem_TNullSeriesIdeal p T i)
   · -- y = ι(x) + (y - ι(x))
     abel
 
@@ -5410,20 +5447,23 @@ theorem range_lifted_add_TNull :
 `Lifted_to_TLifted : LiftedPAdicHahnSeries p →+* TLiftedPAdicHahnSeries p T`
 through the quotient by `NullSeriesIdeal p`.  The lifting kernel condition is the
 (⇐) direction of Lemma 4.7 (`TNullSeriesIdeal_inter_image`). -/
-private noncomputable def σ_lift : 𝕃_[p] →+* 𝕃_[p,T] :=
+noncomputable def σ_lift : 𝕃_[p] →+* 𝕃_[p,T] :=
   Ideal.Quotient.lift (NullSeriesIdeal p)
     ((Ideal.Quotient.mk (TNullSeriesIdeal p T)).comp (Lifted_to_TLifted p T))
     (fun x hx => by
       rw [RingHom.comp_apply, Ideal.Quotient.eq_zero_iff_mem]
       exact (TNullSeriesIdeal_inter_image p T x).mpr hx)
 
-private lemma σ_lift_mk (x : LiftedPAdicHahnSeries p) :
+/-- Computation rule for `σ_lift` on quotient classes: it sends the class of `x` to the class of its
+image `Lifted_to_TLifted x`. -/
+lemma σ_lift_mk (x : LiftedPAdicHahnSeries p) :
     σ_lift p T (Ideal.Quotient.mk (NullSeriesIdeal p) x) =
       Ideal.Quotient.mk (TNullSeriesIdeal p T) (Lifted_to_TLifted p T x) := by
   change Ideal.Quotient.lift _ _ _ _ = _
   rw [Ideal.Quotient.lift_mk, RingHom.comp_apply]
 
-private lemma σ_lift_injective : Function.Injective (σ_lift p T) := by
+/-- The lifted map `σ_lift : 𝕃_[p] → 𝕃_[p,T]` is injective. -/
+lemma σ_lift_injective : Function.Injective (σ_lift p T) := by
   intro f₁ f₂ h
   obtain ⟨x₁, rfl⟩ := Ideal.Quotient.mk_surjective f₁
   obtain ⟨x₂, rfl⟩ := Ideal.Quotient.mk_surjective f₂
@@ -5433,7 +5473,9 @@ private lemma σ_lift_injective : Function.Injective (σ_lift p T) := by
   rw [Ideal.Quotient.eq]
   exact (TNullSeriesIdeal_inter_image p T (x₁ - x₂)).mp h
 
-private lemma σ_lift_surjective : Function.Surjective (σ_lift p T) := by
+/-- The lifted map `σ_lift : 𝕃_[p] → 𝕃_[p,T]` is surjective; with injectivity this makes `σ` a ring
+isomorphism. -/
+lemma σ_lift_surjective : Function.Surjective (σ_lift p T) := by
   intro g
   obtain ⟨y, rfl⟩ := Ideal.Quotient.mk_surjective g
   obtain ⟨x, n, hn, hxy⟩ := range_lifted_add_TNull p T y
@@ -5445,14 +5487,14 @@ private lemma σ_lift_surjective : Function.Surjective (σ_lift p T) := by
   rw [Ideal.Quotient.eq_zero_iff_mem.mpr hn, add_zero]
 
 -- The natural inclusion `Lifted_to_TLifted` carries the Teichmüller-style
--- `from_coeff` constructor of the K₀-side to the K-side: for any
+-- `fromCoeff` constructor of the K₀-side to the K-side: for any
 -- `s : ℚ → 𝔽ᵃ_[p]` with PWO support,
--- `Lifted_to_TLifted (Lifted.from_coeff s) = TLifted.from_coeff p T s`.
+-- `Lifted_to_TLifted (Lifted.fromCoeff s) = TLifted.fromCoeff p T s`.
 omit [NeZero T] in
-private lemma Lifted_to_TLifted_from_coeff_eq (s : ℚ → Fpbar p)
+private lemma Lifted_to_TLifted_fromCoeff_eq (s : ℚ → Fpbar p)
     (hspwo : (Function.support s).IsPWO) :
-    Lifted_to_TLifted p T (LiftedPAdicHahnSeries.from_coeff s hspwo) =
-      TLiftedPAdicHahnSeries.from_coeff p T s hspwo := by
+    Lifted_to_TLifted p T (LiftedPAdicHahnSeries.fromCoeff s hspwo) =
+      TLiftedPAdicHahnSeries.fromCoeff p T s hspwo := by
   apply HahnSeries.ext
   funext q
   rfl
@@ -5480,26 +5522,26 @@ theorem σ_coeff_compat (f : 𝕃_[p]) :
   set s_sub := (exists_canonical_expansion f).choose with hs_def
   -- Property of the canonical K₀-side expansion of `f`.
   have hf_canon : Ideal.Quotient.ringCon (NullSeriesIdeal p) f.out
-      (LiftedPAdicHahnSeries.from_coeff s_sub.val s_sub.prop) :=
+      (LiftedPAdicHahnSeries.fromCoeff s_sub.val s_sub.prop) :=
     (exists_canonical_expansion f).choose_spec.1
   have hf_mk : Ideal.Quotient.mk (NullSeriesIdeal p) f.out =
       Ideal.Quotient.mk (NullSeriesIdeal p)
-        (LiftedPAdicHahnSeries.from_coeff s_sub.val s_sub.prop) :=
+        (LiftedPAdicHahnSeries.fromCoeff s_sub.val s_sub.prop) :=
     Quotient.sound hf_canon
   have hf_eq : f = Ideal.Quotient.mk (NullSeriesIdeal p)
-      (LiftedPAdicHahnSeries.from_coeff s_sub.val s_sub.prop) := by
+      (LiftedPAdicHahnSeries.fromCoeff s_sub.val s_sub.prop) := by
     rw [← Ideal.Quotient.mk_out f]
     exact hf_mk
   -- Show that `s_sub` is also a canonical T-expansion of `σ p T f`.
   have h_T_canon : Ideal.Quotient.ringCon (TNullSeriesIdeal p T) (σ p T f).out
-      (TLiftedPAdicHahnSeries.from_coeff p T s_sub.val s_sub.prop) := by
+      (TLiftedPAdicHahnSeries.fromCoeff p T s_sub.val s_sub.prop) := by
     apply Quotient.exact
     change Ideal.Quotient.mk (TNullSeriesIdeal p T) (σ p T f).out =
       Ideal.Quotient.mk (TNullSeriesIdeal p T)
-        (TLiftedPAdicHahnSeries.from_coeff p T s_sub.val s_sub.prop)
+        (TLiftedPAdicHahnSeries.fromCoeff p T s_sub.val s_sub.prop)
     rw [Ideal.Quotient.mk_out, hf_eq]
     change RingEquiv.ofBijective (σ_lift p T) _ _ = _
-    rw [RingEquiv.ofBijective_apply, σ_lift_mk, Lifted_to_TLifted_from_coeff_eq]
+    rw [RingEquiv.ofBijective_apply, σ_lift_mk, Lifted_to_TLifted_fromCoeff_eq]
   -- Apply unique-existence of the canonical T-expansion.
   have heq : s_sub = (exists_canonical_T_expansion p T (σ p T f)).choose :=
     (exists_canonical_T_expansion p T (σ p T f)).unique h_T_canon
@@ -5509,3 +5551,6 @@ theorem σ_coeff_compat (f : 𝕃_[p]) :
 end TScaled
 
 end FormalizedSparse
+
+
+

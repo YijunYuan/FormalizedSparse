@@ -1,11 +1,48 @@
-import FormalizedSparse.References.PAdicHahnSeries
-import Mathlib.RingTheory.LaurentSeries
-import Mathlib.RingTheory.IntegralClosure.Algebra.Basic
-import Mathlib.Topology.Defs.Basic
-
-/- USER: This file contains admitted results from Kedlaya's paper. You should `NOT` try to
-formalize them by yourself. Just ues them as black boxes.
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
 -/
+module
+
+public import FormalizedSparse.References.PAdicHahnSeries
+public import Mathlib.RingTheory.IntegralClosure.Algebra.Basic
+public import Mathlib.RingTheory.LaurentSeries
+public import Mathlib.Topology.Defs.Basic
+
+/-!
+# External results of Kedlaya
+
+This file records the results of Kedlaya that we use as black boxes. They are deep theorems from
+the theory of algebraic power series over fields of positive characteristic, and reproving them is
+outside the scope of this formalization, so their statements are stated here and their proofs are
+left as `admit`.
+
+## Main statements
+
+- `FormalizedSparse.Kedlaya.kedlaya_2001a_theorem15`: the integrality criterion for Hahn series
+  over `𝔽̄_p((t))`, i.e. Kedlaya (2017), Theorem 11.11 (equivalently Kedlaya (2001a), Theorem 15).
+- `FormalizedSparse.Kedlaya.kedlaya_2017_theorem13_4`: the description of the completed integral
+  closure of `ℚᵘⁿ_[p]` in `𝕃_[p]`, i.e. Kedlaya (2017), Theorem 13.5.
+- `FormalizedSparse.Kedlaya.kedlaya_2001b_ordinal_bound`: the ordinal bound `ω^ω` on the order type
+  of the support of a `ℚ_[p]`-algebraic `p`-adic Hahn series, from Kedlaya (2001a), Section 4.
+
+## Implementation notes
+
+Every statement in this file is deliberately admitted; these are the only intentional `admit`s in
+the project. They are external inputs, not gaps in our own arguments.
+
+## References
+
+- K. S. Kedlaya, *Power series and p-adic algebraic closures*, J. Number Theory 89 (2001)
+  [Ked01a].
+- K. S. Kedlaya, *The algebraic closure of the power series field in positive characteristic*,
+  Proc. Amer. Math. Soc. 129 (2001) [Ked01b].
+- K. S. Kedlaya, *On the algebraicity of generalized power series*, Beiträge Algebra Geom. 58
+  (2017) [Ked17].
+-/
+
+@[expose] public section
 
 namespace FormalizedSparse.Kedlaya
 
@@ -20,7 +57,7 @@ The base-`p` digit sequence `(bᵢ)_{i≥1}` is modelled as a finitely-supported
 `d : ℕ →₀ ℕ` (with `d i` the digit `b_{i+1}`), so the value
 `∑ i, d i * p^{-(i+1)}` is a finite rational; the digit bound is `∑ i, d i ≤ c` and
 each digit satisfies `d i < p`. Positivity of `a` is carried as a hypothesis where
-needed (e.g. in `theorem15`). -/
+needed (e.g. in `kedlaya_2001a_theorem15`). -/
 def Sabc (a : ℕ+) (b c : ℕ) : Set ℚ :=
   { s : ℚ | ∃ (n : ℤ) (d : ℕ →₀ ℕ),
       -b ≤ n ∧ (∀ i, d i < p) ∧ (d.sum fun _ v => v) ≤ c ∧
@@ -32,18 +69,17 @@ rationals in `(-1, 0)` whose base-`p` expansion has digit sum at most `c`. These
 the twist inputs of the recurrence functions below. -/
 def Tc (c : ℕ) : Set ℚ := Sabc p 1 0 c ∩ Set.Ioo (-1) 0
 
-/-- The twist-input sequence `(cₙ)` of Kedlaya (2017), Definition 2.3, eq. (2.2),
-**with the USER sign fix**.
+/-- The twist-input sequence `(cₙ)` of Kedlaya (2017), Definition 2.3, eq. (2.2).
 
 For `f : ℚ → 𝔽̄_p`, a positive integer `j` and base-`p` digits `b : ℕ →₀ ℕ` (with
 `b i` the digit `b_{i+1}`),
 `cₙ = f( -∑_{i < j-1} bᵢ p^{-(i+1)}  −  p^{-n} · ∑_{i ≥ j-1} bᵢ p^{-(i+1)} )`.
 
-The boxed sign is a **minus** (the published eq. (2.2) prints a plus; this is the typo
-the USER directive fixes, corroborated by the paper's own Remark 2.7). We take
-`f : ℚ → 𝔽̄_p` rather than `f : Tc p c → 𝔽̄_p` so that the theorem can compose it directly
-with the coefficient function `f_m`; faithfulness of the domain `T_c` is part of the
-informal content and is recovered in `theorem15` by restricting the digits via `c`. -/
+The sign in front of the second sum is a **minus**: the published eq. (2.2) prints a plus, but
+that is a typo, as corroborated by the paper's own Remark 2.7. We take `f : ℚ → 𝔽̄_p` rather than
+`f : Tc p c → 𝔽̄_p` so that the theorem can compose it directly with the coefficient function
+`f_m`; faithfulness of the domain `T_c` is part of the informal content and is recovered in
+`kedlaya_2001a_theorem15` by restricting the digits via `c`. -/
 def twistSeq (f : ℚ → 𝔽ᵃ_[p]) (j : ℕ) (b : ℕ →₀ ℕ) (n : ℕ) : 𝔽ᵃ_[p] :=
   f (-(∑ i ∈ Finset.range (j - 1), (b i : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ)))
      - (p : ℚ) ^ (-(n : ℤ)) *
@@ -52,13 +88,14 @@ def twistSeq (f : ℚ → 𝔽ᵃ_[p]) (j : ℕ) (b : ℕ →₀ ℕ) (n : ℕ) 
 open LaurentSeries in
 /-- The order-embedding `ℤ ↪ ℚ` of value groups induces the ring inclusion of the
 integer-supported Hahn series `𝔽̄_p((t))` into `𝔽̄_p((t^ℚ))`. Its range is the subring
-over which integrality is asserted in `theorem15`. -/
+over which integrality is asserted in `kedlaya_2001a_theorem15`. -/
 noncomputable def intHahnEmbedding :
     (𝔽ᵃ_[p])⸨X⸩ →+* HahnSeries ℚ (𝔽ᵃ_[p]) :=
   HahnSeries.embDomainRingHom (Int.castAddHom ℚ) Rat.intCast_injective
     (fun _ _ => by exact_mod_cast Int.cast_le)
 
 open LaurentSeries in
+/-- The `𝔽̄_p((t))`-algebra structure on `𝔽̄_p((t^ℚ))` induced by `intHahnEmbedding`. -/
 noncomputable instance : Algebra (𝔽ᵃ_[p])⸨X⸩ (HahnSeries ℚ (𝔽ᵃ_[p])) :=
   (intHahnEmbedding p).toAlgebra
 
@@ -89,14 +126,22 @@ theorem kedlaya_2001a_theorem15 (x : HahnSeries ℚ (𝔽ᵃ_[p])) :
               twistSeq p fm j dig (n + N) = twistSeq p fm j dig n) ) := by
   admit
 
+open LaurentSeries in
+/-- **Kedlaya (2017), Theorem 13.5.** The completion of the integral closure of `ℚᵘⁿ_[p]` in
+`𝕃_[p]` coincides with the completion of the set of `p`-adic Hahn series whose coefficient function
+arises from an algebraic element of `𝔽̄_p((t^ℚ))`. -/
 theorem kedlaya_2017_theorem13_4 :
-  closure (integralClosure ℚᵘⁿ_[p] 𝕃_[p]).carrier =
-  closure { f : 𝕃_[p] | ∃ f' : HahnSeries ℚ (𝔽ᵃ_[p]), IsAlgebraic 𝔽ᵃ_[p] f' ∧
-    (exists_canonical_expansion f).choose.val = f'.coeff}
-  := by admit
+    closure (integralClosure ℚᵘⁿ_[p] 𝕃_[p]).carrier =
+    closure { f : 𝕃_[p] | ∃ f' : HahnSeries ℚ (𝔽ᵃ_[p]), IsAlgebraic 𝔽ᵃ_[p] f' ∧
+      (exists_canonical_expansion f).choose.val = f'.coeff }
+    := by admit
 
 open Ordinal in
+/-- **Kedlaya (2001a), Section 4.** The order type of the support of a `ℚ_[p]`-algebraic `p`-adic
+Hahn series is at most `ω^ω`. -/
 theorem kedlaya_2001b_ordinal_bound (f : 𝕃_[p]) (hp : IsAlgebraic ℚ_[p] f) :
-  typeLT f.support ≤ omega0 ^ omega0 := by admit
+    typeLT f.support ≤ omega0 ^ omega0 := by admit
 
 end FormalizedSparse.Kedlaya
+
+

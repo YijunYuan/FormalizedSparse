@@ -1,22 +1,41 @@
-import FormalizedSparse.Sparse
-import FormalizedSparse.Tscaled
-import Mathlib.Data.PNat.Interval
-import Mathlib.RingTheory.Localization.Integral
-import Mathlib.Data.Nat.Choose.Multinomial
-import Mathlib.GroupTheory.Perm.DomMulAct
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
+-/
+module
+
+public import FormalizedSparse.Sparse
+public import FormalizedSparse.Tscaled
+public import Mathlib.Data.Nat.Choose.Multinomial
+public import Mathlib.Data.PNat.Interval
+public import Mathlib.GroupTheory.Perm.DomMulAct
+public import Mathlib.RingTheory.Localization.Integral
 
 /-!
-# Main theorem (Theorem 1.7) of our paper.
+# Main theorem: sparse support implies transcendence
 
-This files contains the proof of the main theorem, which shows that if the p-adic Hahn series `f`
-has a `sparse` set of representative modulo ℤ, then `f` is transcendental over `ℚᵘⁿ_[p]`.
+This file contains the proof of the main theorem of the paper: if a `p`-adic Hahn series `f` has a
+sparse set of representatives modulo `ℤ` (after scaling by some integer `T ≥ 1`), then `f` is
+transcendental over `ℚᵘⁿ_[p]`, and hence over `ℚ_[p]`.
 
-The proof is highly technical, as one needs to regroup the terms of `f` into "coefficient bundles"
-`C_s`, and use multinomial expansion, which is difficult to formalize.
+The proof is technical: one regroups the terms of `f` into "coefficient bundles" `C_s`, applies the
+multinomial expansion to a hypothetical algebraic relation, and uses the sparseness condition to
+isolate a single surviving nonzero term, producing a contradiction. See `Sparse.lean` for the
+definition of `IsSparse` (Definition 1.4) and the associated notation.
 
-We refer the reader to `Sparse.lean` for the formalized definitions of `IsSparse` (Definition 1.4
-in our paper) and the related notations.
+## Main statements
+
+- `FormalizedSparse.main_theorem`: the main transcendence theorem (Theorem 5.3): if `-T · Supp(f)`
+  admits a nonzero sparse set of representatives modulo `ℤ`, then `f` is transcendental over
+  `ℚᵘⁿ_[p]`.
+
+## Tags
+
+p-adic, Hahn series, transcendence, sparse, multinomial expansion
 -/
+
+@[expose] public section
 
 -- Bring `NeZero T.val` into scope for any `T : ℕ+` so we can use `Tscaled` API.
 instance PNat.coe_neZero (T : ℕ+) : NeZero (T : ℕ) := ⟨T.ne_zero⟩
@@ -34,6 +53,9 @@ namespace FormalizedSparse
 
 open Sparse TScaled
 
+/-- `IsRepModZ A B` says that `A` is a **set of representatives of `B` modulo `ℤ`**: every element
+of `B` is congruent modulo `ℤ` to a unique element of `A`, and every element of `A` is congruent
+modulo `ℤ` to some element of `B`. -/
 def IsRepModZ (A B : Set ℚ) : Prop :=
   (
     ∀ b ∈ B, ∃! a ∈ A, (a - b).isInt
@@ -43,7 +65,7 @@ def IsRepModZ (A B : Set ℚ) : Prop :=
 
 namespace MainTheorem
 
-/-! ### Step 1 — support cosets `Sd`, `mu_q`, `Stilde`. -/
+/-! ### Step 1 — support cosets `Sd`, `muQ`, `Stilde`. -/
 
 /-- The "coset slice" `f.support ∩ (-‖d‖/T + (1/T)ℤ)` for a `DigitSeries` `d`.
 We use the equivalent algebraic form `(d.norm p + T·q).isInt`. -/
@@ -51,10 +73,13 @@ noncomputable def Sd (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d
     Set ℚ :=
   f.support ∩ {q | ((d.norm p : ℚ) + (T : ℚ) * q).isInt = true}
 
+/-- The coset slice `Sd d` is contained in the support of `f`. -/
 lemma Sd_subset_support {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : DigitSeries) :
     Sd p f T d ⊆ f.support :=
   Set.inter_subset_left
 
+/-- The coset slice `Sd d` is well-ordered (as a subset of the well-ordered support of `f`), so it
+has a minimum used to define `muQ`. -/
 lemma Sd_isWF {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) (d : DigitSeries) :
     (Sd p f T d).IsWF :=
   (support_IsPWO f).isWF.mono (Sd_subset_support f T d)
@@ -77,41 +102,44 @@ lemma Sd_nonempty {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
   rw [← h_eq]; exact hint
 
 /-- The minimum element of `Sd d`. -/
-noncomputable def mu_q {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+noncomputable def muQ {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (d : S) : ℚ :=
   (Sd_isWF f T d.val).min (Sd_nonempty hf2 d.property)
 
-lemma mu_q_mem_support {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+/-- `muQ d` — the chosen representative for `d` — lies in the support of `f`. -/
+lemma muQ_mem_support {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (d : S) : mu_q hf2 d ∈ f.support := by
+    (d : S) : muQ hf2 d ∈ f.support := by
   have h := (Sd_isWF f T d.val).min_mem (Sd_nonempty hf2 d.property)
   exact Sd_subset_support f T _ h
 
-lemma mu_q_residue {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+/-- The defining residue property of `muQ d`: `‖d‖ + T · muQ d` is an integer, i.e. `muQ d` lies in
+the coset `-‖d‖/T + (1/T)ℤ` selected by `d`. -/
+lemma muQ_residue {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
-    (d : S) : ((d.val.norm p : ℚ) + (T : ℚ) * mu_q hf2 d).isInt = true :=
+    (d : S) : ((d.val.norm p : ℚ) + (T : ℚ) * muQ hf2 d).isInt = true :=
   ((Sd_isWF f T d.val).min_mem (Sd_nonempty hf2 d.property)).2
 
-/-- The key uniqueness step: `mu_q` is injective. -/
-lemma mu_q_injective {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+/-- The key uniqueness step: `muQ` is injective. -/
+lemma muQ_injective {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} (hS : ∀ d ∈ S, d.IsP p)
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
-    Function.Injective (mu_q (T := T) hf2) := by
+    Function.Injective (muQ (T := T) hf2) := by
   intro d d' hmu
-  have hd := mu_q_residue hf2 d
-  have hd' := mu_q_residue hf2 d'
+  have hd := muQ_residue hf2 d
+  have hd' := muQ_residue hf2 d'
   have h_sub_int :
       ((d.val.norm p : ℚ) - (d'.val.norm p : ℚ)).isInt = true := by
-    set a := (d.val.norm p : ℚ) + (T : ℚ) * mu_q hf2 d with ha_def
-    set b := (d'.val.norm p : ℚ) + (T : ℚ) * mu_q hf2 d' with hb_def
+    set a := (d.val.norm p : ℚ) + (T : ℚ) * muQ hf2 d with ha_def
+    set b := (d'.val.norm p : ℚ) + (T : ℚ) * muQ hf2 d' with hb_def
     have h1 : (d.val.norm p : ℚ) - (d'.val.norm p : ℚ) = a - b := by
       rw [ha_def, hb_def, hmu]; ring
     rw [h1]
@@ -124,20 +152,23 @@ lemma mu_q_injective {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     DigitSeries.eq_of_norm_sub_isInt (hS d.val d.property) (hS d'.val d'.property) h_sub_int
   exact Subtype.ext heq
 
-/-- The "S̃" of the PDF, packaged as a `Set ℚ`: `{ mu_q d | d ∈ S }`. -/
+/-- The "S̃" of the PDF, packaged as a `Set ℚ`: `{ muQ d | d ∈ S }`. -/
 noncomputable def Stilde {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) : Set ℚ :=
-  Set.range (mu_q (T := T) hf2)
+  Set.range (muQ (T := T) hf2)
 
+/-- The set of representatives `S̃ = { muQ d | d ∈ S }` is contained in the support of `f`. -/
 lemma Stilde_subset_support {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     Stilde hf2 ⊆ f.support := by
-  rintro q ⟨d, rfl⟩; exact mu_q_mem_support hf2 d
+  rintro q ⟨d, rfl⟩; exact muQ_mem_support hf2 d
 
+/-- The set of representatives `S̃` is partially well-ordered (inheriting well-orderedness from the
+support of `f`). -/
 lemma Stilde_isPWO {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -146,45 +177,47 @@ lemma Stilde_isPWO {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
   (support_IsPWO f).mono (Stilde_subset_support hf2)
 
 /-- The bijection `μ : S → Stilde`. -/
-noncomputable def mu_to_Stilde {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+noncomputable def muToStilde {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     S → ↥(Stilde hf2) :=
-  fun d => ⟨mu_q hf2 d, ⟨d, rfl⟩⟩
+  fun d => ⟨muQ hf2 d, ⟨d, rfl⟩⟩
 
-lemma mu_to_Stilde_bijective {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+/-- The map `μ : S → S̃` is a bijection: injectivity is the rigidity of the representatives, and
+surjectivity holds by construction of `S̃` as the range of `muQ`. -/
+lemma muToStilde_bijective {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} (hS : ∀ d ∈ S, d.IsP p)
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
-    Function.Bijective (mu_to_Stilde (T := T) hf2) := by
+    Function.Bijective (muToStilde (T := T) hf2) := by
   refine ⟨fun d d' h => ?_, ?_⟩
-  · have : mu_q hf2 d = mu_q hf2 d' := by
-      simpa [mu_to_Stilde] using congrArg Subtype.val h
-    exact mu_q_injective hS hf2 this
+  · have : muQ hf2 d = muQ hf2 d' := by
+      simpa [muToStilde] using congrArg Subtype.val h
+    exact muQ_injective hS hf2 this
   · rintro ⟨q, ⟨d, hq_eq⟩⟩
     refine ⟨d, ?_⟩
     apply Subtype.ext
-    simp [mu_to_Stilde, hq_eq]
+    simp [muToStilde, hq_eq]
 
 /-- The S→Stilde bijection as an `Equiv`. -/
-noncomputable def mu_equiv {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+noncomputable def muEquiv {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} (hS : ∀ d ∈ S, d.IsP p)
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     S ≃ ↥(Stilde hf2) :=
-  Equiv.ofBijective _ (mu_to_Stilde_bijective hS hf2)
+  Equiv.ofBijective _ (muToStilde_bijective hS hf2)
 
 /-! ### Step 2 — coefficient bundles `C_s`.
 
 For `s ∈ Stilde`, the paper defines `C_s = ∑_{w ∈ ℤ} [f(s + w/T)] · pInvT^w ∈ ℤᵘⁿ_[p,T]`.
-Since `s = mu_q d` is the minimum of `Sd d`, the negative-`w` terms vanish, so
+Since `s = muQ d` is the minimum of `Sd d`, the negative-`w` terms vanish, so
 `C_s = ∑_{w ≥ 0} [f(s + w/T)] · pInvT^w`, a convergent series in the complete DVR
 `ℤᵘⁿ_[p,T]`. We decompose the construction into a term `Cs_term`, a partial sum
 `Cs_partial`, an existential limit lemma `exists_Cs` (the analytical hard step), and
 the final definition `Cs`. -/
 
-/-- §2a — the `w`-th summand `OQpUn_embd p T (teichmuller p (f.coeff (s + w/T))) · pInvT^w`. -/
+/-- the `w`-th summand `OQpUn_embd p T (teichmuller p (f.coeff (s + w/T))) · pInvT^w`. -/
 noncomputable def Cs_term {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -192,7 +225,7 @@ noncomputable def Cs_term {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ
     (s : ↥(Stilde hf2)) (w : ℕ) : ℤᵘⁿ_[p,(T : ℕ)] :=
   OQpUn_embd p T (WittVector.teichmuller p (f.coeff (s.val + (w : ℚ) / T))) * (pInvT p T) ^ w
 
-/-- §2b — finite partial sum `∑_{w < N} Cs_term hf2 s w`. -/
+/-- finite partial sum `∑_{w < N} Cs_term hf2 s w`. -/
 noncomputable def Cs_partial {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -200,7 +233,7 @@ noncomputable def Cs_partial {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : 
     (s : ↥(Stilde hf2)) (N : ℕ) : ℤᵘⁿ_[p,(T : ℕ)] :=
   ∑ w ∈ Finset.range N, Cs_term hf2 s w
 
-/-- §2c-1 (algebraic factorization) — For `N ≤ N'`, the difference of partial sums
+/-- For `N ≤ N'`, the difference of partial sums
 `Cs_partial s N' - Cs_partial s N` equals the explicit `Finset.Ico` sum of `Cs_term`. -/
 private lemma Cs_partial_diff_eq_Ico_sum
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -219,7 +252,7 @@ private lemma Cs_partial_diff_eq_Ico_sum
     (Finset.sum_Ico_consecutive (fun w => Cs_term hf2 s w) (Nat.zero_le N) hN).symm
   rw [h_split, add_sub_cancel_left]
 
-/-- §2c-2 (per-term valuation) — Each summand `algebraMap (Cs_term hf2 s w)` has
+/-- Each summand `algebraMap (Cs_term hf2 s w)` has
 valuation `ofAdd(-w)` in `ℚᵘⁿ_[p,T]`. -/
 private lemma algebraMap_Cs_term_v_le
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -250,7 +283,7 @@ private lemma algebraMap_Cs_term_v_le
         mul_le_mul' h_OQ_le_one (le_refl _)
     _ = ((Multiplicative.ofAdd (-(w : ℤ)) : Multiplicative ℤ) : WithZero _) := one_mul _
 
-/-- §2c-3 (Cauchy tail bound) — For `N ≤ N'`,
+/-- For `N ≤ N'`,
 Valued.v (algebraMap (Cs_partial s N' - Cs_partial s N))
 ≤ ofAdd(-N)`. This is the explicit Cauchy property of the partial sums. -/
 private lemma Cs_partial_diff_alg_v_le
@@ -278,7 +311,7 @@ private lemma Cs_partial_diff_alg_v_le
     omega
   exact le_trans h_w_term h_le
 
-/-- §2c-3' (Cauchy bound weakening) — For `M ≤ M'` and `N ≤ M`, the algebraMap of the
+/-- For `M ≤ M'` and `N ≤ M`, the algebraMap of the
 partial-sum difference is bounded by `ofAdd(-N)` rather than the tighter `ofAdd(-M)`.
 This single-direction helper packages the rewrite + bound + index-weakening together,
 which `algebraMap_Cs_partial_isCauchy` invokes symmetrically in both `K ≤ K'` and
@@ -300,7 +333,7 @@ private lemma algebraMap_Cs_partial_diff_v_le
   have : (N : ℤ) ≤ (M : ℤ) := by exact_mod_cast hNM
   omega
 
-/-- §2c-4 — `algebraMap ∘ Cs_partial s` is a Cauchy sequence in `ℚᵘⁿ_[p,T]`.
+/-- `algebraMap ∘ Cs_partial s` is a Cauchy sequence in `ℚᵘⁿ_[p,T]`.
 
 Pattern-copy of `TintPartial_isCauchy`: convert `γ ∈ Γ₀ˣ` to
 `ε ∈ ℝ` via `WithZeroMulInt.toNNReal`, pick `N` such that `(p⁻¹)^N < ε`, and use
@@ -383,7 +416,7 @@ private lemma algebraMap_Cs_partial_isCauchy
       rw [hneg, Valuation.map_neg]
       exact h_convert _ (algebraMap_Cs_partial_diff_v_le hf2 s hKK' hK')
 
-/-- §2c-5 — `Cs_term hf2 s 0 = OQpUn_embd p T (teichmuller p (f.coeff s.val))` is a unit
+/-- `Cs_term hf2 s 0 = OQpUn_embd p T (teichmuller p (f.coeff s.val))` is a unit
 in `ℤᵘⁿ_[p,T]`, so its `algebraMap` to `ℚᵘⁿ_[p,T]` has valuation `1`.
 
 Reason: `s.val ∈ Stilde hf2 ⊆ f.support`, so `f.coeff s.val ≠ 0`. The Teichmüller
@@ -413,7 +446,7 @@ private lemma Cs_term_zero_v_eq_one
   exact Valuation.Integers.one_of_isUnit' h_embd_unit
     (fun _ => (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,(T : ℕ)])).valuation_le_one _)
 
-/-- §2c (analytical hard step) — the partial sums `Cs_partial` admit a
+/-- the partial sums `Cs_partial` admit a
 non-zero limit in `ℤᵘⁿ_[p,T]`.
 
 Construction outline: the algebraMap to the complete DVF `ℚᵘⁿ_[p,T]` carries the
@@ -422,7 +455,7 @@ sequence to a Cauchy sequence (using `valued_v_pInvT_zpow` to bound the tails by
 lies in the closed unit ball (the image of `ℤᵘⁿ_[p,T]` under algebraMap). Non-vanishing
 is from the `w = 0` term: `OQpUn_embd p T (teichmuller p (f.coeff s))` with
 `f.coeff s ≠ 0` (since `s ∈ Stilde ⊆ f.support` via `Stilde_subset_support`). -/
-private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
@@ -433,7 +466,7 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
         (fun N => algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (Cs_partial hf2 s N))
         Filter.atTop
         (nhds (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) c)) := by
-  -- Step 1: `algebraMap ∘ Cs_partial s` is Cauchy in `ℚᵘⁿ_[p,T]` (helper §2c-4).
+  -- Step 1: `algebraMap ∘ Cs_partial s` is Cauchy in `ℚᵘⁿ_[p,T]` (helper lemma).
   have h_cauchy := algebraMap_Cs_partial_isCauchy hf2 s
   -- Step 2: take limit `y` in the complete DVF `ℚᵘⁿ_[p,T]`.
   set y : ℚᵘⁿ_[p, (T : ℕ)] := Filter.limUnder Filter.atTop
@@ -540,7 +573,7 @@ private lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
   rw [hc_eq]
   exact hy_tendsto
 
-/-- §2c' — `Cs hf2 s ∈ ℤᵘⁿ_[p,T]`, the coefficient bundle for `s ∈ Stilde`. -/
+/-- `Cs hf2 s ∈ ℤᵘⁿ_[p,T]`, the coefficient bundle for `s ∈ Stilde`. -/
 noncomputable def Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -548,7 +581,7 @@ noncomputable def Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     (s : ↥(Stilde hf2)) : ℤᵘⁿ_[p,(T : ℕ)] :=
   (exists_Cs hf2 s).choose
 
-/-- §2d — `Cs hf2 s ≠ 0`. Immediate from `exists_Cs`. -/
+/-- `Cs hf2 s ≠ 0`. Immediate from `exists_Cs`. -/
 lemma Cs_ne_zero {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -556,7 +589,7 @@ lemma Cs_ne_zero {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     (s : ↥(Stilde hf2)) : Cs hf2 s ≠ 0 :=
   (exists_Cs hf2 s).choose_spec.1
 
-/-- §2e — `algebraMap (Cs_partial hf2 s N)` converges to `algebraMap (Cs hf2 s)` in
+/-- `algebraMap (Cs_partial hf2 s N)` converges to `algebraMap (Cs hf2 s)` in
 `ℚᵘⁿ_[p,T]`. This is the analytical characterization of `Cs` as a Cauchy sum. -/
 lemma Cs_tendsto {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
@@ -571,8 +604,8 @@ lemma Cs_tendsto {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
 
 /-! ### Step 3 — the lift `fhat`. -/
 
-/-- §3a — the coefficient function of `fhat`: `Cs ⟨q, h⟩` on `Stilde`, `0` elsewhere. -/
-noncomputable def fhat_coeff {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+/-- the coefficient function of `fhat`: `Cs ⟨q, h⟩` on `Stilde`, `0` elsewhere. -/
+noncomputable def fhatCoeff {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
@@ -580,23 +613,23 @@ noncomputable def fhat_coeff {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : 
   classical
   exact (if h : q ∈ Stilde hf2 then Cs hf2 ⟨q, h⟩ else 0)
 
-/-- §3b — the T-lifted Hahn series `fhat : TLiftedPAdicHahnSeries p T`. -/
+/-- the T-lifted Hahn series `fhat : TLiftedPAdicHahnSeries p T`. -/
 noncomputable def fhat {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     TLiftedPAdicHahnSeries p (T : ℕ) where
-  coeff := fhat_coeff hf2
+  coeff := fhatCoeff hf2
   isPWO_support' := by
     apply (Stilde_isPWO hf2).mono
     intro q hq
     by_contra hq_notin
     apply hq
-    show fhat_coeff hf2 q = 0
-    unfold fhat_coeff
+    show fhatCoeff hf2 q = 0
+    unfold fhatCoeff
     exact dif_neg hq_notin
 
-/-- §3c — `Support fhat ⊆ Stilde`. -/
+/-- `Support fhat ⊆ Stilde`. -/
 lemma fhat_support_subset {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -605,29 +638,29 @@ lemma fhat_support_subset {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ
   intro q hq
   by_contra hq_notin
   apply hq
-  change fhat_coeff hf2 q = 0
-  unfold fhat_coeff
+  change fhatCoeff hf2 q = 0
+  unfold fhatCoeff
   exact dif_neg hq_notin
 
-/-- §3d — at `s ∈ Stilde`, the `fhat` coefficient is `Cs s`. -/
-lemma fhat_coeff_eq_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
+/-- at `s ∈ Stilde`, the `fhat` coefficient is `Cs s`. -/
+lemma fhatCoeff_eq_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) : (fhat hf2).coeff s.val = Cs hf2 s := by
-  change fhat_coeff hf2 s.val = _
-  unfold fhat_coeff
+  change fhatCoeff hf2 s.val = _
+  unfold fhatCoeff
   exact dif_pos s.property
 
-/-! §3e The main lemma `mk_fhat_eq_sigma_f` glues them together with
+/-! The main lemma `mk_fhat_eq_sigma_f` glues them together with
 `Ideal.Quotient.eq`.
 
 Original proof outline: by canonical T-expansion uniqueness
 (`exists_canonical_T_expansion`) applied to `σ p T f` (whose canonical coefficient
 is `f.coeff` via `σ_coeff_compat`), it suffices to show
-`fhat - TLiftedPAdicHahnSeries.from_coeff p T f.coeff (support_IsPWO f)
+`fhat - TLiftedPAdicHahnSeries.fromCoeff p T f.coeff (support_IsPWO f)
 ∈ TNullSeriesIdeal p T`. The difference has support contained in `f.support`, with
-coefficient `OQpUn_embd p T (teichmuller p (f.coeff q)) - fhat_coeff hf2 q`:
+coefficient `OQpUn_embd p T (teichmuller p (f.coeff q)) - fhatCoeff hf2 q`:
 * at `q = s ∈ Stilde`, this is `teichmuller (f.coeff s) - Cs s`, the negation of the
   `w ≥ 1` tail of `Cs s`;
 * at `q ∈ f.support \ Stilde`, by `Stilde_isRepModZ_oneOverT` we have a unique
@@ -636,12 +669,12 @@ coefficient `OQpUn_embd p T (teichmuller p (f.coeff q)) - fhat_coeff hf2 q`:
 The partial-sum tendency at every `g ∈ ℚ` collapses by re-indexing into the same
 Cauchy tail used in `exists_Cs`. -/
 
-/-- §3e-bridge — Structural reduction: `σ p T f = mk (from_coeff p T f.coeff (support_IsPWO f))`.
+/-- Structural reduction: `σ p T f = mk (fromCoeff p T f.coeff (support_IsPWO f))`.
 Pure σ-machinery; the proof mimics the σ_coeff_compat strategy and uses no `fhat` data. -/
-private lemma sigma_eq_mk_from_coeff_fcoeff
+private lemma sigma_eq_mk_fromCoeff_fcoeff
     {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+) :
     σ p (T : ℕ) f = Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ))
-      (TLiftedPAdicHahnSeries.from_coeff p (T : ℕ) (pAdicHahnSeries.coeff f)
+      (TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ) (pAdicHahnSeries.coeff f)
         (support_IsPWO f)) := by
   set s_σ := (exists_canonical_T_expansion p (T : ℕ) (σ p (T : ℕ) f)).choose
     with hs_σ_def
@@ -650,16 +683,16 @@ private lemma sigma_eq_mk_from_coeff_fcoeff
   -- The canonical-T-expansion choose_spec gives the ringCon witness.
   have h_ringCon : Ideal.Quotient.ringCon (TNullSeriesIdeal p (T : ℕ))
       (σ p (T : ℕ) f).out
-      (TLiftedPAdicHahnSeries.from_coeff p (T : ℕ) s_σ.val s_σ.prop) :=
+      (TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ) s_σ.val s_σ.prop) :=
     (exists_canonical_T_expansion p (T : ℕ) (σ p (T : ℕ) f)).choose_spec.1
   -- Quotient.sound packages the ringCon into an equality of `mk`s.
   have h1 : Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ)) (σ p (T : ℕ) f).out
       = Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ))
-            (TLiftedPAdicHahnSeries.from_coeff p (T : ℕ) s_σ.val s_σ.prop) :=
+            (TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ) s_σ.val s_σ.prop) :=
     Quotient.sound h_ringCon
-  -- Rewrite the `from_coeff`'s value argument using hs_σ_val (proof irrelevance on prop).
-  have h2 : TLiftedPAdicHahnSeries.from_coeff p (T : ℕ) s_σ.val s_σ.prop
-      = TLiftedPAdicHahnSeries.from_coeff p (T : ℕ) (pAdicHahnSeries.coeff f)
+  -- Rewrite the `fromCoeff`'s value argument using hs_σ_val (proof irrelevance on prop).
+  have h2 : TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ) s_σ.val s_σ.prop
+      = TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ) (pAdicHahnSeries.coeff f)
           (support_IsPWO f) := by
     apply HahnSeries.coeff_inj.mp
     funext n
@@ -668,22 +701,22 @@ private lemma sigma_eq_mk_from_coeff_fcoeff
     rw [hs_σ_val]
   rw [← Ideal.Quotient.mk_out (σ p (T : ℕ) f), h1, h2]
 
-/-! #### `Rat.isInt` helpers (used in both §3e and §5a). -/
+/-! #### `Rat.isInt` helpers. -/
 
 /-- An integer cast to `ℚ` has `Rat.isInt = true`. -/
-private lemma isInt_intCast' (k : ℤ) : ((k : ℚ)).isInt = true := by
+lemma isInt_intCast' (k : ℤ) : ((k : ℚ)).isInt = true := by
   rw [Rat.isInt]; simp
 
 /-- A natural cast to `ℚ` has `Rat.isInt = true`. -/
-private lemma isInt_natCast' (k : ℕ) : ((k : ℚ)).isInt = true := by
+lemma isInt_natCast' (k : ℕ) : ((k : ℚ)).isInt = true := by
   rw [Rat.isInt]; simp
 
 /-- `(0 : ℚ).isInt = true`. -/
-private lemma isInt_zero' : ((0 : ℚ)).isInt = true := by
+lemma isInt_zero' : ((0 : ℚ)).isInt = true := by
   rw [Rat.isInt]; simp
 
 /-- `Rat.isInt` is closed under addition. -/
-private lemma isInt_add' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
+lemma isInt_add' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
     (a + b).isInt = true := by
   have ha_eq : a = (a.num : ℚ) := Rat.eq_num_of_isInt ha
   have hb_eq : b = (b.num : ℚ) := Rat.eq_num_of_isInt hb
@@ -694,7 +727,7 @@ private lemma isInt_add' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true)
   exact isInt_intCast' _
 
 /-- `Rat.isInt` is closed under subtraction. -/
-private lemma isInt_sub' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
+lemma isInt_sub' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
     (a - b).isInt = true := by
   have ha_eq : a = (a.num : ℚ) := Rat.eq_num_of_isInt ha
   have hb_eq : b = (b.num : ℚ) := Rat.eq_num_of_isInt hb
@@ -705,7 +738,7 @@ private lemma isInt_sub' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true)
   exact isInt_intCast' _
 
 /-- `Rat.isInt` is closed under multiplication. -/
-private lemma isInt_mul' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
+lemma isInt_mul' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true) :
     (a * b).isInt = true := by
   have ha_eq : a = (a.num : ℚ) := Rat.eq_num_of_isInt ha
   have hb_eq : b = (b.num : ℚ) := Rat.eq_num_of_isInt hb
@@ -716,7 +749,7 @@ private lemma isInt_mul' {a b : ℚ} (ha : a.isInt = true) (hb : b.isInt = true)
   exact isInt_intCast' _
 
 /-- If every term `g i` is an integer (in the `Rat.isInt` sense) and `g`'s support
-is finite, then the finsum `∑ᶠ i, g i` is an integer. Used in §5a. -/
+is finite, then the finsum `∑ᶠ i, g i` is an integer. -/
 private lemma finsum_isInt {α : Type*} {g : α → ℚ}
     (hg_supp : (Function.support g).Finite)
     (hg_int : ∀ i, (g i).isInt = true) :
@@ -729,9 +762,9 @@ private lemma finsum_isInt {α : Type*} {g : α → ℚ}
   · exact isInt_zero'
   · intros i _; exact hg_int i
 
-/-! ### §3e helpers: unique decomposition of `f.support` along `Stilde × ℕ`. -/
+/-! ### helpers: unique decomposition of `f.support` along `Stilde × ℕ`. -/
 
-/-- §3e-1a (helper) — From `hf2.1`, every `q ∈ f.support` has at least one `d ∈ S`
+/-- From `hf2.1`, every `q ∈ f.support` has at least one `d ∈ S`
 with the residue clause `(d.norm p + T·q).isInt = true`. Used in
 `Stilde_unique_decomposition`. -/
 private lemma exists_d_for_support
@@ -752,14 +785,14 @@ private lemma exists_d_for_support
   rw [← h_eq]
   exact hint
 
-/-- §3e-1b (helper) — The unique decomposition `q = s.val + w/T` for `q ∈ f.support`.
+/-- The unique decomposition `q = s.val + w/T` for `q ∈ f.support`.
 
-Existence: take `d` as above, then `s := mu_q hf2 d` is the minimum of `Sd d`; by
+Existence: take `d` as above, then `s := muQ hf2 d` is the minimum of `Sd d`; by
 construction `s ≤ q`, and the difference `T·(q - s)` is a non-negative integer,
 giving `w : ℕ`. Uniqueness: any two decompositions yield `s.val - s'.val ∈ (1/T)ℤ`,
 which combined with the residue clauses forces `(d.norm p - d'.norm p).isInt = true`;
 applying `hf2.1`'s uniqueness, both decompositions correspond to the same residue
-class, hence the same `mu_q` value and the same `w`. -/
+class, hence the same `muQ` value and the same `w`. -/
 private lemma Stilde_unique_decomposition
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
@@ -773,9 +806,9 @@ private lemma Stilde_unique_decomposition
   -- Existence
   obtain ⟨d, hd_int⟩ := exists_d_for_support hf2 hq_supp
   have hq_in_Sd : q ∈ Sd p f T d.val := ⟨hq_supp, hd_int⟩
-  set s := mu_q hf2 d with hs_def
+  set s := muQ hf2 d with hs_def
   have hs_residue : ((d.val.norm p : ℚ) + (T : ℚ) * s).isInt = true :=
-    mu_q_residue hf2 d
+    muQ_residue hf2 d
   have hs_le_q : s ≤ q := (Sd_isWF f T d.val).min_le (Sd_nonempty hf2 d.property) hq_in_Sd
   -- Compute T·(q - s) ∈ ℕ.
   have h_diff_isInt : ((T : ℚ) * (q - s)).isInt = true := by
@@ -807,16 +840,16 @@ private lemma Stilde_unique_decomposition
   -- Package as the existence witness.
   refine ⟨((⟨s, ⟨d, rfl⟩⟩ : ↥(Stilde hf2)), wq), h_q_decomp, ?_⟩
   rintro ⟨s', w'⟩ h_eq
-  -- s' ∈ Stilde, so s' = mu_q hf2 d' for some d'.
+  -- s' ∈ Stilde, so s' = muQ hf2 d' for some d'.
   obtain ⟨d', hd'_eq⟩ := s'.property
-  -- show s' = s (equivalently s'.val = mu_q hf2 d), then w' = wq.
+  -- show s' = s (equivalently s'.val = muQ hf2 d), then w' = wq.
   have hs'_le_q : (s'.val : ℚ) ≤ q := by
     rw [h_eq]
     have : (0 : ℚ) ≤ (w' : ℚ) / (T : ℚ) := div_nonneg (Nat.cast_nonneg _) hT_pos.le
     linarith
   have hs'_residue : ((d'.val.norm p : ℚ) + (T : ℚ) * s'.val).isInt = true := by
     rw [← hd'_eq]
-    exact mu_q_residue hf2 d'
+    exact muQ_residue hf2 d'
   -- T·(q - s') = w' (a non-negative integer).
   have hTqs'_int : ((T : ℚ) * (q - s'.val)).isInt = true := by
     have h_id : (T : ℚ) * (q - s'.val) = (w' : ℚ) := by
@@ -851,14 +884,14 @@ private lemma Stilde_unique_decomposition
   have hd'_eq_a : (d'.val.norm p : ℚ) = a :=
     ha_unique _ ⟨hd'_norm_in, h_d'_check⟩
   have h_norm_eq : (d.val.norm p : ℚ) = (d'.val.norm p : ℚ) := hd_eq_a.trans hd'_eq_a.symm
-  -- Now mu_q hf2 d = mu_q hf2 d' because Sd depends only on d.norm p.
+  -- Now muQ hf2 d = muQ hf2 d' because Sd depends only on d.norm p.
   have h_Sd_eq : Sd p f T d.val = Sd p f T d'.val := by
     unfold Sd
     congr 1
     ext q'
     simp only [Set.mem_setOf_eq, h_norm_eq]
-  have h_mu_eq : mu_q hf2 d = mu_q hf2 d' := by
-    unfold mu_q
+  have h_mu_eq : muQ hf2 d = muQ hf2 d' := by
+    unfold muQ
     have hd_ne := Sd_nonempty hf2 d.property
     have hd'_ne := Sd_nonempty hf2 d'.property
     apply le_antisymm
@@ -869,8 +902,8 @@ private lemma Stilde_unique_decomposition
       rw [← h_Sd_eq]
       exact (Sd_isWF f T d.val).min_mem hd_ne
   have hs_s'_val : s'.val = s := by
-    have h1 : s'.val = mu_q hf2 d' := hd'_eq.symm
-    have h2 : mu_q hf2 d' = s := h_mu_eq.symm.trans hs_def.symm
+    have h1 : s'.val = muQ hf2 d' := hd'_eq.symm
+    have h2 : muQ hf2 d' = s := h_mu_eq.symm.trans hs_def.symm
     exact h1.trans h2
   -- Now show w' = wq.
   have h_w_eq : (w' : ℚ) = (wq : ℚ) := by
@@ -887,7 +920,7 @@ private lemma Stilde_unique_decomposition
     exact hs_s'_val
   exact Prod.ext h_s_subtype_eq h_w_nat_eq
 
-/-- §3e-1c — Stilde elements live in f.support (re-export of `Stilde_subset_support`). -/
+/-- Stilde elements live in f.support (re-export of `Stilde_subset_support`). -/
 private lemma Stilde_decomp_at_self
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
@@ -896,7 +929,7 @@ private lemma Stilde_decomp_at_self
     (s : ↥(Stilde hf2)) :
     s.val ∈ f.support := Stilde_subset_support hf2 s.property
 
-/-- §3e-1d — If `q ∈ f.support` has decomposition `(s, w)` with `w ≥ 1`, then `q ∉ Stilde`. -/
+/-- If `q ∈ f.support` has decomposition `(s, w)` with `w ≥ 1`, then `q ∉ Stilde`. -/
 private lemma not_Stilde_of_pos_w
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
@@ -917,21 +950,21 @@ private lemma not_Stilde_of_pos_w
   have h_w_zero : w = 0 := (Prod.mk.injEq _ _ _ _).mp h_combined |>.2.symm
   omega
 
-/-! ### §3e-2 — Coefficient formula for the difference. -/
+/-! ### Coefficient formula for the difference. -/
 
-/-- §3e-2a — At `s ∈ Stilde`, the diff coefficient equals `Cs hf2 s - Cs_term hf2 s 0`. -/
+/-- At `s ∈ Stilde`, the diff coefficient equals `Cs hf2 s - Cs_term hf2 s 0`. -/
 private lemma fhat_diff_coeff_Stilde
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (s : ↥(Stilde hf2)) :
-    (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    (fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                   (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff s.val
       = Cs hf2 s - Cs_term hf2 s 0 := by
-  rw [HahnSeries.coeff_sub, fhat_coeff_eq_Cs hf2 s]
-  -- Goal: Cs hf2 s - (from_coeff ...).coeff s.val = Cs hf2 s - Cs_term hf2 s 0.
-  -- (from_coeff p T f.coeff h).coeff s.val = OQpUn_embd p T (teichmuller p (f.coeff s.val))
+  rw [HahnSeries.coeff_sub, fhatCoeff_eq_Cs hf2 s]
+  -- Goal: Cs hf2 s - (fromCoeff ...).coeff s.val = Cs hf2 s - Cs_term hf2 s 0.
+  -- (fromCoeff p T f.coeff h).coeff s.val = OQpUn_embd p T (teichmuller p (f.coeff s.val))
   -- Cs_term hf2 s 0 = OQpUn_embd p T (teich p (f.coeff (s.val + 0/T))) * (pInvT p T)^0
   --                = OQpUn_embd p T (teich p (f.coeff s.val))
   unfold Cs_term
@@ -939,7 +972,7 @@ private lemma fhat_diff_coeff_Stilde
   rw [h0, pow_zero, mul_one]
   rfl
 
-/-- §3e-2b — At `q ∈ f.support \ Stilde`, the diff coefficient equals
+/-- At `q ∈ f.support \ Stilde`, the diff coefficient equals
 `-(OQpUn_embd p T (teichmuller p (f.coeff q)))`. -/
 private lemma fhat_diff_coeff_outside_Stilde
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -947,52 +980,52 @@ private lemma fhat_diff_coeff_outside_Stilde
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {q : ℚ} (hq_not_Stilde : q ∉ Stilde hf2) :
-    (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    (fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                   (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff q
       = -(OQpUn_embd p (T : ℕ) (WittVector.teichmuller p (pAdicHahnSeries.coeff f q))) := by
   rw [HahnSeries.coeff_sub]
   have h_fhat_zero : (fhat hf2).coeff q = 0 := by
-    change fhat_coeff hf2 q = 0
-    unfold fhat_coeff
+    change fhatCoeff hf2 q = 0
+    unfold fhatCoeff
     exact dif_neg hq_not_Stilde
   rw [h_fhat_zero, zero_sub]
   rfl
 
-/-- §3e-2c — At `q ∉ f.support`, the diff coefficient is 0. -/
+/-- At `q ∉ f.support`, the diff coefficient is 0. -/
 private lemma fhat_diff_coeff_outside_support
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {q : ℚ} (hq_not_supp : q ∉ f.support) :
-    (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    (fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                   (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff q = 0 := by
   rw [HahnSeries.coeff_sub]
   have h_f_coeff_zero : pAdicHahnSeries.coeff f q = 0 := by
     by_contra h
     exact hq_not_supp h
   have h_fhat_zero : (fhat hf2).coeff q = 0 := by
-    change fhat_coeff hf2 q = 0
-    unfold fhat_coeff
+    change fhatCoeff hf2 q = 0
+    unfold fhatCoeff
     by_cases hq_stil : q ∈ Stilde hf2
     · exfalso
       apply hq_not_supp
       exact Stilde_subset_support hf2 hq_stil
     · exact dif_neg hq_stil
-  have h_from_coeff_zero : (TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+  have h_fromCoeff_zero : (TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                   (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff q = 0 := by
     change OQpUn_embd p (T : ℕ) (WittVector.teichmuller p (pAdicHahnSeries.coeff f q)) = 0
     rw [h_f_coeff_zero, WittVector.teichmuller_zero, map_zero]
-  rw [h_fhat_zero, h_from_coeff_zero, sub_zero]
+  rw [h_fhat_zero, h_fromCoeff_zero, sub_zero]
 
-/-! ### §3e-3 — Analytical helpers for `fhat_diff_isTNullSeries` (§3e-3d-g).
+/-! ### Analytical helpers for `fhat_diff_isTNullSeries` for the T-null-series argument.
 
 These lemmas extract the `Cs s - Cs_partial s N` valuation tail bound, which is
 the key analytical fact making the Tendsto-zero argument work.  All proofs use only
 the `Cs_tendsto` interface plus the closed-ball-is-closed property of the valuation
 topology on `ℚᵘⁿ_[p,T]`. -/
 
-/-- §3e-3d (limit bound) — `Valued.v (algebraMap (Cs hf2 s - Cs_partial hf2 s N)) ≤ ofAdd(-N)`.
+/-- `Valued.v (algebraMap (Cs hf2 s - Cs_partial hf2 s N)) ≤ ofAdd(-N)`.
 Obtained from the Cauchy bound `Cs_partial_diff_alg_v_le` by taking the limit as
 `N' → ∞`, using `Cs_tendsto` plus `Valued.isClosed_closedBall`. -/
 private lemma Cs_diff_alg_v_le
@@ -1052,7 +1085,7 @@ private lemma Cs_diff_alg_v_le
     exact Cs_partial_diff_alg_v_le hf2 s hN'
   exact h_ball_closed.mem_of_tendsto h_tendsto h_eventually
 
-/-- §3e-3e (per-`s` slice collapse, inner-sum identity).
+/-- Per-`s` slice collapse (inner-sum identity).
 
 For fixed `s ∈ Stilde hf2`, an integer `n_s : ℤ`, and an `M : ℕ`, the algebraic
 identity `(pInvTQ)^w · algebraMap (diff.coeff (s.val + w/T)) =
@@ -1069,7 +1102,7 @@ private lemma per_s_inner_sum_eq
     ∑ w ∈ Finset.range (W + 1),
         (pInvTQ p (T : ℕ)) ^ (w : ℤ) *
           algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-            ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+            ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                           (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
               (s.val + (w : ℚ) / T))
       = algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
@@ -1084,13 +1117,13 @@ private lemma per_s_inner_sum_eq
       ∑ w ∈ Finset.range (W + 1),
         (pInvTQ p (T : ℕ)) ^ (w : ℤ) *
           algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-            ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+            ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                           (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
               (s.val + (w : ℚ) / T))
       = algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (∑ w ∈ Finset.range (W + 1),
             (pInvT p (T : ℕ)) ^ w *
-              ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+              ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                             (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
                 (s.val + (w : ℚ) / T))) := by
     rw [map_sum]
@@ -1102,14 +1135,14 @@ private lemma per_s_inner_sum_eq
   congr 1
   -- Split off w = 0 from the sum.
   rw [Finset.sum_range_succ' (fun w => (pInvT p (T : ℕ)) ^ w *
-        ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+        ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                       (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
           (s.val + (w : ℚ) / T))) W]
   -- Now we have: ∑_{w' ∈ range W} (pInvT)^{w'+1} · diff.coeff(s.val + (w'+1)/T) + (pInvT)^0
   -- · diff.coeff(s.val)
   -- For w = 0:
   have h_w0 : (pInvT p (T : ℕ)) ^ 0 *
-      ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+      ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
         (s.val + ((0 : ℕ) : ℚ) / T))
       = Cs hf2 s - Cs_term hf2 s 0 := by
@@ -1121,7 +1154,7 @@ private lemma per_s_inner_sum_eq
   -- For w' ∈ range W (i.e., w = w' + 1 ≥ 1):
   have h_w_ge1 : ∀ w' ∈ Finset.range W,
       (pInvT p (T : ℕ)) ^ (w' + 1) *
-        ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+        ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                       (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
           (s.val + ((w' + 1 : ℕ) : ℚ) / T))
       = -(Cs_term hf2 s (w' + 1)) := by
@@ -1149,7 +1182,7 @@ private lemma per_s_inner_sum_eq
   rw [Finset.sum_range_succ' (fun w => Cs_term hf2 s w) W]
   ring
 
-/-- §3e-3f (per-`s` slice valuation bound). For fixed `s ∈ Stilde hf2`, an integer
+/-- Per-`s` slice valuation bound. For fixed `s ∈ Stilde hf2`, an integer
 `n_s : ℤ`, and `W : ℕ`, the per-`s` slice `(pInvTQ)^{n_s} · algebraMap(Cs s - Cs_partial s (W+1))`
 has valuation `≤ ofAdd(-(n_s + W + 1))`. -/
 private lemma per_s_slice_v_le
@@ -1182,16 +1215,16 @@ private lemma per_s_slice_v_le
           WithZero (Multiplicative ℤ)) := by
         congr 2; ring
 
-/-! ### §3e-analytic — Body of `fhat_diff_isTNullSeries`. -/
+/-! ### Body of `fhat_diff_isTNullSeries`. -/
 
-/-- §3e-3g — Per-`M` valuation bound for the `Tfinprop`-indexed partial sum of `diff`.
+/-- Per-`M` valuation bound for the `TfiniteBelow`-indexed partial sum of `diff`.
 
 For each `g : ℚ` and `M : ℕ`, the partial sum
-`P_M = ∑_{n ∈ Tfinprop diff g M} (pInvTQ)^n · algebraMap(diff.coeff(g + n/T))`
+`P_M = ∑_{n ∈ TfiniteBelow diff g M} (pInvTQ)^n · algebraMap(diff.coeff(g + n/T))`
 has valuation bounded by `ofAdd(-(K+1))` where `K = ⌊T·(M - g)⌋`.
 
 Strategy:
-1. For each `n ∈ Tfinprop`, by `Stilde_unique_decomposition`, `g + n/T = s.val + w/T`
+1. For each `n ∈ TfiniteBelow`, by `Stilde_unique_decomposition`, `g + n/T = s.val + w/T`
    for a unique `(s, w) ∈ Stilde × ℕ`. Define `s_of n` and `w_of n`.
 2. Let `Stilde_used := image (s_of)` (a Finset). For each `s ∈ Stilde_used`, define
    `n_s := T(s.val - g)` (an integer, since `T(s.val - g) = n - w ∈ ℤ`) and
@@ -1211,53 +1244,53 @@ private lemma fhat_diff_partial_v_le
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     (g : ℚ) (M : ℕ) :
-    Valued.v (∑ n : Set.Finite.toFinset (Tfinprop p (T : ℕ)
-                  (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p (T : ℕ)
+                  (fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)) g M),
               (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
                 algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-                  ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+                  ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
                     (g + (n.val : ℚ) / T))) ≤
       ((Multiplicative.ofAdd (-(⌊(T : ℚ) * ((M : ℚ) - g)⌋ + 1) : ℤ) :
         Multiplicative ℤ) : WithZero _) := by
   classical
   set diff : TLiftedPAdicHahnSeries p (T : ℕ) :=
-    fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                 (pAdicHahnSeries.coeff f) (support_IsPWO f) with hdiff_def
   set K : ℤ := ⌊(T : ℚ) * ((M : ℚ) - g)⌋ with hK_def
   have hT_pos : (0 : ℚ) < (T : ℕ) := by exact_mod_cast T.pos
   have hT_ne : ((T : ℕ) : ℚ) ≠ 0 := ne_of_gt hT_pos
-  -- For each n ∈ Tfinprop.toFinset, g + n/T ∈ f.support.
-  have h_n_supp : ∀ n : ℤ, n ∈ Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M) →
+  -- For each n ∈ TfiniteBelow.toFinset, g + n/T ∈ f.support.
+  have h_n_supp : ∀ n : ℤ, n ∈ Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M) →
       g + (n : ℚ) / (T : ℕ) ∈ f.support := by
     intro n hn
     have hn_data : g + (n : ℚ) / (T : ℕ) ≤ M ∧ diff.coeff (g + (n : ℚ) / (T : ℕ)) ≠ 0 :=
-      (Set.Finite.mem_toFinset (hs := Tfinprop p (T : ℕ) diff g M) (a := n)).mp hn
+      (Set.Finite.mem_toFinset (hs := TfiniteBelow p (T : ℕ) diff g M) (a := n)).mp hn
     by_contra h
     exact hn_data.2 (fhat_diff_coeff_outside_support hf2 h)
-  -- For each n ∈ Tfinprop.toFinset, also: g + n/T ≤ M.
-  have h_n_le_M : ∀ n : ℤ, n ∈ Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M) →
+  -- For each n ∈ TfiniteBelow.toFinset, also: g + n/T ≤ M.
+  have h_n_le_M : ∀ n : ℤ, n ∈ Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M) →
       g + (n : ℚ) / (T : ℕ) ≤ M := by
     intro n hn
-    exact ((Set.Finite.mem_toFinset (hs := Tfinprop p (T : ℕ) diff g M) (a := n)).mp hn).1
+    exact ((Set.Finite.mem_toFinset (hs := TfiniteBelow p (T : ℕ) diff g M) (a := n)).mp hn).1
   -- Define the bijection map on the attached set.
-  let sw_choose : (n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M))) →
+  let sw_choose : (n : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M))) →
       ↥(Stilde hf2) × ℕ :=
     fun n => (Stilde_unique_decomposition hf2 (h_n_supp n.val n.property)).choose
   -- Property of sw_choose: g + n.val/T = (sw_choose n).1.val + (sw_choose n).2 / T.
-  have h_sw_eq : ∀ n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)),
+  have h_sw_eq : ∀ n : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)),
       g + (n.val : ℚ) / (T : ℕ) = ((sw_choose n).1).val +
                                    ((sw_choose n).2 : ℚ) / (T : ℕ) :=
     fun n => (Stilde_unique_decomposition hf2 (h_n_supp n.val n.property)).choose_spec.1
   -- Uniqueness of sw_choose.
-  have h_sw_unique : ∀ n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)),
+  have h_sw_unique : ∀ n : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)),
       ∀ sw', g + (n.val : ℚ) / (T : ℕ) = sw'.1.val + (sw'.2 : ℚ) / (T : ℕ) →
         sw' = sw_choose n :=
     fun n sw' h_eq => (Stilde_unique_decomposition hf2 (h_n_supp n.val n.property)).choose_spec.2
       sw' h_eq
   -- n.val = T·(s.val - g) + w (residue arithmetic).
-  have h_n_decomp : ∀ n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)),
+  have h_n_decomp : ∀ n : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)),
       (n.val : ℚ) = (T : ℕ) * (((sw_choose n).1).val - g) + ((sw_choose n).2 : ℚ) := by
     intro n
     have h1 := h_sw_eq n
@@ -1270,7 +1303,7 @@ private lemma fhat_diff_partial_v_le
     rw [h3]
     field_simp
   -- T·(s.val - g) is an integer for s in image.
-  have h_T_sub_int : ∀ n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)),
+  have h_T_sub_int : ∀ n : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)),
       (T : ℕ) * (((sw_choose n).1).val - g) = (n.val - ((sw_choose n).2 : ℤ) : ℤ) := by
     intro n
     have h := h_n_decomp n
@@ -1279,7 +1312,7 @@ private lemma fhat_diff_partial_v_le
     rw [← this]; push_cast; ring
   -- Define Stilde_used: image of the s coordinate.
   set Stilde_used : Finset ↥(Stilde hf2) :=
-    (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach.image
+    (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach.image
       (fun n => (sw_choose n).1) with hStilde_used_def
   -- For each s ∈ Stilde_used, define n_s : ℤ.
   -- n_s := T·(s.val - g).num (the integer value, which exists for s ∈ Stilde_used).
@@ -1361,7 +1394,7 @@ private lemma fhat_diff_partial_v_le
     rw [h_eq] at h_slice
     exact h_slice
   -- Step: Show the sum identity.
-  -- For each n ∈ Tfinprop, the term equals (pInvTQ)^{n.val} · algebraMap(diff.coeff(g + n/T))
+  -- For each n ∈ TfiniteBelow, the term equals (pInvTQ)^{n.val} · algebraMap(diff.coeff(g + n/T))
   --   = (pInvTQ)^{n_s_int s + (sw_choose n).2} · algebraMap(diff.coeff(s.val + w/T))
   -- where s = (sw_choose n).1, w = (sw_choose n).2.
   -- F : value at a Sigma pair.
@@ -1370,10 +1403,11 @@ private lemma fhat_diff_partial_v_le
       algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
         (diff.coeff (p_sig.1.val + (p_sig.2 : ℚ) / (T : ℕ)))
   -- sigma_of: the indexing function on the subtype.
-  let sigma_of : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)) → Σ _ : ↥(Stilde hf2), ℕ :=
+  let sigma_of : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)) →
+      Σ _ : ↥(Stilde hf2), ℕ :=
     fun n => ⟨(sw_choose n).1, (sw_choose n).2⟩
   -- F (sigma_of n) equals the original summand.
-  have h_F_eq : ∀ n : ↥(Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)),
+  have h_F_eq : ∀ n : ↥(Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)),
       F (sigma_of n) = (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
         algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
           (diff.coeff (g + (n.val : ℚ) / (T : ℕ))) := by
@@ -1396,8 +1430,8 @@ private lemma fhat_diff_partial_v_le
         (diff.coeff ((sw_choose n).1.val + ((sw_choose n).2 : ℚ) / (T : ℕ))) = _
     rw [h_n_eq, h_q_eq]
   -- sigma_of is injective.
-  have h_sigma_inj : ∀ n₁ ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
-      ∀ n₂ ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
+  have h_sigma_inj : ∀ n₁ ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach,
+      ∀ n₂ ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach,
       sigma_of n₁ = sigma_of n₂ → n₁ = n₂ := by
     intro n₁ _ n₂ _ h_eq
     have h_decomp_1 := h_sw_eq n₁
@@ -1418,7 +1452,7 @@ private lemma fhat_diff_partial_v_le
       field_simp at h_div; exact h_div
     exact_mod_cast this
   -- sigma_of maps into FullSigma = Stilde_used.sigma w_range.
-  have h_sigma_mem : ∀ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
+  have h_sigma_mem : ∀ n ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach,
       sigma_of n ∈ Stilde_used.sigma (fun s : ↥(Stilde hf2) => Finset.range (W_s s + 1)) := by
     intro n _
     refine Finset.mem_sigma.mpr ⟨?_, ?_⟩
@@ -1431,7 +1465,6 @@ private lemma fhat_diff_partial_v_le
       have h_w_le : ((sw_choose n).2 : ℚ) / (T : ℕ) ≤ (M : ℚ) - (sw_choose n).1.val := by linarith
       have h_w_le' : ((sw_choose n).2 : ℚ) ≤ (T : ℚ) * ((M : ℚ) - (sw_choose n).1.val) := by
         have h_div_le := (div_le_iff₀ hT_pos).mp h_w_le
-        push_cast at h_div_le
         linarith
       have h_w_int : ((sw_choose n).2 : ℤ) ≤ ⌊(T : ℚ) * ((M : ℚ) - (sw_choose n).1.val)⌋ :=
         Int.le_floor.mpr (by exact_mod_cast h_w_le')
@@ -1451,7 +1484,7 @@ private lemma fhat_diff_partial_v_le
   -- For p ∈ FullSigma \ Image(sigma_of), F(p) = 0.
   have h_zero_outside : ∀ q_sig ∈ Stilde_used.sigma
       (fun s : ↥(Stilde hf2) => Finset.range (W_s s + 1)),
-      q_sig ∉ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach.image sigma_of →
+      q_sig ∉ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach.image sigma_of →
       F q_sig = 0 := by
     intro q_sig hq_sig h_not_im
     rcases q_sig with ⟨s, w⟩
@@ -1497,7 +1530,7 @@ private lemma fhat_diff_partial_v_le
         field_simp
         ring
       have h_n_cand_in_Tfp : n_candidate ∈
-          Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M) := by
+          Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M) := by
         apply (Set.Finite.mem_toFinset _).mpr
         refine ⟨?_, ?_⟩
         · rw [h_q_n_cand]; exact h_sval_le_M_val
@@ -1511,30 +1544,30 @@ private lemma fhat_diff_partial_v_le
         -- h_eq : (s, w) = sw_choose ⟨n_candidate, h_n_cand_in_Tfp⟩
         rw [← h_eq]
       have h_in_im : (⟨s, w⟩ : Σ _ : ↥(Stilde hf2), ℕ) ∈
-          (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach.image sigma_of := by
+          (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach.image sigma_of := by
         refine Finset.mem_image.mpr ?_
         refine ⟨⟨n_candidate, h_n_cand_in_Tfp⟩, Finset.mem_attach _ _, h_sigma_n_cand⟩
       exact h_not_im h_in_im
   -- Sum identity: via Finset.sum_image (injection) + Finset.sum_subset (extension).
   have h_sum_via_sigma :
-      (∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
+      (∑ n ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach,
           (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (diff.coeff (g + (n.val : ℚ) / (T : ℕ)))) =
       ∑ p_sig ∈ Stilde_used.sigma (fun s : ↥(Stilde hf2) => Finset.range (W_s s + 1)),
         F p_sig := by
-    have h_eq : (∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
+    have h_eq : (∑ n ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach,
           (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
             algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
               (diff.coeff (g + (n.val : ℚ) / (T : ℕ)))) =
-        ∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach, F (sigma_of n) := by
+        ∑ n ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach, F (sigma_of n) := by
       apply Finset.sum_congr rfl
       intro n _
       exact (h_F_eq n).symm
     rw [h_eq]
-    rw [show (∑ n ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach,
+    rw [show (∑ n ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach,
               F (sigma_of n)) =
-            ∑ p_sig ∈ (Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M)).attach.image
+            ∑ p_sig ∈ (Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M)).attach.image
               sigma_of, F p_sig from
           (Finset.sum_image h_sigma_inj).symm]
     apply Finset.sum_subset
@@ -1583,7 +1616,7 @@ private lemma fhat_diff_partial_v_le
     rw [h_inner]
   -- Combine: LHS = nested ∑ s ∈ Stilde_used, (pInvTQ)^{n_s} * algebraMap(...).
   have h_LHS_eq :
-      (∑ n : Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M),
+      (∑ n : Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M),
         (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
           algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
             (diff.coeff (g + (n.val : ℚ) / (T : ℕ)))) =
@@ -1598,12 +1631,12 @@ private lemma fhat_diff_partial_v_le
   intro s hs
   exact h_used_per_s_bound s hs
 
-/-- §3e-analytic — The difference `fhat hf2 - from_coeff p T f.coeff (support_IsPWO f)`
+/-- The difference `fhat hf2 - fromCoeff p T f.coeff (support_IsPWO f)`
 is a T-null-series.
 
 Strategy: For each `g : ℚ` and `M : ℕ`, the partial sum `P(M)` is bounded in valuation by
 `ofAdd(-(K+1))` where `K = ⌊T·(M - g)⌋`.  The bound is obtained by recognising each
-`n ∈ Tfinprop diff g M` as `n = T·(s.val - g) + w` for the unique decomposition
+`n ∈ TfiniteBelow diff g M` as `n = T·(s.val - g) + w` for the unique decomposition
 `(s, w) ∈ Stilde × ℕ` of `g + n/T ∈ f.support`, and observing that the per-`s`
 fiber sums collapse to `(pInvTQ)^{n_s} · algebraMap (Cs hf2 s - Cs_partial hf2 s (W_s + 1))`,
 whose valuation is `≤ ofAdd(-(n_s + W_s + 1)) = ofAdd(-(K+1))` by `Cs_diff_alg_v_le`. -/
@@ -1612,7 +1645,7 @@ private lemma fhat_diff_isTNullSeries
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
-    fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                   (pAdicHahnSeries.coeff f) (support_IsPWO f)
       ∈ TNullSeriesIdeal p (T : ℕ) := by
   -- Structural prerequisites already in scope:
@@ -1628,12 +1661,12 @@ private lemma fhat_diff_isTNullSeries
   intro g
   -- Set up notation.
   set diff : TLiftedPAdicHahnSeries p (T : ℕ) :=
-    fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+    fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                 (pAdicHahnSeries.coeff f) (support_IsPWO f)
     with hdiff_def
   -- The partial sum sequence.
   set P : ℕ → ℚᵘⁿ_[p, (T : ℕ)] := fun M =>
-    ∑ n : Set.Finite.toFinset (Tfinprop p (T : ℕ) diff g M),
+    ∑ n : Set.Finite.toFinset (TfiniteBelow p (T : ℕ) diff g M),
       (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
         algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]) (diff.coeff (g + (n.val : ℚ) / T))
     with hP_def
@@ -1644,8 +1677,8 @@ private lemma fhat_diff_isTNullSeries
   -- As `M → ∞`, `⌊T·(M - g)⌋ → ∞`, so the bound `→ 0`, giving the result.
   --
   -- The bound follows from:
-  -- (a) re-indexing `Tfinprop diff g M` over `(s, w) ∈ Stilde × ℕ` via
-  --     `Stilde_unique_decomposition` (each `n ∈ Tfinprop` corresponds to a unique
+  -- (a) re-indexing `TfiniteBelow diff g M` over `(s, w) ∈ Stilde × ℕ` via
+  --     `Stilde_unique_decomposition` (each `n ∈ TfiniteBelow` corresponds to a unique
   --     `(s, w)` with `g + n/T = s.val + w/T`);
   -- (b) for fixed `s`, per-`s` slice collapse via `per_s_inner_sum_eq`:
   --     `∑_w (pInvTQ)^w · algebraMap(diff.coeff(s.val + w/T))
@@ -1697,12 +1730,12 @@ private lemma fhat_diff_isTNullSeries
   have h_partial_le := fhat_diff_partial_v_le hf2 g M
   -- Unfold the partial-sum expression so it matches P M / hP_def.
   have h_P_eq : P M =
-      ∑ n : Set.Finite.toFinset (Tfinprop p (T : ℕ)
-                  (fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+      ∑ n : Set.Finite.toFinset (TfiniteBelow p (T : ℕ)
+                  (fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)) g M),
               (pInvTQ p (T : ℕ)) ^ (n.val : ℤ) *
                 algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-                  ((fhat hf2 - TLiftedPAdicHahnSeries.from_coeff p (T : ℕ)
+                  ((fhat hf2 - TLiftedPAdicHahnSeries.fromCoeff p (T : ℕ)
                     (pAdicHahnSeries.coeff f) (support_IsPWO f)).coeff
                     (g + (n.val : ℚ) / T)) := by
     rw [hP_def]
@@ -1714,13 +1747,16 @@ private lemma fhat_diff_isTNullSeries
   apply Multiplicative.ofAdd_lt.mpr
   linarith
 
+/-- The lift `fhat` represents `σ f`: its class modulo the `T`-null-series ideal equals the image
+`σ p T f` of `f` under the T-scaling isomorphism. This identifies the constructed lift with the
+canonical one, so the multinomial expansion of `P(fhat)` computes `P(σ f)`. -/
 lemma mk_fhat_eq_sigma_f {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ)) (fhat hf2) = σ p (T : ℕ) f := by
-  -- Step 1: rewrite σ p T f as mk (from_coeff p T f.coeff (support_IsPWO f)).
-  rw [sigma_eq_mk_from_coeff_fcoeff]
+  -- Step 1: rewrite σ p T f as mk (fromCoeff p T f.coeff (support_IsPWO f)).
+  rw [sigma_eq_mk_fromCoeff_fcoeff]
   -- Step 2: equality of `mk`s reduces to difference in N_T (Ideal.Quotient.eq).
   exact (Ideal.Quotient.eq).mpr (fhat_diff_isTNullSeries hf2)
 
@@ -1740,7 +1776,7 @@ private def FhatData {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
     (Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ)) fhat = σ p (T : ℕ) f)
 
 /-- Existence of the lift data. Assembles the structural pieces `Cs`, `fhat`,
-`Cs_ne_zero`, `fhat_support_subset`, `fhat_coeff_eq_Cs`, `mk_fhat_eq_sigma_f`.
+`Cs_ne_zero`, `fhat_support_subset`, `fhatCoeff_eq_Cs`, `mk_fhat_eq_sigma_f`.
 The two analytical hard steps (the limit existence and the canonical T-expansion
 identification) are encapsulated in `exists_Cs` and `mk_fhat_eq_sigma_f`. -/
 private lemma exists_FhatData
@@ -1750,7 +1786,7 @@ private lemma exists_FhatData
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x}) :
     FhatData f T hf2 :=
   ⟨Cs hf2, fhat hf2, Cs_ne_zero hf2, fhat_support_subset hf2,
-    fhat_coeff_eq_Cs hf2, mk_fhat_eq_sigma_f hf2⟩
+    fhatCoeff_eq_Cs hf2, mk_fhat_eq_sigma_f hf2⟩
 
 /-! ### Step 4–6 — Multinomial expansion, collapse via `lemma_3_8`, contradiction.
 
@@ -1764,38 +1800,38 @@ This is the part that genuinely requires the multinomial expansion of `P.aeval f
 in `TLiftedPAdicHahnSeries`, the T-null-series identity (c) at `q = -r₀/T`, and the
 application of `Sparse.lemma_3_8` to collapse equation (c) to a single term.
 
-* §4a `r0` — the rational `r₀ := ∑_{d ∈ S} ‖d‖·φ₀(d)`.
-* §4b `sigma_aeval_P_eq_zero` — `σ(P.aeval f) = 0` (trivial from ring-hom + hP_aeval).
-* §4d `identity_c` — the T-null-series identity at `q = -r₀/T`.
-* §5a `phi_tilde_constraint_at_phi0` — application of `Sparse.lemma_3_8` to collapse
+* `r0` — the rational `r₀ := ∑_{d ∈ S} ‖d‖·φ₀(d)`.
+* `sigma_aeval_P_eq_zero` — `σ(P.aeval f) = 0` (trivial from ring-hom + hP_aeval).
+* `identity_c` — the T-null-series identity at `q = -r₀/T`.
+* `phi_tilde_constraint_at_phi0` — application of `Sparse.lemma_3_8` to collapse
   φ̃ to φ₀∘μ⁻¹.
-* §5b `identity_c_collapsed` — the surviving single-term equation obtained from
-  §4d and §5a.
+* `identity_c_collapsed` — the surviving single-term equation obtained from
+  the two lemmas above.
 * `final_disjunction` — domain integrality of `ℤᵘⁿ_[p,T]` to extract the disjunction
   from `identity_c_collapsed`. -/
 
-/-- §4a — The rational `r₀ := ∑_{d ∈ S} ‖d‖ · φ₀(d)`.
+/-- The rational `r₀ := ∑_{d ∈ S} ‖d‖ · φ₀(d)`.
 
 Although `r₀` is rational, the exponent `r₀ + T · ∑φ₀(d)·μ(d)` appearing in the
-paper's Step 5 collapse is an integer (cf. `mu_q_residue`). -/
+paper's Step 5 collapse is an integer (cf. `muQ_residue`). -/
 noncomputable def r0 {p : ℕ} [Fact (Nat.Prime p)] {S : Set DigitSeries}
     {hS : ∀ d ∈ S, d.IsP p} {C n : ℕ+} (hSparse : IsCNSparse p C n S hS) : ℚ :=
   ∑ᶠ d : S, (d.val.norm p) * (Sparse.φ₀ hSparse d : ℚ)
 
-/-- §4b — `σ p T (P.aeval f) = 0` in `𝕃_[p,T]`.
+/-- `σ p T (P.aeval f) = 0` in `𝕃_[p,T]`.
 
 Trivial consequence of `σ` being a ring hom and `P.aeval f = 0`. The PDF uses this
 together with the multinomial expansion of `f̂^i` in `TLiftedPAdicHahnSeries` to
 deduce `P.aeval(f̂) ∈ N_T`. The bridge requires showing the multinomial expansion in
 `TLiftedPAdicHahnSeries` projects to `P.aeval(σ f)` via the quotient; that bridge is
-the body of `identity_c` (§4d). -/
+the body of `identity_c`. -/
 private lemma sigma_aeval_P_eq_zero
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} (T : ℕ+)
     {P : Polynomial ℚᵘⁿ_[p]} (hP_aeval : (Polynomial.aeval f) P = 0) :
     σ p (T : ℕ) ((Polynomial.aeval f) P) = 0 := by
   rw [hP_aeval]; exact map_zero _
 
-/-! ### §4d-aux — clearing denominators and the `Pfhat_TLifted` construction.
+/-! ### clearing denominators and the `Pfhat_TLifted` construction.
 
 We construct an explicit element `Pfhat_TLifted ∈ TLiftedPAdicHahnSeries p T` that
 serves as the witness for `identity_c`. The construction uses
@@ -1808,14 +1844,14 @@ with `P_int.map (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) = c • P`. Then
 The bridge lemma `Pfhat_TLifted_isTNullSeries` shows the resulting element is a
 T-null-series, using `σ(P.aeval f) = 0` + ring-hom commutation. -/
 
-/-- §4d-a — The denominator-cleared polynomial: `P_int := integerNormalization _ P`.
+/-- The denominator-cleared polynomial: `P_int := integerNormalization _ P`.
 By `IsLocalization.integerNormalization_spec`, there exists `c ∈ nonZeroDivisors ℤᵘⁿ_[p]`
 such that `P_int.map (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]) = c • P`. -/
 noncomputable def P_int {p : ℕ} [Fact (Nat.Prime p)]
     (P : Polynomial ℚᵘⁿ_[p]) : Polynomial ℤᵘⁿ_[p] :=
   IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P
 
-/-- §4d-b — The TLifted-level multinomial expansion:
+/-- The TLifted-level multinomial expansion:
 `Pfhat_TLifted := (P_int.map (OQpUn_embd p T)).aeval fhat`. -/
 noncomputable def Pfhat_TLifted {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
     (P : Polynomial ℚᵘⁿ_[p])
@@ -1823,7 +1859,7 @@ noncomputable def Pfhat_TLifted {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
     TLiftedPAdicHahnSeries p (T : ℕ) :=
   ((P_int P).map (OQpUn_embd p T)).aeval fhat
 
-/-- §4d-c — The bridge lemma: `Pfhat_TLifted` is a T-null-series.
+/-- The bridge lemma: `Pfhat_TLifted` is a T-null-series.
 
 Proof outline:
 1. Compose ZpUn_embd = lift QpUn_embd ∘ algebraMap.
@@ -1913,7 +1949,7 @@ private lemma Pfhat_TLifted_isTNullSeries
       (TNullSeriesIdeal p (T : ℕ)) fhat = σ p (T : ℕ) f := h_mk_eq
   rw [h_mkₐ_eq, h_aeval_map, hPint_σf]
 
-/-- §4d-e — Per-coefficient expansion of `Pfhat_TLifted`.
+/-- Per-coefficient expansion of `Pfhat_TLifted`.
 
 For each `q ∈ ℚ`, `(Pfhat_TLifted T P fhat).coeff q` decomposes as a finite sum
 `∑ᵢ OQpUn_embd (P_int.coeff i) * (fhat^i).coeff q`. This is the entry point for
@@ -1933,11 +1969,11 @@ lemma Pfhat_TLifted_coeff_eq {p : ℕ} [Fact (Nat.Prime p)] (T : ℕ+)
   rw [HahnSeries.single_zero_mul_eq_smul]
   rfl
 
-/-- §4d — Identity (c): the IsTNullSeries identity for `P.aeval(f̂)` specialised at
+/-- Identity (c): the IsTNullSeries identity for `P.aeval(f̂)` specialised at
 `q = -r₀/T`.
 
-PDF reasoning: by §4b, `σ(P.aeval f) = 0`. By multinomial expansion of `f̂^i`, the
-element of `TLiftedPAdicHahnSeries p T` whose quotient image equals `σ(P.aeval f) = 0`
+PDF reasoning: by `sigma_aeval_P_eq_zero`, `σ(P.aeval f) = 0`. By multinomial expansion of `f̂^i`,
+the element of `TLiftedPAdicHahnSeries p T` whose quotient image equals `σ(P.aeval f) = 0`
 is in `N_T`. Applying `IsTNullSeries` at `q = -r₀/T` and using the prescribed
 coefficient formula yields:
 `∑_{w ∈ ℤ} p^w · ∑_{φ̃ : S̃ → ℕ, ∑φ̃ ≤ n, ∑φ̃(s)·s = -r₀/T + w/T}
@@ -1967,10 +2003,10 @@ private lemma identity_c
 
 /-! ### Step 5 — Collapse via Lemma 3.8. -/
 
-/-- §5a — Every `φ̃ : Stilde → ℕ` satisfying the constraints from equation (c)
+/-- Every `φ̃ : Stilde → ℕ` satisfying the constraints from equation (c)
 equals `φ₀ ∘ μ⁻¹`.
 
-paper reasoning: define `φ := φ̃ ∘ μ : S → ℕ`. Using `mu_q_residue` (i.e. `‖d‖ + T·μ(d) ∈ ℤ`):
+paper reasoning: define `φ := φ̃ ∘ μ : S → ℕ`. Using `muQ_residue` (i.e. `‖d‖ + T·μ(d) ∈ ℤ`):
 `∑‖d‖·φ(d) ≡ -T·∑μ(d)·φ̃(μd) = -T·∑s·φ̃(s) (mod ℤ)`. From the residue hypothesis,
 `-T·∑s·φ̃(s) ≡ r₀ (mod ℤ) = ∑‖d‖·φ₀(d) (mod ℤ)`. So `φ` satisfies the residue clause
 of `Sparse.lemma_3_8`. Combined with finite support and the sum bound, lemma_3_8 yields
@@ -1986,8 +2022,8 @@ private lemma phi_tilde_constraint_at_phi0
     (hphiT_sum : ∑ᶠ s : ↥(Stilde hf2), phiT s ≤ n)
     (hphiT_residue : ((T : ℚ) * (∑ᶠ s : ↥(Stilde hf2), (s.val : ℚ) * (phiT s : ℚ))
                     + r0 hSparse).isInt = true) :
-    phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := by
-  set μ := mu_equiv hS hf2 with hμ_def
+    phiT = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm := by
+  set μ := muEquiv hS hf2 with hμ_def
   set φ : S → ℕ := phiT ∘ μ with hφ_def
   -- Apply Sparse.lemma_3_8 to get φ = φ₀ hSparse.
   have hφ_eq : φ = Sparse.φ₀ hSparse := by
@@ -2004,12 +2040,12 @@ private lemma phi_tilde_constraint_at_phi0
       rw [h_eq]
       exact hphiT_sum
     · -- The residue clause: (∑ᶠ d, ‖d‖·φ d - ∑ᶠ d, ‖d‖·φ₀ d).isInt.
-      -- use `mu_q_residue d : (‖d‖ + T·μ_q d).isInt = true`, multiply
+      -- use `muQ_residue d : (‖d‖ + T·μ_q d).isInt = true`, multiply
       -- by `phiT(μ d)`, sum over `d` (giving an integer sum), distribute, change
       -- variable `d ↦ μ d` to land at `∑ᶠ s, s·phiT s`, and combine with
       -- `hphiT_residue` to conclude.
-      -- (μ d).val = mu_q hf2 d, by def of `mu_equiv` and `mu_to_Stilde`.
-      have hμ_val : ∀ d : S, ((μ d : ↥(Stilde hf2)) : ℚ) = mu_q hf2 d := fun _ => rfl
+      -- (μ d).val = muQ hf2 d, by def of `muEquiv` and `muToStilde`.
+      have hμ_val : ∀ d : S, ((μ d : ↥(Stilde hf2)) : ℚ) = muQ hf2 d := fun _ => rfl
       -- Finite support of φ = phiT ∘ μ.
       have h_phi_supp_finite : (Function.support φ).Finite := by
         rw [hφ_def, Function.support_comp_eq_preimage]
@@ -2021,7 +2057,7 @@ private lemma phi_tilde_constraint_at_phi0
         intro d
         refine isInt_mul' ?_ (isInt_natCast' _)
         rw [hμ_val]
-        exact mu_q_residue hf2 d
+        exact muQ_residue hf2 d
       -- Helper: support of a product is contained in `Function.support φ`
       -- whenever the second factor is the `phiT(μ ·)` cast.
       have h_supp_via_phi : ∀ (h : S → ℚ),
@@ -2133,13 +2169,13 @@ private lemma phi_tilde_constraint_at_phi0
   simp only [hφ_def, Function.comp_apply, Equiv.apply_symm_apply] at h
   exact h
 
-/-- §5b-prelim — The expression `r₀ + T·∑φ₀(d)·μ(d)` is an integer.
+/-- The expression `r₀ + T·∑φ₀(d)·μ(d)` is an integer.
 
 computation (equation for the surviving `w`):
 * `r₀ = ∑ᶠ d : S, ||d|| · φ₀(d)` by definition.
 * `T · ∑ᶠ d, φ₀(d) · μ(d) = ∑ᶠ d, φ₀(d) · (T · μ(d))`.
 * So `r₀ + T·∑φ₀(d)·μ(d) = ∑ᶠ d, φ₀(d) · (||d|| + T · μ(d))`.
-* Each `||d|| + T · μ(d) ∈ ℤ` by `mu_q_residue`.
+* Each `||d|| + T · μ(d) ∈ ℤ` by `muQ_residue`.
 * The finite sum of integers is an integer.
 
 This is used as the concrete construction of `w₀` in `Pfhat_TLifted_collapse_witness`. -/
@@ -2150,10 +2186,10 @@ private lemma w0_rat_isInt
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS) :
     (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-        (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).isInt = true := by
+        (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).isInt = true := by
   -- The combined sum is finitely supported (only d with φ₀(d) ≠ 0 contribute).
   -- Express r₀ + T·∑φ₀(d)·μ(d) as ∑φ₀(d)·(||d|| + T·μ(d)).
-  -- Each summand is isInt by mu_q_residue.
+  -- Each summand is isInt by muQ_residue.
   -- The finite sum of isInts is isInt by finsum_isInt.
   have hφ_supp_finite : (Function.support (Sparse.φ₀ hSparse)).Finite := by
     refine Set.Finite.subset (Set.finite_range hSparse.2.choose) ?_
@@ -2169,7 +2205,7 @@ private lemma w0_rat_isInt
   have h_term_supp_finite :
       (Function.support (fun d : S =>
         ((Sparse.φ₀ hSparse d : ℕ) : ℚ) *
-          ((d.val.norm p : ℚ) + (T : ℚ) * (mu_q hf2 d : ℚ)))).Finite := by
+          ((d.val.norm p : ℚ) + (T : ℚ) * (muQ hf2 d : ℚ)))).Finite := by
     refine hφ_supp_finite.subset ?_
     intro d hd
     simp only [Function.mem_support, ne_eq] at hd ⊢
@@ -2180,14 +2216,14 @@ private lemma w0_rat_isInt
   -- Each summand is isInt.
   have h_each_int : ∀ d : S,
       (((Sparse.φ₀ hSparse d : ℕ) : ℚ) *
-        ((d.val.norm p : ℚ) + (T : ℚ) * (mu_q hf2 d : ℚ))).isInt = true := by
+        ((d.val.norm p : ℚ) + (T : ℚ) * (muQ hf2 d : ℚ))).isInt = true := by
     intro d
     refine isInt_mul' (isInt_natCast' _) ?_
-    exact mu_q_residue hf2 d
+    exact muQ_residue hf2 d
   -- So the combined sum is isInt.
   have h_combined_isInt :
       (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) *
-        ((d.val.norm p : ℚ) + (T : ℚ) * (mu_q hf2 d : ℚ))).isInt = true :=
+        ((d.val.norm p : ℚ) + (T : ℚ) * (muQ hf2 d : ℚ))).isInt = true :=
     finsum_isInt h_term_supp_finite h_each_int
   -- Now rewrite the target as the combined sum.
   -- r₀ = ∑ᶠ d, ||d|| · φ₀(d), and T · ∑ᶠ d, φ₀(d) · μ(d) = ∑ᶠ d, φ₀(d) · (T · μ(d)).
@@ -2204,7 +2240,7 @@ private lemma w0_rat_isInt
     rw [this, mul_zero]
   have h_muprod_supp_finite :
       (Function.support (fun d : S =>
-        ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * (mu_q hf2 d : ℚ))).Finite := by
+        ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * (muQ hf2 d : ℚ))).Finite := by
     refine hφ_supp_finite.subset ?_
     intro d hd
     simp only [Function.mem_support, ne_eq] at hd ⊢
@@ -2215,9 +2251,9 @@ private lemma w0_rat_isInt
   -- Distribute the combined sum.
   have h_distrib :
       (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) *
-        ((d.val.norm p : ℚ) + (T : ℚ) * (mu_q hf2 d : ℚ))) =
+        ((d.val.norm p : ℚ) + (T : ℚ) * (muQ hf2 d : ℚ))) =
       (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * (d.val.norm p : ℚ)) +
-      (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((T : ℚ) * (mu_q hf2 d : ℚ))) := by
+      (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((T : ℚ) * (muQ hf2 d : ℚ))) := by
     rw [← finsum_add_distrib]
     · apply finsum_congr; intro d; ring
     · refine hφ_supp_finite.subset ?_
@@ -2236,8 +2272,8 @@ private lemma w0_rat_isInt
       rw [this, zero_mul]
   -- Pull T out of the second sum.
   have h_pull_T :
-      (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((T : ℚ) * (mu_q hf2 d : ℚ))) =
-      (T : ℚ) * ∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * (mu_q hf2 d : ℚ) := by
+      (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((T : ℚ) * (muQ hf2 d : ℚ))) =
+      (T : ℚ) * ∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * (muQ hf2 d : ℚ) := by
     rw [mul_finsum' _ _ h_muprod_supp_finite]
     apply finsum_congr; intro d; ring
   -- Commute the first sum.
@@ -2248,15 +2284,14 @@ private lemma w0_rat_isInt
   -- Combine.
   have h_combined_eq :
       (∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) *
-        ((d.val.norm p : ℚ) + (T : ℚ) * (mu_q hf2 d : ℚ))) =
+        ((d.val.norm p : ℚ) + (T : ℚ) * (muQ hf2 d : ℚ))) =
       r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-        (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) := by
+        (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ) := by
     rw [h_distrib, h_swap, h_pull_T]
     rfl
   rw [← h_combined_eq]
   exact h_combined_isInt
 
--- §5b prelim — Helper A0.
 -- Trivial polynomial-degree bound, factored out to avoid heartbeat blowup
 -- in the conjunct-(b) discharge.
 private lemma Pfhat_map_natDegree_bound
@@ -2270,21 +2305,17 @@ private lemma Pfhat_map_natDegree_bound
     intro N hN
     have h_P_coeff_zero : P.coeff N = 0 :=
       Polynomial.coeff_eq_zero_of_natDegree_lt hN
-    -- (P_int P).coeff N = coeffIntegerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P N
-    -- = 0 when P.coeff N = 0 (by coeffIntegerNormalization_of_coeff_zero).
-    have h_coeff_eq :
-        (P_int P).coeff N =
-        IsLocalization.coeffIntegerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P N := by
-      change (IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff N =
-        IsLocalization.coeffIntegerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P N
-      exact IsLocalization.integerNormalization_coeff _ _ _
-    rw [h_coeff_eq]
-    exact IsLocalization.coeffIntegerNormalization_of_coeff_zero _ P N h_P_coeff_zero
+    -- `(P_int P).coeff N = (integerNormalization _ P).coeff N`, which vanishes when `P.coeff N = 0`
+    -- because `integerNormalization` has support contained in that of `P`.
+    have h_coeff_zero : (P_int P).coeff N = 0 := by
+      rw [← Polynomial.notMem_support_iff]
+      exact fun hmem =>
+        Polynomial.notMem_support_iff.mpr h_P_coeff_zero
+          (IsLocalization.integerNormalization_support (nonZeroDivisors ℤᵘⁿ_[p]) P hmem)
+    rw [h_coeff_zero]
   omega
 
-/-- §5b prelim — Helper A1.
-
-Multiset decomposition of the support of `fhat ^ i`. If `q ∈ (fhat ^ i).support`,
+/-- Multiset decomposition of the support of `fhat ^ i`. If `q ∈ (fhat ^ i).support`,
 then `q` is the sum of `i` values drawn from `Stilde hf2` (with multiplicity). -/
 private lemma fhat_pow_support_multiset_decomp
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -2323,9 +2354,7 @@ private lemma fhat_pow_support_multiset_decomp
     · simp [hl_a_card]
     · simp [Multiset.map_cons, Multiset.sum_cons, hl_a_sum, add_comm, hab]
 
-/-- §5b prelim — Helper A2.
-
-Residue-collapse of `(fhat ^ i).coeff q`. If the coefficient is non-zero
+/-- Residue-collapse of `(fhat ^ i).coeff q`. If the coefficient is non-zero
 and the residue constraint holds, then `i = n` and the unique `phiT`
 matching the multiset-count is `Sparse.φ₀ hSparse ∘ μ⁻¹`. -/
 private lemma fhat_pow_coeff_residue_collapse
@@ -2343,7 +2372,7 @@ private lemma fhat_pow_coeff_residue_collapse
     ∃! (phiT : ↥(Stilde hf2) → ℕ),
       (Function.support phiT).Finite ∧
       (∑ᶠ s : ↥(Stilde hf2), phiT s ≤ n) ∧
-      phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := by
+      phiT = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm := by
   classical
   have hq_mem : q ∈ (fhat ^ i).support := by
     simpa [HahnSeries.mem_support] using h_coeff_ne
@@ -2420,7 +2449,7 @@ private lemma fhat_pow_coeff_residue_collapse
     rw [h_residue_bridge]
     exact hq_residue
   have hphiT_eq :
-      phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm :=
+      phiT = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm :=
     phi_tilde_constraint_at_phi0 hS hf2 hSparse phiT hphiT_finite hphiT_sum hphiT_residue
   refine And.intro ?_ ?_
   · -- Deduce i = n.
@@ -2495,15 +2524,15 @@ private lemma fhat_pow_coeff_residue_collapse
       rw [← hl_card, ← h_count_bridge]
       have heq : (∑ᶠ s : ↥(Stilde hf2), phiT s) =
           ∑ᶠ s : ↥(Stilde hf2),
-            (Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm) s := by
+            (Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm) s := by
         apply finsum_congr; intro s; rw [hphiT_eq]
       rw [heq]
-      -- change of variable: along (mu_equiv hS hf2).symm
-      have := finsum_comp_equiv (mu_equiv hS hf2)
-        (f := Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm)
+      -- change of variable: along (muEquiv hS hf2).symm
+      have := finsum_comp_equiv (muEquiv hS hf2)
+        (f := Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm)
       -- this : ∑ᶠ d : S, (φ₀ ∘ μ.symm) (μ d) = ∑ᶠ s, (φ₀ ∘ μ.symm) s
       have hcomp : (fun d : S =>
-          (Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm) ((mu_equiv hS hf2) d))
+          (Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm) ((muEquiv hS hf2) d))
           = Sparse.φ₀ hSparse := by
         funext d
         simp
@@ -2515,21 +2544,20 @@ private lemma fhat_pow_coeff_residue_collapse
   · refine ⟨phiT, ?_, ?_⟩
     · exact ⟨hphiT_finite, hphiT_sum, hphiT_eq⟩
     · intro phiU hphiU
-      have hUeq : phiU = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := hphiU.2.2
-      have hTeq : phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm := hphiT_eq
+      have hUeq : phiU = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm := hphiU.2.2
+      have hTeq : phiT = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm := hphiT_eq
       simp [hUeq, hTeq]
 
-/- §5b — Closure lemma for Helper A3 sorry #2.
+/- Closure lemma for the coefficient-collapse argument.
 
-After composing A4a (`coeff_pow_eq_sum_over_pi`) → `Finset.sum_filter` →
-Helper A5 (`pi_filter_q0_eq_count_fiber`) → A4b
-(`sum_over_functions_with_fixed_counts`) → A4d
-(`product_rewrite_with_coeff_eq`), the remaining reindexing
-`∏ a : ↥A, Cs ⟨a, hA⟩ ^ m0 a = ∏ᶠ d : S, Cs (mu_to_Stilde d) ^ φ₀(d)`
+After composing `coeff_pow_eq_sum_over_pi` → `Finset.sum_filter` →
+`pi_filter_q0_eq_count_fiber` → `sum_over_functions_with_fixed_counts` →
+`product_rewrite_with_coeff_eq`, the remaining reindexing
+`∏ a : ↥A, Cs ⟨a, hA⟩ ^ m0 a = ∏ᶠ d : S, Cs (muToStilde d) ^ φ₀(d)`
 and the identification
 `Nat.cast (Nat.multinomial univ m0) =
   (Nat.multinomial hφ₀_finite.toFinset φ₀ : ℤᵘⁿ_[p,T])`
-combine into the conclusion of Helper A3 sorry #2.
+combine into the multinomial form of the collapsed coefficient.
 -/
 
 /-! ### closure-lemma truncation — Sub-lemma 1.
@@ -2549,7 +2577,7 @@ private lemma tuple_summing_to_q0_lies_in_A
     (he_residue : ((T : ℚ) * (∑ i : Fin n, ((e i).val : ℚ)) +
                     r0 hSparse).isInt = true) :
     ∀ i : Fin n, ∃ d : S,
-      Sparse.φ₀ hSparse d ≠ 0 ∧ (e i).val = mu_q hf2 d := by
+      Sparse.φ₀ hSparse d ≠ 0 ∧ (e i).val = muQ hf2 d := by
   classical
   -- Build the multiset l_e of (e i)'s and its toFinsupp count function phiT.
   let l_e : Multiset (↥(Stilde hf2)) :=
@@ -2625,7 +2653,7 @@ private lemma tuple_summing_to_q0_lies_in_A
     rw [h_residue_bridge]; exact he_residue
   -- Apply phi_tilde_constraint_at_phi0 to conclude phiT = φ₀ ∘ μ.symm.
   have hphiT_eq :
-      phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm :=
+      phiT = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm :=
     phi_tilde_constraint_at_phi0 hS hf2 hSparse phiT hphiT_finite hphiT_sum hphiT_residue
   -- Now derive the conclusion for each i : Fin n.
   intro i
@@ -2640,31 +2668,31 @@ private lemma tuple_summing_to_q0_lies_in_A
     exact Multiset.one_le_count_iff_mem.mpr h_mem_l_e
   -- phiT (e i) = φ₀ (μ.symm (e i)).
   have h_phiT_at_i :
-      phiT (e i) = Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm (e i)) := by
+      phiT (e i) = Sparse.φ₀ hSparse ((muEquiv hS hf2).symm (e i)) := by
     have := congrFun hphiT_eq (e i)
     simpa [Function.comp_apply] using this
-  refine ⟨(mu_equiv hS hf2).symm (e i), ?_, ?_⟩
+  refine ⟨(muEquiv hS hf2).symm (e i), ?_, ?_⟩
   · -- φ₀ (μ.symm (e i)) ≠ 0.
     intro h_phi_zero
     have h_phiT_zero : phiT (e i) = 0 := by rw [h_phiT_at_i, h_phi_zero]
     omega
-  · -- (e i).val = mu_q hf2 (μ.symm (e i)).
-    have h_apply : (mu_equiv hS hf2) ((mu_equiv hS hf2).symm (e i)) = e i :=
-      Equiv.apply_symm_apply (mu_equiv hS hf2) (e i)
-    -- ((mu_equiv hS hf2) d).val = mu_q hf2 d by definition of mu_equiv / mu_to_Stilde.
+  · -- (e i).val = muQ hf2 (μ.symm (e i)).
+    have h_apply : (muEquiv hS hf2) ((muEquiv hS hf2).symm (e i)) = e i :=
+      Equiv.apply_symm_apply (muEquiv hS hf2) (e i)
+    -- ((muEquiv hS hf2) d).val = muQ hf2 d by definition of muEquiv / muToStilde.
     have h_val_at_symm :
-        ((mu_equiv hS hf2) ((mu_equiv hS hf2).symm (e i)) : ↥(Stilde hf2)).val
-        = mu_q hf2 ((mu_equiv hS hf2).symm (e i)) := rfl
-    have h_val_eq_ei : ((mu_equiv hS hf2) ((mu_equiv hS hf2).symm (e i)) : ↥(Stilde hf2)).val
+        ((muEquiv hS hf2) ((muEquiv hS hf2).symm (e i)) : ↥(Stilde hf2)).val
+        = muQ hf2 ((muEquiv hS hf2).symm (e i)) := rfl
+    have h_val_eq_ei : ((muEquiv hS hf2) ((muEquiv hS hf2).symm (e i)) : ↥(Stilde hf2)).val
         = (e i).val := by rw [h_apply]
     exact h_val_eq_ei.symm.trans h_val_at_symm
 
-/-! ### closure-lemma truncation — Sub-lemma 2 and the truncation `fhat_A_of`.
+/-! ### closure-lemma truncation — Sub-lemma 2 and the truncation `fhatAOf`.
 
 The truncation of `fhat` to support contained in `μ(supp φ₀)`, used in
 Sub-lemma 2 (`coeff_pow_truncate_eq`).
 The definition uses an explicit finite sum of `HahnSeries.single`. -/
-private noncomputable def fhat_A_of
+private noncomputable def fhatAOf
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -2673,15 +2701,15 @@ private noncomputable def fhat_A_of
     (fhat : TLiftedPAdicHahnSeries p (T : ℕ))
     (hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite) :
     TLiftedPAdicHahnSeries p (T : ℕ) :=
-  -- Explicit truncation: sum HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))
+  -- Explicit truncation: sum HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))
   -- over d ∈ supp φ₀. The support of the result is contained in μ(supp φ₀),
   -- so A4a applies after this truncation.
   ∑ d ∈ hφ₀_finite.toFinset,
-    HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))
+    HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))
 
 /-- Sub-lemma 2 (`coeff_pow_truncate_eq`).
 
-Proves `(fhat^n).coeff q0 = (fhat_A_of)^n.coeff q0`. The proof goes by induction on
+Proves `(fhat^n).coeff q0 = (fhatAOf)^n.coeff q0`. The proof goes by induction on
 `n`, expanding via `HahnSeries.coeff_mul_left'` (from
 `Mathlib.RingTheory.HahnSeries.Multiplication`) on each side; every contributing
 pair `(a, b)` with `a + b = q0` and `fhat.coeff a ≠ 0`, `(fhat^(k))(b) ≠ 0`,
@@ -2704,20 +2732,20 @@ private lemma coeff_pow_truncate_eq
     (fhat ^ (n : ℕ)).coeff
         (-(r0 hSparse) / T +
           ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-            (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T) =
-      (fhat_A_of hf2 hSparse fhat hφ₀_finite ^ (n : ℕ)).coeff
+            (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T) =
+      (fhatAOf hf2 hSparse fhat hφ₀_finite ^ (n : ℕ)).coeff
         (-(r0 hSparse) / T +
           ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-            (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T) := by
+            (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T) := by
   classical
   -- Setup: name fhatA, q0, and the set A := μ(supp φ₀).
-  set fhatA := fhat_A_of hf2 hSparse fhat hφ₀_finite with hfhatA_def
+  set fhatA := fhatAOf hf2 hSparse fhat hφ₀_finite with hfhatA_def
   set q0 : ℚ := -(r0 hSparse) / T +
         ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-          (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T
+          (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T
         with hq0_def
-  -- A := image of supp φ₀ under mu_q.
-  set A : Set ℚ := {a | ∃ d : S, Sparse.φ₀ hSparse d ≠ 0 ∧ a = mu_q hf2 d}
+  -- A := image of supp φ₀ under muQ.
+  set A : Set ℚ := {a | ∃ d : S, Sparse.φ₀ hSparse d ≠ 0 ∧ a = muQ hf2 d}
         with hA_def
   -- (A0) A ⊆ Stilde hf2.
   have hA_sub_Stilde : A ⊆ Stilde hf2 := by
@@ -2727,20 +2755,20 @@ private lemma coeff_pow_truncate_eq
   have h_fhatA_in_A : ∀ a ∈ A, fhatA.coeff a = fhat.coeff a := by
     rintro a ⟨d₀, hd₀_ne, rfl⟩
     change (∑ d ∈ hφ₀_finite.toFinset,
-        HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff (mu_q hf2 d₀) = _
+        HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))).coeff (muQ hf2 d₀) = _
     rw [HahnSeries.coeff_sum]
     have hd₀_mem : d₀ ∈ hφ₀_finite.toFinset := by
       rw [Set.Finite.mem_toFinset]; exact hd₀_ne
     rw [Finset.sum_eq_single d₀]
     · exact HahnSeries.coeff_single_same _ _
     · intro d _ hne
-      exact HahnSeries.coeff_single_of_ne (fun h => hne (mu_q_injective hS hf2 h.symm))
+      exact HahnSeries.coeff_single_of_ne (fun h => hne (muQ_injective hS hf2 h.symm))
     · intro h; exact absurd hd₀_mem h
   -- (A2) For a ∉ A, fhatA.coeff a = 0 — all summands vanish.
   have h_fhatA_not_A : ∀ a, a ∉ A → fhatA.coeff a = 0 := by
     intro a ha_notA
     change (∑ d ∈ hφ₀_finite.toFinset,
-        HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff a = 0
+        HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))).coeff a = 0
     rw [HahnSeries.coeff_sum]
     apply Finset.sum_eq_zero
     intro d hd
@@ -2809,7 +2837,7 @@ private lemma coeff_pow_truncate_eq
       have hT_ne : (T : ℚ) ≠ 0 := by exact_mod_cast PNat.ne_zero T
       have hk_eq : (T : ℚ) * q0 + r0 hSparse =
           ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-            (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) := by
+            (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) := by
         rw [hq0_def]; field_simp; ring
       rw [hk_eq]; exact isInt_intCast' _
     have he_residue : ((T : ℚ) * (∑ i : Fin (n : ℕ), ((e i).val : ℚ)) + r0 hSparse).isInt
@@ -2923,14 +2951,12 @@ private lemma coeff_pow_truncate_eq
       rw [← HahnSeries.coeff_sub]; exact h_total
     exact sub_eq_zero.mp h_sub_zero
 
-/-! ### §5b auxiliary combinatorics.
+/-! ### auxiliary combinatorics.
 
 The next group of lemmas develops the finite combinatorics needed for the
 collapse of the coefficient at the distinguished exponent. -/
 
-/-- §5b — Helper A4a.
-
-Coefficient of a HahnSeries power as a finite sum over n-tuples. For a HahnSeries
+/-- Coefficient of a HahnSeries power as a finite sum over n-tuples. For a HahnSeries
 `f` with support contained in a finite set `A`, the coefficient of `f^n` at `q`
 equals a finite sum over `Fin n → ↥A` of the product of coefficients, subject to
 a sum-of-coordinates condition. This is the Cauchy-product unfolded n times. -/
@@ -3000,7 +3026,7 @@ private lemma coeff_pow_eq_sum_over_pi
   · rw [if_pos h.symm, if_pos h]
   · rw [if_neg (Ne.symm h), if_neg h]
 
-/- §5b — Helper A4b' via orbit-stabilizer.
+/- Fiber-cardinality via orbit-stabilizer.
 
 The fiber-cardinality identity: the number of functions `Fin n → A` with
 prescribed multiplicities `m0 : A → ℕ` is the multinomial coefficient
@@ -3018,17 +3044,17 @@ The final assembly combines these with
 `Nat.multinomial_spec`. -/
 
 /-- Fintype instance for `Mᵐᵒᵖ` when `M` is a Fintype.
-Local helper for the orbit-stabilizer route to Helper A4b'. -/
+Local helper for the orbit-stabilizer route to the fiber-cardinality lemma. -/
 private instance opFintype' (M : Type*) [Fintype M] : Fintype Mᵐᵒᵖ :=
   Fintype.ofEquiv _ MulOpposite.opEquiv
 
 /-- Fintype instance for `(Equiv.Perm (Fin n))ᵈᵐᵃ`.
-Local helper for the orbit-stabilizer route to Helper A4b'. -/
+Local helper for the orbit-stabilizer route to the fiber-cardinality lemma. -/
 private instance permDomMulActFintype' (n : ℕ) :
     Fintype (Equiv.Perm (Fin n))ᵈᵐᵃ :=
   Fintype.ofEquiv _ DomMulAct.mk
 
-/-- §5b auxiliary — Witness construction `e₀ : Fin n → A` with prescribed counts.
+/-- Witness construction `e₀ : Fin n → A` with prescribed counts.
 Given `∑ a, m0 a = n`, exhibit `e₀ : Fin n → A` whose fiber over each `a` has
 cardinality `m0 a`. Uses the σ-construction `Σ a : A, Fin (m0 a) ≃ Fin n`. -/
 private lemma exists_function_with_count_vector_aux
@@ -3057,7 +3083,7 @@ private lemma exists_function_with_count_vector_aux
     rw [Fintype.card_congr e2, Fintype.card_fin]
   exact h_card
 
-/-- §5b auxiliary — Stabilizer cardinality for orbit-stabilizer on `Fin n → A`.
+/-- Stabilizer cardinality for orbit-stabilizer on `Fin n → A`.
 The stabilizer of `e₀` under the `DomMulAct` (right-composition) action of
 `Equiv.Perm (Fin n)` has cardinality `∏ a : A, (m0 a)!`. Uses
 `DomMulAct.stabilizerMulEquiv` to identify the stabilizer with
@@ -3083,7 +3109,7 @@ private lemma stabilizer_perm_dom_card_aux
     rw [← he₀ a]; exact Fintype.card_congr (Equiv.setCongr rfl).symm
   rw [this]
 
-/-- §5b auxiliary — Orbit = count-vector fiber under `DomMulAct` action.
+/-- Orbit = count-vector fiber under `DomMulAct` action.
 The orbit of `e₀ : Fin n → A` under right-composition by `Equiv.Perm (Fin n)`
 equals the set of functions with the same count vector as `e₀`. The forward
 direction (orbit ⊆ fiber) is direct (precomposition preserves counts); the
@@ -3193,9 +3219,7 @@ private lemma sum_over_functions_with_fixed_counts'
     · intro ⟨x, _⟩; rfl
     · intro ⟨e, _⟩; rfl
 
-/-- §5b — Helper A4b.
-
-Sum over functions with fixed multiplicity equals multinomial × power product.
+/-- Sum over functions with fixed multiplicity equals multinomial × power product.
 If `e : Fin n → A` is restricted to have prescribed multiplicities `m0 : A → ℕ`,
 then the sum of `∏ i w(e i)` over the resulting fiber equals
 `(Nat.multinomial univ m0 : R) * ∏ a w(a)^(m0 a)`. -/
@@ -3241,9 +3265,7 @@ private lemma sum_over_functions_with_fixed_counts
   have hcard := sum_over_functions_with_fixed_counts' (A := A) n m0 hm0
   exact_mod_cast congrArg (fun k : ℕ => (k : R)) hcard
 
-/-- §5b — Helper A4c.
-
-Coefficient-collapse step: combines A4a + A4b under a `hCollapse` hypothesis
+/-- Coefficient-collapse step: combines A4a + A4b under a `hCollapse` hypothesis
 (the q0-contributors are exactly those with fixed count vector `m0`). -/
 private lemma coeff_pow_collapse_to_multinomial_prod
     {Γ : Type*} [DecidableEq Γ] [AddCommMonoid Γ] [PartialOrder Γ]
@@ -3273,9 +3295,7 @@ private lemma coeff_pow_collapse_to_multinomial_prod
   exact sum_over_functions_with_fixed_counts
     (A := ↥A) (R := R) (fun a : ↥A => f.coeff (a : Γ)) n m0 hm0
 
-/-- §5b — Helper A4d.
-
-Trivial product rewrite: from `g` to `Cs` using pointwise equality. -/
+/-- Trivial product rewrite: from `g` to `Cs` using pointwise equality. -/
 private lemma product_rewrite_with_coeff_eq
     {R : Type*} [CommMonoid R]
     {A : Type*} [Fintype A]
@@ -3287,10 +3307,8 @@ private lemma product_rewrite_with_coeff_eq
   intro a _
   simp [h a]
 
-/-- §5b — Helper A5.
-
-The `hCollapse` hypothesis required by Helper A4c: at the surviving residue
-`q0`, the q0-contributors among `Fin n → ↥A` are exactly those with the fixed
+/-- The `hCollapse` hypothesis required by `coeff_pow_collapse_to_multinomial_prod`: at the
+surviving residue `q0`, the q0-contributors among `Fin n → ↥A` are exactly those with the fixed
 count vector `m0 a = φ₀ (μ.symm a)`.
 
 The proof proceeds by `Finset.Subset.antisymm`:
@@ -3300,16 +3318,16 @@ The proof proceeds by `Finset.Subset.antisymm`:
     Step 1. Fiber-wise grouping (same pattern as A4b Step 1):
             `∑ i, (e i : ℚ) = ∑ a : ↥A, (m0 a) * (a.val : ℚ)`
             via `Finset.prod_fiberwise_of_maps_to` (sum variant).
-    Step 2. Substitute `hm0_def` to rewrite `m0 a = φ₀ ((mu_equiv).symm ⟨a.val, ...⟩)`:
-            `= ∑ a : ↥A, (φ₀ ((mu_equiv hS hf2).symm ⟨a.val, ...⟩) : ℕ) * (a.val : ℚ)`
+    Step 2. Substitute `hm0_def` to rewrite `m0 a = φ₀ ((muEquiv).symm ⟨a.val, ...⟩)`:
+            `= ∑ a : ↥A, (φ₀ ((muEquiv hS hf2).symm ⟨a.val, ...⟩) : ℕ) * (a.val : ℚ)`
     Step 3. Convert sum-over-↥A to finsum-over-↥(Stilde hf2) via
             `finsum_mem_finset` + `Finset.sum_subtype` (or extend m0 by zero
             outside A). Use that `support fhat.coeff ⊆ A ⊆ Stilde`.
-    Step 4. Change variables via `finsum_comp_equiv (mu_equiv hS hf2)`
-            to get `∑ᶠ d : S, (φ₀ d : ℕ) * (mu_q hf2 d : ℚ)`.
-    Step 5. Use `w0_rat_isInt` (L1944) to identify
+    Step 4. Change variables via `finsum_comp_equiv (muEquiv hS hf2)`
+            to get `∑ᶠ d : S, (φ₀ d : ℕ) * (muQ hf2 d : ℚ)`.
+    Step 5. Use `w0_rat_isInt` to identify
             `(...).num = ...` (integer cast back) and conclude
-            `q0 = -r0/T + (r0/T + ∑ᶠ d, ...) = ∑ᶠ d, φ₀ d * mu_q d`.
+            `q0 = -r0/T + (r0/T + ∑ᶠ d, ...) = ∑ᶠ d, φ₀ d * muQ d`.
     Key Mathlib helpers: `Rat.den_eq_one_iff` (gives `(x.num : ℚ) = x` when `x.isInt`),
     `Finset.sum_const_nat`, `Finset.sum_subtype`, `finsum_eq_sum_of_support_subset`.
 
@@ -3318,13 +3336,13 @@ The proof proceeds by `Finset.Subset.antisymm`:
     Step 1. Form multiset `l_e` lifting e through hA_sub_Stilde:
             `l_e := (Finset.univ : Finset (Fin n)).val.map
                        (fun i => ⟨(e i : ℚ), hA_sub_Stilde (e i).property⟩)`
-    Step 2. Witness `q0 ∈ (fhat^n).support` via Helper A1
-            (`fhat_pow_support_multiset_decomp` L2087, a:k:a multiset decomp of (fhat^n).support).
-    Step 3. Apply Helper A2 (`fhat_pow_coeff_residue_collapse` L2129) with
+    Step 2. Witness `q0 ∈ (fhat^n).support` via `fhat_pow_support_multiset_decomp`
+            (multiset decomposition of `(fhat^n).support`).
+    Step 3. Apply `fhat_pow_coeff_residue_collapse` with
             `i := n`, `q := q0`, `hi_le := le_refl n`, `hq_residue := hq0_residue`:
-            yields uniqueness of `phiT = φ₀ ∘ (mu_equiv hS hf2).symm`.
+            yields uniqueness of `phiT = φ₀ ∘ (muEquiv hS hf2).symm`.
         Step 4. Identify the multiset's count function with phiT, deduce
-          `count e a = φ₀ ((mu_equiv hS hf2).symm ⟨a.val, ...⟩) = m0 a`. -/
+          `count e a = φ₀ ((muEquiv hS hf2).symm ⟨a.val, ...⟩) = m0 a`. -/
 private lemma pi_filter_q0_eq_count_fiber
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
@@ -3332,12 +3350,12 @@ private lemma pi_filter_q0_eq_count_fiber
                      {x | ∃ q ∈ f.support, -1 * (T : ℚ) * q = x})
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
     (A : Finset ℚ) (hA_sub_Stilde : (A : Set ℚ) ⊆ Stilde hf2)
-    (hA_covers_phi : ∀ d : S, Sparse.φ₀ hSparse d ≠ 0 → (mu_q hf2 d) ∈ A)
+    (hA_covers_phi : ∀ d : S, Sparse.φ₀ hSparse d ≠ 0 → (muQ hf2 d) ∈ A)
     (q0 : ℚ) (hq0_residue : ((T : ℚ) * q0 + r0 hSparse).isInt = true)
-    (hq0_value : q0 = ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ))
+    (hq0_value : q0 = ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ))
     (m0 : ↥A → ℕ)
     (hm0_def : ∀ a : ↥A, m0 a =
-      Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm ⟨a.val, hA_sub_Stilde a.property⟩))
+      Sparse.φ₀ hSparse ((muEquiv hS hf2).symm ⟨a.val, hA_sub_Stilde a.property⟩))
     --(hm0_sum : ∑ a, m0 a = (n : ℕ))
     :
     ((Finset.univ : Finset (Fin (n : ℕ) → ↥A)).filter
@@ -3435,7 +3453,7 @@ private lemma pi_filter_q0_eq_count_fiber
           + r0 hSparse).isInt = true := by
       rw [h_residue_bridge]; exact hq0_residue
     have hphiT_eq :
-        phiT = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm :=
+        phiT = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm :=
       phi_tilde_constraint_at_phi0 hS hf2 hSparse phiT hphiT_finite hphiT_sum hphiT_residue
     -- Now pull back to A-indexing: count e a = phiT ⟨a.val, ...⟩ = m0 a.
     intro a
@@ -3501,7 +3519,7 @@ private lemma pi_filter_q0_eq_count_fiber
     -- Step 2: by hphiT_eq, phiT s = (φ₀ ∘ μ.symm) s.
     have h_phiT_val :
         phiT (⟨a.val, hA_sub_Stilde a.property⟩ : ↥(Stilde hf2))
-        = Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
+        = Sparse.φ₀ hSparse ((muEquiv hS hf2).symm
             ⟨a.val, hA_sub_Stilde a.property⟩) :=
       congrFun hphiT_eq ⟨a.val, hA_sub_Stilde a.property⟩
     -- Step 3: combine using hm0_def.
@@ -3544,11 +3562,11 @@ private lemma pi_filter_q0_eq_count_fiber
     -- Step 2: substitute hm0_def.
     have h_m0_phi : ∀ a : ↥A,
         (m0 a : ℚ)
-        = ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
+        = ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm
             ⟨a.val, hA_sub_Stilde a.property⟩) : ℕ) : ℚ) := by
       intro a; rw [hm0_def]
     have h_sum_phi : ∑ a : ↥A, (m0 a : ℚ) * (a.val : ℚ)
-        = ∑ a : ↥A, ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
+        = ∑ a : ↥A, ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm
             ⟨a.val, hA_sub_Stilde a.property⟩) : ℕ) : ℚ) * (a.val : ℚ) := by
       apply Finset.sum_congr rfl
       intro a _
@@ -3559,15 +3577,15 @@ private lemma pi_filter_q0_eq_count_fiber
     -- (since the val maps coincide); on the complement we use finsum_eq_sum_of_support_subset.
     -- Strategy: lift m0 to all of Stilde via subtype lifting.
     set G : ↥(Stilde hf2) → ℚ := fun s : ↥(Stilde hf2) =>
-        ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) : ℕ) : ℚ) * (s.val : ℚ) with hG_def
+        ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) : ℕ) : ℚ) * (s.val : ℚ) with hG_def
     -- Each summand in the A-sum equals G ⟨a.val, hA_sub_Stilde a.property⟩.
     have h_G_match : ∀ a : ↥A,
-        ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
+        ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm
             ⟨a.val, hA_sub_Stilde a.property⟩) : ℕ) : ℚ) * (a.val : ℚ)
         = G ⟨a.val, hA_sub_Stilde a.property⟩ := by
       intro a; rfl
     have h_sum_via_G :
-        ∑ a : ↥A, ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
+        ∑ a : ↥A, ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm
             ⟨a.val, hA_sub_Stilde a.property⟩) : ℕ) : ℚ) * (a.val : ℚ)
         = ∑ a : ↥A, G ⟨a.val, hA_sub_Stilde a.property⟩ := by
       apply Finset.sum_congr rfl
@@ -3581,14 +3599,14 @@ private lemma pi_filter_q0_eq_count_fiber
     -- We use that ∑ a : ↥A, G ⟨a.val, ...⟩ = ∑ᶠ s : ↥(Stilde hf2), G s
     -- iff the support of G is contained in the image of A in Stilde, plus
     -- the embedding is injective.
-    -- Simpler approach: compute ∑ᶠ d : S, (φ₀ d : ℚ) * (mu_q hf2 d : ℚ) directly.
-    -- The key: change variable along (mu_equiv hS hf2).symm:
-    --   ∑ᶠ d : S, (φ₀ d : ℚ) * (mu_q hf2 d : ℚ)
-    --   = ∑ᶠ s : ↥(Stilde hf2), (φ₀ ((mu_equiv hS hf2).symm s) : ℚ) * (s.val : ℚ)
-    -- (since mu_q hf2 d = (mu_to_Stilde hf2 d).val = ((mu_equiv hS hf2) d).val).
+    -- Simpler approach: compute ∑ᶠ d : S, (φ₀ d : ℚ) * (muQ hf2 d : ℚ) directly.
+    -- The key: change variable along (muEquiv hS hf2).symm:
+    --   ∑ᶠ d : S, (φ₀ d : ℚ) * (muQ hf2 d : ℚ)
+    --   = ∑ᶠ s : ↥(Stilde hf2), (φ₀ ((muEquiv hS hf2).symm s) : ℚ) * (s.val : ℚ)
+    -- (since muQ hf2 d = (muToStilde hf2 d).val = ((muEquiv hS hf2) d).val).
     -- That gives ∑ᶠ s, G s.
     -- Then it remains to show ∑ a : ↥A, G ⟨a.val, ...⟩ = ∑ᶠ s, G s.
-    -- Since G's support is among s where φ₀ ((mu_equiv hS hf2).symm s) ≠ 0,
+    -- Since G's support is among s where φ₀ ((muEquiv hS hf2).symm s) ≠ 0,
     -- and m0 a = φ₀ (μ.symm ⟨a.val, ...⟩) ≠ 0 implies the corresponding a contributes,
     -- AND A ⊆ Stilde via hA_sub_Stilde, the embedding is a Finset-image equiv.
     -- We use Finset.sum_subtype + extension.
@@ -3597,38 +3615,38 @@ private lemma pi_filter_q0_eq_count_fiber
     --   = ∑ s ∈ (A.attach.image (fun a => ⟨a.val, hA_sub_Stilde a.property⟩)), G s
     -- after handling injectivity.
     -- ----- Strategy: bypass A-to-Stilde issue by computing directly. -----
-    -- We have hq0_value: q0 = ∑ᶠ d : S, (φ₀ d : ℚ) * (mu_q hf2 d : ℚ).
-    -- Express the RHS of hq0_value via mu_equiv.
-    -- For each d : S, mu_q hf2 d = (mu_equiv hS hf2 d).val (by definition).
-    have h_mu_eq_val : ∀ d : S, (mu_q hf2 d : ℚ) = ((mu_equiv hS hf2 d).val : ℚ) := by
+    -- We have hq0_value: q0 = ∑ᶠ d : S, (φ₀ d : ℚ) * (muQ hf2 d : ℚ).
+    -- Express the RHS of hq0_value via muEquiv.
+    -- For each d : S, muQ hf2 d = (muEquiv hS hf2 d).val (by definition).
+    have h_mu_eq_val : ∀ d : S, (muQ hf2 d : ℚ) = ((muEquiv hS hf2 d).val : ℚ) := by
       intro d; rfl
     have h_q0_expand :
-        q0 = ∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((mu_equiv hS hf2 d).val : ℚ) := by
+        q0 = ∑ᶠ d : S, ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((muEquiv hS hf2 d).val : ℚ) := by
       rw [hq0_value]
       apply finsum_congr
       intro d
       rw [h_mu_eq_val]
-    -- Now express this via change of variable along mu_equiv:
-    --   ∑ᶠ d : S, (φ₀ d : ℚ) * ((mu_equiv hS hf2 d).val : ℚ)
-    --   = ∑ᶠ s : ↥(Stilde hf2), (φ₀ ((mu_equiv hS hf2).symm s) : ℚ) * (s.val : ℚ)
+    -- Now express this via change of variable along muEquiv:
+    --   ∑ᶠ d : S, (φ₀ d : ℚ) * ((muEquiv hS hf2 d).val : ℚ)
+    --   = ∑ᶠ s : ↥(Stilde hf2), (φ₀ ((muEquiv hS hf2).symm s) : ℚ) * (s.val : ℚ)
     -- via finsum_comp_equiv.
     have h_q0_via_Stilde :
         q0 = ∑ᶠ s : ↥(Stilde hf2), G s := by
       rw [h_q0_expand]
-      -- We apply finsum_comp_equiv with e := (mu_equiv hS hf2).
-      have h_change := finsum_comp_equiv (mu_equiv hS hf2)
+      -- We apply finsum_comp_equiv with e := (muEquiv hS hf2).
+      have h_change := finsum_comp_equiv (muEquiv hS hf2)
         (f := fun s : ↥(Stilde hf2) =>
-          ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) : ℕ) : ℚ) * (s.val : ℚ))
-      -- h_change : ∑ᶠ (d : S), (fun s => ...) (mu_equiv hS hf2 d)
+          ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) : ℕ) : ℚ) * (s.val : ℚ))
+      -- h_change : ∑ᶠ (d : S), (fun s => ...) (muEquiv hS hf2 d)
       --          = ∑ᶠ (s : ↥(Stilde hf2)), (fun s => ...) s
       -- Simplify LHS of h_change.
       have hcomp_eq :
           (fun d : S =>
             ((Sparse.φ₀ hSparse
-              ((mu_equiv hS hf2).symm ((mu_equiv hS hf2) d)) : ℕ) : ℚ)
-            * (((mu_equiv hS hf2) d).val : ℚ))
+              ((muEquiv hS hf2).symm ((muEquiv hS hf2) d)) : ℕ) : ℚ)
+            * (((muEquiv hS hf2) d).val : ℚ))
           = (fun d : S =>
-            ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((mu_equiv hS hf2 d).val : ℚ)) := by
+            ((Sparse.φ₀ hSparse d : ℕ) : ℚ) * ((muEquiv hS hf2 d).val : ℚ)) := by
         funext d
         simp [Equiv.symm_apply_apply]
       rw [hcomp_eq] at h_change
@@ -3637,10 +3655,10 @@ private lemma pi_filter_q0_eq_count_fiber
     -- The embedding A.attach → Stilde hf2 via a ↦ ⟨a.val, hA_sub_Stilde a.property⟩
     -- has injective image. Off the image (i.e., on s : Stilde with s.val ∉ A),
     -- we claim G s = 0.
-    -- Why? Because if G s ≠ 0, then (φ₀ ((mu_equiv hS hf2).symm s) : ℕ) ≠ 0,
-    -- i.e., (mu_equiv hS hf2).symm s ∈ Function.support (Sparse.φ₀ hSparse) ⊆ S.
+    -- Why? Because if G s ≠ 0, then (φ₀ ((muEquiv hS hf2).symm s) : ℕ) ≠ 0,
+    -- i.e., (muEquiv hS hf2).symm s ∈ Function.support (Sparse.φ₀ hSparse) ⊆ S.
     -- We have hA_supp : Function.support fhat.coeff ⊆ A.
-    -- We need: (s : Stilde hf2 with φ₀ ((mu_equiv hS hf2).symm s) ≠ 0) → s.val ∈ A.
+    -- We need: (s : Stilde hf2 with φ₀ ((muEquiv hS hf2).symm s) ≠ 0) → s.val ∈ A.
     -- This needs that fhat.coeff is non-zero at every such s, which is NOT given here.
     -- BUT the lemma's intended use has m0 supported on A and m0 a = φ₀ (μ.symm ⟨a.val, ...⟩),
     -- so if a "phantom" s : Stilde with s.val ∉ A has φ₀ (μ.symm s) ≠ 0, it cannot
@@ -3681,19 +3699,19 @@ private lemma pi_filter_q0_eq_count_fiber
       -- Goal: Function.support G ⊆ ↑((Finset.univ.image toStilde))
       intro s hs
       simp only [Function.mem_support, ne_eq, hG_def] at hs
-      have h_phi_ne : (Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) : ℕ) ≠ 0 := by
+      have h_phi_ne : (Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) : ℕ) ≠ 0 := by
         intro h
         apply hs
-        rw [show ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) : ℕ) : ℚ) = 0 from by
+        rw [show ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) : ℕ) : ℚ) = 0 from by
           exact_mod_cast h]
         ring
-      have h_phi_ne_nat : Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) ≠ 0 := h_phi_ne
-      -- By hA_covers_phi, mu_q hf2 ((mu_equiv hS hf2).symm s) ∈ A.
-      have h_cover := hA_covers_phi ((mu_equiv hS hf2).symm s) h_phi_ne_nat
-      -- mu_q hf2 ((mu_equiv hS hf2).symm s) = s.val (since mu_equiv applies inverse).
-      have h_mu_inv : mu_q hf2 ((mu_equiv hS hf2).symm s) = s.val := by
-        have : (mu_equiv hS hf2 ((mu_equiv hS hf2).symm s)) = s :=
-          (mu_equiv hS hf2).apply_symm_apply s
+      have h_phi_ne_nat : Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) ≠ 0 := h_phi_ne
+      -- By hA_covers_phi, muQ hf2 ((muEquiv hS hf2).symm s) ∈ A.
+      have h_cover := hA_covers_phi ((muEquiv hS hf2).symm s) h_phi_ne_nat
+      -- muQ hf2 ((muEquiv hS hf2).symm s) = s.val (since muEquiv applies inverse).
+      have h_mu_inv : muQ hf2 ((muEquiv hS hf2).symm s) = s.val := by
+        have : (muEquiv hS hf2 ((muEquiv hS hf2).symm s)) = s :=
+          (muEquiv hS hf2).apply_symm_apply s
         have := congrArg Subtype.val this
         exact this
       rw [h_mu_inv] at h_cover
@@ -3706,17 +3724,17 @@ private lemma pi_filter_q0_eq_count_fiber
     --            = ∑ a, (m0 a : ℚ) * (a.val : ℚ) = ∑ i, (e i : ℚ).
     rw [h_fiber, h_sum_phi, h_sum_via_G, h_finset_to_finsum, ← h_q0_via_Stilde]
 
-/-! ### §5b prelim — extracted helpers for the closure lemma. -/
+/-! ### extracted helpers for the closure lemma. -/
 
-/-- §5b-prelim-1 — Coefficient and support properties of `fhat_A_of`. Bundles three
+/-- Coefficient and support properties of `fhatAOf`. Bundles three
 facts used by the closure lemma:
 
-  * `coeff_in_A`  — at `a ∈ A_F`, `(fhat_A_of).coeff a = fhat.coeff a`.
-  * `coeff_not_in_A` — at `a ∉ A_F`, `(fhat_A_of).coeff a = 0`.
-  * `support_subset` — `support (fhat_A_of).coeff ⊆ A_F`.
+  * `coeff_in_A`  — at `a ∈ A_F`, `(fhatAOf).coeff a = fhat.coeff a`.
+  * `coeff_not_in_A` — at `a ∉ A_F`, `(fhatAOf).coeff a = 0`.
+  * `support_subset` — `support (fhatAOf).coeff ⊆ A_F`.
 
-The `A_F := image mu_q (supp φ₀)` is the image set used in the closure lemma. -/
-private lemma fhat_A_of_coeff_props
+The `A_F := image muQ (supp φ₀)` is the image set used in the closure lemma. -/
+private lemma fhatAOf_coeff_props
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -3724,28 +3742,28 @@ private lemma fhat_A_of_coeff_props
     {C : ℕ+} {n : ℕ+} (hSparse : IsCNSparse p C n S hS)
     (fhat : TLiftedPAdicHahnSeries p (T : ℕ))
     (hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite) :
-    (∀ a ∈ hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d),
-        (fhat_A_of hf2 hSparse fhat hφ₀_finite).coeff a = fhat.coeff a) ∧
-    (∀ a, a ∉ hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d) →
-        (fhat_A_of hf2 hSparse fhat hφ₀_finite).coeff a = 0) ∧
-    ((Function.support (fhat_A_of hf2 hSparse fhat hφ₀_finite).coeff : Set ℚ) ⊆
-        (hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d) : Set ℚ)) := by
+    (∀ a ∈ hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d),
+        (fhatAOf hf2 hSparse fhat hφ₀_finite).coeff a = fhat.coeff a) ∧
+    (∀ a, a ∉ hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d) →
+        (fhatAOf hf2 hSparse fhat hφ₀_finite).coeff a = 0) ∧
+    ((Function.support (fhatAOf hf2 hSparse fhat hφ₀_finite).coeff : Set ℚ) ⊆
+        (hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d) : Set ℚ)) := by
   classical
   refine ⟨?_, ?_, ?_⟩
   · intro a ha
     rw [Finset.mem_image] at ha
     obtain ⟨d₀, hd₀_mem, rfl⟩ := ha
     change (∑ d ∈ hφ₀_finite.toFinset,
-        HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff (mu_q hf2 d₀) = _
+        HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))).coeff (muQ hf2 d₀) = _
     rw [HahnSeries.coeff_sum]
     rw [Finset.sum_eq_single d₀]
     · exact HahnSeries.coeff_single_same _ _
     · intro d _ hne
-      exact HahnSeries.coeff_single_of_ne (fun h => hne (mu_q_injective hS hf2 h.symm))
+      exact HahnSeries.coeff_single_of_ne (fun h => hne (muQ_injective hS hf2 h.symm))
     · intro h; exact absurd hd₀_mem h
   · intro a ha
     change (∑ d ∈ hφ₀_finite.toFinset,
-        HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff a = 0
+        HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))).coeff a = 0
     rw [HahnSeries.coeff_sum]
     apply Finset.sum_eq_zero
     intro d hd
@@ -3754,11 +3772,11 @@ private lemma fhat_A_of_coeff_props
     exact ha (Finset.mem_image.mpr ⟨d, hd, h.symm⟩)
   · intro a ha_supp
     by_contra ha_notA
-    have ha_notin : a ∉ hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d) :=
+    have ha_notin : a ∉ hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d) :=
       fun h => ha_notA (Finset.mem_coe.mpr h)
     apply ha_supp
     change (∑ d ∈ hφ₀_finite.toFinset,
-        HahnSeries.single (mu_q hf2 d) (fhat.coeff (mu_q hf2 d))).coeff a = 0
+        HahnSeries.single (muQ hf2 d) (fhat.coeff (muQ hf2 d))).coeff a = 0
     rw [HahnSeries.coeff_sum]
     apply Finset.sum_eq_zero
     intro d hd
@@ -3766,12 +3784,12 @@ private lemma fhat_A_of_coeff_props
     intro h
     exact ha_notin (Finset.mem_image.mpr ⟨d, hd, h.symm⟩)
 
-/-- §5b-prelim-2 — `Finset.sum_bij` along `(mu_equiv hS hf2).symm` between
+/-- `Finset.sum_bij` along `(muEquiv hS hf2).symm` between
 `Finset.univ : Finset ↥A_F` and `hφ₀_finite.toFinset : Finset S`, for any commutative
 monoid-valued function `g` satisfying the `hg` compatibility condition. This packages
-the `mu_equiv`-bijection bookkeeping used in three separate inline `Finset.sum_bij` /
+the `muEquiv`-bijection bookkeeping used in three separate inline `Finset.sum_bij` /
 `Finset.prod_bij` invocations in the closure lemma. -/
-private lemma mu_equiv_prod_reindex
+private lemma muEquiv_prod_reindex
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -3780,36 +3798,34 @@ private lemma mu_equiv_prod_reindex
     (hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite)
     {M : Type*} [CommMonoid M]
     (A_F : Finset ℚ)
-    (hA_F_def : A_F = hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d))
+    (hA_F_def : A_F = hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d))
     (hA_F_sub_Stilde : (A_F : Set ℚ) ⊆ Stilde hf2)
     (g_A : ↥A_F → M) (g_S : S → M)
     (hg : ∀ a : ↥A_F,
         g_A a =
-          g_S ((mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)) :
+          g_S ((muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)) :
     ∏ a : ↥A_F, g_A a = ∏ d ∈ hφ₀_finite.toFinset, g_S d := by
   classical
   refine Finset.prod_bij
     (fun (a : ↥A_F) _ =>
-      (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
+      (muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
     ?_ ?_ ?_ ?_
   · intro a _
-    change (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩
-        ∈ hφ₀_finite.toFinset
     have ha_image : a.val ∈
-        Finset.image (fun d : S => mu_q hf2 d) hφ₀_finite.toFinset := by
+        Finset.image (fun d : S => muQ hf2 d) hφ₀_finite.toFinset := by
       rw [← hA_F_def]; exact a.property
     obtain ⟨d, hd_mem, hd_eq⟩ := Finset.mem_image.mp ha_image
     have hd_supp : d ∈ Function.support (Sparse.φ₀ hSparse) :=
       (hφ₀_finite.mem_toFinset).mp hd_mem
-    have h_eq_d : (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩ = d := by
-      apply (mu_equiv hS hf2).injective
+    have h_eq_d : (muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩ = d := by
+      apply (muEquiv hS hf2).injective
       rw [Equiv.apply_symm_apply]
       apply Subtype.ext
       exact hd_eq.symm
     rw [h_eq_d]
     exact (hφ₀_finite.mem_toFinset).mpr hd_supp
   · intro a₁ _ a₂ _ heq
-    have h1 := congrArg (mu_equiv hS hf2) heq
+    have h1 := congrArg (muEquiv hS hf2) heq
     rw [Equiv.apply_symm_apply, Equiv.apply_symm_apply] at h1
     have h2 : a₁.val = a₂.val := by
       have := congrArg Subtype.val h1
@@ -3818,21 +3834,21 @@ private lemma mu_equiv_prod_reindex
   · intro d hd
     have hd_supp : d ∈ Function.support (Sparse.φ₀ hSparse) :=
       (hφ₀_finite.mem_toFinset).mp hd
-    have h_mem : mu_q hf2 d ∈
-        Finset.image (fun d : S => mu_q hf2 d) hφ₀_finite.toFinset :=
+    have h_mem : muQ hf2 d ∈
+        Finset.image (fun d : S => muQ hf2 d) hφ₀_finite.toFinset :=
       Finset.mem_image.mpr ⟨d, hd, rfl⟩
-    have h_mem' : mu_q hf2 d ∈ A_F := by
+    have h_mem' : muQ hf2 d ∈ A_F := by
       rw [hA_F_def]; exact h_mem
-    refine ⟨⟨mu_q hf2 d, h_mem'⟩, Finset.mem_univ _, ?_⟩
-    change (mu_equiv hS hf2).symm ⟨mu_q hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
-    apply (mu_equiv hS hf2).injective
+    refine ⟨⟨muQ hf2 d, h_mem'⟩, Finset.mem_univ _, ?_⟩
+    change (muEquiv hS hf2).symm ⟨muQ hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
+    apply (muEquiv hS hf2).injective
     rw [Equiv.apply_symm_apply]; apply Subtype.ext; rfl
   · intro a _
     exact hg a
 
-/-- §5b-prelim-3 — Additive variant of `mu_equiv_prod_reindex` for `Finset.sum_bij`.
+/-- Additive variant of `muEquiv_prod_reindex` for `Finset.sum_bij`.
 Used by step (12) of the closure lemma (`hm0_sum`). -/
-private lemma mu_equiv_sum_reindex
+private lemma muEquiv_sum_reindex
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries} {hS : ∀ d ∈ S, d.IsP p}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -3841,36 +3857,34 @@ private lemma mu_equiv_sum_reindex
     (hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite)
     {M : Type*} [AddCommMonoid M]
     (A_F : Finset ℚ)
-    (hA_F_def : A_F = hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d))
+    (hA_F_def : A_F = hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d))
     (hA_F_sub_Stilde : (A_F : Set ℚ) ⊆ Stilde hf2)
     (g_A : ↥A_F → M) (g_S : S → M)
     (hg : ∀ a : ↥A_F,
         g_A a =
-          g_S ((mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)) :
+          g_S ((muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)) :
     ∑ a : ↥A_F, g_A a = ∑ d ∈ hφ₀_finite.toFinset, g_S d := by
   classical
   refine Finset.sum_bij
     (fun (a : ↥A_F) _ =>
-      (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
+      (muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
     ?_ ?_ ?_ ?_
   · intro a _
-    change (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩
-        ∈ hφ₀_finite.toFinset
     have ha_image : a.val ∈
-        Finset.image (fun d : S => mu_q hf2 d) hφ₀_finite.toFinset := by
+        Finset.image (fun d : S => muQ hf2 d) hφ₀_finite.toFinset := by
       rw [← hA_F_def]; exact a.property
     obtain ⟨d, hd_mem, hd_eq⟩ := Finset.mem_image.mp ha_image
     have hd_supp : d ∈ Function.support (Sparse.φ₀ hSparse) :=
       (hφ₀_finite.mem_toFinset).mp hd_mem
-    have h_eq_d : (mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩ = d := by
-      apply (mu_equiv hS hf2).injective
+    have h_eq_d : (muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩ = d := by
+      apply (muEquiv hS hf2).injective
       rw [Equiv.apply_symm_apply]
       apply Subtype.ext
       exact hd_eq.symm
     rw [h_eq_d]
     exact (hφ₀_finite.mem_toFinset).mpr hd_supp
   · intro a₁ _ a₂ _ heq
-    have h1 := congrArg (mu_equiv hS hf2) heq
+    have h1 := congrArg (muEquiv hS hf2) heq
     rw [Equiv.apply_symm_apply, Equiv.apply_symm_apply] at h1
     have h2 : a₁.val = a₂.val := by
       have := congrArg Subtype.val h1
@@ -3879,27 +3893,28 @@ private lemma mu_equiv_sum_reindex
   · intro d hd
     have hd_supp : d ∈ Function.support (Sparse.φ₀ hSparse) :=
       (hφ₀_finite.mem_toFinset).mp hd
-    have h_mem : mu_q hf2 d ∈
-        Finset.image (fun d : S => mu_q hf2 d) hφ₀_finite.toFinset :=
+    have h_mem : muQ hf2 d ∈
+        Finset.image (fun d : S => muQ hf2 d) hφ₀_finite.toFinset :=
       Finset.mem_image.mpr ⟨d, hd, rfl⟩
-    have h_mem' : mu_q hf2 d ∈ A_F := by
+    have h_mem' : muQ hf2 d ∈ A_F := by
       rw [hA_F_def]; exact h_mem
-    refine ⟨⟨mu_q hf2 d, h_mem'⟩, Finset.mem_univ _, ?_⟩
-    change (mu_equiv hS hf2).symm ⟨mu_q hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
-    apply (mu_equiv hS hf2).injective
+    refine ⟨⟨muQ hf2 d, h_mem'⟩, Finset.mem_univ _, ?_⟩
+    change (muEquiv hS hf2).symm ⟨muQ hf2 d, hA_F_sub_Stilde h_mem'⟩ = d
+    apply (muEquiv hS hf2).injective
     rw [Equiv.apply_symm_apply]; apply Subtype.ext; rfl
   · intro a _
     exact hg a
 
-/-- §5b — Closure lemma for the multinomial collapse.
+/-- Closure lemma for the multinomial collapse.
 
-1. `coeff_pow_truncate_eq` truncates LHS to `(fhat_A_of)^n.coeff q0`.
-2. Helper A5 (`pi_filter_q0_eq_count_fiber`) gives the q0-filter / count-fiber
-   equality (the hCollapse hypothesis for A4c).
-3. Helper A4c (`coeff_pow_collapse_to_multinomial_prod`) wraps A4a+A4b under
-   that collapse to produce `multinomial × ∏ a, fhatA.coeff a.val^(m0 a)`.
+1. `coeff_pow_truncate_eq` truncates LHS to `(fhatAOf)^n.coeff q0`.
+2. `pi_filter_q0_eq_count_fiber` gives the q0-filter / count-fiber
+   equality (the `hCollapse` hypothesis).
+3. `coeff_pow_collapse_to_multinomial_prod` wraps the sum-over-tuples and
+   fiber-cardinality steps under that collapse to produce
+   `multinomial × ∏ a, fhatA.coeff a.val^(m0 a)`.
 4. Coefficient rewrite via `h_fhatA_in_A_F` + `h_coeff_eq`, then product
-   re-indexing through the `mu_equiv` bijection.
+   re-indexing through the `muEquiv` bijection.
 -/
 private lemma fhat_pow_collapse_to_beta_P_prod
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
@@ -3916,18 +3931,18 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     (fhat ^ (n : ℕ)).coeff
         (-(r0 hSparse) / T +
           ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-            (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T) =
+            (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T) =
       ((Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) :
           ℤᵘⁿ_[p,(T : ℕ)]) *
-        (∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) := by
+        (∏ᶠ d : S, Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) := by
   classical
   -- ====== Setup: q0, fhatA, A_F. ======
-  set fhatA := fhat_A_of hf2 hSparse fhat hφ₀_finite with hfhatA_def
+  set fhatA := fhatAOf hf2 hSparse fhat hφ₀_finite with hfhatA_def
   set q0 : ℚ := -(r0 hSparse) / T +
         ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-          (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T
+          (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T
         with hq0_def
-  set A_F : Finset ℚ := hφ₀_finite.toFinset.image (fun d : S => mu_q hf2 d)
+  set A_F : Finset ℚ := hφ₀_finite.toFinset.image (fun d : S => muQ hf2 d)
         with hA_F_def
   -- (1) A_F ⊆ Stilde hf2.
   have hA_F_sub_Stilde : (A_F : Set ℚ) ⊆ Stilde hf2 := by
@@ -3935,14 +3950,14 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     rw [hA_F_def, Finset.coe_image] at ha
     obtain ⟨d, _, rfl⟩ := ha
     exact ⟨d, rfl⟩
-  -- (2-4) Coefficient and support properties of fhat_A_of, via helper §5b-prelim-1.
+  -- (2-4) Coefficient and support properties of fhatAOf, via `fhatAOf_coeff_props`.
   obtain ⟨h_fhatA_in_A_F, h_fhatA_not_A_F, h_fhatA_supp_A_F⟩ :=
-    fhat_A_of_coeff_props hf2 hSparse fhat hφ₀_finite
+    fhatAOf_coeff_props hf2 hSparse fhat hφ₀_finite
   -- (5) Function.support fhatA.coeff ⊆ Stilde hf2.
   have h_fhatA_supp_Stilde : Function.support fhatA.coeff ⊆ Stilde hf2 :=
     h_fhatA_supp_A_F.trans hA_F_sub_Stilde
-  -- (6) A_F covers φ₀: every d with φ₀ d ≠ 0 has mu_q hf2 d ∈ A_F.
-  have hA_F_covers_phi : ∀ d : S, Sparse.φ₀ hSparse d ≠ 0 → (mu_q hf2 d) ∈ A_F := by
+  -- (6) A_F covers φ₀: every d with φ₀ d ≠ 0 has muQ hf2 d ∈ A_F.
+  have hA_F_covers_phi : ∀ d : S, Sparse.φ₀ hSparse d ≠ 0 → (muQ hf2 d) ∈ A_F := by
     intro d hd
     rw [hA_F_def, Finset.mem_image]
     exact ⟨d, by rw [Set.Finite.mem_toFinset]; exact hd, rfl⟩
@@ -3951,23 +3966,23 @@ private lemma fhat_pow_collapse_to_beta_P_prod
   have hq0_residue : ((T : ℚ) * q0 + r0 hSparse).isInt = true := by
     have hk_eq : (T : ℚ) * q0 + r0 hSparse =
         ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) *
-          (mu_q hf2 d : ℚ)).num : ℚ) := by
+          (muQ hf2 d : ℚ)).num : ℚ) := by
       rw [hq0_def]; field_simp; ring
     rw [hk_eq]; exact isInt_intCast' _
   -- (8) q0 value (mirrors the inline `_hq0_value` derivation from
   -- `fhat_pow_coeff_at_phi0_nonzero_form` below).
   have hq0_value : q0 = ∑ᶠ d : S,
-      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) := by
+      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ) := by
     have h_isInt := w0_rat_isInt hf2 hSparse
     have h_num_eq : ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ)
+                      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ)
                  = r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) :=
+                      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ) :=
       (Rat.eq_num_of_isInt h_isInt).symm
     rw [hq0_def, h_num_eq]; field_simp; ring
-  -- (9) m0 : ↥A_F → ℕ, the count function pulled back from φ₀ via mu_equiv.
+  -- (9) m0 : ↥A_F → ℕ, the count function pulled back from φ₀ via muEquiv.
   set m0 : ↥A_F → ℕ := fun a =>
-    Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
+    Sparse.φ₀ hSparse ((muEquiv hS hf2).symm ⟨a.val, hA_F_sub_Stilde a.property⟩)
     with hm0_def
   -- (10) ∑ᶠ d : S, φ₀ d = n.
   have h_sum_phi_eq_n :
@@ -4015,21 +4030,21 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     rw [h_rhs]
     rw [← Finset.card_eq_sum_card_fiberwise (f := witness) h_maps_to]
     simp
-  -- (12) ∑ a : ↥A_F, m0 a = n. Bijection mu_q : supp φ₀ ↔ A_F.
+  -- (12) ∑ a : ↥A_F, m0 a = n. Bijection muQ : supp φ₀ ↔ A_F.
   have hm0_sum : ∑ a, m0 a = (n : ℕ) := by
     rw [← h_sum_phi_eq_n]
     rw [finsum_eq_sum_of_support_subset (Sparse.φ₀ hSparse) (s := hφ₀_finite.toFinset)
       (by intro d hd; simpa using hd)]
-    exact mu_equiv_sum_reindex hf2 hSparse hφ₀_finite A_F hA_F_def
+    exact muEquiv_sum_reindex hf2 hSparse hφ₀_finite A_F hA_F_def
       hA_F_sub_Stilde m0 (Sparse.φ₀ hSparse)
       (fun a => by simp only [hm0_def])
   -- (13) Apply Sub-lemma 2 to truncate.
   rw [coeff_pow_truncate_eq (hf2 := hf2) hSparse h_supp h_coeff_eq hCs_ne hφ₀_finite]
-  -- (14) Apply Helper A5 to get hCollapse.
+  -- (14) Apply `pi_filter_q0_eq_count_fiber` to get hCollapse.
   have hCollapse :=
     pi_filter_q0_eq_count_fiber (hf2 := hf2) hSparse
       A_F hA_F_sub_Stilde hA_F_covers_phi q0 hq0_residue hq0_value m0 (fun _ => rfl)
-  -- (15) Apply Helper A4c.
+  -- (15) Apply `coeff_pow_collapse_to_multinomial_prod`.
   rw [coeff_pow_collapse_to_multinomial_prod (Γ := ℚ) (R := ℤᵘⁿ_[p,(T : ℕ)])
         fhatA A_F h_fhatA_supp_A_F (n : ℕ) q0 m0 hm0_sum hCollapse]
   -- (16) Identify the multinomial.
@@ -4043,7 +4058,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     have h_prodfact :
         ∏ a : ↥A_F, (m0 a).factorial
         = ∏ d ∈ hφ₀_finite.toFinset, (Sparse.φ₀ hSparse d).factorial :=
-      mu_equiv_prod_reindex hf2 hSparse hφ₀_finite A_F hA_F_def hA_F_sub_Stilde
+      muEquiv_prod_reindex hf2 hSparse hφ₀_finite A_F hA_F_def hA_F_sub_Stilde
         (fun a => (m0 a).factorial)
         (fun d => (Sparse.φ₀ hSparse d).factorial)
         (fun a => by simp only [hm0_def])
@@ -4056,32 +4071,27 @@ private lemma fhat_pow_collapse_to_beta_P_prod
   -- (17) Identify the product.
   have h_prod :
       (∏ a : ↥A_F, fhatA.coeff a.val ^ m0 a) =
-      (∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)) := by
+      (∏ᶠ d : S, Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d)) := by
     -- Step (i): ∏ a : ↥A_F, fhatA.coeff a.val ^ m0 a
-    --        = ∏ d ∈ supp_finset, Cs (mu_to_Stilde d) ^ φ₀ d (Finset.prod_bij)
+    --        = ∏ d ∈ supp_finset, Cs (muToStilde d) ^ φ₀ d (Finset.prod_bij)
     have h_step1 :
         (∏ a : ↥A_F, fhatA.coeff a.val ^ m0 a)
         = ∏ d ∈ hφ₀_finite.toFinset,
-            Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d) :=
-      mu_equiv_prod_reindex hf2 hSparse hφ₀_finite A_F hA_F_def hA_F_sub_Stilde
+            Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d) :=
+      muEquiv_prod_reindex hf2 hSparse hφ₀_finite A_F hA_F_def hA_F_sub_Stilde
         (fun a => fhatA.coeff a.val ^ m0 a)
-        (fun d => Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))
+        (fun d => Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))
         (fun a => by
-          change fhatA.coeff a.val ^ m0 a
-              = Cs (mu_to_Stilde hf2 ((mu_equiv hS hf2).symm
-                  ⟨a.val, hA_F_sub_Stilde a.property⟩)) ^
-                (Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm
-                  ⟨a.val, hA_F_sub_Stilde a.property⟩))
           have h_a_in : a.val ∈ A_F := a.property
           have h_in : fhatA.coeff a.val = fhat.coeff a.val :=
             h_fhatA_in_A_F a.val h_a_in
           have h_mu_to_S :
-              mu_to_Stilde hf2 ((mu_equiv hS hf2).symm
+              muToStilde hf2 ((muEquiv hS hf2).symm
                 ⟨a.val, hA_F_sub_Stilde a.property⟩)
               = ⟨a.val, hA_F_sub_Stilde a.property⟩ := by
-            change (mu_equiv hS hf2) ((mu_equiv hS hf2).symm
+            change (muEquiv hS hf2) ((muEquiv hS hf2).symm
               ⟨a.val, hA_F_sub_Stilde a.property⟩) = _
-            exact (mu_equiv hS hf2).apply_symm_apply _
+            exact (muEquiv hS hf2).apply_symm_apply _
           rw [h_in, h_mu_to_S]
           rw [show fhat.coeff a.val =
               Cs ⟨a.val, hA_F_sub_Stilde a.property⟩ from
@@ -4089,7 +4099,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
     -- Step (ii): ∏ d ∈ supp_finset, ... = ∏ᶠ d : S, ... via mulSupport subset.
     rw [h_step1]
     symm
-    apply finprod_eq_finset_prod_of_mulSupport_subset
+    apply finprod_eq_finsetProd_of_mulSupport_subset
     intro d hd
     rw [Function.mem_mulSupport] at hd
     rw [Finset.mem_coe, hφ₀_finite.mem_toFinset, Function.mem_support]
@@ -4099,9 +4109,7 @@ private lemma fhat_pow_collapse_to_beta_P_prod
   -- (18) Combine.
   rw [h_mult, h_prod]
 
-/-- §5b prelim — Helper A3 weak form.
-
-The multinomial-value identity at `(i, q) = (n, q0)`: the surviving coefficient
+/-- The multinomial-value identity at `(i, q) = (n, q0)`: the surviving coefficient
 `(fhat ^ n).coeff q0` equals `β · ∏ Cs(μd)^φ₀(d)` for some non-zero β. The β
 is the multinomial coefficient `Nat.multinomial(n; φ₀)` cast into `ℤᵘⁿ_[p,T]`,
 which is non-zero via `CharZero` (instance `instCharZeroQpUnT`). -/
@@ -4121,26 +4129,26 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
       (fhat ^ (n : ℕ)).coeff
           (-(r0 hSparse) / T +
             ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-              (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T) =
-        β * ∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d) := by
+              (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T) =
+        β * ∏ᶠ d : S, Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d) := by
   classical
   -- Notation for q0 and the canonical product P_prod.
   set q0 : ℚ := -(r0 hSparse) / T +
     ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T with hq0_def
+      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T with hq0_def
   set P_prod : ℤᵘⁿ_[p,(T : ℕ)] :=
-    ∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d) with hP_prod_def
+    ∏ᶠ d : S, Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d) with hP_prod_def
   -- k := the multinomial coefficient; β := its image in the coefficient ring.
   set k : ℕ := Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) with hk_def
   set β : ℤᵘⁿ_[p,(T : ℕ)] := (k : ℤᵘⁿ_[p,(T : ℕ)]) with hβ_def
   -- Derive the canonical value of `q0` from `w0_rat_isInt`.
   have _hq0_value : q0 = ∑ᶠ d : S,
-      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) := by
+      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ) := by
     have h_isInt := w0_rat_isInt hf2 hSparse
     have h_num_eq : ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ)
+                      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ)
                  = r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) :=
+                      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ) :=
       (Rat.eq_num_of_isInt h_isInt).symm
     have hT_ne : (T : ℚ) ≠ 0 := by exact_mod_cast PNat.ne_zero T
     rw [hq0_def, h_num_eq]; field_simp; ring
@@ -4149,7 +4157,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
     have hT_ne : (T : ℚ) ≠ 0 := by exact_mod_cast PNat.ne_zero T
     have hk_eq : (T : ℚ) * q0 + r0 hSparse =
         ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) *
-          (mu_q hf2 d : ℚ)).num : ℚ) := by
+          (muQ hf2 d : ℚ)).num : ℚ) := by
       rw [hq0_def]; field_simp; ring
     rw [hk_eq]; exact isInt_intCast' _
   -- Apply the combinatorial collapse.
@@ -4161,7 +4169,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
     rw [show β * P_prod
         = ((Nat.multinomial hφ₀_finite.toFinset (Sparse.φ₀ hSparse) :
               ℤᵘⁿ_[p,(T : ℕ)]) *
-          (∏ᶠ d : S, Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) from by
+          (∏ᶠ d : S, Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) from by
         rfl]
     exact h_axiom
   -- `β` is nonzero by `CharZero`.
@@ -4187,7 +4195,7 @@ private lemma fhat_pow_coeff_at_phi0_nonzero_form
   refine ⟨β, hβ_ne, ?_⟩
   simpa [hP_prod_def] using hcoeff_eq
 
-/-- §5b mini-helper: the support of `Sparse.φ₀ hSparse` is finite (a structural
+/-- the support of `Sparse.φ₀ hSparse` is finite (a structural
 fact: `φ₀` is the count of `d ∈ S` covered by the witness function, and `hSparse`
 provides a witness function whose range is finite). -/
 private lemma phi0_support_finite
@@ -4205,7 +4213,7 @@ private lemma phi0_support_finite
     intro hi; exact h ⟨i, hi⟩
   rw [hempty] at hd; simp at hd
 
-/-- §5b mini-helper: the scaling factor `α := algebraMap c.val · algebraMap β` is
+/-- the scaling factor `α := algebraMap c.val · algebraMap β` is
 nonzero, given `c ∈ nonZeroDivisors ℤᵘⁿ_[p]` and `β ≠ 0` in `ℤᵘⁿ_[p,T]`. The
 proof goes through the injectivity chain
 `algebraMap ℤᵘⁿ_[p] → ℚᵘⁿ_[p] → ℚᵘⁿ_[p,T]` (via `IsFractionRing.injective` plus
@@ -4247,9 +4255,9 @@ private lemma alpha_ne_zero_of_c_β
     exact h_inj_OQ (h.trans (map_zero _).symm)
   exact mul_ne_zero h_alg_c_ne h_alg_β_ne
 
-/-- §5b — Combinatorial existential.
+/-- Combinatorial existential.
 
-Captures the §5b multinomial-collapse content as a single existential at the
+Captures the multinomial-collapse content as a single existential at the
 fixed integer exponent `w₀ := (r₀ + T·∑_{d∈S} φ₀(d)·μ(d)).num` (real by
 `w0_rat_isInt`). The conclusion is:
 
@@ -4258,7 +4266,7 @@ fixed integer exponent `w₀ := (r₀ + T·∑_{d∈S} φ₀(d)·μ(d)).num` (re
 α · (algebraMap (P.coeff n) · ∏ᶠ algebraMap (Cs(μd)^φ₀(d)))`.
 3. ∀ k : ℤ, k ≠ w₀, `Pfhat.coeff (-r0/T + k/T) = 0`.
 
-Mathematical content (PDF pp. 9-10, §5b):
+Mathematical content (paper, Section 5):
 * α is constructed as `algebraMap c.val · multinomial(n; φ₀)`, where
   - `c ∈ nonZeroDivisors ℤᵘⁿ_[p]` is the denominator from
     `IsLocalization.integerNormalization_spec` applied to `P`.
@@ -4298,12 +4306,12 @@ private lemma Pfhat_TLifted_collapse_combinatorial
           ((Pfhat_TLifted T P fhat).coeff
             (-(r0 hSparse) / T +
               ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T)) =
+                (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T)) =
         α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
           ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                      (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
+                      (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
       ∀ k : ℤ, k ≠ (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                    (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num →
+                    (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num →
         (Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (k : ℚ) / T) = 0 := by
   -- Extract the denominator-clearing factor and the multinomial term, then
   -- package the surviving coefficient and the vanishing of the other terms.
@@ -4314,7 +4322,8 @@ private lemma Pfhat_TLifted_collapse_combinatorial
   obtain ⟨c, hc_mem, hc_eq⟩ :=
     IsLocalization.integerNormalization_spec (nonZeroDivisors ℤᵘⁿ_[p]) P
   have hc : ∀ i : ℕ, (algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p])
-      ((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff i) = c • P.coeff i := by
+      ((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff i) =
+        c • P.coeff i := by
     intro i
     have := congrArg (fun q : Polynomial ℚᵘⁿ_[p] => q.coeff i) hc_eq
     simpa [Polynomial.coeff_map, Polynomial.coeff_smul] using this
@@ -4322,7 +4331,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
   -- Step 2: extract finite support of φ₀ (for `Nat.multinomial` argument).
   have hφ₀_finite : (Function.support (Sparse.φ₀ hSparse)).Finite :=
     phi0_support_finite hSparse
-  -- Step 3: Apply Helper A3 to obtain β ∈ ℤᵘⁿ_[p,T] with β ≠ 0 and
+  -- Step 3: Apply `exists_FhatData` to obtain β ∈ ℤᵘⁿ_[p,T] with β ≠ 0 and
   -- the multinomial-value identity `(fhat^n).coeff q0 = β · ∏ Cs^φ₀`.
   obtain ⟨β, hβ_ne, hβ_coeff⟩ :=
     fhat_pow_coeff_at_phi0_nonzero_form (hS := hS) (hf2 := hf2) (Cs := Cs)
@@ -4337,20 +4346,20 @@ private lemma Pfhat_TLifted_collapse_combinatorial
   · -- Set abbreviations for the surviving rational value `q0` and the inner sum index range.
     set q0 : ℚ := -(r0 hSparse) / T +
       ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-        (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num : ℚ) / T with hq0_def
-    -- The combinatorial heart of §5b, packaged as a single inner claim. This
-    -- captures Helper A (multinomial expansion of `(fhat^i).coeff q`) + the
-    -- §5a constraint (`phi_tilde_constraint_at_phi0`):
+        (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num : ℚ) / T with hq0_def
+    -- The combinatorial heart of the argument, packaged as a single inner claim. This
+    -- captures the multinomial expansion of `(fhat^i).coeff q`) + the
+    -- Constraint (`phi_tilde_constraint_at_phi0`):
     --
     -- (a) At `q = q0` (the surviving exponent), the per-`i` sum collapses to
     --     `i = n` with value `algebraMap (OQpUn_embd ((P_int P).coeff n)) * (mult · ∏ Cs^φ₀)`.
-    --     (Proved by Helper A + `phi_tilde_constraint_at_phi0` forcing `φ̃ = φ₀∘μ.symm`.)
+    --     (Proved by the multinomial expansion forcing `φ̃ = φ₀∘μ.symm`.)
     --     This, combined with `hc n` (`algebraMap (P_int.coeff n) = c.val · P.coeff n`)
     --     and the algebraMap chain `algebraMap ∘ OQpUn_embd = algebraMap ∘ algebraMap`
     --     (via IsScalarTower), gives equation 1.
     --
     -- (b) At `q = -r0/T + k/T` for `k ≠ w0_rat.num`, the per-`i` sum is identically
-    --     `0` because no `φ̃` satisfies the residue constraint (Helper A + §5a).
+    --     `0` because no `φ̃` satisfies the residue constraint.
     --
     -- The combined claim:
     have h_collapse :
@@ -4358,14 +4367,14 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             ((Pfhat_TLifted T P fhat).coeff q0) =
           α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
             ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                        (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))))
+                        (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))))
         ∧
         (∀ k : ℤ, k ≠ (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                       (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num →
+                       (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num →
           ∀ i ∈ Finset.range
                   (((P_int P).map (OQpUn_embd p T)).natDegree + 1),
             (fhat ^ i).coeff (-(r0 hSparse) / T + (k : ℚ) / T) = 0) := by
-      -- Discharge requires: (Helper A) multinomial expansion of `(fhat^i).coeff q`
+      -- Discharge requires: multinomial expansion of `(fhat^i).coeff q`
       -- via `pow_succ` + `HahnSeries.coeff_mul` + induction; combined with
       -- `phi_tilde_constraint_at_phi0` to identify the unique φ̃ = φ₀ ∘ μ.symm.
       -- For (a): at q = q0, φ̃ = φ₀∘μ.symm is the unique surviving multi-index,
@@ -4375,19 +4384,19 @@ private lemma Pfhat_TLifted_collapse_combinatorial
       refine ⟨?_, ?_⟩
       · -- Conjunct (a): the surviving-coefficient identification at q0.
         -- Strategy: expand Pfhat.coeff q0 via Pfhat_TLifted_coeff_eq, collapse the
-        -- sum to i = n using Helper A0 (degree bound) + Helper A2 (residue collapse),
-        -- then apply Helper A3 to compute (fhat^n).coeff q0 and chain via hc n +
+        -- sum to i = n using the degree bound + residue-collapse lemmas,
+        -- then apply `exists_FhatData` to compute (fhat^n).coeff q0 and chain via hc n +
         -- IsScalarTower to express the LHS in α form.
         --
-        -- Step 0: residue at q0 is integral (for invoking Helper A2).
+        -- Step 0: residue at q0 is integral (for invoking `fhat_pow_coeff_residue_collapse`).
         have hq0_residue : ((T : ℚ) * q0 + r0 hSparse).isInt = true := by
           have hT_ne : (T : ℚ) ≠ 0 := by exact_mod_cast PNat.ne_zero T
           have hk_eq : (T : ℚ) * q0 + r0 hSparse =
               ((r0 hSparse + (T : ℚ) * ∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) *
-                (mu_q hf2 d : ℚ)).num : ℚ) := by
+                (muQ hf2 d : ℚ)).num : ℚ) := by
             rw [hq0_def]; field_simp; ring
           rw [hk_eq]; exact isInt_intCast' _
-        -- Step 1: Sum-collapse via Helper A0 + Helper A2 — extract i = n.
+        -- Step 1: sum-collapse via the degree bound + residue-collapse lemmas — extract i = n.
         have h_sum := Pfhat_TLifted_coeff_eq T P fhat q0
         have h_natDeg_le : ((P_int P).map (OQpUn_embd p T)).natDegree ≤ (n : ℕ) :=
           Pfhat_map_natDegree_bound T _hP_natDegree
@@ -4410,7 +4419,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
           · intro hn_notmem
             have h_n_gt : ((P_int P).map (OQpUn_embd p T)).natDegree < (n : ℕ) := by
               by_contra hge
-              push_neg at hge
+              push Not at hge
               exact hn_notmem (Finset.mem_range.mpr (Nat.lt_succ_of_le hge))
             have h_coeff_zero :
                 OQpUn_embd p T ((P_int P).coeff n) = 0 := by
@@ -4421,7 +4430,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             rw [h_coeff_zero, zero_mul]
         -- Step 2: Rewrite Pfhat.coeff q0 to the collapsed form.
         rw [h_sum, h_sum_collapse, map_mul]
-        -- Step 3: Apply Helper A3 (hβ_coeff already has q0 in scope).
+        -- Step 3: Apply `exists_FhatData` (hβ_coeff already has q0 in scope).
         rw [hβ_coeff, map_mul]
         -- Goal: algebraMap (OQpUn_embd ((P_int P).coeff n)) *
         -- (algebraMap β * algebraMap (∏ᶠ Cs^φ₀))
@@ -4429,7 +4438,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
         -- Step 4: distribute algebraMap over ∏ᶠ.
         have h_mulSup_finite :
             (Function.mulSupport (fun d : S =>
-              Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))).Finite := by
+              Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))).Finite := by
           refine hφ₀_finite.subset ?_
           intro d hd
           simp only [Function.mem_mulSupport, ne_eq] at hd
@@ -4463,10 +4472,10 @@ private lemma Pfhat_TLifted_collapse_combinatorial
                 ((IsLocalization.integerNormalization (nonZeroDivisors ℤᵘⁿ_[p]) P).coeff n))
             * ((algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) β *
               ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                          (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)))
+                          (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d)))
             = α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
               ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                          (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)))
+                          (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d)))
         rw [hc n, Algebra.smul_def, map_mul]
         -- Goal: (algebraMap_ℚᵘⁿ_p_to_ℚᵘⁿ_p_T (algebraMap_ℤᵘⁿ_p_to_ℚᵘⁿ_p c.val)
         --        * algebraMap_ℚᵘⁿ_p_to_ℚᵘⁿ_p_T (P.coeff n))
@@ -4481,19 +4490,19 @@ private lemma Pfhat_TLifted_collapse_combinatorial
         rw [h_c_step, hα_def]
         ring
       · -- Conjunct (b): per-`i` vanishing for `k ≠ w0_rat.num`.
-        -- per-`i` vanishing for `k ≠ w0_rat.num`, by contradiction via Helper A2.
+        -- per-`i` vanishing for `k ≠ w0_rat.num`, by contradiction via the residue-collapse lemma.
         intro k hk_ne i _hi_range
         by_contra h_coeff_ne
         -- Step 1: i ≤ n. From hi_range : i ∈ Finset.range (..natDegree + 1)
         -- and natDegree of (P_int P).map (OQpUn_embd p T) bounded by natDegree (P_int P)
         -- bounded by natDegree P = n. Use the strong form: factor through any i ≤ n
-        -- by passing to a clean upper bound. Helper A2
+        -- by passing to a clean upper bound. `fhat_pow_coeff_residue_collapse`
         -- only required `i ≤ n`, but for `i > n` the coefficient is automatically
-        -- zero by polynomial-degree considerations, so we never reach Helper A2
+        -- zero by polynomial-degree considerations, so we never reach the residue-collapse lemma
         -- and can therefore safely assume the worst case `i ≤ n`. We bypass the
         -- degree-bound argument by splitting on `i ≤ n` vs `i > n`.
         by_cases hi_le : i ≤ (n : ℕ)
-        · -- Apply Helper A2 to extract i = n and force phiT = φ₀ ∘ μ.symm.
+        · -- Apply `fhat_pow_coeff_residue_collapse` to extract i = n and force phiT = φ₀ ∘ μ.symm.
           set q : ℚ := -(r0 hSparse) / T + (k : ℚ) / T with hq_def
           -- Step 2: the residue clause T * q + r0 = k is an integer.
           have hT_ne_zero : (T : ℚ) ≠ 0 := by
@@ -4508,13 +4517,13 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             fhat_pow_coeff_residue_collapse (hS := hS) hf2 hSparse _h_supp
               i hi_le q hq_residue h_coeff_ne
           -- Step 3: extract phiT and rewrite the residue identity to derive k = w0_rat.num.
-          -- The residue bridge inside Helper A2 gives ∑ᶠ s, s.val * phiT s = q;
+          -- The residue bridge inside the residue-collapse lemma gives ∑ᶠ s, s.val * phiT s = q;
           -- combined with phiT = φ₀ ∘ μ.symm and change-of-variable, we get
           -- ∑ᶠ d : S, d.val * φ₀ d via μ. But the value of q is -r0/T + k/T,
           -- so T * q + r0 = T * ∑ᶠ s, s.val * phiT s + r0 = w0_rat = k, giving k = w0_rat.num.
-          -- We extract the unique phiT to access the inner conjuncts of Helper A2.
+          -- We extract the unique phiT to access the inner conjuncts of the residue-collapse lemma.
           rcases hphi_unique with ⟨phiT, ⟨_hphiT_finite, _hphiT_sum, hphiT_eq⟩, _⟩
-          -- Derive the residue identity by re-using the Helper A2 residue clause.
+          -- Derive the residue identity by re-using its residue clause.
           have hq_mem : q ∈ (fhat ^ i).support := by
             simpa [HahnSeries.mem_support] using h_coeff_ne
           obtain ⟨l, _hl_card, hl_sum⟩ :=
@@ -4524,53 +4533,54 @@ private lemma Pfhat_TLifted_collapse_combinatorial
           --   ∑ᶠ s, s.val * phiT s = ∑ᶠ d : S, μ(d) * φ₀(d).
           -- So T * q + r0 = w0_rat ∈ ℤ. Combined with T * q + r0 = k, we get k = w0_rat.num.
           -- But the strict identity ∑ᶠ s, s.val * phiT s = ∑ᶠ d : S, μ(d).val * φ₀(d)
-          -- requires invoking phi_tilde and the count/residue bridges from Helper A2.
+          -- requires invoking phi_tilde and the count/residue bridges from the
+          -- residue-collapse lemma.
           -- The cleanest path: re-state w0_rat from hphiT_eq via finsum_comp_equiv.
-          -- Use Helper A2's `i = n` conclusion together with the residue identity
+          -- Use its `i = n` conclusion together with the residue identity
           -- `T * q + r0 = w0_rat` to derive `k = w0_rat.num`, contradicting `hk_ne`.
           -- We compute the integer equality directly:
           have h_phiT_sum :
               (∑ᶠ s : ↥(Stilde hf2), (s.val : ℚ) * (phiT s : ℚ)) =
-              ∑ᶠ d : S, (mu_q hf2 d : ℚ) * (Sparse.φ₀ hSparse d : ℚ) := by
+              ∑ᶠ d : S, (muQ hf2 d : ℚ) * (Sparse.φ₀ hSparse d : ℚ) := by
             -- Apply phiT = φ₀ ∘ μ.symm, then change of variable along μ.
             have h1 : ∀ s : ↥(Stilde hf2),
                 (s.val : ℚ) * (phiT s : ℚ) =
                 (s.val : ℚ) *
-                  ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) : ℕ) : ℚ) := by
+                  ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) : ℕ) : ℚ) := by
               intro s
               rw [hphiT_eq]; rfl
             rw [finsum_congr h1]
             -- Now change variables along μ : S ≃ ↥(Stilde hf2).
-            have h2 := finsum_comp_equiv (mu_equiv hS hf2)
+            have h2 := finsum_comp_equiv (muEquiv hS hf2)
               (f := fun s : ↥(Stilde hf2) =>
                 (s.val : ℚ) *
-                  ((Sparse.φ₀ hSparse ((mu_equiv hS hf2).symm s) : ℕ) : ℚ))
+                  ((Sparse.φ₀ hSparse ((muEquiv hS hf2).symm s) : ℕ) : ℚ))
             -- h2 : ∑ᶠ d : S, ((μ d).val : ℚ) * (φ₀ (μ.symm (μ d)) : ℚ) = ∑ᶠ s, ...
             -- LHS of h2 simplifies via Equiv.symm_apply_apply.
             rw [← h2]
             apply finsum_congr; intro d
-            have h_simp : (mu_equiv hS hf2).symm ((mu_equiv hS hf2) d) = d := by
+            have h_simp : (muEquiv hS hf2).symm ((muEquiv hS hf2) d) = d := by
               exact Equiv.symm_apply_apply _ _
             rw [h_simp]
-            -- ((μ d : ↥(Stilde hf2)).val : ℚ) = mu_q hf2 d, by def of mu_equiv / mu_to_Stilde.
+            -- ((μ d : ↥(Stilde hf2)).val : ℚ) = muQ hf2 d, by def of muEquiv / muToStilde.
             rfl
           -- We now have T * q + r0 = k (from hq_residue) and want T * q + r0 = w0_rat.num
           -- as an integer. The bridge: T * (∑ᶠ s, s.val * phiT s) + r0 = w0_rat
           -- (this is the definition of w0_rat).
           have hw0_def :
               r0 hSparse + (T : ℚ) * (∑ᶠ d : S,
-                (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)) =
+                (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)) =
               (T : ℚ) * (∑ᶠ s : ↥(Stilde hf2), (s.val : ℚ) * (phiT s : ℚ)) + r0 hSparse := by
             rw [h_phiT_sum]
-            rw [show (∑ᶠ d : S, (mu_q hf2 d : ℚ) * (Sparse.φ₀ hSparse d : ℚ)) =
-                  (∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)) by
+            rw [show (∑ᶠ d : S, (muQ hf2 d : ℚ) * (Sparse.φ₀ hSparse d : ℚ)) =
+                  (∑ᶠ d : S, (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)) by
               apply finsum_congr; intro d; ring]
             ring
-          -- Pull q from the residue identity in Helper A2.
+          -- Pull q from the residue identity in `fhat_pow_coeff_residue_collapse`.
           have hq_phiT :
               (T : ℚ) * (∑ᶠ s : ↥(Stilde hf2), (s.val : ℚ) * (phiT s : ℚ)) = (T : ℚ) * q := by
             -- We need ∑ᶠ s, s.val * phiT s = q. This requires the residue-bridge
-            -- (an internal step of Helper A2). Re-derive it inline:
+            -- (an internal step of `fhat_pow_coeff_residue_collapse`). Re-derive it inline:
             -- but since we have phiT chosen via hphiT_eq, we can re-invoke the same
             -- count-bridge / residue-bridge using l and hphiT_eq.
             -- A cleaner approach: re-state h_residue_bridge using the same definition
@@ -4634,7 +4644,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
               rw [h_count_form]
               rw [← Finset.sum_multiset_map_count l (fun s : ↥(Stilde hf2) => (s.val : ℚ))]
               exact hl_sum
-            -- We also need phiT' = phiT (by uniqueness of Helper A2's ExistsUnique).
+            -- We also need phiT' = phiT (by uniqueness of its ExistsUnique).
             -- Both satisfy:
             --   * finite support
             --   * sum ≤ n
@@ -4642,7 +4652,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
             -- For phiT', we need to verify these. The residue clause + sum bound need
             -- to be checked against `phi_tilde_constraint_at_phi0`, which gives
             -- phiT' = φ₀ ∘ μ.symm.
-            -- BUT — uniqueness in Helper A2's ExistsUnique only constrains
+            -- BUT — uniqueness in `fhat_pow_coeff_residue_collapse`'s ExistsUnique only constrains
             -- the conjunction (finite ∧ sum ≤ n ∧ = φ₀ ∘ μ.symm). So both phiT and phiT'
             -- end up as φ₀ ∘ μ.symm — making them equal directly.
             have h_pT_le : ∑ᶠ s : ↥(Stilde hf2), phiT' s ≤ (n : ℕ) := by
@@ -4653,7 +4663,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
                 ((T : ℚ) * (∑ᶠ s : ↥(Stilde hf2), (s.val : ℚ) * (phiT' s : ℚ))
                   + r0 hSparse).isInt = true := by
               rw [h_pT_residue]; exact hq_residue
-            have h_pT_eq : phiT' = Sparse.φ₀ hSparse ∘ (mu_equiv hS hf2).symm :=
+            have h_pT_eq : phiT' = Sparse.φ₀ hSparse ∘ (muEquiv hS hf2).symm :=
               phi_tilde_constraint_at_phi0 hS hf2 hSparse phiT' hphiT'_finite
                 h_pT_le hpT_residue_isInt
             have h_eq_phiT_phiT' : phiT' = phiT := by
@@ -4663,17 +4673,17 @@ private lemma Pfhat_TLifted_collapse_combinatorial
           -- Combine: r0 + T·∑φ₀(d)·μ(d) = T*q + r0.
           have hw0_eq_Tq_r0 :
               r0 hSparse + (T : ℚ) * (∑ᶠ d : S,
-                (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)) =
+                (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)) =
               (T : ℚ) * q + r0 hSparse := by
             rw [hw0_def, hq_phiT]
           -- Now: T*q + r0 = k. So w0_rat = k. So k = w0_rat.num.
           have hk_eq : (T : ℚ) * q + r0 hSparse = (k : ℚ) := by
             rw [hq_def]; field_simp; ring
           have hw0_eq_k : (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)) = (k : ℚ) := by
+                (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)) = (k : ℚ) := by
             rw [hw0_eq_Tq_r0, hk_eq]
           have hw0_num_eq_k : (r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-                (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ)).num = k := by
+                (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ)).num = k := by
             rw [hw0_eq_k]
             exact Rat.num_intCast k
           exact hk_ne hw0_num_eq_k.symm
@@ -4696,7 +4706,7 @@ private lemma Pfhat_TLifted_collapse_combinatorial
       h_collapse.2 k hk_ne i hi_mem
     rw [h_inner_zero, mul_zero]
 
-/-- §5b mini-helper: ceiling bound for sums of two fractions.
+/-- ceiling bound for sums of two fractions.
 
 If `M ≥ ⌈((a + b) / T)⌉₊`, then `a / T + b / T ≤ (M : ℚ)`. This is the
 arithmetic step used to verify that the chosen threshold `M₀` makes the
@@ -4707,9 +4717,9 @@ private lemma ceil_div_add_div_le {T : ℚ} (a b : ℚ) {M : ℕ}
   have h1 : (a + b) / T ≤ (M : ℚ) := Nat.ceil_le.mp hM
   linarith [show a / T + b / T = (a + b) / T from by ring]
 
-/-- §5b — Combinatorial collapse witness.
+/-- Combinatorial collapse witness.
 
-Encapsulates the multinomial-expansion + φ̃-collapse content of the §5b argument
+Encapsulates the multinomial-expansion + φ̃-collapse content of the collapse argument
 into a single existential. Returns a unique surviving integer exponent `w₀`,
 a non-zero scaling factor `α : ℚᵘⁿ_[p,T]`, and a threshold `M₀ : ℕ` such that:
 
@@ -4721,8 +4731,8 @@ a non-zero scaling factor `α : ℚᵘⁿ_[p,T]`, and a threshold `M₀ : ℕ` s
    for every `M ≥ M₀`, the partial sum equals
    `(pInvTQ)^w₀ · algebraMap (Pfhat.coeff (-r0/T + w₀/T))`.
 
-Mathematical content (PDF pp. 9-10, §5b):
-* `w₀ := r₀ + T·∑_{d∈S} φ₀(d)·μ(d) ∈ ℤ` (integer by `mu_q_residue`).
+Mathematical content (paper, Section 5):
+* `w₀ := r₀ + T·∑_{d∈S} φ₀(d)·μ(d) ∈ ℤ` (integer by `muQ_residue`).
 * `α := (algebraMap (P_int.coeff n)) · multinomial(n; φ₀)`, where the multinomial
   coefficient `n!/∏_{d∈S} φ₀(d)!` is non-zero.
 * The other-vanishing claim (1) is by `phi_tilde_constraint_at_phi0`: only the
@@ -4753,10 +4763,10 @@ private lemma Pfhat_TLifted_collapse_witness
           ((Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (w₀ : ℚ) / T)) =
         α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
           ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                      (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
+                      (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
       ∀ M : ℕ, M ≥ M₀ →
         (∑ k : Set.Finite.toFinset
-                (Tfinprop p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M),
+                (TfiniteBelow p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M),
             (pInvTQ p (T : ℕ)) ^ (k.val : ℤ) *
               (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                 ((Pfhat_TLifted T P fhat).coeff
@@ -4772,10 +4782,10 @@ private lemma Pfhat_TLifted_collapse_witness
   -- via `w0_rat_isInt`); take its integer numerator.
   set w0_rat : ℚ :=
     r0 hSparse + (T : ℚ) * ∑ᶠ d : S,
-      (Sparse.φ₀ hSparse d : ℚ) * (mu_q hf2 d : ℚ) with hw0_rat_def
+      (Sparse.φ₀ hSparse d : ℚ) * (muQ hf2 d : ℚ) with hw0_rat_def
   have hw0_isInt : w0_rat.isInt = true := w0_rat_isInt hf2 hSparse
   refine ⟨w0_rat.num, ?_⟩
-  -- The combinatorial heart of §5b, packaged as a sub-existential. The
+  -- The combinatorial heart of the argument, packaged as a sub-existential. The
   -- existential captures both (a) the coefficient identification at the
   -- surviving exponent `w₀ = w0_rat.num`, and (b) the vanishing of
   -- `Pfhat.coeff` at all OTHER points of the `(-r0/T + ℤ/T)` coset. Both
@@ -4794,10 +4804,10 @@ private lemma Pfhat_TLifted_collapse_witness
             ((Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (w0_rat.num : ℚ) / T)) =
           α * ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
             ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                        (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
+                        (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) ∧
         ∀ k : ℤ, k ≠ w0_rat.num →
           (Pfhat_TLifted T P fhat).coeff (-(r0 hSparse) / T + (k : ℚ) / T) = 0 := by
-    -- Delegate the combinatorial heart of §5b to
+    -- Delegate the combinatorial heart of the collapse argument to
     -- `Pfhat_TLifted_collapse_combinatorial`.
     exact Pfhat_TLifted_collapse_combinatorial hSparse _h_supp h_coeff_eq hCs_ne
       _h_mk_eq _hP_aeval _hP_natDegree
@@ -4812,7 +4822,7 @@ private lemma Pfhat_TLifted_collapse_witness
     ceil_div_add_div_le _ _ hM
   -- Notation: `tFin` for the partial-sum Finset.
   set tFin : Finset ℤ :=
-    Set.Finite.toFinset (Tfinprop p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M)
+    Set.Finite.toFinset (TfiniteBelow p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M)
     with htFin_def
   -- Convert the subtype-style sum `∑ k : tFin, term k.val` to the
   -- membership-style sum `∑ k ∈ tFin, term k`.
@@ -4858,12 +4868,13 @@ private lemma Pfhat_TLifted_collapse_witness
       exact ⟨h_M_bound, h_ne⟩
     rw [h_coeff_zero, map_zero, mul_zero]
 
-/-- §5b — Collapsed form of equation (c): only the `φ̃ = φ₀ ∘ μ⁻¹` summand survives.
+/-- Collapsed form of equation (c): only the `φ̃ = φ₀ ∘ μ⁻¹` summand survives.
 
-PDF reasoning: by §5a, every nonzero summand of (c) has `φ̃ = φ₀ ∘ μ⁻¹`, with the
+PDF reasoning: by `phi_tilde_constraint_at_phi0`, every nonzero summand of (c) has
+`φ̃ = φ₀ ∘ μ⁻¹`, with the
 single surviving `w` equal to `r₀ + T·∑φ₀(d)·μ(d) ∈ ℤ`. Equation (c) collapses to
 `p^{r₀ + T·∑φ₀(d)·μ(d)} · a_n · (n!/∏φ₀(d)!) · ∏ Cs(μd)^{φ₀(d)} = 0`
-in `ℤᵘⁿ_[p,T]` (or its embedding, depending on the natural ambient ring used by §4d).
+in `ℤᵘⁿ_[p,T]` (or its embedding, depending on the natural ambient ring used by `identity_c`).
 
 The statement here is presented as a `(... = 0)` in `ℤᵘⁿ_[p,T]`, abstracting over the
 algebraMap and exponent conventions. -/
@@ -4883,7 +4894,7 @@ private lemma identity_c_collapsed
     (hP_natDegree : P.natDegree = n) :
     (algebraMap ℚᵘⁿ_[p] ℚᵘⁿ_[p, (T : ℕ)]) (P.coeff n) *
         (∏ᶠ d : S, algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-                     (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
+                     (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
   -- Chain through `Pfhat_TLifted_collapse_witness`.
   -- Step 1: get `Pfhat_TLifted ∈ TNullSeriesIdeal`.
   have hPfhat_null : Pfhat_TLifted T P fhat ∈ TNullSeriesIdeal p (T : ℕ) :=
@@ -4908,7 +4919,7 @@ private lemma identity_c_collapsed
     have h_partial_tendsto_surv : Filter.Tendsto
         (fun M : ℕ =>
           ∑ k : Set.Finite.toFinset
-                  (Tfinprop p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M),
+                  (TfiniteBelow p (T : ℕ) (Pfhat_TLifted T P fhat) (-(r0 hSparse) / T) M),
               (pInvTQ p (T : ℕ)) ^ (k.val : ℤ) *
                 (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
                   ((Pfhat_TLifted T P fhat).coeff
@@ -4923,7 +4934,7 @@ private lemma identity_c_collapsed
       (pInvTQ p (T : ℕ)) ^ w₀ * (α *
         ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
           ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                      (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d)))) := by
+                      (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d)))) := by
     rw [hsurv_def, h_coeff_eq']
   rw [h_surv_eq] at h_surv_zero
   -- Step 7: divide by non-zero factors `(pInvTQ)^w₀` and `α` to extract the LHS-goal.
@@ -4937,7 +4948,7 @@ private lemma identity_c_collapsed
   have h_α_lhs_zero : α *
       ((algebraMap ℚᵘⁿ_[p] (ℚᵘⁿ_[p, (T : ℕ)])) (P.coeff n) *
         ∏ᶠ d : S, (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)]))
-                    (Cs (mu_to_Stilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
+                    (Cs (muToStilde hf2 d) ^ (Sparse.φ₀ hSparse d))) = 0 := by
     rcases mul_eq_zero.mp h_surv_zero with hp_zero | h_rest
     · exact absurd hp_zero h_pInvTQ_pow_ne_zero
     · exact h_rest
@@ -4971,7 +4982,7 @@ private lemma final_disjunction
     (h_mk_eq : Ideal.Quotient.mk (TNullSeriesIdeal p (T : ℕ)) fhat = σ p (T : ℕ) f)
     {P : Polynomial ℚᵘⁿ_[p]} (hP_aeval : (Polynomial.aeval f) P = 0)
     (hP_natDegree : P.natDegree = n) :
-    P.coeff n = 0 ∨ ∃ d : S, Cs (mu_to_Stilde hf2 d) = 0 := by
+    P.coeff n = 0 ∨ ∃ d : S, Cs (muToStilde hf2 d) = 0 := by
   have hCollapse :=
     identity_c_collapsed hSparse h_supp h_coeff_eq hCs_ne h_mk_eq hP_aeval hP_natDegree
   -- Factor in the field ℚᵘⁿ_[p,T].
@@ -5001,7 +5012,7 @@ private lemma final_disjunction
     have h_mulSup_sub :
         Function.mulSupport (fun d : S =>
           algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-            (Cs (mu_to_Stilde hf2 d) ^ Sparse.φ₀ hSparse d)) ⊆
+            (Cs (muToStilde hf2 d) ^ Sparse.φ₀ hSparse d)) ⊆
         Function.support (Sparse.φ₀ hSparse) := by
       intro d hd
       simp only [Function.mem_mulSupport, ne_eq] at hd
@@ -5018,7 +5029,7 @@ private lemma final_disjunction
     have h_inj₂ : Function.Injective
         (algebraMap (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])) :=
       IsFractionRing.injective (ℤᵘⁿ_[p,(T : ℕ)]) (ℚᵘⁿ_[p, (T : ℕ)])
-    have h_powZ : Cs (mu_to_Stilde hf2 d) ^ Sparse.φ₀ hSparse d = 0 :=
+    have h_powZ : Cs (muToStilde hf2 d) ^ Sparse.φ₀ hSparse d = 0 :=
       h_inj₂ (hd_zero.trans (map_zero _).symm)
     -- `ℤᵘⁿ_[p,T]` is an integral domain (`instIsDomainOQpUnT`). Use pow_eq_zero_iff.
     have hφ₀_pos : Sparse.φ₀ hSparse d ≠ 0 := by
@@ -5049,6 +5060,10 @@ private lemma sparse_contradiction_engine
 end MainTheorem
 
 open MainTheorem in
+/-- Internal form of the main theorem, phrased with the combinatorial `IsCNSparse` hypothesis on a
+set `S` of digit series (rather than the analytic `IsSparse` on a set of rationals). The user-facing
+`main_theorem` is obtained by translating `IsSparse` into this form via
+`IsSparse_iff_IsCNSparse`. -/
 theorem main_theorem₀ (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
 (S : Set (DigitSeries)) (hS : ∀ f ∈ S, f.IsP p)
 (hS : ∃ c : PNat, ∃ D : Set ℕ+, D.Infinite ∧ ∀ n ∈ D, IsCNSparse p c n S hS)
@@ -5088,7 +5103,13 @@ theorem main_theorem₀ (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
   have lift_data := exists_FhatData f T hf2
   exact sparse_contradiction_engine (hcD n hnD) lift_data hP2 hP1 hP3
 
--- `Theorem 1.7` of this paper, version for transcendence over `ℚᵘⁿ_[p]`
+/-- **Theorem 1.7 / 5.3 (transcendence over `ℚᵘⁿ_[p]`).** Let `f : 𝕃_[p]` be a `p`-adic Hahn series
+and `T ≥ 1` an integer. If `−T · Supp(f)` admits a nonzero **sparse** set `W` of representatives
+modulo `ℤ`, then `f` is transcendental over the completed maximal unramified extension `ℚᵘⁿ_[p]`.
+
+This is the main theorem of the paper. The proof assumes `f` is algebraic and expands the resulting
+polynomial relation via the multinomial theorem; the sparseness of `W` isolates a single surviving
+nonzero coefficient, contradicting the relation. -/
 theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
 (W : Set ℚ) (hW1 : W ≠ {0}) (hW2 : IsSparse p W)
 (hf2 : IsRepModZ W {-1 * T * q | q ∈ f.support}) :
@@ -5099,7 +5120,9 @@ theorem main_theorem (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
     rwa [hS]
   · exact hW1
 
--- `Theorem 1.7` of this paper, version for transcendence over `ℚ_[p]`
+/-- **Theorem 1.7 / 5.3 (transcendence over `ℚ_[p]`).** The `ℚ_[p]`-version of `main_theorem`: under
+the same sparseness hypothesis, `f` is transcendental over `ℚ_[p]`. Immediate from the `ℚᵘⁿ_[p]`
+version, since transcendence over the larger field `ℚᵘⁿ_[p]` implies transcendence over `ℚ_[p]`. -/
 theorem main_theorem' (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
 (W : Set ℚ) (hW1 : W ≠ {0}) (hW2 : IsSparse p W)
 (hf2 : IsRepModZ W {-1 * T * q | q ∈ f.support}) :
@@ -5109,3 +5132,7 @@ theorem main_theorem' (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p]) (T : ℕ+)
   exact pAdicHahnSeries.alg_QpUn_of_alg_Qp p f this
 
 end FormalizedSparse
+
+
+
+

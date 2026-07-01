@@ -1,26 +1,58 @@
-import Mathlib.Algebra.CharP.Invertible
-import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Analysis.Normed.Field.Lemmas
-import Mathlib.Data.Nat.Digits.Lemmas
-import Mathlib.Data.Rat.Star
-import Mathlib.Data.Finsupp.Multiset
-import Mathlib.Data.Fintype.Fin
-import Mathlib.SetTheory.Cardinal.Finite
-import Mathlib.Topology.Algebra.InfiniteSum.Defs
-import Mathlib.Analysis.Real.OfDigits
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
+-/
+module
+
+public import Mathlib.Algebra.CharP.Invertible
+public import Mathlib.Algebra.Order.Ring.Star
+public import Mathlib.Analysis.Normed.Field.Lemmas
+public import Mathlib.Analysis.Real.OfDigits
+public import Mathlib.Data.Finsupp.Multiset
+public import Mathlib.Data.Fintype.Fin
+public import Mathlib.Data.Nat.Digits.Lemmas
+public import Mathlib.Data.Rat.Star
+public import Mathlib.SetTheory.Cardinal.Finite
+public import Mathlib.Topology.Algebra.InfiniteSum.Defs
 
 /-!
-# Sparseness and (c,n)-sparseness (Section 3)
-This files formalize section of this paper.
+# Sparseness and `(c, n)`-sparseness
+
+This file formalizes Section 3 of the paper. It introduces the combinatorial model of base-`p`
+digit expansions used to phrase the sparseness condition on supports of `p`-adic Hahn series, and
+proves that sets with pairwise-disjoint digit supports are sparse.
+
+## Main definitions
+
+- `FormalizedSparse.Sparse.DigitSeries`: the direct sum `⨁_{ℕ₊} ℕ`, modeling base-`p` digit
+  expansions.
+- `FormalizedSparse.Sparse.IsCSparse`: the `(c, n)`-sparseness condition (Definition 3.5).
+- `FormalizedSparse.IsSparse`: sparseness for subsets of `[0, 1) ∩ ℚ` (Definition 1.4).
+
+## Main statements
+
+- `FormalizedSparse.IsSparse_of_digit_disjoint`: sets built from pairwise-disjoint digit supports
+  are sparse (Example 3.7).
+
+## Tags
+
+sparse, digit expansion, p-adic, Hahn series
 -/
+
+@[expose] public section
+
 namespace FormalizedSparse
 
 namespace Sparse
 
--- The type for ⊕_(ℕ+) ℕ: a direct sum of countably many copies of ℕ, indexed by ℕ+.
+/-- A **digit series**: the direct sum `⨁_{ℕ₊} ℕ`, i.e. a function `ℕ+ → ℕ` with finite support.
+It models the base-`p` digit expansion `∑ᵢ (f i) · p^{-i}` of a rational in `[0, 1)`. -/
 @[ext]
 structure DigitSeries where
+  /-- The underlying digit function, sending a position `i : ℕ+` to its digit value. -/
   toFun : ℕ+ → ℕ
+  /-- The digit function has finite support. -/
   fin_supp : toFun.support.Finite
 
 instance : FunLike (DigitSeries) ℕ+ ℕ where
@@ -84,7 +116,8 @@ instance : AddCommMonoid DigitSeries where
     exact Nat.succ_mul n (f s)
 
 namespace DigitSeries
--- `Ψ` in `Definition 3.1`
+/-- The **digit sum** `Ψ` of a digit series (Definition 3.1): the sum of all its digit values,
+as an additive monoid homomorphism `DigitSeries →+ ℕ`. -/
 noncomputable def Psi : DigitSeries →+ ℕ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, f i
   map_zero' := by
@@ -144,16 +177,21 @@ noncomputable def Psi : DigitSeries →+ ℕ where
     _ = (∑ i ∈ a.fin_supp.toFinset, a i) + ∑ i ∈ b.fin_supp.toFinset, b i := by
       rw [← hsum_a, ← hsum_b]
 
+/-- The largest position at which a digit series is nonzero (`0` if the series vanishes). -/
 noncomputable def maxIndex (f : DigitSeries) : ℕ :=
   f.fin_supp.toFinset.sup fun i => (i : ℕ)
 
+/-- The list of the first `n` digit values `[f 1, f 2, …, f n]` of a raw digit function, in
+reverse order (least significant last), suitable for `Nat.ofDigits`. -/
 def coeffs (f : ℕ+ → ℕ) : ℕ → List ℕ
   | 0 => []
   | n + 1 => f (Nat.succPNat n) :: coeffs f n
 
+/-- The base-`p` value of the first `n` digits of `f`, i.e. `Nat.ofDigits p (coeffs f n)`. -/
 noncomputable def value (p : ℕ) (f : DigitSeries) (n : ℕ) : ℕ :=
   Nat.ofDigits p (coeffs f n)
 
+/-- The first `n` positive-integer positions `{1, 2, …, n}` as a `Finset ℕ+`. -/
 def indices (n : ℕ) : Finset ℕ+ :=
   (Finset.range n).map ⟨Nat.succPNat, Nat.succPNat_injective⟩
 
@@ -213,7 +251,9 @@ lemma cast_pow_mul_zpow_neg (p : ℕ) [Fact (Nat.Prime p)] (n : ℕ) :
   rw [zpow_neg, zpow_natCast]
   field_simp [hp0]
 
--- `‖·‖` in `Definition 3.1`
+/-- The **norm** `‖·‖` of a digit series (Definition 3.1): the rational value
+`∑ᵢ (f i) · p^{-i}` of its base-`p` digit expansion, as an additive monoid homomorphism
+`DigitSeries →+ ℚ`. -/
 noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : DigitSeries →+ ℚ where
   toFun f := ∑ i ∈ f.fin_supp.toFinset, (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))
   map_zero' := by
@@ -301,11 +341,14 @@ noncomputable def norm (p : ℕ) [Fact (Nat.Prime p)] : DigitSeries →+ ℚ whe
             ∑ i ∈ b.fin_supp.toFinset, (b i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
           rw [← hsum_a, ← hsum_b]
 
--- `‖a + b‖ = ‖a‖ + ‖b‖` in `Lemma 3.3`
+/-- **Lemma 3.3.** The norm is additive: `‖a + b‖ = ‖a‖ + ‖b‖`. (Immediate, since `norm` is an
+additive monoid homomorphism.) -/
 lemma norm_additive (p : ℕ) [Fact (Nat.Prime p)] (a b : DigitSeries) :
     (a + b).norm p = a.norm p + b.norm p := by
   exact (norm p).map_add a b
 
+/-- The truncated base-`p` value of `f` at length `n`, rescaled by `p^{-n}`, equals the partial
+norm `∑_{i ∈ indices n} (f i) · p^{-i}` over the first `n` positions. -/
 lemma value_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] :
     ∀ n,
       ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) =
@@ -327,6 +370,8 @@ lemma value_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] :
                   simp
       · simp
 
+/-- Once `n` exceeds the largest nonzero position of `f`, the norm is the finite sum
+`∑_{i ∈ indices n} (f i) · p^{-i}` — the tail beyond `n` contributes nothing. -/
 lemma norm_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
     (hn : f.maxIndex < n) :
     f.norm p = Finset.sum (indices n) fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ)) := by
@@ -347,11 +392,15 @@ lemma norm_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] {n : 
       exact his (by simpa using hne)
     simp [hzero]
 
+/-- Once `n` exceeds the largest nonzero position of `f`, its norm equals the truncated value
+`(f.value p n) · p^{-n}`; i.e. `f` is determined by its first `n` digits. -/
 lemma norm_eq_value (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] {n : ℕ}
     (hn : f.maxIndex < n) :
     f.norm p = ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) := by
   rw [f.norm_eq_sum_indices p hn, ← f.value_eq_sum_indices p n]
 
+/-- Once `n` exceeds the largest nonzero position of `f`, its digit sum `Ψ` equals the plain sum of
+digits over the first `n` positions. -/
 lemma Psi_eq_sum_indices (f : DigitSeries) {n : ℕ} (hn : f.maxIndex < n) :
     f.Psi = Finset.sum (indices n) f := by
   classical
@@ -384,6 +433,8 @@ lemma coeffs_update_above (f : ℕ+ → ℕ) (n m : ℕ) (hm : m ≤ n) (a : ℕ
         exact fun h => (Nat.lt_of_succ_le hm).ne (Nat.succPNat_injective h)
       simp [coeffs, Function.update, hne, ih hm']
 
+/-- Build a digit series from a list of digit values `[a₁, a₂, …, aₙ]`, placing `aᵢ` at
+position `i`. This is a left inverse to `coeffs` on lists of the right length. -/
 noncomputable def ofCoeffs : List ℕ → DigitSeries
   | [] =>
       { toFun := 0
@@ -486,7 +537,8 @@ lemma eq_on_of_coeffs_eq : ∀ {f g : ℕ+ → ℕ} {n : ℕ}, coeffs f n = coef
 end DigitSeries
 
 namespace DigitSeries
--- `ℙ` in `Definition 3.1 (2)`
+/-- The predicate `ℙ` (Definition 3.1 (2)): a digit series is a **proper** base-`p` expansion,
+i.e. every digit is `< p`. -/
 def IsP (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] : Prop :=
   ∀ n, f n < p
 
@@ -610,6 +662,7 @@ lemma forall_lt_of_digit_sum_ofDigits_eq_sum (p : ℕ) (hp : 1 < p) {L : List �
 
 namespace DigitSeries
 
+/-- The first `n` digit values of a proper (`IsP p`) digit series are all `< p`. -/
 lemma coeffs_lt {p : ℕ} [Fact (Nat.Prime p)] (f : DigitSeries) (hf : f.IsP p) (n : ℕ) :
     ∀ x ∈ DigitSeries.coeffs f n, x < p := by
   intro x hx
@@ -621,12 +674,17 @@ lemma coeffs_lt {p : ℕ} [Fact (Nat.Prime p)] (f : DigitSeries) (hf : f.IsP p) 
       · simpa using hf (Nat.succPNat n)
       · exact ih _ hx
 
+/-- The truncated base-`p` value of a proper digit series at length `n` is `< p^n` (it is an
+`n`-digit number in base `p`). -/
 lemma value_lt_pow {p : ℕ} [Fact (Nat.Prime p)] (f : DigitSeries) (hf : f.IsP p) (n : ℕ) :
     f.value p n < p ^ n := by
   unfold DigitSeries.value
   simpa [DigitSeries.coeffs_length] using
     Nat.ofDigits_lt_base_pow_length ((Fact.out : Nat.Prime p).one_lt) (f.coeffs_lt hf n)
 
+/-- If two proper (`IsP p`) digit series have norms differing by an integer, they are equal. A
+proper base-`p` expansion of a number in `[0, 1)` is unique, so no integer shift can relate two
+distinct ones. -/
 lemma eq_of_norm_sub_isInt {p : ℕ} [Fact (Nat.Prime p)] {f g : DigitSeries}
     (hf : f.IsP p) (hg : g.IsP p) (hfg : (f.norm p - g.norm p).isInt) : f = g := by
   let n := max f.maxIndex g.maxIndex + 1
@@ -690,7 +748,9 @@ end DigitSeries
 
 variable (p : ℕ) [Fact (Nat.Prime p)]
 
--- `Lemma 3.2` in the paper, which is used to define `τ`.
+/-- **Lemma 3.2.** Every digit series `d` has a unique proper (`IsP p`) digit series whose norm
+differs from `‖d‖` by an integer. This unique representative is used to define the carry
+normalization `τ`. -/
 lemma lemma_3_2 (d : DigitSeries) :
     ∃! f : DigitSeries, f.IsP p ∧ (f.norm p - d.norm p).isInt := by
   let n := d.maxIndex + 1
@@ -781,15 +841,19 @@ lemma lemma_3_2 (d : DigitSeries) :
 
 namespace DigitSeries
 -- `τ` in `Lemma 3.2`
+/-- The **carry normalization** `τ` (Lemma 3.2): given a digit series `f`, `τ f` is the
+proper (`IsP p`) digit series with the same norm, obtained by carrying overflowing digits. -/
 noncomputable def tau (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries) : DigitSeries :=
   (lemma_3_2 p f).choose
 
+/-- The carry normalization `τ f` is proper (`IsP p`): all its digits are `< p`. -/
 lemma tau_isP (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries) : (f.tau p).IsP p :=
   (lemma_3_2 p f).choose_spec.1.1
 
 end DigitSeries
 
--- `Lemma 3.3 (2)` in the paper.
+/-- **Lemma 3.3 (2).** Two digit series have the same carry normalization iff their norms differ by
+an integer; i.e. `τ` identifies exactly the digit series that are equal modulo `ℤ`. -/
 lemma lemma_3_3₂ (p : ℕ) [Fact (Nat.Prime p)] (f g : DigitSeries) :
   f.tau p = g.tau p ↔ (f.norm p - g.norm p).isInt := by
     constructor
@@ -974,8 +1038,8 @@ lemma lemma_3_3₄ (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     repeat simp [(lemma_3_3₃ p d).2 hdIsP]
 
 -- Unconditional version of the inequality from `lemma_3_3₄`.
--- Mirrors the construction in `lemma_3_3₄`'s forward direction but stops at the
--- ≤ chain (without requiring Psi equality / IsP).
+/-- Carry normalization never increases the digit sum: `Ψ(τ d) ≤ Ψ(d)`. Carrying `p` units at one
+position into a single unit at the next strictly reduces the total digit count. -/
 lemma Psi_tau_le_Psi (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     (d.tau p).Psi ≤ d.Psi := by
   let n := d.maxIndex + 1
@@ -1083,7 +1147,8 @@ lemma Psi_tau_le_Psi (p : ℕ) [Fact (Nat.Prime p)] (d : DigitSeries) :
     _ ≤ Ld.sum := hdigits_le
     _ = d.Psi := hLdPsi.symm
 
--- `lemma 3.3 (1)` of the paper: ‖·‖ is injective when restricted to ℙ.
+/-- **Lemma 3.3 (1).** The norm `‖·‖` is injective on proper digit series: if `d, e` are proper
+(`IsP p`) and `‖d‖ = ‖e‖`, then `d = e`. -/
 lemma lemma_3_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
     (hd : d.IsP p) (he : e.IsP p) (h : d.norm p = e.norm p) : d = e := by
   have hsub : (d.norm p - e.norm p).isInt := by
@@ -1091,7 +1156,10 @@ lemma lemma_3_3₁ (p : ℕ) [Fact (Nat.Prime p)] (d e : DigitSeries)
     simp [Rat.isInt]
   exact DigitSeries.eq_of_norm_sub_isInt hd he hsub
 
--- Predicate for `(c,n)-sparse` condition in `Definition 3.5`
+/-- The **`(c, n)`-sparseness** condition (Definition 3.5) for a set `S` of proper digit series:
+every element has digit sum `≤ c`, and there exists a tuple of `n` elements of digit sum exactly
+`c` whose sum is proper and which is rigid — any other tuple differing from it by an integer norm
+is a permutation of it. -/
 def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
 (c n : PNat) (S : Set (DigitSeries)) (_hS : ∀ f ∈ S, f.IsP p) : Prop :=
   (
@@ -1108,13 +1176,16 @@ def IsCNSparse (p : ℕ) [Fact (Nat.Prime p)]
       )
   )
 
--- The `φ₀` in `Lemma 3.8` of the paper
+/-- The multiplicity function `φ₀` (Lemma 3.8): for a `(c, n)`-sparse set `S`, `φ₀ d` counts how
+many times the element `d ∈ S` occurs in the fixed rigid witness tuple. -/
 noncomputable def φ₀ {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)} {hS : ∀ f ∈ S, f.IsP p}
   {c n : ℕ+} (hSparse : IsCNSparse p c n S hS) : S → ℕ :=
   fun d => Nat.card <| hSparse.2.choose⁻¹' {d}
 
--- `Lemma 3.8` of the paper, which is the logic core of the uniqueness argument for the witness
--- sequence in `IsCNSparse`.
+/-- **Lemma 3.8.** The combinatorial core of the sparseness uniqueness argument: for a
+`(c, n)`-sparse set `S`, any multiplicity function `φ : S → ℕ` with finite support, total mass
+`≤ n`, and the same carry-free sum data as the canonical witness must coincide with `φ₀`. This is
+what forces the rigidity of the witness sequence in `IsCNSparse`. -/
 lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
     {hS : ∀ f ∈ S, f.IsP p} {c n : ℕ+} (hSparse : IsCNSparse p c n S hS)
     (φ : S → ℕ)
@@ -1316,7 +1387,7 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
         _ ≤ (∑ d ∈ T, φ d) * c.val := hPsi_bound
         _ = (∑ᶠ d : S, φ d) * c.val := by rw [hsum_φ_eq]
     exact Nat.le_of_mul_le_mul_right hchain c.pos
-  -- Step 4: Main uniqueness argument (Stage 2 of informal proof)
+  -- Step 4: main uniqueness argument
   classical
   -- Reuse the support-set T from Step 3b
   set T : Finset S := hφ_finite.toFinset with hT_def
@@ -1494,25 +1565,31 @@ lemma lemma_3_8 {p : ℕ} [Fact (Nat.Prime p)] {S : Set (DigitSeries)}
       intro x _; exact ⟨perm.symm x, by simp⟩)
   rw [hperm_card, hA5]
 
--- `Definition 1.3`: the digits in base `p`
+/-- The `p`-adic **digits** of a rational `q` (Definition 1.3): `decDigits p q n` is the `n`-th
+base-`p` digit of the fractional part of `q`. -/
 noncomputable abbrev decDigits (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : ℕ+ → Fin p :=
   fun n => Real.digits (Int.fract q) p ((n : ℕ) - 1)
 
 open Classical in
-/- The `p-digit sum`, `𝔑ₚ(q)` in `Definition 1.3 (1)`-/
+/-- The **`p`-digit sum** `𝔑ₚ(q)` of a rational `q` (Definition 1.3 (1)): the sum of its base-`p`
+digits, or `⊤` if the expansion has infinite support. -/
 noncomputable def pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ) : WithTop ℕ :=
   if h : (Function.support (decDigits p q)).Infinite then ⊤
   else ∑ n ∈ (Set.not_infinite.1 h).toFinset, (decDigits p q n).val
 
-/- `dominant p-digit sum` of S, `Definition 1.3 (2)`-/
+/-- The **dominant `p`-digit sum** of a set `S` (Definition 1.3 (2)): the supremum of the `p`-digit
+sums of its elements. -/
 noncomputable def dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : WithTop ℕ :=
   sSup {pDigitSum p  q | q ∈ S}
 
-/- `p-digit dominant part` of S, `Definition 1.3 (2)`-/
+/-- The **`p`-digit dominant part** of a set `S` (Definition 1.3 (2)): the elements of `S` whose
+`p`-digit sum attains the dominant value `dom p S`. -/
 noncomputable def Dom (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Set ℚ :=
   {q ∈ S | pDigitSum p q = dom p S}
 
-/- `Definition 1.4`: The sparse condition -/
+/-- The **sparseness** condition (Definition 1.4) for a set `S ⊆ [0, 1) ∩ ℚ`: its dominant part is
+finite, and for infinitely many `n` there are `n` elements of `Dom p S` that add without carry and
+whose carry-free sum is rigid up to permutation. -/
 def IsSparse (p : ℕ) [Fact (Nat.Prime p)] (S : Set ℚ) : Prop :=
   S ⊆ Set.Ico 0 1 ∧ dom p S < ⊤ ∧
   ∃ D : Set ℕ+, D.Infinite ∧ (
@@ -1891,7 +1968,9 @@ lemma DigitSeries.Psi_ofRat_eq_pDigitSum (p : ℕ) [Fact (Nat.Prime p)] (q : ℚ
     rfl
   rw [hSig]
 
--- `Lemma 3.6` of the paper, relates `IsSparse` with `IsCNSparse`
+/-- **Lemma 3.6.** Reformulates sparseness of a set `W ⊆ [0, 1) ∩ ℚ` (`W ≠ {0}`) in terms of
+`(c, n)`-sparseness of a set `S` of proper digit series whose norms enumerate `W`. This is the
+bridge between the analytic condition `IsSparse` and the combinatorial condition `IsCNSparse`. -/
 lemma IsSparse_iff_IsCNSparse (p : ℕ) [Fact (Nat.Prime p)] (W : Set ℚ)
     (hW : W ≠ {0}) :
   IsSparse p W ↔ ∃ S : Set (DigitSeries), ∃ hS : ∀ f ∈ S, f.IsP p,
@@ -2348,6 +2427,10 @@ lemma indicatorSeries_IsP (p : ℕ) [Fact (Nat.Prime p)] (A : Set ℕ) (hA_fin :
   · exact (Fact.out : Nat.Prime p).one_lt
   · exact (Fact.out : Nat.Prime p).pos
 
+/-- Raw (ℕ-indexed) form of Example 3.7: given pairwise-disjoint, nonempty, finite digit-support
+sets `A n ⊆ ℕ` with a common cardinality bound attained infinitely often, the set of norms
+`{∑_{r ∈ Aₙ} p^{-r}}` is sparse. The `ℕ+`-indexed statement `IsSparse_of_digit_disjoint` is derived
+from this. -/
 lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite) (hA0 : ∀ n, 0 ∉ A n)
@@ -2497,46 +2580,6 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
   have h_dom_lt : dom p {∑ r ∈ (hA3 i).toFinset, (p : ℚ)^(-(r:ℤ)) | i : ℕ} < ⊤ :=
     lt_of_le_of_lt h_dom_le (WithTop.coe_lt_top _)
   refine ⟨h_subIco, h_dom_lt, ?_⟩
-  /- (iii) Build infinite D and witnesses.
-     We use hK_inf: I := {n | |A_n| = K}.Infinite. Extract an injective
-     enumeration ι : ℕ → I.
-
-     For each n : ℕ+, the witness `d : Fin n → Dom p M(A)` is `j ↦ q_{ι(j)}`.
-     The no-carry follows from hA2 + ι-injectivity (A_{ι(j)} pairwise disjoint),
-     so at each position r, at most one j contributes digit 1.
-
-     The rigidity from any `e : Fin n → Dom p M(A)`: each (e j).val = q_{i_j}
-     for some i_j with |A_{i_j}| = K (forced by pDigitSum = dom = K). Then by
-     digit-uniqueness, the multiset of i_j's matches {ι(0), ..., ι(n-1)}, so
-     a perm exists. -/
-  /- Detailed strategy (for the next prover iteration):
-
-     Step 1 (Build D):
-       I := {n | (hA3 n).toFinset.card = K} (infinite by hK_inf).
-       D := Set.univ ∩ Set.image Nat.succPNat Set.univ (i.e., all ℕ+).
-       hD_inf : D.Infinite — D = univ on ℕ+ which is infinite.
-
-     Step 2 (Witnesses for n ∈ D):
-       Use `Set.Infinite.natEmbedding` on `hK_inf` to get `ι : ℕ ↪ ℕ` with
-         `∀ j, (ι j) ∈ I`.
-       Define `d : Fin n → Dom p M(A) := fun j => ⟨q_{ι(j.val)}, _⟩`.
-       Membership in Dom: q_{ι(j)} ∈ M(A) by def; pDigitSum = card(A_{ι(j)}) = K
-       = dom (need dom = K = upper bound is achieved infinitely often via hK_inf).
-
-     Step 3 (No-carry):
-       For each position pos : ℕ+, ∑ j : Fin n, decDigits p (d j).val pos.val < p.
-       Each decDigits p (d j).val pos = decDigits p q_{ι(j)} pos =
-         (decDigits applied to f_{ι(j)}.norm p) pos = (f_{ι(j)} pos) (by
-         decDigits_norm). This is 0 or 1.
-       Distinct j, j' give distinct ι(j), ι(j'); by hA2, A_{ι(j)} ∩ A_{ι(j')} = ∅.
-       So at most one j has digit 1. Sum ≤ 1 < p. ✓
-
-     Step 4 (Rigidity):
-       For any `e : Fin n → Dom p M(A)`, (∑ d.val - ∑ e.val).isInt.
-       Each (e j).val ∈ M(A), so (e j).val = q_{m_j} for some m_j : ℕ.
-       Since (e j) ∈ Dom p M(A), pDigitSum p (e j).val = K = card(A_{m_j}).
-       Build e_DS : Fin n → DigitSeries via f_{m_j}. Each is IsP.
-       Apply IsP_norm_injective + uniqueness to derive the permutation. -/
   /- Step (a): the dominant digit sum is K (achieved at any i ∈ {n | |A_n| = K}). -/
   have h_dom_eq : dom p {∑ r ∈ (hA3 i).toFinset, (p : ℚ)^(-(r:ℤ)) | i : ℕ}
       = ((K : ℕ) : WithTop ℕ) := by
@@ -2890,7 +2933,10 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
     have h_eq : m (perm i) = ι_index i := hperm_eq i
     rw [hm_eq (perm i), h_eq]
 
--- `Example 3.7` of the paper: the digit-disjoint sets are sparse.
+/-- **Example 3.7.** If `A₁, A₂, …` are pairwise-disjoint nonempty finite subsets of `ℕ₊` whose
+sizes are bounded, with the bound attained for infinitely many indices, then the set
+`{∑_{r ∈ Aᵢ} p^{-r} : i}` is sparse. This is the source of the transcendental series with
+non-overlapping base-`p` digits used in the application. -/
 lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set ℕ+)
 (hA1 : ∀ n, (A n).Nonempty) (hA2 : ∀ i j, (A i) ∩ (A j) ≠ ∅ → i = j)
 (hA3 : ∀ n, (A n).Finite)
@@ -2972,3 +3018,8 @@ lemma IsSparse_of_digit_disjoint (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → Set
 end Sparse
 
 end FormalizedSparse
+
+
+
+
+

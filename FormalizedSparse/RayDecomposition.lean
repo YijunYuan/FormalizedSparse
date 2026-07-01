@@ -1,30 +1,41 @@
-import FormalizedSparse.QuasiTwistRecurrent
-import Mathlib.Topology.DerivedSet
-import Mathlib.SetTheory.Ordinal.Basic
-import Mathlib.Data.List.GetD
-import Mathlib.Data.Set.Finite.List
-
-/- USER: This file corresponds to the subsection `Ray decomposition of the QTR sets` in section
-`Application: $p$-adic Hahn series with bounded support`. You need to formalize every thing in this
-subsection in this file. I will give you several hints on the formalization:
+/-
+Copyright (c) 2025 Shanwen Wang, Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Shanwen Wang, Yijun Yuan
 -/
+module
+
+public import FormalizedSparse.QuasiTwistRecurrent
+public import Mathlib.Data.List.GetD
+public import Mathlib.Data.Set.Finite.List
+public import Mathlib.SetTheory.Ordinal.Basic
+public import Mathlib.Topology.DerivedSet
+
+/-!
+# Ray decomposition of QTR sets
+
+This file formalizes the subsection *Ray decomposition of the QTR sets* of Section 6 (Application:
+`p`-adic Hahn series with bounded support). Throughout, we fix `p` prime, `a : ℕ+`, `b : ℤ`,
+`c : ℕ`, `m : ℤ` with `m ≥ -b`, `M N : ℕ+`, and a set `S ⊆ Sabc p a b c`.
+
+## Main statements
+
+- `FormalizedSparse.qtr_ray_decomposition` (Corollary 6.20): a bounded QTR set with finitely many
+  accumulation points decomposes as a finite set together with finitely many pairwise disjoint rays.
+
+## Tags
+
+QTR, ray decomposition, p-adic, Hahn series, bounded support
+-/
+
+@[expose] public section
 
 namespace FormalizedSparse
 
 open Kedlaya
 
 /-!
-## §6.2 — Ray decomposition of QTR sets
-
-Throughout this section we fix `p` prime, `a : ℕ+`, `b : ℤ`, `c : ℕ`, `m : ℤ` with `m ≥ -b`,
-`M N : ℕ+`, and a set `S ⊆ Sabc p a b c`.
-
-The main goal is `qtr_ray_decomposition` (`coro:48108`): a bounded QTR set with finitely many
-accumulation points decomposes as a finite set plus finitely many pairwise disjoint rays.
--/
-
-/-!
-### Helper: the `m`-slice `S_{a,b,c,m}`
+### The `m`-slice `S_{a,b,c,m}`
 
 This is the subset of `Sabc p a b c` whose elements have integer part `m` (i.e. the value is
 `(1/a)(m - 0.q₁q₂⋯)` for fixed `m`). It is used in conditions (S1) and (S3) and in the
@@ -46,10 +57,10 @@ noncomputable def Sabc_m (p : ℕ) [Fact (Nat.Prime p)] (a : ℕ+) (c : ℕ) (m 
         ((m : ℚ) - d.sum fun i v => (v : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ))) }
 
 /-!
-### Admissible sets (`def:admissible`)
+### Admissible sets
 -/
 
-/-- **Definition `def:admissible`**: `(a,b,c,m,M,N)`-admissible sets.
+/-- **The `(a,b,c,m,M,N)`-admissibility conditions (S1)–(S3) of Section 6.2.**
 
 A set `S ⊆ Sabc p a b c` is **`(a,b,c,m,M,N)`-admissible** if it satisfies the three conditions:
 
@@ -63,7 +74,7 @@ A set `S ⊆ Sabc p a b c` is **`(a,b,c,m,M,N)`-admissible** if it satisfies the
 
 - **(S3)** `S` has only finitely many accumulation points: `(derivedSet S).Finite`.
 
-Note: (S2) is strictly weaker than the QTR recurrence (Def `def:16557`) because it only requires
+Note: (S2) is strictly weaker than the QTR recurrence (Def Definition 6.2) because it only requires
 the single element `q ∈ S` itself (not all `w ≥ -b`). -/
 def IsAdmissible (p : ℕ) [Fact (Nat.Prime p)] (a : ℕ+) (b : ℤ) (c : ℕ)
     (m : ℤ) (_hm : -b ≤ m) (M N : ℕ+) (S : Set ℚ) : Prop :=
@@ -83,10 +94,10 @@ def IsAdmissible (p : ℕ) [Fact (Nat.Prime p)] (a : ℕ+) (b : ℤ) (c : ℕ)
   (derivedSet S).Finite
 
 /-!
-### Words and gap vectors (`def:word-gap`)
+### Words and gap vectors
 -/
 
-/-- **Definition `def:word-gap` (word part)**: the word of an element of `Sabc`.
+/-- **Definition 6.9 (word part)**: the word of an element of `Sabc`.
 
 Given an element of `Sabc p a b c` encoded by a finsupp `d : ℕ →₀ ℕ` (with `d i` the digit
 `q_{i+1}`), the **word** of `q` is the list of nonzero digit values, read in increasing order of
@@ -97,7 +108,7 @@ value. This gives the tuple of nonzero digits of `0.q₁q₂⋯` in left-to-righ
 noncomputable def word (d : ℕ →₀ ℕ) : List ℕ :=
   (d.support.sort (· ≤ ·)).map (fun i => d i)
 
-/-- **Definition `def:word-gap` (gap vector part)**: the gap vector of an element of `Sabc`.
+/-- **Definition 6.9 (gap vector part)**: the gap vector of an element of `Sabc`.
 
 The **gap vector** of `q` (encoded by `d : ℕ →₀ ℕ`) is the list of zero-gaps between consecutive
 nonzero digits. The `i`-th entry counts the number of zero digits between the `(i-1)`-th and
@@ -105,7 +116,8 @@ nonzero digits. The `i`-th entry counts the number of zero digits between the `(
 
 Concretely: let `pos = (d.support.sort (· ≤ ·))` be the sorted positions of nonzero digits.
 - Entry 0 = `pos[0]` (0-indexed leading zeros before the first nonzero digit).
-- Entry `i` (for `i ≥ 1`) = `pos[i] - pos[i-1] - 1` (zeros strictly between positions `i-1` and `i`).
+- Entry `i` (for `i ≥ 1`) = `pos[i] - pos[i-1] - 1` (zeros strictly between positions `i-1` and
+  `i`).
 -/
 noncomputable def gapVector (d : ℕ →₀ ℕ) : List ℕ :=
   let pos := d.support.sort (· ≤ ·)
@@ -119,7 +131,7 @@ noncomputable def gapVector (d : ℕ →₀ ℕ) : List ℕ :=
 ### Structural lemmas
 -/
 
-/-- **Lemma `lem:5966`**: word length is bounded by `c`.
+/-- **Lemma Lemma 6.11**: word length is bounded by `c`.
 
 For every element of `S` (encoded by `d : ℕ →₀ ℕ` with `∑ d ≤ c`), the word of `q` has length
 at most `c`. In particular, only finitely many words occur among elements of `S`.
@@ -354,8 +366,7 @@ theorem support_sort_strictMono (d : ℕ →₀ ℕ) (l₁ l₂ : ℕ)
   have h1 : l₁ < (d.support.sort (· ≤ ·)).length := by omega
   rw [List.getI_eq_getElem (l := d.support.sort (· ≤ ·)) h1,
       List.getI_eq_getElem (l := d.support.sort (· ≤ ·)) h2]
-  have hsm := d.support.sortedLT_sort
-  exact hsm (show (⟨l₁, h1⟩ : Fin _) < ⟨l₂, h2⟩ from h12)
+  exact (d.support.sortedLT_sort.getElem_lt_getElem_iff).mpr h12
 
 /-- Each entry of the sorted support of `d` is an element of `d.support`. -/
 theorem support_sort_getI_mem (d : ℕ →₀ ℕ) (l : ℕ)
@@ -373,7 +384,7 @@ theorem mem_support_eq_getI (d : ℕ →₀ ℕ) (x : ℕ) (hx : x ∈ d.support
   obtain ⟨l, hl, hlx⟩ := hx2
   exact ⟨l, hl, by rw [List.getI_eq_getElem (l := d.support.sort (· ≤ ·)) hl]; exact hlx⟩
 
-/-- **Lemma `lem:30089`**: the gap-addition closure.
+/-- **Lemma Lemma 6.12**: the gap-addition closure.
 
 Fix a word `d` (a finsupp encoding a nonzero-digit pattern) and let `G_d ⊆ ℕ^t` be the set of gap
 vectors of elements of `S` with word `d`. If `g ∈ G_d` and the `i`-th gap coordinate `g[i] ≥ M`,
@@ -466,7 +477,7 @@ theorem gap_add_mem {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ
     exact hmem
 
 /-!
-### Order-type infrastructure for `lem:27279`
+### Order-type infrastructure for Lemma 6.13
 
 The deep lemma `gap_at_most_one_ge_M` argues that two gaps `≥ M` produce an `ω²`-ordered family
 inside `S`, contradicting (S3). The following helpers package the analytic content: the digit
@@ -701,7 +712,7 @@ theorem insert_pow_mem {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : 
     exact this
 
 /-- The doubly-indexed family `v_{s,t}` of values arising from inserting `s·N` zeros at the
-`i`-th support position and `t·N` zeros at the `j`-th, all lying in `S`. The core of `lem:27279`:
+`i`-th support position and `t·N` zeros at the `j`-th, all lying in `S`. The core of Lemma 6.13:
 two gaps `≥ M` make this family contradict (S3). We package the `i < j` case here; the symmetric
 statement follows by swapping `i` and `j`. -/
 theorem two_gaps_ge_M_absurd {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ}
@@ -924,7 +935,7 @@ theorem two_gaps_ge_M_absurd {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
   have hfin : (Set.range w).Finite := hS.2.2.subset hsubset
   exact (Set.infinite_range_of_injective hw_inj) hfin
 
-/-- **Lemma `lem:27279`**: at most one gap coordinate is `≥ M`.
+/-- **Lemma Lemma 6.13**: at most one gap coordinate is `≥ M`.
 
 For every word occurring in `S` and every gap vector `g` of an element of `S` with that word, at
 most one coordinate of `g` is `≥ M`.
@@ -1014,7 +1025,7 @@ theorem sum_eq_of_word_eq (d' d_word : ℕ →₀ ℕ) (hw : word d' = word d_wo
     d'.sum (fun _ v => v) = d_word.sum (fun _ v => v) := by
   rw [← word_sum d', ← word_sum d_word, hw]
 
-/-- **Lemma `lem:19048`**: decomposition of the gap set.
+/-- **Lemma Lemma 6.14**: decomposition of the gap set.
 
 For any fixed word `d`, the gap set `G_d` (gap vectors of elements of `S` with word `d`)
 decomposes as `G_d = W ∪ A₁ ∪ ⋯ ∪ Aᵣ`, where:
@@ -1285,10 +1296,10 @@ theorem gapSet_decomp {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : �
     exact hgW.2 x hx
 
 /-!
-### Rays (`def:33761`) and the decomposition
+### Rays (Definition 6.15) and the decomposition
 -/
 
-/-- **Definition `def:33761`**: a ray in `S`.
+/-- **Definition Definition 6.15**: a ray in `S`.
 
 A **ray** in `S` is a subset of `S` of the form
 ```
@@ -1316,7 +1327,7 @@ def IsRay (p : ℕ) [Fact (Nat.Prime p)] (a : ℕ+) (c : ℕ) (m : ℤ) (N : ℕ
 /-- **Bridge: a long gap yields a ray.** If `d_base` encodes an element of `S` (digit/sum bounds)
 and gap index `u` has gap `≥ M` (so positions `[pos_u - M, pos_u)` form a zero run, where
 `pos_u = (sorted support).getI u`), then the set obtained by inserting `kN` zeros at the threshold
-`pos_u` for `k = 0, 1, 2, …` is a ray in `S`. This is the geometric content of `def:33761`,
+`pos_u` for `k = 0, 1, 2, …` is a ray in `S`. This is the geometric content of Definition 6.15,
 realised through the membership iterator `insert_pow_mem`. -/
 theorem progression_isRay {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : ℕ}
     {m : ℤ} {hm : -b ≤ m} {M N : ℕ+} {S : Set ℚ}
@@ -1447,7 +1458,7 @@ theorem gapVector_mapDomain_insert (d_base : ℕ →₀ ℕ) (u k N' : ℕ)
     gapOfList_map_insertZeros _ (support_sort_strictMono d_base) u (k * N') hu',
     ← gapVector_eq_gapOfList]
 
-/-- **Corollary `coro:8081`**: `S` is a union of a finite set and finitely many rays.
+/-- **Corollary Corollary 6.17**: `S` is a union of a finite set and finitely many rays.
 
 *Proof sketch*: By `word_length_le`, only finitely many words occur in `S`. For each word `d`,
 apply `gapSet_decomp` to write `G_d = W ∪ A₁ ∪ ⋯ ∪ Aᵣ`. The finite parts `W` give a finite set;
@@ -1640,7 +1651,7 @@ theorem eq_finite_union_rays {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
       obtain ⟨R, hRrays, hyR⟩ := hyR
       exact (hrays_isRay R hRrays).1 hyR
 
-/-- **Lemma `lem:59667`**: two rays are comparable or have finite intersection.
+/-- **Lemma `Lemma 6.117`**: two rays are comparable or have finite intersection.
 
 For two rays `R₁, R₂` in `S`, exactly one holds:
 1. `R₁ ⊆ R₂` or `R₂ ⊆ R₁`; or
@@ -2008,7 +2019,7 @@ theorem ray_split_for_disjoint {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : �
         rw [Finset.mem_coe] at hqD
         exact hk₀ k hk hqD
 
-/-- **Proposition `prop:29055`**: `S` is a union of a finite set and finitely many
+/-- **Proposition Proposition 6.19**: `S` is a union of a finite set and finitely many
 **pairwise disjoint** rays.
 
 *Proof sketch*: Start from `eq_finite_union_rays`. By `rays_sub_or_finite_inter`, discard any ray
@@ -2126,10 +2137,10 @@ theorem eq_finite_union_disjoint_rays {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} 
     ext q; simp only [Set.mem_union, Finset.mem_coe]; tauto
 
 /-!
-### Main corollary: QTR sets decompose into rays (`coro:48108`)
+### Main corollary: QTR sets decompose into rays (Corollary 6.20)
 -/
 
-/-- **Corollary `coro:48108`**: ray decomposition of bounded QTR sets.
+/-- **Corollary Corollary 6.20**: ray decomposition of bounded QTR sets.
 
 Let `U = Function.support x` where `x : ℚ → 𝔽ᵃ_[p]` is QTR with data `(a, b, c, M, N)`.
 If `U` is bounded (as a subset of `ℚ`) and has only finitely many accumulation points, then `U`
@@ -2279,7 +2290,7 @@ theorem qtr_ray_decomposition {p : ℕ} [Fact (Nat.Prime p)]
       refine ⟨?_, hRslice.2⟩
       exact le_trans hRslice.1 Set.inter_subset_left
     exact ⟨m, hms_ge m hmem, hRU, hslice_adm m (hms_ge m hmem)⟩
-  · -- Disjointness: within a slice (prop:29055) and across slices (disjoint `Sabc_m`).
+  · -- Disjointness: within a slice (Proposition 6.19) and across slices (disjoint `Sabc_m`).
     -- Helper: every element of `Sabc_m … m` has integer part `mOf = m`.
     have hmOf_slice : ∀ (m : ℤ) (s : ℚ), s ∈ Sabc_m p a c m → mOf s = m := by
       intro m s hs
@@ -2296,7 +2307,7 @@ theorem qtr_ray_decomposition {p : ℕ} [Fact (Nat.Prime p)]
     obtain ⟨m₁, hm₁mem, hR₁raysm⟩ := hR₁
     obtain ⟨m₂, hm₂mem, hR₂raysm⟩ := hR₂
     by_cases hmeq : m₁ = m₂
-    · -- same slice: use prop:29055's pairwise disjointness.
+    · -- same slice: use Proposition 6.19's pairwise disjointness.
       subst hmeq
       exact hraysm_disj m₁ hm₁mem R₁ hR₁raysm R₂ hR₂raysm hne
     · -- distinct integer parts: the slices are disjoint, so the rays are.
@@ -2347,3 +2358,5 @@ theorem qtr_ray_decomposition {p : ℕ} [Fact (Nat.Prime p)]
         exact ((hraysm_ray m hmmem R hRraysm).1 hsR).1
 
 end FormalizedSparse
+
+
