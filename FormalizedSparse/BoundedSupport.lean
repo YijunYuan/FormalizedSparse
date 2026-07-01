@@ -1517,7 +1517,7 @@ the blueprint:
 Then `typeLT S < ω² = ω^(succ 1)` gives `n` with `typeLT S < ω·n`
 (`lt_omega0_opow_succ`); Steps 3–4 put `o '' derivedSet T ⊆ {ω·k | k<n}`, finite, and with
 Step 5 injective `Set.Finite.of_finite_image` finishes. -/
-private theorem derivedSet_real_finite_of_typeLT_lt_omega0_sq {p : ℕ} [Fact (Nat.Prime p)]
+theorem derivedSet_real_finite_of_typeLT_lt_omega0_sq {p : ℕ} [Fact (Nat.Prime p)]
     (f : 𝕃_[p]) (hf : typeLT f.support < omega0 ^ 2) :
     (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite := by
   -- `S = f.support` is well-founded in ℚ; the subtype `↥f.support` carries the
@@ -1702,7 +1702,3 @@ theorem order_type_of_qp_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime
     exact Or.inr hge
 
 end FormalizedSparse
-
-
-
-
