@@ -10,45 +10,67 @@ A full formalization in Lean 4 of the paper **"p-adic Hahn Series with Sparse Su
 
 ## Overview
 
-The paper introduces a combinatorial "sparseness" condition on the support of a p-adic Hahn series and proves that any p-adic Hahn series satisfying this condition is transcendental over the completed maximal unramified extension of ℚ_[p] (and hence over ℚ_[p]). As an application, it proves a p-adic analogue of a classical result of Huang and Ştefănescu on the algebraicity of equal-characteristic Hahn series.
+The paper introduces a combinatorial "sparseness" condition on the support of a p-adic Hahn series and proves that any p-adic Hahn series satisfying this condition is transcendental over ℚᵘⁿ_[p], the completed maximal unramified extension of ℚ_[p] (and hence over ℚ_[p]). As an application, it proves the **order-type conjecture** for ℚ_[p]-algebraic p-adic Hahn series with bounded support: under the assumption that the support has only finitely many accumulation points, such a series has finite support, so the order type of its support is either finite or at least ω².
 
-The formalization covers all definitions, lemmas, and theorems from the paper, including the main theorem (Theorem 1.7/5.3) and its applications (Proposition 5.3, Corollary 5.4).
+The formalization covers every definition, lemma, proposition, theorem, and corollary from the paper, following the same section structure.
 
 ## Project Structure
 
 | File | Paper § | Description |
 |------|---------|-------------|
+| `FormalizedSparse/References/Miscellaneous.lean` | — | Helper: `WithZeroRat.toNNReal` for the p-adic absolute value |
 | `FormalizedSparse/References/WittVector.lean` | §2 | ℚᵘⁿ_[p] via Witt vectors, Teichmüller lift, valuation topology |
-| `FormalizedSparse/References/PAdicHahnSeries.lean` | §2 | 𝕃_[p] as W(𝔽ᵃ_[p])((p^ℚ)), null series, support well-orderedness |
+| `FormalizedSparse/References/PAdicHahnSeries.lean` | §2 | 𝕃_[p] as W(𝔽ᵃ_[p])((t^ℚ)) / null series, coefficients, support well-orderedness |
 | `FormalizedSparse/Sparse.lean` | §3 | Digit series, (c,n)-sparseness, sparseness of disjoint-digit sets |
-| `FormalizedSparse/Tscaled.lean` | §4 | T-scaled realization of 𝕃_[p]: adjoining p^(1/T), T-null-series, isomorphism 𝕃_[p] ≅ W(𝔽ᵃ_[p])((t^ℚ))[p^(1/T)]/N_T |
-| `FormalizedSparse/MainTheorem.lean` | §5.1 | Main theorem: sparse support ⇒ transcendental over ℚᵘⁿ_[p] |
-| `FormalizedSparse/Application.lean` | §5.2 | Proposition 5.3 (disjoint-digit transcendence) and Corollary 5.4 (p-adic Huang–Ştefănescu) |
-| `FormalizedSparse/References/Miscellaneous.lean` | — | Helper: `WithZeroRat.toNNReal` for p-adic absolute value |
+| `FormalizedSparse/Tscaled.lean` | §4 | T-scaled realization of 𝕃_[p]: adjoining p^(1/T), T-null-series, isomorphism 𝕃_[p] ≅ W(𝔽ᵃ_[p])[p^(1/T)]((t^ℚ))/N_T |
+| `FormalizedSparse/MainTheorem.lean` | §5 | Main theorem: sparse support ⇒ transcendental over ℚᵘⁿ_[p] |
+| `FormalizedSparse/References/Kedlaya.lean` | §6 | External results of Kedlaya used as black boxes (the only admitted statements) |
+| `FormalizedSparse/QuasiTwistRecurrent.lean` | §6.1 | Quasi-twist-recurrent (QTR) functions and Kedlaya's integrality criterion |
+| `FormalizedSparse/RayDecomposition.lean` | §6.2 | Ray decomposition of bounded QTR sets |
+| `FormalizedSparse/BoundedSupport.lean` | §6.3 | Sparse representatives and finiteness of bounded QTR supports (the application) |
 
 ## Key Definitions and Theorems
 
 ### Sparseness (§3)
 
-- `DigitSeries` — the direct sum ⨁_{ℕ₊} ℕ, modeling base-p digit expansions
-- `IsCSparse S c n` — (c,n)-sparseness (Definition 3.5)
-- `IsSparse p W` — sparseness for subsets of [0,1) ∩ ℚ (Definition 1.4)
-- `IsSparse_of_digit_disjoint` — Example 3.7: disjoint-digit sets are sparse
+- `Sparse.DigitSeries` — the direct sum ⨁_{ℕ₊} ℕ, modeling base-p digit expansions
+- `Sparse.IsCNSparse S c n` — (c,n)-sparseness (Definition 3.5)
+- `Sparse.IsSparse p W` — sparseness for subsets of [0,1) ∩ ℚ (Definition 1.4)
+- `Sparse.IsSparse_of_digit_disjoint` — Example 3.7: disjoint-digit sets are sparse
 
 ### T-scaled Realization (§4)
 
-- `ℤᵘⁿ_[p,T]` — W(𝔽ᵃ_[p])[p^(1/T)] via AdjoinRoot
-- `TScaledNullSeries` — T-null-series ideal N_T
-- `sigma_iso` — isomorphism σ : 𝕃_[p] → W(𝔽ᵃ_[p])[p^(1/T)]((t^(ℚ)))/N_T
+- `TScaled.OQpUnT` (`ℤᵘⁿ_[p,T]`) — W(𝔽ᵃ_[p])[p^(1/T)] via `AdjoinRoot`
+- `TScaled.TNullSeriesIdeal` — the T-null-series ideal N_T
+- `TScaled.σ` — the isomorphism σ : 𝕃_[p] ≃+* 𝕃_[p,T]
 
 ### Main Theorem (§5)
 
-- `main_theorem` — Theorem 5.3: if −T·Supp(f) admits a non-zero sparse set of representatives mod ℤ, then f is transcendental over ℚᵘⁿ_[p]
-- `trans_of_digit_disjoint` — Proposition 5.3: transcendence for series with non-overlapping base-p digits
-- `pAdicHuangStefanescu` — Corollary 5.4: p-adic analogue of Huang–Ştefănescu; for f = ∑ [f(i)]·p^(−1/p^i), algebraicity over ℚ_[p] is equivalent to finite support.
+- `main_theorem` — Theorem 1.7 / 5.3: if −T·Supp(f) admits a nonzero sparse set of representatives mod ℤ, then f is transcendental over ℚᵘⁿ_[p]
+- `main_theorem'` — the same conclusion phrased over ℚ_[p]
+
+### Application: bounded support (§6)
+
+- `IsQTR` — quasi-twist-recurrent functions (Definition 6.2)
+- `isAlgebraic_iff_isQTR` — Proposition 6.3: algebraicity over 𝔽̄_p((t)) ⇔ QTR
+- `isQTR_of_isAlgebraic_of_bddSupport` — Proposition 6.6: bounded ℚᵘⁿ_[p]-algebraic ⇒ QTR
+- `qtr_ray_decomposition` — Corollary 6.20: a bounded QTR set with finitely many accumulation points is a finite set plus finitely many pairwise-disjoint rays
+- `finite_support_of_qpun_algebraic_of_bounded_support` — Theorem 6.23: a ℚ_[p]-algebraic p-adic Hahn series with bounded support and finitely many accumulation points has finite support
+- `order_type_of_qp_algebraic_of_bounded_support` — Corollary 6.24: the order type of such a support is either finite or at least ω²
+
+## Namespace convention
+
+Declarations that correspond to a stated item of the paper live at the top level of the
+`FormalizedSparse` namespace; formalization-internal helper lemmas are placed in a sub-namespace
+named after the file's section (`QuasiTwistRecurrent`, `RayDecomposition`, `BoundedSupport`). The
+§2–§4 files (`WittVector`, `PAdicHahnSeries`, `Sparse`, `Tscaled`) instead keep all of their
+content inside a single concept namespace (`QpUn`, `pAdicHahnSeries`, `Sparse`, `TScaled`), which
+enables mathlib-style dot notation such as `d.norm` and `d.Psi`.
 
 ## Formalization Statistics
 
-- ~19,300 lines of Lean code
-- All results from the paper are **fully formalized** with no `sorry` gaps
-- Builds against mathlib v4.31.0
+- ~23,800 lines of Lean code
+- All results of the paper are **fully formalized**. The only admitted statements are three external
+  results of Kedlaya in `References/Kedlaya.lean`, which are cited and used as black boxes rather
+  than reproved.
+- Builds against Lean 4.31.0 and mathlib v4.31.0
