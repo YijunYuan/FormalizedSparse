@@ -28,6 +28,7 @@ The formalization covers every definition, lemma, proposition, theorem, and coro
 | `FormalizedSparse/QuasiTwistRecurrent.lean` | §6.1 | Quasi-twist-recurrent (QTR) functions and Kedlaya's integrality criterion |
 | `FormalizedSparse/RayDecomposition.lean` | §6.2 | Ray decomposition of bounded QTR sets |
 | `FormalizedSparse/BoundedSupport.lean` | §6.3 | Sparse representatives and finiteness of bounded QTR supports (the application) |
+| `FormalizedSparse/HuangStefanescu.lean` | §1.3 | Huang–Stefanescu equivalence and divergence of sparse ℚᵘⁿ_[p]-algebraic support sequences (headline consequences of the §6.3 engine) |
 
 ## Key Definitions and Theorems
 
@@ -58,6 +59,11 @@ The formalization covers every definition, lemma, proposition, theorem, and coro
 - `finite_support_of_qpun_algebraic_of_bounded_support` — Theorem 6.23: a ℚ_[p]-algebraic p-adic Hahn series with bounded support and finitely many accumulation points has finite support
 - `order_type_of_qp_algebraic_of_bounded_support` — Corollary 6.24: the order type of such a support is either finite or at least ω²
 
+### Huang–Stefanescu equivalence (§1.3)
+
+- `tendsto_atTop_of_strictMono_support_of_qpun_algebraic` — Corollary 1.12: if a ℚᵘⁿ_[p]-algebraic p-adic Hahn series has support enumerated by a strictly monotone rational sequence, that sequence diverges to +∞
+- `padic_huang_stefanescu_tfae` — Proposition 1.14: the p-adic analogue of the Huang–Stefanescu equivalence — for a series supported in {−p^(−i) : i ∈ ℕ₊}, finite support, ℚᵘⁿ_[p]-algebraicity, and ℚ_[p]-algebraicity are all equivalent (the algebraic ⇒ finite direction is deduced from Corollary 1.12)
+
 ## Namespace convention
 
 Declarations that correspond to a stated item of the paper live at the top level of the
@@ -69,7 +75,7 @@ enables mathlib-style dot notation such as `d.norm` and `d.Psi`.
 
 ## Formalization Statistics
 
-- ~23,800 lines of Lean code
+- ~24,000 lines of Lean code
 - All results of the paper are **fully formalized**. The only admitted statements are three external
   results of Kedlaya in `References/Kedlaya.lean`, which are cited and used as black boxes rather
   than reproved.
