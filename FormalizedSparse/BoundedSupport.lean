@@ -1458,6 +1458,21 @@ theorem finite_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat
   exact (main_theorem p g T W hW_ne hW_sparse hRep') hg_alg
 
 open Bornology in
+/-- **Theorem 1.10.** A `p`-adic algebraic number `f : 𝕃_[p]` — one algebraic over `ℚ_[p]` — whose
+support is bounded and has only finitely many accumulation points (measured as the ℝ-derived set of
+the support under `ℚ ↪ ℝ`, per Remark 1.11) has finite support.
+
+This is the `ℚ_[p]`-form of Theorem 6.23 (`finite_support_of_qpun_algebraic_of_bounded_support`):
+since `ℚ_[p] ⊆ ℚᵘⁿ_[p]`, algebraicity over `ℚ_[p]` upgrades to algebraicity over `ℚᵘⁿ_[p]` via
+`pAdicHahnSeries.alg_QpUn_of_alg_Qp`, and the `ℚᵘⁿ_[p]` statement then applies directly. -/
+theorem finite_support_of_qp_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime p)]
+  (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚ_[p] f) (hf2 : IsBounded f.support)
+  (hf3 : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite) :
+  f.support.Finite := by
+  have halg_un : IsAlgebraic ℚᵘⁿ_[p] f := pAdicHahnSeries.alg_QpUn_of_alg_Qp p f hf1
+  exact finite_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hf3
+
+open Bornology in
 /-- **Corollary 6.24 (accumulation-point dichotomy).** For a `p`-adic Hahn series `f` that is
 algebraic over `ℚ_[p]` with bounded support, the set of accumulation points of its support (taken in
 ℝ via `ℚ ↪ ℝ`) is either empty or infinite — it can never be a nonempty finite set.
