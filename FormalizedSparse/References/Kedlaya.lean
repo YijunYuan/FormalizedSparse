@@ -24,8 +24,6 @@ left as `admit`.
   over `𝔽̄_p((t))`, i.e. Kedlaya (2017), Theorem 11.11 (equivalently Kedlaya (2001a), Theorem 15).
 - `FormalizedSparse.Kedlaya.kedlaya_2017_theorem13_4`: the description of the completed integral
   closure of `ℚᵘⁿ_[p]` in `𝕃_[p]`, i.e. Kedlaya (2017), Theorem 13.5.
-- `FormalizedSparse.Kedlaya.kedlaya_2001b_ordinal_bound`: the ordinal bound `ω^ω` on the order type
-  of the support of a `ℚ_[p]`-algebraic `p`-adic Hahn series, from Kedlaya (2001a), Section 4.
 
 ## Implementation notes
 
@@ -136,12 +134,4 @@ theorem kedlaya_2017_theorem13_4 :
       (exists_canonical_expansion f).choose.val = f'.coeff }
     := by admit
 
-open Ordinal in
-/-- **Kedlaya (2001a), Section 4.** The order type of the support of a `ℚ_[p]`-algebraic `p`-adic
-Hahn series is at most `ω^ω`. -/
-theorem kedlaya_2001b_ordinal_bound (f : 𝕃_[p]) (hp : IsAlgebraic ℚ_[p] f) :
-    typeLT f.support ≤ omega0 ^ omega0 := by admit
-
 end FormalizedSparse.Kedlaya
-
-
