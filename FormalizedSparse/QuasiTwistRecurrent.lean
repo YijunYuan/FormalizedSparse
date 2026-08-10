@@ -184,7 +184,7 @@ lemma shift_mapDomain_lt {p : ℕ} (hp : 0 < p) (k t : ℕ) (dig : ℕ →₀ �
   by_cases h : i ∈ Set.range (fun i : ℕ => if i < k then i else i + t)
   · obtain ⟨j, hj⟩ := h
     rw [← hj, Finsupp.mapDomain_apply (shift_injective k t)]; exact hdig j
-  · rw [Finsupp.mapDomain_notin_range _ _ h]; exact hp
+  · rw [Finsupp.mapDomain_of_notMem_range _ _ h]; exact hp
 
 /-- Helper: the digit sum `∑ dig i` is preserved by the tail-shift reindexing `s_{k,t}` (it is
 injective). Side condition for both directions of Proposition 6.3. -/
@@ -201,7 +201,7 @@ lemma shift_mapDomain_gap (k t : ℕ) (dig : ℕ →₀ ℕ) {m : ℕ} (hm : m �
     ∀ i, k ≤ i → i < k + m →
       (Finsupp.mapDomain (fun i => if i < k then i else i + t) dig) i = 0 := by
   intro i hi1 hi2
-  apply Finsupp.mapDomain_notin_range
+  apply Finsupp.mapDomain_of_notMem_range
   rintro ⟨j, hj⟩
   simp only at hj
   split_ifs at hj <;> omega
@@ -666,7 +666,7 @@ lemma ball_val_mem_nhds {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ) 
   have hane : Valued.v.restrict (singleWitness (p := p) (u : ℚ)) ≠ 0 := by
     rw [ne_eq, Valuation.restrict_eq_zero_iff, hwv]; exact hγ_ne
   refine ⟨Units.mk0 (Valued.v.restrict (singleWitness (p := p) (u : ℚ))) hane, fun y hy => ?_⟩
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, Units.val_mk0, Valuation.embedding_restrict, hwv]
     at hy
   rw [show Valued.v (y - f) = Valued.v (f - y) from by rw [← Valuation.map_neg]; ring_nf] at hy

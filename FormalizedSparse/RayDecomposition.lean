@@ -994,7 +994,7 @@ theorem finite_bounded_finsupp (B p : ℕ) (hp : 0 < p) :
       (if h : d i.val < p then (⟨d i.val, h⟩ : Fin p) else ⟨0, hp⟩)))
   · exact Set.toFinite _
   · intro d1 hd1 d2 hd2 heq
-    simp only [Set.mem_setOf_eq] at hd1 hd2
+    simp only [Set.mem_ofPred_eq] at hd1 hd2
     ext i
     by_cases hi : i < B
     · have hcong := congrFun heq ⟨i, hi⟩
@@ -1274,7 +1274,7 @@ theorem gapSet_decomp {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ} {c : �
         rw [← hs1.2.1, hres, hs2.2.1]
       have hbveq : bucketVals g₁ (longIdx g₁) = bucketVals g₂ (longIdx g₁) := by
         rw [hbV]; ext w
-        simp only [Set.mem_setOf_eq, hsetw w, hres']
+        simp only [Set.mem_ofPred_eq, hsetw w, hres']
       rw [hbveq, ← hidx]
       exact hsetw _
   -- Assemble `progressions` as a Finset and prove the set equality.
@@ -1516,7 +1516,7 @@ theorem eq_finite_union_rays {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
         gapSet_decomp hS dbnd hdig hsum (Gw w) (by
           intro g
           rw [hGw_def]
-          simp only [Set.mem_setOf_eq, hword])
+          simp only [Set.mem_ofPred_eq, hword])
       exact ⟨Ww, progsw, fun _ => ⟨hd, hpr, hsm⟩⟩
     · exact ⟨∅, ∅, fun hcon => absurd hcon h⟩
   choose Ww progsw hkey using key
@@ -1623,7 +1623,7 @@ theorem eq_finite_union_rays {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {b : ℤ}
       rw [hreq, ← hyd]
     · -- Progression part: `y ∈ rayOf w q ∈ rays`.
       right
-      simp only [Set.mem_iUnion, Set.mem_setOf_eq] at hgprog
+      simp only [Set.mem_iUnion, Set.mem_ofPred_eq] at hgprog
       obtain ⟨q, hqmem, k, hgv_eq⟩ := hgprog
       obtain ⟨hq1G, hq2len, _hq2M⟩ := hpr q hqmem
       set base := realize w q.1 with hbase_def
@@ -1746,7 +1746,7 @@ theorem rays_sub_or_finite_inter {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : 
     obtain ⟨K, hK⟩ := exists_pow_lt_of_lt_one hε hr1
     apply Set.Finite.subset (Set.finite_Iio K)
     intro k hk
-    simp only [Set.mem_setOf_eq] at hk
+    simp only [Set.mem_ofPred_eq] at hk
     simp only [Set.mem_Iio]
     by_contra hcon
     rw [not_lt] at hcon
@@ -1899,7 +1899,7 @@ theorem ray_explicit_tail_isRay {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : �
     rw [sum_mapDomain_inj d_base (strictMono_insertZeros _ _).injective]; exact hsum
   · -- the set identity, via the composition of insertions
     ext q
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     constructor
     · rintro ⟨k, hk, rfl⟩
       refine ⟨k - k₀, ?_⟩
@@ -1984,7 +1984,7 @@ theorem ray_split_for_disjoint {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : �
     have hR_eq : R = {α} := by
       rw [hReq]
       ext q
-      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
       constructor
       · rintro ⟨k, rfl⟩
         rw [ray_enc_affine d_base P k, ← hαdef, ← hlamdef, hlam0, mul_zero, sub_zero]
@@ -2021,7 +2021,7 @@ theorem ray_split_for_disjoint {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+} {c : �
     · -- `R = ↑head ∪ Rt`.
       rw [hReq]
       ext q
-      simp only [Set.mem_setOf_eq, Finset.coe_image, Finset.coe_range, Set.mem_union,
+      simp only [Set.mem_ofPred_eq, Finset.coe_image, Finset.coe_range, Set.mem_union,
         Set.mem_image, Set.mem_Iio, hRtdef, hencdef]
       constructor
       · rintro ⟨k, rfl⟩

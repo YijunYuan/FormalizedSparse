@@ -511,7 +511,7 @@ lemma exists_Cs {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
       have hbridge : ball =
           {x : ℚᵘⁿ_[p, (T : ℕ)] | Valued.v.restrict x ≤ Valued.v.restrict (pInvTQ p (T : ℕ))} := by
         ext x
-        rw [hball_def, Set.mem_setOf_eq, Set.mem_setOf_eq,
+        rw [hball_def, Set.mem_ofPred_eq, Set.mem_ofPred_eq,
           Valuation.restrict_le_iff_le_embedding, Valuation.embedding_restrict, valued_v_pInvT]
       rw [hbridge]
       exact Valued.isClosed_closedBall _ _
@@ -889,7 +889,7 @@ private lemma Stilde_unique_decomposition
     unfold Sd
     congr 1
     ext q'
-    simp only [Set.mem_setOf_eq, h_norm_eq]
+    simp only [Set.mem_ofPred_eq, h_norm_eq]
   have h_mu_eq : muQ hf2 d = muQ hf2 d' := by
     unfold muQ
     have hd_ne := Sd_nonempty hf2 d.property
@@ -1051,7 +1051,7 @@ private lemma Cs_diff_alg_v_le
         {x : ℚᵘⁿ_[p, (T : ℕ)] |
           Valued.v.restrict x ≤ Valued.v.restrict ((pInvTQ p (T : ℕ)) ^ (N : ℤ))} := by
       ext x
-      rw [hball_def, Set.mem_setOf_eq, Set.mem_setOf_eq,
+      rw [hball_def, Set.mem_ofPred_eq, Set.mem_ofPred_eq,
         Valuation.restrict_le_iff_le_embedding, Valuation.embedding_restrict,
         valued_v_pInvT_zpow]
     rw [hbridge]
@@ -2881,7 +2881,7 @@ private lemma coeff_pow_truncate_eq
       rw [HahnSeries.coeff_mul_left' (Stilde_isPWO hf2) h_fmA_supp]
       apply Finset.sum_eq_zero
       intro ij hij
-      rw [Finset.mem_addAntidiagonal] at hij
+      rw [Finset.mem_antidiagonal] at hij
       obtain ⟨hi_Stilde, _, hij_sum⟩ := hij
       -- Case split on ij.1 ∈ A.
       by_cases h_inA : ij.1 ∈ A
@@ -2925,7 +2925,7 @@ private lemma coeff_pow_truncate_eq
       rw [HahnSeries.coeff_mul_left' (Stilde_isPWO hf2) h_fhatA_supp_Stilde]
       apply Finset.sum_eq_zero
       intro ij hij
-      rw [Finset.mem_addAntidiagonal] at hij
+      rw [Finset.mem_antidiagonal] at hij
       obtain ⟨_, _, hij_sum⟩ := hij
       by_cases h_fA_zero : fhatA.coeff ij.1 = 0
       · rw [h_fA_zero, zero_mul]
@@ -3096,7 +3096,7 @@ private lemma stabilizer_perm_dom_card_aux
     = ∏ a : A, (m0 a).factorial := by
   classical
   have h_equiv := (DomMulAct.stabilizerMulEquiv (α := Fin n) (ι := A) e₀).toEquiv
-  haveI : Fintype (↥(MulAction.stabilizer (Equiv.Perm (Fin n))ᵈᵐᵃ e₀))ᵐᵒᵖ :=
+  have : Fintype (↥(MulAction.stabilizer (Equiv.Perm (Fin n))ᵈᵐᵃ e₀))ᵐᵒᵖ :=
     Fintype.ofEquiv _ MulOpposite.opEquiv
   rw [show Fintype.card ↥(MulAction.stabilizer (Equiv.Perm (Fin n))ᵈᵐᵃ e₀)
       = Fintype.card (↥(MulAction.stabilizer (Equiv.Perm (Fin n))ᵈᵐᵃ e₀))ᵐᵒᵖ from

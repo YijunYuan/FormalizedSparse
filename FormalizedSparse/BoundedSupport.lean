@@ -146,7 +146,7 @@ def shiftBy (f : DigitSeries) (m : ℕ) : DigitSeries where
     simp only [Function.mem_support, ne_eq] at hq
     split_ifs at hq with h
     · refine ⟨⟨(q : ℕ) - m, by omega⟩, ?_, ?_⟩
-      · simpa [Function.mem_support] using hq
+      · exact Function.mem_support.mpr hq
       · apply Subtype.ext; change ((q : ℕ) - m) + m = (q : ℕ); omega
     · exact absurd rfl hq
 
@@ -178,7 +178,7 @@ lemma shiftBy_ne_zero_iff (f : DigitSeries) (m : ℕ) (q : ℕ+) :
         rw [dif_pos hmq]
       rwa [hval] at hq
     · apply PNat.coe_injective
-      rw [pAdd_coe]; change (q : ℕ) = (q : ℕ) - m + m; omega
+      change (q : ℕ) = (q : ℕ) - m + m; omega
   · rintro ⟨i, hi, rfl⟩
     rw [shiftBy_apply_pAdd]; exact hi
 
@@ -438,7 +438,7 @@ theorem isSparse_deltas {p : ℕ} [Fact (Nat.Prime p)] (N : ℕ+) (r : ℕ) (hr 
   refine ⟨S, hS_isP, ?_, ?_⟩
   · -- `norm '' S = W`.
     ext w
-    simp only [Set.mem_image, hS_def, Set.mem_setOf_eq, hW_def]
+    simp only [Set.mem_image, hS_def, Set.mem_ofPred_eq, hW_def]
     constructor
     · rintro ⟨f, ⟨i, k, rfl⟩, rfl⟩
       exact ⟨i, k, (hblk_norm i k)⟩
@@ -815,7 +815,6 @@ private lemma digitSeries_finsupp_model {p : ℕ} [Fact (Nat.Prime p)] (g : Spar
   conv_lhs => rw [hg_eq]
   rw [Sparse.DigitSeries.ofFinsupp_norm]
 
-open Sparse in
 /-- An infinite explicit base-`P` ray has positive slope `(1/a)·tail`.  If the tail digit-value mass
 at or above `P` were zero, every ray element would equal the single limit point `α`
 (`ray_enc_affine`), making the ray a singleton — contradicting infiniteness. -/
@@ -846,7 +845,7 @@ private lemma ray_pos_slope_of_infinite {p : ℕ} [Fact (Nat.Prime p)] {a : ℕ+
       with hαdef
     have hR_eq : R = {α} := by
       rw [hReq]; ext q
-      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
       constructor
       · rintro ⟨k, rfl⟩
         rw [ray_enc_affine d_base P k, ← hαdef, ← hlamdef, ← hlam0, mul_zero, sub_zero]
@@ -1447,7 +1446,7 @@ theorem finite_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat
         {x : ℚ | ∃ q ∈ g.support, -1 * (T : ℚ) * q = x}
           = {x : ℚ | ∃ q ∈ S', x = -1 * (T : ℚ) * (q - lam)} := by
       ext x
-      simp only [Set.mem_setOf_eq, hg_supp, hf_good_supp, Set.mem_image]
+      simp only [Set.mem_ofPred_eq, hg_supp, hf_good_supp, Set.mem_image]
       constructor
       · rintro ⟨q', ⟨q, hq, rfl⟩, rfl⟩
         exact ⟨q, hq, by ring⟩

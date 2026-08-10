@@ -130,19 +130,19 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
 
   -- Step 1: use `Valued.toNormedField` so that the NormedField's UniformSpace coincides
   -- with the Valued one (avoids the clash with the file-level `WithAbs.normedField (abs p)`).
-  letI nfd : NormedField (ℚᵘⁿ_[p]) :=
+  let nfd : NormedField (ℚᵘⁿ_[p]) :=
     Valued.toNormedField (ℚᵘⁿ_[p]) (WithZero (Multiplicative ℤ))
   -- Step 2: by `NormedField.completeSpace_iff_isComplete_closedBall`, it suffices to show the
   -- unit closed ball is complete.
   refine NormedField.completeSpace_iff_isComplete_closedBall.mpr ?_
   -- Step 3: the unit closed ball is exactly the valuation-integer subring (as a set).
-  rw [← Valued.toNormedField.setOf_mem_integer_eq_closedBall]
+  rw [← Valued.toNormedField.setOfPred_mem_integer_eq_closedBall]
   -- Step 4: show that `{x | x ∈ Valued.v.integer}` is complete.
   -- Equip `ℤᵘⁿ_[p]` with the `(Ideal.span {p})`-adic topology/uniformity via `WithIdeal`.
-  letI : WithIdeal (ℤᵘⁿ_[p]) := ⟨Ideal.span {(p : ℤᵘⁿ_[p])}⟩
+  let _ : WithIdeal (ℤᵘⁿ_[p]) := ⟨Ideal.span {(p : ℤᵘⁿ_[p])}⟩
   have hadic : IsAdic (WithIdeal.i (R := ℤᵘⁿ_[p])) := rfl
   -- `WittVector.isAdicCompleteIdealSpanP` + `IsAdic.isAdicComplete_iff` gives `CompleteSpace`.
-  haveI : CompleteSpace (ℤᵘⁿ_[p]) :=
+  have : CompleteSpace (ℤᵘⁿ_[p]) :=
     (hadic.isAdicComplete_iff.mp WittVector.isAdicCompleteIdealSpanP).1
   -- Show `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]` is uniform inducing: pulling back the valuation
   -- uniformity from `ℚᵘⁿ_[p]` recovers the `(Ideal.span {p})`-adic uniformity on `ℤᵘⁿ_[p]`.
@@ -164,7 +164,7 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
       have hg0 : g ≠ 0 := MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ
       refine ⟨(1 - g.log).toNat, trivial, ?_⟩
       intro x y h
-      simp only [Set.mem_setOf_eq] at h ⊢
+      simp only [Set.mem_ofPred_eq] at h ⊢
       rw [Valuation.restrict_lt_iff_lt_embedding, ← map_sub, ← hg, valued_algebraMap]
       rw [← hmax] at h
       have h1 : v.intValuation (y - x) ≤ WithZero.exp (-((1 - g.log).toNat : ℤ)) :=
@@ -187,7 +187,7 @@ instance (p : ℕ) [Fact (Nat.Prime p)] : CompleteSpace (ℚᵘⁿ_[p]) := by
         rw [ne_eq, Valuation.restrict_eq_zero_iff, hva]; exact WithZero.exp_ne_zero
       refine ⟨Units.mk0 (Valued.v.restrict a) hane, trivial, ?_⟩
       intro x y h
-      simp only [Set.mem_setOf_eq] at h ⊢
+      simp only [Set.mem_ofPred_eq] at h ⊢
       rw [← hmax, ← IsDedekindDomain.HeightOneSpectrum.intValuation_le_pow_iff_mem v (y - x) n]
       rw [Valuation.restrict_lt_iff_lt_embedding, ← map_sub, valued_algebraMap, Units.val_mk0,
         Valuation.embedding_restrict, hva] at h

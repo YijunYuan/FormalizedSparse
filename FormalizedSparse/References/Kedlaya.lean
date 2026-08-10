@@ -83,13 +83,18 @@ def twistSeq (f : ℚ → 𝔽ᵃ_[p]) (j : ℕ) (b : ℕ →₀ ℕ) (n : ℕ) 
      - (p : ℚ) ^ (-(n : ℤ)) *
         ∑ i ∈ b.support.filter (fun i => j - 1 ≤ i), (b i : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ)))
 
+/-- Injectivity of `Int.castAddHom ℚ`, stated at the bundled-map coercion so that terms built
+from it stay type-correct at reducible transparency (needed by `rw` at use sites). -/
+lemma intCastAddHom_rat_injective : Function.Injective ⇑(Int.castAddHom ℚ) :=
+  fun _ _ h => Rat.intCast_injective h
+
 open LaurentSeries in
 /-- The order-embedding `ℤ ↪ ℚ` of value groups induces the ring inclusion of the
 integer-supported Hahn series `𝔽̄_p((t))` into `𝔽̄_p((t^ℚ))`. Its range is the subring
 over which integrality is asserted in `kedlaya_2001a_theorem15`. -/
 noncomputable def intHahnEmbedding :
     (𝔽ᵃ_[p])⸨X⸩ →+* HahnSeries ℚ (𝔽ᵃ_[p]) :=
-  HahnSeries.embDomainRingHom (Int.castAddHom ℚ) Rat.intCast_injective
+  HahnSeries.embDomainRingHom (Int.castAddHom ℚ) intCastAddHom_rat_injective
     (fun _ _ => by exact_mod_cast Int.cast_le)
 
 open LaurentSeries in

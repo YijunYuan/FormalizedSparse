@@ -109,8 +109,7 @@ instance : AddCommMonoid DigitSeries where
     exact Nat.add_comm (a n) (b n)
   nsmul_zero f := by
     ext n
-    simp only [zero_mul]
-    rfl
+    exact Nat.zero_mul (f n)
   nsmul_succ n f := by
     ext s
     exact Nat.succ_mul n (f s)
@@ -353,7 +352,7 @@ lemma value_eq_sum_indices (f : DigitSeries) (p : ℕ) [Fact (Nat.Prime p)] :
     ∀ n,
       ((f.value p n : ℚ) * (p : ℚ) ^ (-(n : ℤ))) =
         Finset.sum (indices n) fun i => (f i : ℚ) * (p : ℚ) ^ (-(i : ℤ))
-  | 0 => by simp [DigitSeries.value, DigitSeries.indices]
+  | 0 => by simp [DigitSeries.value, DigitSeries.coeffs, DigitSeries.indices]
   | n + 1 => by
       rw [DigitSeries.value, DigitSeries.coeffs, Nat.ofDigits_cons, DigitSeries.indices_succ,
         Finset.sum_insert]
@@ -1680,7 +1679,7 @@ lemma DigitSeries.ofRat_norm_eq (p : ℕ) [Fact (Nat.Prime p)] {q : ℚ}
   have hp_one_lt : 1 < p := hp_prime.one_lt
   have hp_pos_ℝ : (0 : ℝ) < p := by exact_mod_cast hp_prime.pos
   have hp_ne_ℝ : (p : ℝ) ≠ 0 := ne_of_gt hp_pos_ℝ
-  haveI hpNeZero : NeZero p := ⟨hp_prime.ne_zero⟩
+  have hpNeZero : NeZero p := ⟨hp_prime.ne_zero⟩
   have hp_one_lt_ℝ : (1 : ℝ) < p := by exact_mod_cast hp_one_lt
   have hqIco_real : (q : ℝ) ∈ Set.Ico (0 : ℝ) 1 := by
     refine ⟨?_, ?_⟩
@@ -1811,7 +1810,7 @@ lemma DigitSeries.decDigits_norm (p : ℕ) [Fact (Nat.Prime p)] (f : DigitSeries
   have hp_pos : 0 < p := hp_prime.pos
   have hp_pos_ℝ : (0 : ℝ) < p := by exact_mod_cast hp_pos
   have hp_ne_ℝ : (p : ℝ) ≠ 0 := ne_of_gt hp_pos_ℝ
-  haveI hpNeZero : NeZero p := ⟨hp_prime.ne_zero⟩
+  have hpNeZero : NeZero p := ⟨hp_prime.ne_zero⟩
   -- Step 1a: For k ≥ M, digit at position k is zero.
   have hhigh : ∀ k : ℕ, k ≥ M → (Real.digits (q : ℝ) p k).val = 0 := by
     intro k hkM
@@ -2503,8 +2502,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
       simp only [Set.Finite.mem_toFinset] at hb
       have hb_ne : b ≠ 0 := fun heq => hA0 i (heq ▸ hb)
       refine ⟨⟨b, Nat.pos_of_ne_zero hb_ne⟩, ?_, rfl⟩
-      simp only [Set.Finite.mem_toFinset, Set.mem_preimage]
-      exact hb
+      exact (Set.Finite.mem_toFinset _).mpr hb
   /- norm of f i = ∑ r ∈ A i, p^(-r:ℤ) — the i-th element of M(A). -/
   have hf_norm : ∀ i, (f i).norm p = ∑ r ∈ (hA3 i).toFinset, (p : ℚ)^(-(r : ℤ)) := by
     intro i
@@ -2553,8 +2551,7 @@ lemma IsSparse_of_digit_disjoint₀ (p : ℕ) [Fact (Nat.Prime p)] (A : ℕ → 
       simp only [Set.Finite.mem_toFinset] at hb
       have hb_ne : b ≠ 0 := fun heq => hA0 i (heq ▸ hb)
       refine ⟨⟨b, Nat.pos_of_ne_zero hb_ne⟩, ?_, rfl⟩
-      simp only [Set.Finite.mem_toFinset, Set.mem_preimage]
-      exact hb
+      exact (Set.Finite.mem_toFinset _).mpr hb
     · intro a _
       rfl
   /- (i) M(A) ⊆ Ico 0 1. -/

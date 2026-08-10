@@ -289,10 +289,10 @@ private lemma instLocalRingOQpUnT : IsLocalRing (ℤᵘⁿ_[p,T]) := by
   refine IsLocalRing.of_unique_max_ideal ?_
   refine ⟨Ideal.span {pInvT p T}, pInvT_maximal p T, ?_⟩
   intro M hM
-  haveI hint : Algebra.IsIntegral (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) := by
-    haveI := (TPoly_monic p T).finite_adjoinRoot
+  have hint : Algebra.IsIntegral (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) := by
+    have := (TPoly_monic p T).finite_adjoinRoot
     exact Algebra.IsIntegral.of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-  haveI hMmax : M.IsMaximal := hM
+  have hMmax : M.IsMaximal := hM
   have hMcomap_max : (M.comap (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]))).IsMaximal :=
     Ideal.isMaximal_comap_of_isIntegral_of_isMaximal M
   have hMcomap_eq : M.comap (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) =
@@ -326,15 +326,15 @@ private lemma _root_.Multiset.prod_assoc_pow {α : Type*} [CommMonoid α] (m : M
 This is the existence half of `HasUnitMulPowIrreducibleFactorization`. -/
 private lemma exists_pInvT_pow_unit_decomposition (x : ℤᵘⁿ_[p,T]) (hx : x ≠ 0) :
     ∃ (n : ℕ), Associated ((pInvT p T) ^ n) x := by
-  haveI : IsLocalRing (ℤᵘⁿ_[p,T]) := instLocalRingOQpUnT p T
-  haveI : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) := (TPoly_monic p T).finite_adjoinRoot
-  haveI : IsNoetherian (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+  have : IsLocalRing (ℤᵘⁿ_[p,T]) := instLocalRingOQpUnT p T
+  have : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) := (TPoly_monic p T).finite_adjoinRoot
+  have : IsNoetherian (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
     isNoetherian_of_isNoetherianRing_of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-  haveI : IsNoetherianRing (ℤᵘⁿ_[p,T]) := by
+  have : IsNoetherianRing (ℤᵘⁿ_[p,T]) := by
     refine isNoetherianRing_of_surjective (Polynomial (ℤᵘⁿ_[p])) (ℤᵘⁿ_[p,T])
       (AdjoinRoot.mk (TPoly p T)) ?_
     exact AdjoinRoot.mk_surjective
-  haveI : WfDvdMonoid (ℤᵘⁿ_[p,T]) := IsNoetherianRing.wfDvdMonoid
+  have : WfDvdMonoid (ℤᵘⁿ_[p,T]) := IsNoetherianRing.wfDvdMonoid
   obtain ⟨fx, hfx⟩ := WfDvdMonoid.exists_factors x hx
   refine ⟨Multiset.card fx, ?_⟩
   have hπ_irr : Irreducible (pInvT p T) := pInvT_irreducible p T
@@ -425,7 +425,7 @@ lemma Tmem_nhds_zero_v_lt {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
     rw [ne_eq, Valuation.restrict_eq_zero_iff, hva]; exact hc
   refine ⟨Units.mk0 (Valued.v.restrict ((pInvTQ p T) ^ (-(WithZero.log c)))) hane, ?_⟩
   intro y hy
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero, Units.val_mk0,
     Valuation.embedding_restrict, hva] at hy
   exact hy
@@ -440,7 +440,7 @@ lemma Texists_v_lt_subset {U : Set (ℚᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚ�
     MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ, ?_⟩
   intro y hy
   apply hγ
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero]
   exact hy
 
@@ -454,7 +454,7 @@ lemma Tmem_nhds_v_sub_lt {x w : ℚᵘⁿ_[p,T]} {c : WithZero (Multiplicative �
     rw [ne_eq, Valuation.restrict_eq_zero_iff, hw]; exact hc
   refine ⟨Units.mk0 (Valued.v.restrict w) hane, ?_⟩
   intro y hy
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, Units.val_mk0,
     Valuation.embedding_restrict, hw] at hy
   exact hy
@@ -469,7 +469,7 @@ lemma Texists_v_sub_lt_subset {U : Set (ℚᵘⁿ_[p,T])} {x : ℚᵘⁿ_[p,T]} 
     MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ, ?_⟩
   intro y hy
   apply hγ
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding]
   exact hy
 
@@ -548,7 +548,7 @@ instance instIsLocalizationOQpUnTQpUnT :
 `ℤᵘⁿ_[p,T]`). Promoted to a global instance so `LinearMap.continuous_of_finiteDimensional`
 fires without typeclass-search timeouts. -/
 instance instModuleFiniteQpUnT : Module.Finite (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
-  haveI hpb : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+  have hpb : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
     (AdjoinRoot.powerBasis' (TPoly_monic p T)).finite
   exact Module.Finite.of_isLocalization (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
     (Rₚ := ℚᵘⁿ_[p]) (Sₚ := ℚᵘⁿ_[p,T]) (nonZeroDivisors (ℤᵘⁿ_[p]))
@@ -566,14 +566,14 @@ theorem rank_QpUnT_over_QpUn :
   have hpb : Module.finrank (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) = T := by
     rw [(AdjoinRoot.powerBasis' (TPoly_monic p T)).finrank,
       AdjoinRoot.powerBasis'_dim, TPoly_natDegree]
-  haveI : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+  have : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
     (AdjoinRoot.powerBasis' (TPoly_monic p T)).finite
-  haveI : FaithfulSMul (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+  have : FaithfulSMul (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
     (faithfulSMul_iff_algebraMap_injective _ _).mpr (OQpUn_embd_injective p T)
-  haveI : Algebra.IsAlgebraic (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+  have : Algebra.IsAlgebraic (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
     Algebra.IsAlgebraic.of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-  haveI : IsScalarTower (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) := inferInstance
-  haveI : IsScalarTower (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
+  have : IsScalarTower (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) := inferInstance
+  have : IsScalarTower (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
     refine IsScalarTower.of_algebraMap_eq fun x => ?_
     -- `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p,T] = QpUn_embd ∘ algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]`
     -- `algebraMap ℚᵘⁿ_[p] ℚᵘⁿ_[p,T] = QpUn_embd` (definitionally)
@@ -597,8 +597,7 @@ theorem rank_QpUnT_over_QpUn :
       IsFractionRing.lift_algebraMap _ x]
     rfl
   -- Now apply the finrank-of-fraction-ring lemma.
-  have := Algebra.IsAlgebraic.finrank_of_isFractionRing
-    (R := ℤᵘⁿ_[p]) (R' := ℚᵘⁿ_[p]) (S := ℤᵘⁿ_[p,T]) (S' := ℚᵘⁿ_[p,T])
+  have := IsFractionRing.finrank_eq (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
   rw [this, hpb]
 
 /-! ### Lemma 4.2 — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
@@ -657,8 +656,8 @@ coefficient `x.coeff (g + n/T)` is non-zero is finite.
 
 The well-orderedness of the support transfers via the order-preserving rescaling
 `q ↦ g + q/T` (recall `T ≠ 0` from `[NeZero T]`). -/
-@[reducible] def TfiniteBelow (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
-    Finite {n : ℤ | g + (n : ℚ) / T ≤ M ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
+abbrev TfiniteBelow (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
+    Set.Finite {n : ℤ | g + (n : ℚ) / T ≤ M ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
     exact_mod_cast Nat.pos_of_ne_zero hT
@@ -687,7 +686,7 @@ The well-orderedness of the support transfers via the order-preserving rescaling
         rw [hT_eq] at h2
         exact_mod_cast h2
       exact ⟨hlower, hupper⟩
-    exact ((Set.finite_Icc _ _).subset hsubset).to_subtype
+    exact ((Set.finite_Icc _ _).subset hsubset)
   · have hcoeff : ∀ q : ℚ, x.coeff q = 0 := by
       intro q
       by_contra hq
@@ -695,7 +694,7 @@ The well-orderedness of the support transfers via the order-preserving rescaling
     have hset : {n : ℤ | g + (n : ℚ) / T ≤ M ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} = ∅ := by
       ext n
       simp [hcoeff (g + (n : ℚ) / T)]
-    simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
+    simp [hset]
 
 open Topology Filter in
 /--
@@ -716,9 +715,9 @@ def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
 
 /-- T-scaled analogue of `finiteBelowInt` (line 61). Indexes integers `n ≤ K` whose
 shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
-@[reducible] private noncomputable def TfiniteBelowInt
+private abbrev TfiniteBelowInt
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) :
-    Finite {n : ℤ | n ≤ K ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
+    Set.Finite {n : ℤ | n ≤ K ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} := by
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
     exact_mod_cast Nat.pos_of_ne_zero hT
@@ -740,7 +739,7 @@ shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
         rw [hT_eq] at h2
         exact_mod_cast h2
       exact ⟨hlower, hn.1⟩
-    exact ((Set.finite_Icc _ _).subset hsubset).to_subtype
+    exact ((Set.finite_Icc _ _).subset hsubset)
   · have hcoeff : ∀ q : ℚ, x.coeff q = 0 := by
       intro q
       by_contra hq
@@ -748,7 +747,7 @@ shifted coefficient `x.coeff (g + n/T)` is non-zero. -/
     have hset : {n : ℤ | n ≤ K ∧ x.coeff (g + (n : ℚ) / T) ≠ 0} = ∅ := by
       ext n
       simp [hcoeff (g + (n : ℚ) / T)]
-    simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
+    simp [hset]
 
 /-- T-scaled analogue of `intPartial` (line 84). -/
 private noncomputable def TintPartial
@@ -869,7 +868,7 @@ private lemma TpartialSum_eq_intPartial
       Set.Finite.toFinset
         (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋) := by
     ext n
-    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+    simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
     constructor
     · rintro ⟨hle, hne⟩
       refine ⟨?_, hne⟩
@@ -1004,7 +1003,7 @@ private lemma TintPartial_mul_valuation_bound
       exact (Set.finite_Icc _ _).subset hbound
     · have hempty : {n : ℤ | n ≤ K ∧ g + (n : ℚ) / T ∈ c.support + x.support} = ∅ := by
         ext n
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
+        simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and]
         intro _ hg
         exact (hs_ne ⟨g + (n : ℚ) / T, hg⟩).elim
       rw [hempty]; exact Set.finite_empty
@@ -1048,7 +1047,7 @@ private lemma TintPartial_mul_valuation_bound
   have h_expand : ∀ n ∈ OuterExt,
       (pInvTQ p T) ^ n *
           algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) =
-        ∑ ab ∈ Finset.addAntidiagonal c.isPWO_support x.isPWO_support
+        ∑ ab ∈ Finset.antidiagonal c.isPWO_support x.isPWO_support
             (g + (n : ℚ) / T),
           (pInvTQ p T) ^ n *
             (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff ab.1) *
@@ -1060,14 +1059,14 @@ private lemma TintPartial_mul_valuation_bound
     rw [map_mul]
   rw [h_extend_eq, Finset.sum_congr rfl h_expand]
   have h_sigma_eq := Finset.sum_sigma (s := OuterExt)
-        (t := fun n => Finset.addAntidiagonal c.isPWO_support x.isPWO_support
+        (t := fun n => Finset.antidiagonal c.isPWO_support x.isPWO_support
           (g + (n : ℚ) / T))
         (f := fun p_sig : Sigma (fun _ : ℤ => ℚ × ℚ) => (pInvTQ p T) ^ p_sig.1 *
           (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff p_sig.2.1) *
             algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff p_sig.2.2)))
   rw [← h_sigma_eq]
   let Triples : Finset (Sigma (fun _ : ℤ => ℚ × ℚ)) :=
-    OuterExt.sigma (fun n => Finset.addAntidiagonal c.isPWO_support x.isPWO_support
+    OuterExt.sigma (fun n => Finset.antidiagonal c.isPWO_support x.isPWO_support
       (g + (n : ℚ) / T))
   let AOf : Finset ℚ := Triples.image (fun s => s.2.1)
   have h_fubini : (∑ p_sig ∈ Triples,
@@ -1120,7 +1119,7 @@ private lemma TintPartial_mul_valuation_bound
         (hOuterExt_mem s.1).mp hs_data.1
       have h_anti_data : s.2.1 ∈ c.support ∧ s.2.2 ∈ x.support ∧
           s.2.1 + s.2.2 = g + (s.1 : ℚ) / T :=
-        Finset.mem_addAntidiagonal.mp hs_data.2
+        Finset.mem_antidiagonal.mp hs_data.2
       refine Finset.mem_sigma.mpr ⟨?_, ?_⟩
       · exact Finset.mem_image.mpr ⟨s, hs, rfl⟩
       · refine (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T x (g - s.2.1) K)).mpr
@@ -1131,8 +1130,8 @@ private lemma TintPartial_mul_valuation_bound
     · intro s₁ hs₁ s₂ hs₂ h_eq
       have hs₁_data := Finset.mem_sigma.mp hs₁
       have hs₂_data := Finset.mem_sigma.mp hs₂
-      have h_anti_data₁ := Finset.mem_addAntidiagonal.mp hs₁_data.2
-      have h_anti_data₂ := Finset.mem_addAntidiagonal.mp hs₂_data.2
+      have h_anti_data₁ := Finset.mem_antidiagonal.mp hs₁_data.2
+      have h_anti_data₂ := Finset.mem_antidiagonal.mp hs₂_data.2
       have h_a_eq : s₁.2.1 = s₂.2.1 := (Sigma.mk.inj_iff.mp h_eq).1
       have h_n_eq : s₁.1 = s₂.1 := by
         have h := (Sigma.mk.inj_iff.mp h_eq).2
@@ -1160,7 +1159,7 @@ private lemma TintPartial_mul_valuation_bound
         (Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T x (g - t.1) K)).mp ht_data.2
       obtain ⟨s_orig, hs_orig, hs_eq⟩ := Finset.mem_image.mp ht_a_in
       have hs_orig_data := Finset.mem_sigma.mp hs_orig
-      have h_anti_orig := Finset.mem_addAntidiagonal.mp hs_orig_data.2
+      have h_anti_orig := Finset.mem_antidiagonal.mp hs_orig_data.2
       have ha_in_supp : t.1 ∈ c.support := hs_eq ▸ h_anti_orig.1
       let b : ℚ := g - t.1 + (t.2 : ℚ) / T
       have hb_in_supp : b ∈ x.support := (HahnSeries.mem_support _ _).mpr ht_n_data.2
@@ -1170,11 +1169,11 @@ private lemma TintPartial_mul_valuation_bound
         exact ⟨t.1, ha_in_supp, b, hb_in_supp, hab_sum⟩
       refine ⟨⟨t.2, t.1, b⟩, ?_, ?_⟩
       · refine Finset.mem_sigma.mpr ⟨hn_outer, ?_⟩
-        exact Finset.mem_addAntidiagonal.mpr ⟨ha_in_supp, hb_in_supp, hab_sum⟩
+        exact Finset.mem_antidiagonal.mpr ⟨ha_in_supp, hb_in_supp, hab_sum⟩
       · rfl
     · intro s hs
       have hs_data := Finset.mem_sigma.mp hs
-      have h_anti_data := Finset.mem_addAntidiagonal.mp hs_data.2
+      have h_anti_data := Finset.mem_antidiagonal.mp hs_data.2
       have hb_eq : g - s.2.1 + (s.1 : ℚ) / T = s.2.2 := by linarith [h_anti_data.2.2]
       simp only [hb_eq]
   rw [h_fubini]
@@ -1508,7 +1507,7 @@ private lemma one_notMem_TNullSeriesIdeal :
     -- `(1).coeff q = 0` whenever `q ≠ 0`, and `n = 0` is admissible (since `0 ≤ M`).
     have hS_eq : S = ({0} : Finset ℤ) := by
       ext n
-      simp only [hS_def, Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.mem_singleton]
+      simp only [hS_def, Set.Finite.mem_toFinset, Set.mem_ofPred_eq, Finset.mem_singleton]
       constructor
       · rintro ⟨_, h_ne⟩
         by_contra h_n_ne_zero
@@ -1757,7 +1756,7 @@ private lemma tendsto_algebraMap_K₀_K_zero_early :
     mem_nhds_zero_v_lt WithZero.coe_ne_zero
   refine Filter.mem_of_superset hsrc ?_
   intro z hz
-  simp only [Set.mem_setOf_eq] at hz ⊢
+  simp only [Set.mem_ofPred_eq] at hz ⊢
   -- Goal: `Valued.v.restrict (algebraMap z) < γ.1`, i.e. `Valued.v (algebraMap z) < c`.
   rw [Valuation.restrict_lt_iff_lt_embedding, ← hc_def, valued_v_algebraMap_K₀_K_early]
   have hc_eq : c = ((γ_m : Multiplicative ℤ) : WithZero _) :=
@@ -2570,22 +2569,21 @@ private lemma Tteichmuller_digits_unique
         · rw [Finset.sum_map, Finset.mul_sum]
           apply Finset.sum_congr rfl
           intro j _
-          simp only [Function.Embedding.coeFn_mk]
+          change (pInvT p T)^(i + j) *
+            (TTeichmuller p T (c (i + j)) - TTeichmuller p T (c' (i + j))) = _
           rw [show (pInvT p T)^(i + j) = (pInvT p T)^i * (pInvT p T)^j from
             pow_add _ _ _]
           ring
         · ext k
-          simp only [Finset.mem_Icc, Finset.mem_map, Finset.mem_range,
-            Function.Embedding.coeFn_mk]
+          simp only [Finset.mem_Icc, Finset.mem_map, Finset.mem_range]
           constructor
           · intro ⟨hk1, hk2⟩
-            refine ⟨k - i, ?_, ?_⟩
-            · omega
-            · omega
-          · rintro ⟨j, hj, rfl⟩
-            constructor
-            · omega
-            · omega
+            refine ⟨k - i, by omega, ?_⟩
+            change i + (k - i) = k
+            omega
+          · rintro ⟨j, hj, hjk⟩
+            have hk : i + j = k := hjk
+            omega
       have h_factored : Spart c N - Spart c' N = (pInvT p T)^i *
           ∑ j ∈ Finset.range (N - i + 1), (pInvT p T)^j *
             (TTeichmuller p T (c (i + j)) - TTeichmuller p T (c' (i + j))) := by
@@ -3534,7 +3532,7 @@ theorem Texists_canonical_T_representative
     have h_image : Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)) =
         (Set.Finite.toFinset (TfiniteBelowInt p T β' g K)).image (fun n : ℤ => n + n₀) := by
       ext n'
-      simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_setOf_eq]
+      simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_ofPred_eq]
       constructor
       · rintro ⟨h1, h2⟩
         refine ⟨n' - n₀, ⟨by omega, ?_⟩, by omega⟩
@@ -3619,7 +3617,7 @@ theorem Texists_canonical_T_representative
         (Set.Finite.toFinset (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋) : Finset ℤ) := by
     intro x M
     ext n
-    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+    simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
     constructor
     · intro ⟨h1, h2⟩
       refine ⟨?_, h2⟩
@@ -3848,7 +3846,7 @@ theorem Tunique_canonical_T_representative
           (Set.Finite.toFinset (TfiniteBelowInt p T x γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋) : Finset ℤ) := by
       intro x M
       ext n
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+      simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
       constructor
       · intro ⟨h1, h2⟩
         refine ⟨?_, h2⟩
@@ -4495,7 +4493,7 @@ private lemma tendsto_algebraMap_K₀_K_zero :
     mem_nhds_zero_v_lt WithZero.coe_ne_zero
   refine Filter.mem_of_superset hsrc ?_
   intro z hz
-  simp only [Set.mem_setOf_eq] at hz ⊢
+  simp only [Set.mem_ofPred_eq] at hz ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, ← hc_def, valued_v_algebraMap_K₀_K]
   have hc_eq : c = ((γ_m : Multiplicative ℤ) : WithZero _) :=
     (WithZero.coe_unzero hc_ne).symm
@@ -4689,7 +4687,7 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
     Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   refine Filter.mem_of_superset hsrc ?_
   intro c hc
-  simp only [Set.mem_setOf_eq] at hc ⊢
+  simp only [Set.mem_ofPred_eq] at hc ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, ← hc'_def]
   -- We have hc : v(c) < ofAdd k.
   -- Goal: v(QpUn_proj j c) < c' = ofAdd N.
@@ -5115,7 +5113,7 @@ private noncomputable def LiftedPAdic_shift
       ext q
       refine ⟨fun hq => ⟨q - δ, hq, by ring⟩, ?_⟩
       rintro ⟨q', hq', rfl⟩
-      simp only [Set.mem_setOf_eq, add_sub_cancel_right]
+      simp only [Set.mem_ofPred_eq, add_sub_cancel_right]
       exact hq'
     change {q : ℚ | z.coeff (q - δ) ≠ 0}.IsPWO
     rw [hsupp]
@@ -5279,7 +5277,7 @@ private lemma linearShiftPartial_eventually_zero (i : Fin T) (g : ℚ) :
     have h_finiteBelow : Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M)
         = ({n_0, n_1} : Finset ℤ) := by
       ext n
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq,
+      simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq,
         Finset.mem_insert, Finset.mem_singleton]
       constructor
       · rintro ⟨_, h_coeff⟩
@@ -5332,7 +5330,7 @@ private lemma linearShiftPartial_eventually_zero (i : Fin T) (g : ℚ) :
   · -- Case `gT ∉ ℤ`: TfiniteBelow is empty.
     have h_empty : Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M) = ∅ := by
       ext n
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.notMem_empty,
+      simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq, Finset.notMem_empty,
         iff_false, not_and]
       intro _ h_coeff
       apply h_coeff
@@ -5508,7 +5506,8 @@ This is the standard fact "for `R₁ ⊂ R₂` with `R₁ + I = R₂`, `R₁/(I 
 to Lemmas 4.7 and 4.8. -/
 noncomputable def σ : 𝕃_[p] ≃+* 𝕃_[p,T] :=
   RingEquiv.ofBijective (σ_lift p T)
-    ⟨σ_lift_injective p T, σ_lift_surjective p T⟩
+    (⟨σ_lift_injective p T, σ_lift_surjective p T⟩ :
+      Function.Bijective ⇑(σ_lift p T))
 
 /-! ### Remark 4.10 — coefficient compatibility -/
 
@@ -5540,8 +5539,9 @@ theorem σ_coeff_compat (f : 𝕃_[p]) :
       Ideal.Quotient.mk (TNullSeriesIdeal p T)
         (TLiftedPAdicHahnSeries.fromCoeff p T s_sub.val s_sub.prop)
     rw [Ideal.Quotient.mk_out, hf_eq]
-    change RingEquiv.ofBijective (σ_lift p T) _ _ = _
-    rw [RingEquiv.ofBijective_apply, σ_lift_mk, Lifted_to_TLifted_fromCoeff_eq]
+    change σ_lift p T ((Ideal.Quotient.mk (NullSeriesIdeal p))
+        (LiftedPAdicHahnSeries.fromCoeff s_sub.val s_sub.prop)) = _
+    rw [σ_lift_mk, Lifted_to_TLifted_fromCoeff_eq]
   -- Apply unique-existence of the canonical T-expansion.
   have heq : s_sub = (exists_canonical_T_expansion p T (σ p T f)).choose :=
     (exists_canonical_T_expansion p T (σ p T f)).unique h_T_canon

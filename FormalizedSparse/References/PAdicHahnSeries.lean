@@ -74,7 +74,7 @@ end LiftedPAdicHahnSeries
 /-- The set of integer shifts `n` with `g + n ≤ N` at which `x` has a nonzero coefficient is finite.
 This finiteness witness indexes the partial sums appearing in the null-series condition. -/
 abbrev finiteBelow {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) (g : ℚ) (N : ℕ) :
-  Finite {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} := by
+  Set.Finite {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} := by
   by_cases hs : Set.Nonempty x.support
   · let m : ℚ := x.isWF_support.min hs
     have hsubset :
@@ -92,7 +92,7 @@ abbrev finiteBelow {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) 
         rw [le_sub_iff_add_le]
         simpa [add_comm, add_left_comm, add_assoc] using hn.1
       exact ⟨hlower, hupper⟩
-    exact ((Set.finite_Icc (⌈m - g⌉ : ℤ) ⌊(N : ℚ) - g⌋).subset hsubset).to_subtype
+    exact ((Set.finite_Icc (⌈m - g⌉ : ℤ) ⌊(N : ℚ) - g⌋).subset hsubset)
   · have hcoeff : ∀ q : ℚ, x.coeff q = 0 := by
       intro q
       by_contra hq
@@ -100,7 +100,7 @@ abbrev finiteBelow {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) 
     have hset : {n : ℤ | g + n ≤ N ∧ x.coeff (g + n) ≠ 0} = ∅ := by
       ext n
       simp [hcoeff (g + n)]
-    simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
+    simp [hset]
 
 open Topology Filter in
 /-- An element `∑ₖ aₖ tᵏ` of `W(𝔽ᵃ_[p])((t^ℚ))` is a **null series** if for every `g : ℚ` the
@@ -112,9 +112,9 @@ def IsNullSeries {p : ℕ} [Fact (Nat.Prime p)] (x : LiftedPAdicHahnSeries p) : 
 
 /-- The integer-bounded variant of `finiteBelow`: the set of shifts `n ≤ K` at which `x` has a
 nonzero coefficient at `g + n` is finite. -/
-@[reducible] noncomputable def finiteBelowInt {p : ℕ} [Fact (Nat.Prime p)]
+abbrev finiteBelowInt {p : ℕ} [Fact (Nat.Prime p)]
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (K : ℤ) :
-    Finite {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} := by
+    Set.Finite {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} := by
   by_cases hs : Set.Nonempty x.support
   · let m : ℚ := x.isWF_support.min hs
     have hsubset : {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} ⊆ Set.Icc (⌈m - g⌉ : ℤ) K := by
@@ -126,7 +126,7 @@ nonzero coefficient at `g + n` is finite. -/
         rw [sub_le_iff_le_add]
         simpa [add_comm, add_left_comm, add_assoc] using hm_le
       exact ⟨hlower, hn.1⟩
-    exact ((Set.finite_Icc (⌈m - g⌉ : ℤ) K).subset hsubset).to_subtype
+    exact ((Set.finite_Icc (⌈m - g⌉ : ℤ) K).subset hsubset)
   · have hcoeff : ∀ q : ℚ, x.coeff q = 0 := by
       intro q
       by_contra hq
@@ -134,7 +134,7 @@ nonzero coefficient at `g + n` is finite. -/
     have hset : {n : ℤ | n ≤ K ∧ x.coeff (g + n) ≠ 0} = ∅ := by
       ext n
       simp [hcoeff (g + n)]
-    simpa [hset] using (Set.finite_empty : (∅ : Set ℤ).Finite).to_subtype
+    simp [hset]
 
 /-- The partial sum `∑_{n ≤ K} a_{g+n} pⁿ` in `ℚᵘⁿ_[p]` of the coefficients of `x` at shifts
 `n ≤ K` above `g`. These partial sums are the finite truncations whose limit defines the
@@ -186,7 +186,7 @@ lemma mem_nhds_zero_v_lt {p : ℕ} [Fact (Nat.Prime p)]
     rw [ne_eq, Valuation.restrict_eq_zero_iff, hva]; exact hc
   refine ⟨Units.mk0 (Valued.v.restrict ((p : QpUn p) ^ (-(WithZero.log c)))) hane, ?_⟩
   intro y hy
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero, Units.val_mk0,
     Valuation.embedding_restrict, hva] at hy
   exact hy
@@ -202,7 +202,7 @@ private lemma exists_v_lt_subset {p : ℕ} [Fact (Nat.Prime p)] {U : Set (QpUn p
     MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ, ?_⟩
   intro y hy
   apply hγ
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, sub_zero]
   exact hy
 
@@ -217,7 +217,7 @@ private lemma exists_v_sub_lt_subset {p : ℕ} [Fact (Nat.Prime p)] {U : Set (Qp
     MonoidWithZeroHom.ValueGroup₀.embedding_unit_ne_zero γ, ?_⟩
   intro y hy
   apply hγ
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding]
   exact hy
 
@@ -232,7 +232,7 @@ private lemma mem_nhds_v_sub_lt {p : ℕ} [Fact (Nat.Prime p)] {x w : QpUn p}
     rw [ne_eq, Valuation.restrict_eq_zero_iff, hw]; exact hc
   refine ⟨Units.mk0 (Valued.v.restrict w) hane, ?_⟩
   intro y hy
-  simp only [Set.mem_setOf_eq] at hy ⊢
+  simp only [Set.mem_ofPred_eq] at hy ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, Units.val_mk0,
     Valuation.embedding_restrict, hw] at hy
   exact hy
@@ -339,7 +339,7 @@ private lemma partialSum_eq_intPartial {p : ℕ} [Fact (Nat.Prime p)]
   have hset_eq : Set.Finite.toFinset (finiteBelow x g M) =
       Set.Finite.toFinset (finiteBelowInt x g ⌊(M : ℚ) - g⌋) := by
     ext n
-    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+    simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
     constructor
     · rintro ⟨hle, hne⟩
       refine ⟨?_, hne⟩
@@ -451,7 +451,7 @@ private lemma finite_int_in_pwo_below {s : Set ℚ} (hs : s.IsPWO) (g : ℚ) (K 
     exact (Set.finite_Icc _ _).subset hbound
   · have hempty : {n : ℤ | n ≤ K ∧ g + (n : ℚ) ∈ s} = ∅ := by
       ext n
-      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
+      simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and]
       intro _ hg
       exact (hs_ne ⟨g + n, hg⟩).elim
     rw [hempty]
@@ -510,7 +510,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
   -- Step 3: For each `n ∈ OuterExt`, expand `(c*x).coeff(g+n)` via `coeff_mul`.
   have h_expand : ∀ n ∈ OuterExt,
       (p : QpUn p) ^ n * algebraMap (OQpUn p) (QpUn p) ((c * x).coeff (g + n)) =
-        ∑ ab ∈ Finset.addAntidiagonal c.isPWO_support x.isPWO_support (g + (n : ℚ)),
+        ∑ ab ∈ Finset.antidiagonal c.isPWO_support x.isPWO_support (g + (n : ℚ)),
           (p : QpUn p) ^ n *
             (algebraMap (OQpUn p) (QpUn p) (c.coeff ab.1) *
               algebraMap (OQpUn p) (QpUn p) (x.coeff ab.2)) := by
@@ -522,14 +522,14 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
   rw [h_extend_eq, Finset.sum_congr rfl h_expand]
   -- Step 4: convert the double sum to a single sum over a sigma type, then reindex.
   have h_sigma_eq := Finset.sum_sigma (s := OuterExt)
-        (t := fun n => Finset.addAntidiagonal c.isPWO_support x.isPWO_support (g + (n : ℚ)))
+        (t := fun n => Finset.antidiagonal c.isPWO_support x.isPWO_support (g + (n : ℚ)))
         (f := fun p_sig : Sigma (fun _ : ℤ => ℚ × ℚ) => (p : QpUn p) ^ p_sig.1 *
           (algebraMap (OQpUn p) (QpUn p) (c.coeff p_sig.2.1) *
             algebraMap (OQpUn p) (QpUn p) (x.coeff p_sig.2.2)))
   rw [← h_sigma_eq]
   -- Step 5: reindex via the bijection `(n, (a, b)) ↦ (a, n)` (b = g - a + n implicit).
   let Triples : Finset (Sigma (fun _ : ℤ => ℚ × ℚ)) :=
-    OuterExt.sigma (fun n => Finset.addAntidiagonal c.isPWO_support x.isPWO_support
+    OuterExt.sigma (fun n => Finset.antidiagonal c.isPWO_support x.isPWO_support
       (g + (n : ℚ)))
   let AOf : Finset ℚ := Triples.image (fun s => s.2.1)
   have h_fubini : (∑ p_sig ∈ Triples,
@@ -576,7 +576,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
       have h_outer_data : s.1 ≤ K ∧ g + (s.1 : ℚ) ∈ c.support + x.support :=
         (hOuterExt_mem s.1).mp hs_data.1
       have h_anti_data : s.2.1 ∈ c.support ∧ s.2.2 ∈ x.support ∧ s.2.1 + s.2.2 = g + s.1 :=
-        Finset.mem_addAntidiagonal.mp hs_data.2
+        Finset.mem_antidiagonal.mp hs_data.2
       refine Finset.mem_sigma.mpr ⟨?_, ?_⟩
       · exact Finset.mem_image.mpr ⟨s, hs, rfl⟩
       · refine (Set.Finite.mem_toFinset (hs := finiteBelowInt x (g - s.2.1) K)).mpr
@@ -587,8 +587,8 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
     · intro s₁ hs₁ s₂ hs₂ h_eq
       have hs₁_data := Finset.mem_sigma.mp hs₁
       have hs₂_data := Finset.mem_sigma.mp hs₂
-      have h_anti_data₁ := Finset.mem_addAntidiagonal.mp hs₁_data.2
-      have h_anti_data₂ := Finset.mem_addAntidiagonal.mp hs₂_data.2
+      have h_anti_data₁ := Finset.mem_antidiagonal.mp hs₁_data.2
+      have h_anti_data₂ := Finset.mem_antidiagonal.mp hs₂_data.2
       have h_a_eq : s₁.2.1 = s₂.2.1 := (Sigma.mk.inj_iff.mp h_eq).1
       have h_n_eq : s₁.1 = s₂.1 := by
         have h := (Sigma.mk.inj_iff.mp h_eq).2
@@ -617,7 +617,7 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
         (Set.Finite.mem_toFinset (hs := finiteBelowInt x (g - t.1) K)).mp ht_data.2
       obtain ⟨s_orig, hs_orig, hs_eq⟩ := Finset.mem_image.mp ht_a_in
       have hs_orig_data := Finset.mem_sigma.mp hs_orig
-      have h_anti_orig := Finset.mem_addAntidiagonal.mp hs_orig_data.2
+      have h_anti_orig := Finset.mem_antidiagonal.mp hs_orig_data.2
       have ha_in_supp : t.1 ∈ c.support := hs_eq ▸ h_anti_orig.1
       let b : ℚ := g - t.1 + (t.2 : ℚ)
       have hb_in_supp : b ∈ x.support := (HahnSeries.mem_support _ _).mpr ht_n_data.2
@@ -627,11 +627,11 @@ private lemma intPartial_mul_valuation_bound {p : ℕ} [Fact (Nat.Prime p)]
         exact ⟨t.1, ha_in_supp, b, hb_in_supp, hab_sum⟩
       refine ⟨⟨t.2, t.1, b⟩, ?_, ?_⟩
       · refine Finset.mem_sigma.mpr ⟨hn_outer, ?_⟩
-        exact Finset.mem_addAntidiagonal.mpr ⟨ha_in_supp, hb_in_supp, hab_sum⟩
+        exact Finset.mem_antidiagonal.mpr ⟨ha_in_supp, hb_in_supp, hab_sum⟩
       · rfl
     · intro s hs
       have hs_data := Finset.mem_sigma.mp hs
-      have h_anti_data := Finset.mem_addAntidiagonal.mp hs_data.2
+      have h_anti_data := Finset.mem_antidiagonal.mp hs_data.2
       have hb_eq : g - s.2.1 + (s.1 : ℚ) = s.2.2 := by linarith [h_anti_data.2.2]
       simp only [hb_eq]
   rw [h_fubini]
@@ -879,7 +879,7 @@ private lemma one_notMem_NullSeriesIdeal (p : ℕ) [Fact (Nat.Prime p)] :
     -- whenever `q ≠ 0` and `0 ≤ M` makes `n = 0` admissible.
     have hS_eq : S = ({0} : Finset ℤ) := by
       ext n
-      simp only [hS_def, Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.mem_singleton]
+      simp only [hS_def, Set.Finite.mem_toFinset, Set.mem_ofPred_eq, Finset.mem_singleton]
       constructor
       · rintro ⟨h_le, h_ne⟩
         by_contra h_n_ne_zero
@@ -1046,7 +1046,8 @@ lemma intPartial_isCauchy (α : LiftedPAdicHahnSeries p) (g : ℚ) :
       (WithZeroMulInt.toNNReal (p_ne_zero p)
         (((Multiplicative.ofAdd (n : ℤ) : Multiplicative ℤ) : WithZero _))) = (p : NNReal)^n := by
     intro n
-    simp [WithZeroMulInt.toNNReal]
+    rw [WithZeroMulInt.toNNReal_neg_apply _ WithZero.coe_ne_zero]
+    simp
   -- Find N : ℕ such that (p : NNReal)⁻¹^N < ε
   have htendsto : Filter.Tendsto (fun n : ℕ => ((p : NNReal)⁻¹)^n) Filter.atTop (nhds 0) :=
     tendsto_pow_atTop_nhds_zero_of_lt_one hpinv_nn hpinv_lt
@@ -1869,21 +1870,20 @@ lemma teichmuller_digits_unique (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
         · rw [Finset.sum_map, Finset.mul_sum]
           apply Finset.sum_congr rfl
           intro j _
-          simp only [Function.Embedding.coeFn_mk]
+          change (p : OQpUn p)^(i + j) *
+            (teichmuller p (c (i + j)) - teichmuller p (c' (i + j))) = _
           rw [show (p : OQpUn p)^(i + j) = (p : OQpUn p)^i * (p : OQpUn p)^j from pow_add _ _ _]
           ring
         · ext k
-          simp only [Finset.mem_Icc, Finset.mem_map, Finset.mem_range,
-            Function.Embedding.coeFn_mk]
+          simp only [Finset.mem_Icc, Finset.mem_map, Finset.mem_range]
           constructor
           · intro ⟨hk1, hk2⟩
-            refine ⟨k - i, ?_, ?_⟩
-            · omega
-            · omega
-          · rintro ⟨j, hj, rfl⟩
-            constructor
-            · omega
-            · omega
+            refine ⟨k - i, by omega, ?_⟩
+            change i + (k - i) = k
+            omega
+          · rintro ⟨j, hj, hjk⟩
+            have hk : i + j = k := hjk
+            omega
       -- Now extract p^i factor.
       have h_factored : Spart c N - Spart c' N = (p : OQpUn p)^i *
           ∑ j ∈ Finset.range (N - i + 1), (p : OQpUn p)^j *
@@ -2397,7 +2397,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
     have h_image : Set.Finite.toFinset (finiteBelowInt β' γ (K + n₀)) =
         (Set.Finite.toFinset (finiteBelowInt β' g K)).image (fun n : ℤ => n + n₀) := by
       ext n'
-      simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_setOf_eq]
+      simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_ofPred_eq]
       constructor
       · rintro ⟨h1, h2⟩
         refine ⟨n' - n₀, ⟨by omega, ?_⟩, by omega⟩
@@ -2585,7 +2585,7 @@ theorem exists_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
         (Set.Finite.toFinset (finiteBelowInt x g ⌊((M : ℚ) - g)⌋) : Finset ℤ) := by
     intro x M
     ext n
-    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+    simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
     constructor
     · intro ⟨h1, h2⟩
       refine ⟨?_, h2⟩
@@ -2931,7 +2931,7 @@ theorem unique_canonical_representative {p : ℕ} [Fact (Nat.Prime p)]
           (Set.Finite.toFinset (finiteBelowInt x γ ⌊((M : ℚ) - γ)⌋) : Finset ℤ) := by
       intro x M
       ext n
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+      simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
       constructor
       · intro ⟨h1, h2⟩
         refine ⟨?_, h2⟩
@@ -3354,19 +3354,15 @@ open Classical in
 to `⊤`). This is the additive valuation making `𝕃_[p]` a valued field. -/
 noncomputable def val
   (p : ℕ) [Fact (Nat.Prime p)] :
-  AddValuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithTop ℚ) := {
-  toFun x :=
-    if h : x = 0 then (⊤ : WithTop ℚ)
-    else ((support_IsPWO x).isWF.min (support_nonempty_of_nonzero p x h) : WithTop ℚ)
-  map_zero' := by
-    simp only
-    rfl
-  map_one' := by
-    simp only
-    rw [dif_neg (one_ne_zero_quot p)]
-    rw [val_one_eq_zero p]
-    rfl
-  map_mul' := by
+  AddValuation ((LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) (WithTop ℚ) := by
+  refine AddValuation.of
+    (fun x =>
+      if h : x = 0 then (⊤ : WithTop ℚ)
+      else ((support_IsPWO x).isWF.min (support_nonempty_of_nonzero p x h) : WithTop ℚ))
+    (dif_pos rfl)
+    (by rw [dif_neg (one_ne_zero_quot p), val_one_eq_zero p]; exact WithTop.coe_zero)
+    ?hadd ?hmul
+  case hmul =>
     -- Goal: val(x*y) = val(x) * val(y) in `Multiplicative (WithTop ℚ)ᵒᵈ`,
     -- i.e., qxy = qx + qy in additive `WithTop ℚ` (when nonzero).
     -- Cases: x = 0, y = 0 — trivial since `⊤ * a = ⊤`.
@@ -3375,15 +3371,14 @@ noncomputable def val
     -- to `Δ := fromCoeff s_x * fromCoeff s_y - fromCoeff s_{xy}`.
     intro x y
     by_cases hx : x = 0
-    · -- x = 0 case: val(0 * y) = val(0) = ⊤. In `Multiplicative (WithTop ℚ)ᵒᵈ`, ⊤ is the
-      -- multiplicative zero, so ⊤ * a = ⊤ for any a.
+    · -- x = 0 case: val(0 * y) = val(0) = ⊤, and `⊤ + a = ⊤` in `WithTop ℚ`.
       subst hx
       rw [dif_pos (zero_mul y), dif_pos (rfl : (0 : (LiftedPAdicHahnSeries p) ⧸ _) = 0)]
-      exact (zero_mul _).symm
+      simp
     · by_cases hy : y = 0
       · subst hy
         rw [dif_pos (mul_zero x), dif_pos (rfl : (0 : (LiftedPAdicHahnSeries p) ⧸ _) = 0)]
-        exact (mul_zero _).symm
+        simp
       · -- Main case: x ≠ 0, y ≠ 0.
         -- Set canonical-expansion data.
         set s_x : ℚ → Fpbar p := (exists_canonical_expansion x).choose.val with hs_x_def
@@ -3435,9 +3430,9 @@ noncomputable def val
           rw [HahnSeries.coeff_mul]
           -- Show the antidiagonal is the singleton {(qx, qy)}.
           have h_set :
-              Finset.addAntidiagonal fx.isPWO_support fy.isPWO_support (qx + qy) = {(qx, qy)} := by
+              Finset.antidiagonal fx.isPWO_support fy.isPWO_support (qx + qy) = {(qx, qy)} := by
             ext ⟨i, j⟩
-            simp only [Finset.mem_addAntidiagonal, Finset.mem_singleton, Prod.mk.injEq]
+            simp only [Finset.mem_antidiagonal, Finset.mem_singleton, Prod.mk.injEq]
             constructor
             · rintro ⟨hi, hj, hij⟩
               -- hi : i ∈ fx.support; convert to i ∈ Function.support s_x.
@@ -3590,17 +3585,12 @@ noncomputable def val
           exact (null_series_no_unit_leading hΔ_mem h_Δ_unit h_Δ_lead).elim
         have h_eq : qxy = qx + qy := le_antisymm h_le h_ge
         -- Now translate to the goal.
-        simp only [dif_neg hxy_ne, dif_neg hx, dif_neg hy]
-        -- Goal: ↑qxy = ↑qx * ↑qy in `Multiplicative (WithTop ℚ)ᵒᵈ`.
-        rw [show
-            ((hs_xy_pwo.isWF.min hsxy_ne : ℚ) : WithTop ℚ) =
-            (((qx + qy : ℚ) : WithTop ℚ)) from by
-            change ((qxy : ℚ) : WithTop ℚ) = _
-            rw [h_eq]]
-        -- Now goal is: ↑(qx + qy) = ↑qx * ↑qy in dual carrier.
-        push_cast
-        rfl
-  map_add_le_max' := by
+        rw [dif_neg hxy_ne, dif_neg hx, dif_neg hy]
+        -- Goal: ↑qxy = ↑qx + ↑qy in `WithTop ℚ`.
+        change ((qxy : ℚ) : WithTop ℚ) = ((qx : ℚ) : WithTop ℚ) + ((qy : ℚ) : WithTop ℚ)
+        rw [h_eq]
+        exact_mod_cast rfl
+  case hadd =>
     -- Goal in `Multiplicative (WithTop ℚ)ᵒᵈ`:
     --   val(x+y) ≤ max(val x, val y)
     -- Equivalent in additive `WithTop ℚ` to the standard ultrametric:
@@ -3610,22 +3600,20 @@ noncomputable def val
     --   `min(supp s_{x+y}) ≥ min(min(supp s_x), min(supp s_y))`.
     -- The main step is the support comparison stated below.
     intro x y
-    -- Case x + y = 0: LHS is ⊤, which is `0` (the bottom) in the dual carrier,
-    -- so `0 ≤ anything`.
+    -- Case x + y = 0: RHS is ⊤, so the ultrametric bound is trivial.
     by_cases hxy : x + y = 0
-    · simp only [dif_pos hxy]
-      change (0 : Multiplicative (WithTop ℚ)ᵒᵈ) ≤ _
-      exact zero_le (a := _)
+    · rw [dif_pos hxy]
+      exact le_top
     -- Case x = 0: x + y = y, both reduce to val y; trivial.
     · by_cases hx : x = 0
       · subst hx
         rw [zero_add, dif_pos (rfl : (0 : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) = 0)]
-        exact le_max_right _ _
+        exact min_le_right _ _
       -- Case y = 0: similar; symmetric.
       · by_cases hy : y = 0
         · subst hy
           rw [add_zero, dif_pos (rfl : (0 : (LiftedPAdicHahnSeries p) ⧸ (NullSeriesIdeal p)) = 0)]
-          exact le_max_left _ _
+          exact min_le_left _ _
         -- Main case: all of x, y, x+y are nonzero.
         -- Reduces to showing `min(supp s_{x+y}) ≥ min(min(supp s_x), min(supp s_y))` in ℚ
         -- (then translate to the dual ordering in `Multiplicative (WithTop ℚ)ᵒᵈ`).
@@ -3641,7 +3629,7 @@ noncomputable def val
         -- is a unit in `OQpUn p`, and so is its negation.
         -- For q' < q, all three coefficients vanish, so Δ.coeff q' = 0.
         -- Apply `null_series_no_unit_leading` → contradiction.
-        simp only [dif_neg hxy, dif_neg hx, dif_neg hy]
+        rw [dif_neg hxy, dif_neg hx, dif_neg hy]
         -- Set canonical-expansion data.
         set s_x : ℚ → Fpbar p := (exists_canonical_expansion x).choose.val with hs_x_def
         set s_y : ℚ → Fpbar p := (exists_canonical_expansion y).choose.val with hs_y_def
@@ -3663,18 +3651,9 @@ noncomputable def val
         set qxy : ℚ := hs_xy_pwo.isWF.min hsxy_ne with hqxy_def
         -- Show goal in additive ℚ form: min(qx, qy) ≤ qxy.
         suffices h : min qx qy ≤ qxy by
-          -- Translate to dual-multiplicative.
-          -- Goal: ↑qxy ≤ max(↑qx, ↑qy) in `Multiplicative (WithTop ℚ)ᵒᵈ`.
-          -- Use `le_max_iff` and case-split on `min_le_iff`.
-          rw [le_max_iff]
-          rcases min_le_iff.mp h with hcase | hcase
-          · -- qx ≤ qxy in ℚ ⟹ ↑qxy ≤ ↑qx in dual.
-            left
-            have : ((qx : ℚ) : WithTop ℚ) ≤ ((qxy : ℚ) : WithTop ℚ) := by exact_mod_cast hcase
-            exact this
-          · right
-            have : ((qy : ℚ) : WithTop ℚ) ≤ ((qxy : ℚ) : WithTop ℚ) := by exact_mod_cast hcase
-            exact this
+          -- Translate the ℚ-level inequality to `WithTop ℚ`.
+          change min ((qx : ℚ) : WithTop ℚ) ((qy : ℚ) : WithTop ℚ) ≤ ((qxy : ℚ) : WithTop ℚ)
+          exact_mod_cast h
         -- Now prove min qx qy ≤ qxy by contradiction.
         by_contra hlt
         push Not at hlt
@@ -3789,7 +3768,6 @@ noncomputable def val
           ring
         -- Apply the helper to derive False.
         exact (null_series_no_unit_leading hΔ hΔ_coeff_qxy_unit hΔ_lead).elim
-}
 
 /-- The field `𝕃_[p]` of **`p`-adic Hahn series**: the quotient of `W(𝔽ᵃ_[p])((t^ℚ))` by the
 null-series ideal.
@@ -4282,7 +4260,7 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
     set S := Set.Finite.toFinset (finiteBelow x g M)
     have hmem : ∀ n : ℤ, n ∈ S ↔ (n = -k₀ ∨ n = 1 - k₀) := by
       intro n
-      simp only [S, Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+      simp only [S, Set.Finite.mem_toFinset, Set.mem_ofPred_eq]
       constructor
       · rintro ⟨hle, hne⟩
         by_contra hcases
@@ -4356,7 +4334,7 @@ private lemma single_one_sub_p_mem_nullSeries (p : ℕ) [Fact (Nat.Prime p)] :
     intro M
     have hempty : Set.Finite.toFinset (finiteBelow x g M) = (∅ : Finset ℤ) := by
       ext n
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.notMem_empty,
+      simp only [Set.Finite.mem_toFinset, Set.mem_ofPred_eq, Finset.notMem_empty,
         iff_false, not_and]
       intro hle hne
       have h0 : (g + (n : ℚ)) ≠ 0 := by
@@ -4478,10 +4456,10 @@ private lemma exists_pow_p_eq_self_Fpbar (p : ℕ) [Fact (Nat.Prime p)] (a : Fpb
   have hint : IsIntegral (ZMod p) a := Algebra.IsIntegral.isIntegral a
   let K : IntermediateField (ZMod p) (Fpbar p) :=
     IntermediateField.adjoin (ZMod p) ({a} : Set (Fpbar p))
-  haveI : FiniteDimensional (ZMod p) K :=
+  have : FiniteDimensional (ZMod p) K :=
     IntermediateField.adjoin.finiteDimensional hint
-  haveI : Finite K := Module.finite_of_finite (ZMod p)
-  haveI : Fintype K := Fintype.ofFinite _
+  have : Finite K := Module.finite_of_finite (ZMod p)
+  have : Fintype K := Fintype.ofFinite _
   have ha_in_K : a ∈ K :=
     IntermediateField.subset_adjoin _ _ (Set.mem_singleton _)
   set d := Fintype.card K with hd_def
