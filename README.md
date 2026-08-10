@@ -1,10 +1,10 @@
 # FormalizedSparse
 
 ![CI](https://github.com/YijunYuan/FormalizedSparse/actions/workflows/lean_action_ci.yml/badge.svg)
-[![Lean](https://img.shields.io/badge/Lean-4.31.0-5C2D91)](https://leanprover.github.io)
-[![mathlib](https://img.shields.io/badge/mathlib-v4.31.0-5C2D91)](https://github.com/leanprover-community/mathlib4)
+[![Lean](https://img.shields.io/badge/Lean-4.33.0-5C2D91)](https://leanprover.github.io)
+[![mathlib](https://img.shields.io/badge/mathlib-v4.33.0-5C2D91)](https://github.com/leanprover-community/mathlib4)
 
-[![Graph](https://img.shields.io/badge/Dependency_graph-100000?style=for-the-badge&logo=GitHub&logoColor=white&labelColor=black&color=black)](https://yijunyuan.github.io/lean-graph/?url=https://raw.githubusercontent.com/YijunYuan/FormalizedSparse/refs/heads/master/FormalizedSparse.json#dark)
+[![Graph](https://img.shields.io/badge/Dependency_graph-100000?style=for-the-badge&logo=GitHub&logoColor=white&labelColor=black&color=black)](https://yijunyuan.github.io/lean-graph/?url=https://raw.githubusercontent.com/YijunYuan/FormalizedSparse/refs/heads/4.33.0/FormalizedSparse.json#dark)
 
 A full formalization in Lean 4 of the paper **"p-adic Hahn Series with Sparse Support"** by Shanwen Wang and Yijun Yuan.
 
@@ -79,4 +79,4 @@ enables mathlib-style dot notation such as `d.norm` and `d.Psi`.
 - All results of the paper are **fully formalized**. The only admitted statements are three external
   results of Kedlaya in `References/Kedlaya.lean`, which are cited and used as black boxes rather
   than reproved.
-- Builds against Lean 4.31.0 and mathlib v4.31.0
+- Builds against Lean 4.33.0 and mathlib v4.33.0
