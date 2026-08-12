@@ -8,6 +8,28 @@
 
 A full formalization in Lean 4 of the paper **"p-adic Hahn Series with Sparse Support"** by Shanwen Wang and Yijun Yuan.
 
+---------------
+# ⚠️⚠️⚠️Important Update Note:
+In the latest version of this repository, we fix an inaccurate formalized statement of [Kedlaya's result](https://github.com/YijunYuan/FormalizedSparse/blob/bbfb158543681037683d9b0b6a98aef00bbb8011/FormalizedSparse/References/Kedlaya.lean#L127-L135):
+```lean4
+theorem kedlaya_2017_theorem13_4 :
+    closure (integralClosure ℚᵘⁿ_[p] 𝕃_[p]).carrier =
+    closure { f : 𝕃_[p] | ∃ f' : HahnSeries ℚ (𝔽ᵃ_[p]), IsAlgebraic 𝔽ᵃ_[p] f' ∧
+      (exists_canonical_expansion f).choose.val = f'.coeff }
+    := by admit
+```
+is now
+```lean4
+theorem kedlaya_2017_theorem13_4 :
+    closure (integralClosure ℚᵘⁿ_[p] 𝕃_[p]).carrier =
+    closure { f : 𝕃_[p] | ∃ f' : HahnSeries ℚ (𝔽ᵃ_[p]), IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ f' ∧
+      (exists_canonical_expansion f).choose.val = f'.coeff }
+    := by admit
+```
+The whole theory still works with this fix, and the main theorem and its application are **unaffected**.
+
+---------------
+
 ## Overview
 
 The paper introduces a combinatorial "sparseness" condition on the support of a p-adic Hahn series and proves that any p-adic Hahn series satisfying this condition is transcendental over ℚᵘⁿ_[p], the completed maximal unramified extension of ℚ_[p] (and hence over ℚ_[p]). As an application, it proves the **order-type conjecture** for ℚ_[p]-algebraic p-adic Hahn series with bounded support: under the assumption that the support has only finitely many accumulation points, such a series has finite support, so the order type of its support is either finite or at least ω².
