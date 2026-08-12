@@ -127,10 +127,10 @@ theorem kedlaya_2001a_theorem15 (x : HahnSeries ℚ (𝔽ᵃ_[p])) :
 open LaurentSeries in
 /-- **Kedlaya (2017), Theorem 13.5.** The completion of the integral closure of `ℚᵘⁿ_[p]` in
 `𝕃_[p]` coincides with the completion of the set of `p`-adic Hahn series whose coefficient function
-arises from an algebraic element of `𝔽̄_p((t^ℚ))`. -/
+arises from an `𝔽ᵃ_[p]⸨X⸩`-algebraic element of `𝔽̄_p((t^ℚ))`. -/
 theorem kedlaya_2017_theorem13_4 :
     closure (integralClosure ℚᵘⁿ_[p] 𝕃_[p]).carrier =
-    closure { f : 𝕃_[p] | ∃ f' : HahnSeries ℚ (𝔽ᵃ_[p]), IsAlgebraic 𝔽ᵃ_[p] f' ∧
+    closure { f : 𝕃_[p] | ∃ f' : HahnSeries ℚ (𝔽ᵃ_[p]), IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ f' ∧
       (exists_canonical_expansion f).choose.val = f'.coeff }
     := by admit
 
