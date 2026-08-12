@@ -453,44 +453,6 @@ theorem isQTR_restrict {p : ℕ} [Fact (Nat.Prime p)] {x : ℚ → 𝔽ᵃ_[p]}
 
 namespace QuasiTwistRecurrent
 
-/-- **Scalar tower `𝔽ᵃ_[p] → 𝔽ᵃ_[p]⸨X⸩ → 𝔽ᵃ_[p]((t^ℚ))`.** The constant-field algebra map into the
-big Hahn-series ring `HahnSeries ℚ 𝔽ᵃ_[p]` factors through the Laurent series `𝔽ᵃ_[p]⸨X⸩`
-(which sits inside via `Kedlaya.intHahnEmbedding`). This makes `IsAlgebraic 𝔽ᵃ_[p] g` upgrade to
-`IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ g` (`isAlgebraic_LaurentSeries_of_isAlgebraic_constants`).
-
-The instance is stated with the algebra `SMul`s explicit (`@IsScalarTower … Algebra.toSMul …`)
-because the default `𝔽ᵃ_[p]`-action on `HahnSeries ℚ 𝔽ᵃ_[p]` is the *module* `SMul`
-(`HahnSeries.instSMul`), which is not defeq to the algebra `SMul` of the canonical
-`HahnSeries.powerSeriesAlgebra`; `IsAlgebraic.tower_top` needs the algebra-`SMul` version. -/
-instance instIsScalarTowerLaurentHahn {p : ℕ} [Fact (Nat.Prime p)] :
-    @IsScalarTower (𝔽ᵃ_[p]) ((𝔽ᵃ_[p])⸨X⸩) (HahnSeries ℚ (𝔽ᵃ_[p]))
-      Algebra.toSMul Algebra.toSMul Algebra.toSMul := by
-  apply IsScalarTower.of_algebraMap_eq'
-  refine RingHom.ext (fun a => ?_)
-  simp only [RingHom.coe_comp, Function.comp_apply]
-  -- Both base maps send `a` to the constant `HahnSeries.C a`; the inclusion fixes it.
-  have hL : (algebraMap (𝔽ᵃ_[p]) (HahnSeries ℚ (𝔽ᵃ_[p]))) a = HahnSeries.C a := by
-    rw [HahnSeries.algebraMap_apply']
-    simp only [PowerSeries.algebraMap_eq, HahnSeries.ofPowerSeries_C]
-  have hRin : (algebraMap (𝔽ᵃ_[p]) ((𝔽ᵃ_[p])⸨X⸩)) a = HahnSeries.C a := by
-    rw [HahnSeries.algebraMap_apply']
-    simp only [PowerSeries.algebraMap_eq, HahnSeries.ofPowerSeries_C]
-  have hEmb : Kedlaya.intHahnEmbedding p (HahnSeries.C a) = HahnSeries.C a := by
-    unfold Kedlaya.intHahnEmbedding
-    rw [HahnSeries.embDomainRingHom_apply, HahnSeries.C_apply, HahnSeries.embDomain_single]
-    simp
-  rw [hL, hRin]; exact hEmb.symm
-
-/-- A Hahn series algebraic over the constant field `𝔽ᵃ_[p]` is a fortiori algebraic over the
-Laurent-series field `𝔽ᵃ_[p]⸨X⸩` (tower top). This is the bridge that lets
-`kedlaya_2017_theorem13_4` (which produces algebraicity over the *constants*) feed
-`isAlgebraic_iff_isQTR` (which needs
-algebraicity over `𝔽ᵃ_[p]⸨X⸩`). -/
-lemma isAlgebraic_LaurentSeries_of_isAlgebraic_constants {p : ℕ} [Fact (Nat.Prime p)]
-    {g : HahnSeries ℚ (𝔽ᵃ_[p])} (h : IsAlgebraic (𝔽ᵃ_[p]) g) :
-    IsAlgebraic (𝔽ᵃ_[p])⸨X⸩ g :=
-  h.tower_top _
-
 /-- A `p`-adic Hahn series in `𝕃_[p]` has vanishing coefficient at every rational strictly below
 its valuation `val p x` (the minimal support point). This is the elementary half of the
 valuation–coefficient dictionary: `val p x` is, by definition, `⊤` for `x = 0` and the
@@ -690,7 +652,7 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
     rw [mem_integralClosure_iff, ← isAlgebraic_iff_isIntegral]; exact halg
   -- Step 2: hence `f` is in the closure of the set of algebraic approximants (Kedlaya Theorem 6.4).
   have hf_clos : f ∈ closure { g : 𝕃_[p] | ∃ g' : HahnSeries ℚ (𝔽ᵃ_[p]),
-      IsAlgebraic 𝔽ᵃ_[p] g' ∧ (exists_canonical_expansion g).choose.val = g'.coeff} := by
+      IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ g' ∧ (exists_canonical_expansion g).choose.val = g'.coeff} := by
     rw [← Kedlaya.kedlaya_2017_theorem13_4 p]
     exact subset_closure hf_int
   -- Step 3: bounded support gives an integer ceiling `u` with `Supp(f) ⊆ (-∞, u]`.
@@ -712,14 +674,14 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
     exact absurd (hu q hmem) (not_le.mpr hq)
   -- Step 4 (Kedlaya Theorem 6.4, the topological heart): from `f ∈ closure {approximants}` and the
   -- support bound, extract an approximant `g` whose canonical coefficients `g'.coeff` (with `g'`
-  -- algebraic over `𝔽ᵃ_[p]`) agree with `F_f` on `(-∞, u]`. It splits into two facts about the
+  -- algebraic over `𝔽ᵃ_[p]⸨X⸩`) agree with `F_f` on `(-∞, u]`. It splits into two facts about the
   -- valuation topology on `𝕃_[p]`, each a consequence of the canonical isometry
   -- `val (x - y) = orderTop (canon x - canon y)` of `PAdicHahnSeries.lean`:
   --   (A) the open ball `{h | u < val (f - h)}` is a neighbourhood of `f`;
   --   (B) `u < val (f - h)` forces `F_f` and `F_h` to agree on `(-∞, u]` (the minimal point of
   --       the canonical difference exceeds `u`, and the leading Teichmüller coefficient is a unit).
   -- Given (A) and (B), the closure membership yields the approximant by `mem_closure_iff_nhds`.
-  obtain ⟨g', hg'alg, hagree⟩ : ∃ (g' : HahnSeries ℚ (𝔽ᵃ_[p])), IsAlgebraic 𝔽ᵃ_[p] g' ∧
+  obtain ⟨g', hg'alg, hagree⟩ : ∃ (g' : HahnSeries ℚ (𝔽ᵃ_[p])), IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ g' ∧
       ∀ q : ℚ, q ≤ (u : ℚ) → f.coeff q = g'.coeff q := by
     -- (A) the valuation ball is a neighbourhood of `f` (proved via the `singleWitness` element).
     have hnhds : {h : 𝕃_[p] | (((u : ℚ) : WithTop ℚ)) < FormalizedSparse.val p (f - h)} ∈ nhds f :=
@@ -737,11 +699,10 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
     have h2 : g.coeff q = g'.coeff q := by
       rw [show g.coeff = (exists_canonical_expansion g).choose.val from rfl, hg'coeff]
     rw [h1, h2]
-  -- Step 5 (final assembly): `g'.coeff` is QTR by Proposition 6.3 (after lifting algebraicity to
-  -- `𝔽ᵃ_[p]⸨X⸩`); its restriction to `(-∞, u]` is QTR by Lemma 6.7; and that restriction is
+  -- Step 5 (final assembly): `g'.coeff` is QTR by Proposition 6.3; its restriction to `(-∞, u]`
+  -- is QTR by Lemma 6.7; and that restriction is
   -- exactly `F_f` since `F_f` agrees with `g'.coeff` below `u` and vanishes above it.
-  obtain ⟨a, b, c, M, N, hg'QTR⟩ :=
-    (isAlgebraic_iff_isQTR g').mp (isAlgebraic_LaurentSeries_of_isAlgebraic_constants hg'alg)
+  obtain ⟨a, b, c, M, N, hg'QTR⟩ := (isAlgebraic_iff_isQTR g').mp hg'alg
   have hrestr := isQTR_restrict hg'QTR u
   have hfeq : f.coeff = fun q => if q ≤ (u : ℚ) then g'.coeff q else 0 := by
     funext q
