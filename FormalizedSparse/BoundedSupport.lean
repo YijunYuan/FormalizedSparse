@@ -37,7 +37,7 @@ p-adic, Hahn series, bounded support, sparse, order type
 
 namespace FormalizedSparse
 
-open RayDecomposition
+open TrustworthyKedlaya RayDecomposition
 
 /-! ## Infrastructure for `isSparse_deltas` (Lemma 6.21)
 
@@ -348,7 +348,7 @@ open Sparse in
 Let `N ≥ 1`, `r`, and `δ : Fin r → ℚ` with each `δ i` a nonzero rational in `[0,1)`
 having a finite base-`p` expansion (the §6 finsupp digit model `d : ℕ →₀ ℕ`, where
 `d j` = digit `q_{j+1}`, `d j < p`, value `∑ d j · p^{-(j+1)}` — same model as
-`Kedlaya.Sabc` / `RayDecomposition.Sabc_m`). Then
+`TrustworthyKedlaya.Sabc` / `RayDecomposition.Sabc_m`). Then
 `W = { δ i · p^{-N·k} : i, k ≥ 0 }` is `IsSparse p`. -/
 theorem isSparse_deltas {p : ℕ} [Fact (Nat.Prime p)] (N : ℕ+) (r : ℕ) (hr : 0 < r)
     (δ : Fin r → ℚ)

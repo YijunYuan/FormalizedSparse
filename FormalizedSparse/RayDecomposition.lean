@@ -32,7 +32,7 @@ QTR, ray decomposition, p-adic, Hahn series, bounded support
 
 namespace FormalizedSparse
 
-open Kedlaya
+open TrustworthyKedlaya
 open QuasiTwistRecurrent
 
 /-!

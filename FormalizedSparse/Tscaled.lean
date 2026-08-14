@@ -5,7 +5,7 @@ Authors: Shanwen Wang, Yijun Yuan
 -/
 module
 
-public import FormalizedSparse.References.PAdicHahnSeries
+public import TrustworthyKedlaya.PAdicHahnSeries
 public import Mathlib.RingTheory.AdjoinRoot
 public import Mathlib.RingTheory.Localization.Finiteness
 public import Mathlib.RingTheory.Polynomial.Eisenstein.Basic
@@ -42,6 +42,8 @@ p-adic, Hahn series, T-scaled, adjoin root, null series
 open WittVector
 
 namespace FormalizedSparse
+
+open TrustworthyKedlaya
 
 namespace TScaled
 

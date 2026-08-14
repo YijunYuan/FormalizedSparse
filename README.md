@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/YijunYuan/FormalizedSparse/actions/workflows/lean_action_ci.yml/badge.svg)
 [![Lean](https://img.shields.io/badge/Lean-4.33.0-5C2D91)](https://leanprover.github.io)
-[![mathlib](https://img.shields.io/badge/mathlib-v4.33.0-5C2D91)](https://github.com/leanprover-community/mathlib4)
+[![mathlib](https://img.shields.io/badge/mathlib-db584cd6d46c92f209a44c0f1c829460d327499d-5C2D91)](https://github.com/leanprover-community/mathlib4)
 
 [![Graph](https://img.shields.io/badge/Dependency_graph-100000?style=for-the-badge&logo=GitHub&logoColor=white&labelColor=black&color=black)](https://yijunyuan.github.io/lean-graph/?url=https://raw.githubusercontent.com/YijunYuan/FormalizedSparse/refs/heads/4.33.0/FormalizedSparse.json#dark)
 
@@ -16,15 +16,20 @@ The formalization covers every definition, lemma, proposition, theorem, and coro
 
 ## Project Structure
 
+The foundational material (§2) and Kedlaya's external results (§6) live in the
+[TrustworthyKedlaya](https://github.com/YijunYuan/TrustworthyKedlaya) project, on which this
+project depends. TrustworthyKedlaya fully formalizes Kedlaya's theorems, so nothing in the
+development is admitted.
+
 | File | Paper § | Description |
 |------|---------|-------------|
-| `FormalizedSparse/References/Miscellaneous.lean` | — | Helper: `WithZeroRat.toNNReal` for the p-adic absolute value |
-| `FormalizedSparse/References/WittVector.lean` | §2 | ℚᵘⁿ_[p] via Witt vectors, Teichmüller lift, valuation topology |
-| `FormalizedSparse/References/PAdicHahnSeries.lean` | §2 | 𝕃_[p] as W(𝔽ᵃ_[p])((t^ℚ)) / null series, coefficients, support well-orderedness |
+| `TrustworthyKedlaya/Miscellaneous.lean` (dependency) | — | Helper: `WithZeroRat.toNNReal` for the p-adic absolute value |
+| `TrustworthyKedlaya/WittVector.lean` (dependency) | §2 | ℚᵘⁿ_[p] via Witt vectors, Teichmüller lift, valuation topology |
+| `TrustworthyKedlaya/PAdicHahnSeries.lean` (dependency) | §2 | 𝕃_[p] as W(𝔽ᵃ_[p])((t^ℚ)) / null series, coefficients, support well-orderedness |
 | `FormalizedSparse/Sparse.lean` | §3 | Digit series, (c,n)-sparseness, sparseness of disjoint-digit sets |
 | `FormalizedSparse/Tscaled.lean` | §4 | T-scaled realization of 𝕃_[p]: adjoining p^(1/T), T-null-series, isomorphism 𝕃_[p] ≅ W(𝔽ᵃ_[p])[p^(1/T)]((t^ℚ))/N_T |
 | `FormalizedSparse/MainTheorem.lean` | §5 | Main theorem: sparse support ⇒ transcendental over ℚᵘⁿ_[p] |
-| `FormalizedSparse/References/Kedlaya.lean` | §6 | External results of Kedlaya used as black boxes (the only admitted statements) |
+| `TrustworthyKedlaya/Kedlaya.lean` (dependency) | §6 | External results of Kedlaya, fully proved in TrustworthyKedlaya |
 | `FormalizedSparse/QuasiTwistRecurrent.lean` | §6.1 | Quasi-twist-recurrent (QTR) functions and Kedlaya's integrality criterion |
 | `FormalizedSparse/RayDecomposition.lean` | §6.2 | Ray decomposition of bounded QTR sets |
 | `FormalizedSparse/BoundedSupport.lean` | §6.3 | Sparse representatives and finiteness of bounded QTR supports (the application) |
@@ -69,14 +74,16 @@ The formalization covers every definition, lemma, proposition, theorem, and coro
 Declarations that correspond to a stated item of the paper live at the top level of the
 `FormalizedSparse` namespace; formalization-internal helper lemmas are placed in a sub-namespace
 named after the file's section (`QuasiTwistRecurrent`, `RayDecomposition`, `BoundedSupport`). The
-§2–§4 files (`WittVector`, `PAdicHahnSeries`, `Sparse`, `Tscaled`) instead keep all of their
-content inside a single concept namespace (`QpUn`, `pAdicHahnSeries`, `Sparse`, `TScaled`), which
-enables mathlib-style dot notation such as `d.norm` and `d.Psi`.
+§3–§4 files (`Sparse`, `Tscaled`) instead keep all of their content inside a single concept
+namespace (`Sparse`, `TScaled`), which enables mathlib-style dot notation such as `d.norm` and
+`d.Psi`; the §2 material (`WittVector`, `PAdicHahnSeries`) follows the same convention inside the
+`TrustworthyKedlaya` namespace of the dependency.
 
 ## Formalization Statistics
 
-- ~24,000 lines of Lean code
-- All results of the paper are **fully formalized**. The only admitted statements are three external
-  results of Kedlaya in `References/Kedlaya.lean`, which are cited and used as black boxes rather
-  than reproved.
-- Builds against Lean 4.33.0 and mathlib v4.33.0
+- ~19,000 lines of Lean code (plus ~26000 lines of Lean code in the TrustworthyKedlaya dependency)
+- All results of the paper are **fully formalized**. Kedlaya's external results, formerly admitted
+  as black boxes, are now fully proved in the
+  [TrustworthyKedlaya](https://github.com/YijunYuan/TrustworthyKedlaya) dependency, so the whole
+  development is free of `admit`/`sorry`.
+- Builds against Lean 4.33.0 and mathlib (commit db584cd6d46c92f209a44c0f1c829460d327499d)

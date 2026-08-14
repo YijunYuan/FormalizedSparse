@@ -5,7 +5,7 @@ Authors: Shanwen Wang, Yijun Yuan
 -/
 module
 
-public import FormalizedSparse.References.Kedlaya
+public import TrustworthyKedlaya.Kedlaya
 
 /-!
 # Quasi-twist-recurrent functions
@@ -28,10 +28,11 @@ proves, via Kedlaya's integrality criterion, that the coefficient function of a 
 
 ## Implementation notes
 
-The two external inputs are Kedlaya's results, admitted in `FormalizedSparse.References.Kedlaya`:
-Theorem 6.1 is `kedlaya_2001a_theorem15` and Theorem 6.4 is `kedlaya_2017_theorem13_4`. These are
-faithful translations of Kedlaya's theorems; where Kedlaya writes *integral* we use *algebraic*, as
-the two notions coincide over a field.
+The two external inputs are Kedlaya's results, fully formalized in the `TrustworthyKedlaya`
+project: Theorem 6.1 is `TrustworthyKedlaya.kedlaya_2001a_theorem15` and Theorem 6.4 is
+`TrustworthyKedlaya.kedlaya_2017_theorem13_4`. These are faithful translations of Kedlaya's
+theorems; where Kedlaya writes *integral* we use *algebraic*, as the two notions coincide over a
+field.
 
 ## Tags
 
@@ -42,7 +43,7 @@ quasi-twist-recurrent, QTR, p-adic, Hahn series, bounded support
 
 namespace FormalizedSparse
 
-open LaurentSeries
+open TrustworthyKedlaya LaurentSeries
 
 /-- **Definition 6.2: quasi-twist-recurrent (QTR) functions.**
 
@@ -51,12 +52,12 @@ A function `x : ℚ → 𝔽ᵃ_[p]` is *quasi-twist-recurrent* with respect to 
 satisfying two conditions.
 
 The base-`p` digit string `0.q₁⋯qₙ⋯ = ∑_{i≥1} qᵢ p^{-i}` is modelled exactly as in
-`Kedlaya.Sabc`: a finitely-supported `d : ℕ →₀ ℕ` with `d i` the digit `q_{i+1}`, value
+`TrustworthyKedlaya.Sabc`: a finitely-supported `d : ℕ →₀ ℕ` with `d i` the digit `q_{i+1}`, value
 `∑ i, d i * p^{-(i+1)}`, digit bound `∑ i, d i ≤ c` and `d i < p`.
 
-1. (support bound) The support is contained in `S_{a,b,c} = Kedlaya.Sabc p a b c`. This is the
-   condition that for every `q ∈ Supp x`, writing `a q = w - 0.q₁⋯qₙ⋯`, one has `w ≥ -b` and
-   `∑ qₙ ≤ c`.
+1. (support bound) The support is contained in `S_{a,b,c} = TrustworthyKedlaya.Sabc p a b c`.
+   This is the condition that for every `q ∈ Supp x`, writing `a q = w - 0.q₁⋯qₙ⋯`, one has
+   `w ≥ -b` and `∑ qₙ ≤ c`.
 
 2. (recurrence) For every integer `w ≥ -b` and every rational `q = (1/a)(w - ∑ d i p^{-(i+1)})`
    with `d i < p` and `∑ d i ≤ c`, if the digit string has `M` consecutive zeros — i.e.
@@ -69,7 +70,7 @@ def IsQTR {p : ℕ} [Fact (Nat.Prime p)] (x : ℚ → 𝔽ᵃ_[p])
   -- The support is a well-ordered subset of `ℚ`.
   (Function.support x).IsWF ∧
   -- Condition (1): the support is contained in `S_{a,b,c}`.
-  (Function.support x ⊆ Kedlaya.Sabc p a b c) ∧
+  (Function.support x ⊆ TrustworthyKedlaya.Sabc p a b c) ∧
   -- Condition (2): the `M`-zero-run ⇒ `N`-zero-insertion recurrence.
   ∀ (w : ℤ), -(b : ℤ) ≤ w → ∀ (d : ℕ →₀ ℕ), (∀ i, d i < p) →
       (d.sum fun _ v => v) ≤ c →
@@ -90,7 +91,7 @@ This is what lets Kedlaya's twist-sequence periodicity be read off as the QTR di
 recurrence (and vice versa). -/
 lemma twistSeq_eq_coeff {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (𝔽ᵃ_[p]))
     (m : ℤ) (a : ℕ+) (j : ℕ) (dig : ℕ →₀ ℕ) (n : ℕ) :
-    Kedlaya.twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig n
+    TrustworthyKedlaya.twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig n
       = x.coeff ((1 / (a : ℚ)) * ((m : ℚ) -
           (Finsupp.mapDomain (fun i => if i < j - 1 then i else i + n) dig).sum
             fun i v => (v : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ)))) := by
@@ -140,7 +141,7 @@ lemma twistSeq_eq_coeff {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (𝔽
       rw [hsi]
       rw [show (-(((i + n : ℕ) : ℤ) + 1)) = (-(((i + n : ℕ) : ℤ)) + -1) by ring, hpow]
       ring
-  simp only [Kedlaya.twistSeq]
+  simp only [TrustworthyKedlaya.twistSeq]
   congr 1
   rw [hDV]; ring
 
@@ -217,8 +218,8 @@ lemma recurrence_of_twist {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (�
     (htwist : ∀ m : ℤ, m ≥ -(b : ℤ) →
         ∀ (j : ℕ) (dig : ℕ →₀ ℕ), 0 < j → (∀ i, dig i < p) → (dig.sum fun _ v => v) ≤ c →
           ∀ n : ℕ, (M : ℕ) ≤ n →
-            Kedlaya.twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig (n + (N : ℕ))
-              = Kedlaya.twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig n) :
+            twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig (n + (N : ℕ))
+              = twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig n) :
     ∀ (w : ℤ), -(b : ℤ) ≤ w → ∀ (d : ℕ →₀ ℕ), (∀ i, d i < p) → (d.sum fun _ v => v) ≤ c →
       ∀ (k : ℕ), (∀ i, k ≤ i → i < k + (M : ℕ) → d i = 0) →
         x.coeff ((1 / (a : ℚ)) * ((w : ℚ) - d.sum fun i v => (v : ℚ) * (p : ℚ) ^ (-(i + 1 : ℤ))))
@@ -282,8 +283,8 @@ lemma twist_of_recurrence {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ (�
     ∀ m : ℤ, m ≥ -(b : ℤ) →
         ∀ (j : ℕ) (dig : ℕ →₀ ℕ), 0 < j → (∀ i, dig i < p) → (dig.sum fun _ v => v) ≤ c →
           ∀ n : ℕ, (M : ℕ) ≤ n →
-            Kedlaya.twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig (n + (N : ℕ))
-              = Kedlaya.twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig n := by
+            twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig (n + (N : ℕ))
+              = twistSeq p (fun z => x.coeff (((m : ℚ) + z) / (a : ℚ))) j dig n := by
   intro m hm j dig hj hdp hdc n hn
   have hppos : 0 < p := (Fact.out : Nat.Prime p).pos
   -- The digit string `d` whose gap drives the recurrence.
@@ -321,7 +322,7 @@ theorem isAlgebraic_iff_isQTR {p : ℕ} [Fact (Nat.Prime p)] (x : HahnSeries ℚ
     IsAlgebraic (𝔽ᵃ_[p])⸨X⸩ x ↔
       ∃ (a : ℕ+) (b c : ℕ) (M N : ℕ+), IsQTR x.coeff a b c M N := by
   -- Over the field `𝔽ᵃ_[p]((t))`, algebraic = integral, then apply Kedlaya's `theorem15`.
-  rw [isAlgebraic_iff_isIntegral, Kedlaya.kedlaya_2001a_theorem15]
+  rw [isAlgebraic_iff_isIntegral, TrustworthyKedlaya.kedlaya_2001a_theorem15]
   constructor
   · -- Forward: Kedlaya's (support-bound ∧ twist-periodicity) ⟹ QTR.
     rintro ⟨a, b, c, hsupp, M, N, htwist⟩
@@ -458,20 +459,20 @@ its valuation `val p x` (the minimal support point). This is the elementary half
 valuation–coefficient dictionary: `val p x` is, by definition, `⊤` for `x = 0` and the
 `IsWF.min` of the support otherwise, so anything strictly below it is off the support. -/
 theorem coeff_eq_zero_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (x : 𝕃_[p]) (q : ℚ)
-    (hq : ((q : ℚ) : WithTop ℚ) < FormalizedSparse.val p x) : x.coeff q = 0 := by
+    (hq : ((q : ℚ) : WithTop ℚ) < TrustworthyKedlaya.val p x) : x.coeff q = 0 := by
   classical
   by_contra hne
   have hmem : q ∈ x.support := by
     simp only [pAdicHahnSeries.support, Function.mem_support]; exact hne
   have hx0 : x ≠ 0 := fun h => hne (by
     rw [h]; exact (pAdicHahnSeries.eq_zero_iff_coeff_zero 0).mp rfl q (h ▸ hmem))
-  have hval : FormalizedSparse.val p x = (((FormalizedSparse.support_IsPWO x).isWF.min
+  have hval : TrustworthyKedlaya.val p x = (((TrustworthyKedlaya.support_IsPWO x).isWF.min
       (support_nonempty_of_nonzero p x hx0) : ℚ) : WithTop ℚ) := by
-    rw [FormalizedSparse.val]
+    rw [TrustworthyKedlaya.val]
     change (if h : x = 0 then (⊤ : WithTop ℚ) else _) = _
     rw [dif_neg hx0]
   rw [hval, WithTop.coe_lt_coe] at hq
-  exact absurd ((FormalizedSparse.support_IsPWO x).isWF.min_le _ hmem) (not_le.mpr hq)
+  exact absurd ((TrustworthyKedlaya.support_IsPWO x).isWF.min_le _ hmem) (not_le.mpr hq)
 
 /-- **Obligation (B) of Proposition 6.6's Step 4.** If `val (f - h) > u`, then `F_f` and `F_h`
 agree on `(-∞, u]`. Contrapositive: take the minimal disagreement point `q₀ ≤ u`. The lifted
@@ -482,7 +483,7 @@ vanishes) and `C` vanishes (since `q' ≤ q₀ < val (f - h)` via `coeff_eq_zero
 `(Δ - C).coeff q₀ = teich (F_f q₀) - teich (F_h q₀)` is a unit. This contradicts
 `null_series_no_unit_leading`. -/
 lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u : ℤ)
-    (hval : (((u : ℚ) : WithTop ℚ)) < FormalizedSparse.val p (f - h)) :
+    (hval : (((u : ℚ) : WithTop ℚ)) < TrustworthyKedlaya.val p (f - h)) :
     ∀ q : ℚ, q ≤ (u : ℚ) → f.coeff q = h.coeff q := by
   classical
   by_contra hcon
@@ -498,8 +499,8 @@ lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u :
       obtain ⟨hf, hh⟩ := hc
       simp only [pAdicHahnSeries.support, Function.mem_support, not_not] at hf hh
       exact hq.2 (hf.trans hh.symm)
-    have hDwf : D.IsWF := ((FormalizedSparse.support_IsPWO f).isWF.union
-      (FormalizedSparse.support_IsPWO h).isWF).mono hDsub
+    have hDwf : D.IsWF := ((TrustworthyKedlaya.support_IsPWO f).isWF.union
+      (TrustworthyKedlaya.support_IsPWO h).isWF).mono hDsub
     obtain ⟨q₀, hq₀u, hq₀ne⟩ := hcon
     have hDne : D.Nonempty := ⟨q₀, hq₀u, hq₀ne⟩
     refine ⟨hDwf.min hDne, (hDwf.min_mem hDne).1, (hDwf.min_mem hDne).2, fun q' hq' => ?_⟩
@@ -508,10 +509,10 @@ lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u :
       (not_le.mpr hq')
   -- The lifted canonical difference `Δ` and the canonical representative `C` of `f - h`.
   set Δ : LiftedPAdicHahnSeries p :=
-    LiftedPAdicHahnSeries.fromCoeff f.coeff (FormalizedSparse.support_IsPWO f)
-      - LiftedPAdicHahnSeries.fromCoeff h.coeff (FormalizedSparse.support_IsPWO h) with hΔdef
+    LiftedPAdicHahnSeries.fromCoeff f.coeff (TrustworthyKedlaya.support_IsPWO f)
+      - LiftedPAdicHahnSeries.fromCoeff h.coeff (TrustworthyKedlaya.support_IsPWO h) with hΔdef
   set C : LiftedPAdicHahnSeries p :=
-    LiftedPAdicHahnSeries.fromCoeff (f - h).coeff (FormalizedSparse.support_IsPWO (f - h))
+    LiftedPAdicHahnSeries.fromCoeff (f - h).coeff (TrustworthyKedlaya.support_IsPWO (f - h))
     with hCdef
   -- Coefficient formulas: `Δ.coeff = teich∘f.coeff - teich∘h.coeff`, `C.coeff = teich∘(f-h).coeff`.
   have hΔcoeff : ∀ q : ℚ, Δ.coeff q
@@ -532,7 +533,7 @@ lemma coeff_agree_of_lt_val {p : ℕ} [Fact (Nat.Prime p)] (f h : 𝕃_[p]) (u :
   -- `C` vanishes at and below `q₀`: each such point is `< val (f - h)`.
   have hCvanish : ∀ q' : ℚ, q' ≤ q₀ → C.coeff q' = 0 := by
     intro q' hq'
-    have hlt : ((q' : ℚ) : WithTop ℚ) < FormalizedSparse.val p (f - h) :=
+    have hlt : ((q' : ℚ) : WithTop ℚ) < TrustworthyKedlaya.val p (f - h) :=
       lt_of_le_of_lt (by exact_mod_cast le_trans hq' hq₀u) hval
     rw [hCcoeff, coeff_eq_zero_of_lt_val (f - h) q' hlt, WittVector.teichmuller_zero]
   -- `(Δ - C).coeff q₀` is a unit (the Teichmüller difference at the disagreement point).
@@ -592,15 +593,15 @@ lemma singleWitness_ne {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) : singleWitness 
 
 /-- The valuation of `singleWitness u` is `u` (its unique support point). -/
 lemma singleWitness_val {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) :
-    FormalizedSparse.val p (singleWitness (p := p) u) = ((u : ℚ) : WithTop ℚ) := by
+    TrustworthyKedlaya.val p (singleWitness (p := p) u) = ((u : ℚ) : WithTop ℚ) := by
   classical
-  rw [FormalizedSparse.val]
+  rw [TrustworthyKedlaya.val]
   change (if h : singleWitness (p := p) u = 0 then (⊤ : WithTop ℚ) else _) = _
   rw [dif_neg (singleWitness_ne u)]
   congr 1
-  have hmem : (FormalizedSparse.support_IsPWO (singleWitness (p := p) u)).isWF.min
+  have hmem : (TrustworthyKedlaya.support_IsPWO (singleWitness (p := p) u)).isWF.min
       (support_nonempty_of_nonzero p _ (singleWitness_ne u)) ∈ (singleWitness (p := p) u).support :=
-    (FormalizedSparse.support_IsPWO (singleWitness (p := p) u)).isWF.min_mem _
+    (TrustworthyKedlaya.support_IsPWO (singleWitness (p := p) u)).isWF.min_mem _
   rw [singleWitness_support] at hmem
   exact Set.mem_singleton_iff.mp hmem
 
@@ -610,7 +611,7 @@ neighbourhood of `f` in `𝕃_[p]`. Proof: `singleWitness u` realises the value 
 `Valued.mem_nhds`/`Valued.v.restrict` apparatus) applies, and the order-dual encoding turns
 `Valued.v (f - h) < γ₀` back into `u < val (f - h)`. -/
 lemma ball_val_mem_nhds {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ) :
-    {h : 𝕃_[p] | (((u : ℚ) : WithTop ℚ)) < FormalizedSparse.val p (f - h)} ∈ nhds f := by
+    {h : 𝕃_[p] | (((u : ℚ) : WithTop ℚ)) < TrustworthyKedlaya.val p (f - h)} ∈ nhds f := by
   set γ₀ : Multiplicative (WithTop ℚ)ᵒᵈ :=
     Multiplicative.ofAdd (OrderDual.toDual (((u : ℚ)) : WithTop ℚ)) with hγ₀
   have hγ_ne : γ₀ ≠ 0 := by
@@ -622,7 +623,7 @@ lemma ball_val_mem_nhds {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ) 
   have hwv : Valued.v (singleWitness (p := p) (u : ℚ)) = γ₀ := by
     rw [show Valued.v (singleWitness (p := p) (u : ℚ))
         = Multiplicative.ofAdd (OrderDual.toDual
-            (FormalizedSparse.val p (singleWitness (p := p) (u : ℚ)))) from rfl,
+            (TrustworthyKedlaya.val p (singleWitness (p := p) (u : ℚ)))) from rfl,
       singleWitness_val, hγ₀]
   rw [Valued.mem_nhds]
   have hane : Valued.v.restrict (singleWitness (p := p) (u : ℚ)) ≠ 0 := by
@@ -633,7 +634,7 @@ lemma ball_val_mem_nhds {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p]) (u : ℤ) 
     at hy
   rw [show Valued.v (y - f) = Valued.v (f - y) from by rw [← Valuation.map_neg]; ring_nf] at hy
   rwa [show Valued.v (f - y)
-      = Multiplicative.ofAdd (OrderDual.toDual (FormalizedSparse.val p (f - y))) from rfl,
+      = Multiplicative.ofAdd (OrderDual.toDual (TrustworthyKedlaya.val p (f - y))) from rfl,
     hγ₀, Multiplicative.ofAdd_lt, OrderDual.toDual_lt_toDual] at hy
 
 end QuasiTwistRecurrent
@@ -653,7 +654,7 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
   -- Step 2: hence `f` is in the closure of the set of algebraic approximants (Kedlaya Theorem 6.4).
   have hf_clos : f ∈ closure { g : 𝕃_[p] | ∃ g' : HahnSeries ℚ (𝔽ᵃ_[p]),
       IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ g' ∧ (exists_canonical_expansion g).choose.val = g'.coeff} := by
-    rw [← Kedlaya.kedlaya_2017_theorem13_4 p]
+    rw [← TrustworthyKedlaya.kedlaya_2017_theorem13_4 p]
     exact subset_closure hf_int
   -- Step 3: bounded support gives an integer ceiling `u` with `Supp(f) ⊆ (-∞, u]`.
   obtain ⟨u, hu⟩ : ∃ u : ℤ, ∀ q ∈ f.support, q ≤ (u : ℚ) := by
@@ -684,10 +685,11 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
   obtain ⟨g', hg'alg, hagree⟩ : ∃ (g' : HahnSeries ℚ (𝔽ᵃ_[p])), IsAlgebraic 𝔽ᵃ_[p]⸨X⸩ g' ∧
       ∀ q : ℚ, q ≤ (u : ℚ) → f.coeff q = g'.coeff q := by
     -- (A) the valuation ball is a neighbourhood of `f` (proved via the `singleWitness` element).
-    have hnhds : {h : 𝕃_[p] | (((u : ℚ) : WithTop ℚ)) < FormalizedSparse.val p (f - h)} ∈ nhds f :=
+    have hnhds :
+        {h : 𝕃_[p] | (((u : ℚ) : WithTop ℚ)) < TrustworthyKedlaya.val p (f - h)} ∈ nhds f :=
       ball_val_mem_nhds f u
     -- (B) high valuation of the difference ⇒ coefficient agreement on `(-∞, u]`.
-    have hbridge : ∀ h : 𝕃_[p], (((u : ℚ) : WithTop ℚ)) < FormalizedSparse.val p (f - h) →
+    have hbridge : ∀ h : 𝕃_[p], (((u : ℚ) : WithTop ℚ)) < TrustworthyKedlaya.val p (f - h) →
         ∀ q : ℚ, q ≤ (u : ℚ) → f.coeff q = h.coeff q :=
       fun h hh => coeff_agree_of_lt_val f h u hh
     -- Plumbing: extract the approximant from the closure membership inside the ball.

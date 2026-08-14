@@ -14,5 +14,10 @@ name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.33.0"
 
+[[require]]
+name = "TrustworthyKedlaya"
+git = "https://github.com/YijunYuan/TrustworthyKedlaya.git"
+rev = "cd8779e4ed5e71c60b0aa6a7c296129eb8a0c6d4"
+
 [[lean_lib]]
 name = "FormalizedSparse"

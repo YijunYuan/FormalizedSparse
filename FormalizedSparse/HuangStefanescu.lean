@@ -44,6 +44,8 @@ p-adic, Hahn series, sparse support, algebraic, accumulation point
 
 namespace FormalizedSparse
 
+open TrustworthyKedlaya
+
 open Filter Topology in
 /-- If a real sequence `u` converges to `L`, then `L` is its only accumulation point: the derived
 set of `Set.range u` is contained in `{L}`. Indeed, if `x ≠ L`, choose disjoint neighbourhoods

@@ -51,7 +51,7 @@ private instance instCharZeroQpUnT (p : ℕ) [Fact (Nat.Prime p)] (T : ℕ+) :
 
 namespace FormalizedSparse
 
-open Sparse TScaled
+open TrustworthyKedlaya Sparse TScaled
 
 /-- `IsRepModZ A B` says that `A` is a **set of representatives of `B` modulo `ℤ`**: every element
 of `B` is congruent modulo `ℤ` to a unique element of `A`, and every element of `A` is congruent
