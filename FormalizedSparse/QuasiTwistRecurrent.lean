@@ -12,7 +12,7 @@ public import TrustworthyKedlaya.Kedlaya
 
 This file formalizes the subsection *Quasi-twist-recurrent functions* of Section 6 (Application:
 `p`-adic Hahn series with bounded support). It introduces quasi-twist-recurrent (QTR) functions and
-proves, via Kedlaya's integrality criterion, that the coefficient function of a `ℚᵘⁿ_[p]`-algebraic
+proves, via Kedlaya's integrality criterion, that the coefficient function of a `ℚᶜᵘⁿ_[p]`-algebraic
 `p`-adic Hahn series with bounded support is QTR.
 
 ## Main definitions
@@ -23,7 +23,7 @@ proves, via Kedlaya's integrality criterion, that the coefficient function of a 
 
 - `FormalizedSparse.isAlgebraic_iff_isQTR`: a Hahn series over `𝔽̄_p((t^ℚ))` is algebraic over
   `𝔽̄_p((t))` iff its coefficient function is QTR (Proposition 6.3).
-- `FormalizedSparse.isQTR_of_isAlgebraic`: the coefficient function of a `ℚᵘⁿ_[p]`-algebraic
+- `FormalizedSparse.isQTR_of_isAlgebraic`: the coefficient function of a `ℚᶜᵘⁿ_[p]`-algebraic
   `p`-adic Hahn series with bounded support is QTR (Proposition 6.6).
 
 ## Implementation notes
@@ -585,7 +585,7 @@ lemma singleWitness_ne {p : ℕ} [Fact (Nat.Prime p)] (u : ℚ) : singleWitness 
     have h0eq : pAdicHahnSeries.fromCoeff (0 : ℚ → Fpbar p) (by simp) = (0 : 𝕃_[p]) := by
       have hlift : LiftedPAdicHahnSeries.fromCoeff (p := p) 0 (by simp) = 0 := by
         simpa [LiftedPAdicHahnSeries.fromCoeff] using
-          Eq.symm (Pi.zero_def : (0 : ℚ → ℤᵘⁿ_[p]) = 0)
+          Eq.symm (Pi.zero_def : (0 : ℚ → ℤᶜᵘⁿ_[p]) = 0)
       simpa [pAdicHahnSeries.fromCoeff] using
         congrArg (Ideal.Quotient.mk (NullSeriesIdeal p)) hlift
     rw [← h0eq, hco]; rfl
@@ -642,14 +642,14 @@ end QuasiTwistRecurrent
 /-- **Proposition 6.6: the necessary condition for bounded `p`-adic Hahn series.**
 
 Let `f = ∑_{q∈ℚ} [f q] p^q ∈ 𝕃_[p]` be a `p`-adic Hahn series with bounded support. If `f` is
-algebraic over `ℚᵘⁿ_[p]`, then the coefficient function `F_f = f.coeff` is QTR. The proof goes
+algebraic over `ℚᶜᵘⁿ_[p]`, then the coefficient function `F_f = f.coeff` is QTR. The proof goes
 through `kedlaya_2017_theorem13_4` (Theorem 6.4), `isAlgebraic_iff_isQTR` (Proposition 6.3) and
 `isQTR_restrict` (Lemma 6.7). -/
 theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
-    (f : 𝕃_[p]) (halg : IsAlgebraic ℚᵘⁿ_[p] f) (hbdd : Bornology.IsBounded f.support) :
+    (f : 𝕃_[p]) (halg : IsAlgebraic ℚᶜᵘⁿ_[p] f) (hbdd : Bornology.IsBounded f.support) :
     ∃ (a : ℕ+) (b c : ℕ) (M N : ℕ+), IsQTR f.coeff a b c M N := by
-  -- Step 1: `f` lies in the integral closure of `ℚᵘⁿ_[p]` in `𝕃_[p]`.
-  have hf_int : f ∈ integralClosure ℚᵘⁿ_[p] 𝕃_[p] := by
+  -- Step 1: `f` lies in the integral closure of `ℚᶜᵘⁿ_[p]` in `𝕃_[p]`.
+  have hf_int : f ∈ integralClosure ℚᶜᵘⁿ_[p] 𝕃_[p] := by
     rw [mem_integralClosure_iff, ← isAlgebraic_iff_isIntegral]; exact halg
   -- Step 2: hence `f` is in the closure of the set of algebraic approximants (Kedlaya Theorem 6.4).
   have hf_clos : f ∈ closure { g : 𝕃_[p] | ∃ g' : HahnSeries ℚ (𝔽ᵃ_[p]),
@@ -715,5 +715,3 @@ theorem isQTR_of_isAlgebraic_of_bddSupport {p : ℕ} [Fact (Nat.Prime p)]
   exact ⟨a, b, c, M, N, hrestr⟩
 
 end FormalizedSparse
-
-

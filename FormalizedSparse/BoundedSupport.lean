@@ -895,7 +895,7 @@ end BoundedSupport
 
 open Sparse in
 /-- Lemma 6.22: bounded QTR support has a sparse representative set mod ℤ.
-Let `f : 𝕃_[p]` be `ℚᵘⁿ_[p]`-algebraic with bounded support admitting finitely many
+Let `f : 𝕃_[p]` be `ℚᶜᵘⁿ_[p]`-algebraic with bounded support admitting finitely many
 but at least one accumulation point. Then there exist `S' ⊆ f.support`, `lam : ℚ`,
 `T : ℕ+`, and a set `W` such that `f.support \ S'` is finite and `-T(S'-lam)` has a
 sparse nonzero set `W` of representatives mod ℤ.
@@ -907,7 +907,7 @@ P4 ALIGNMENT (do not reshape the representative set): the argument
 series `f₁·p^{-lam}` (whose support is `S'-lam`). Keep this exact set-builder so the
 prover plugs into `main_theorem` without a rewrite. -/
 theorem exists_sparse_rep {p : ℕ} [Fact (Nat.Prime p)] (f : 𝕃_[p])
-    (halg : IsAlgebraic ℚᵘⁿ_[p] f) (hbdd : Bornology.IsBounded f.support)
+    (halg : IsAlgebraic ℚᶜᵘⁿ_[p] f) (hbdd : Bornology.IsBounded f.support)
     (hacc_fin : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite)
     (hacc_ne : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Nonempty) :
     ∃ (S' : Set ℚ) (lam : ℚ) (T : ℕ+) (W : Set ℚ),
@@ -1306,7 +1306,7 @@ PWO because translation is an order-iso.  By uniqueness of the canonical expansi
 product, so its support computes the product's `support`. -/
 private theorem support_single_mul_shift {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) (x : 𝕃_[p]) :
     pAdicHahnSeries.support
-        ((Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))) * x)
+        ((Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]))) * x)
       = (fun q => q + c) '' x.support := by
   classical
   -- The shifted canonical coefficient family of `x`.
@@ -1329,7 +1329,7 @@ private theorem support_single_mul_shift {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ
     intro a b hab; simpa using add_le_add_right hab c
   -- The lift of `single c 1 * x` equals `Lifted.fromCoeff sShift`.
   have hlift_eq :
-      HahnSeries.single c (1 : ℤᵘⁿ_[p]) *
+      HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]) *
           LiftedPAdicHahnSeries.fromCoeff s hs_pwo
         = LiftedPAdicHahnSeries.fromCoeff sShift hsShift_pwo := by
     apply HahnSeries.ext
@@ -1341,11 +1341,11 @@ private theorem support_single_mul_shift {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ
     (pAdicHahnSeries.fromCoeff_of_coeff_eq_self x).symm
   -- Multiply through the quotient ring-hom and identify the product's canonical family.
   have hprod_eq :
-      (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))) * x
+      (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]))) * x
         = pAdicHahnSeries.fromCoeff sShift hsShift_pwo := by
     rw [hx_eq]
     change
-      (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))) *
+      (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]))) *
           (Ideal.Quotient.mk (NullSeriesIdeal p)) (LiftedPAdicHahnSeries.fromCoeff s hs_pwo)
         = (Ideal.Quotient.mk (NullSeriesIdeal p))
             (LiftedPAdicHahnSeries.fromCoeff sShift hsShift_pwo)
@@ -1357,13 +1357,13 @@ private theorem support_single_mul_shift {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ
   rfl
 
 open Bornology in
-/-- The monomial `single c 1` (image in `𝕃_[p]`) is algebraic over `ℚᵘⁿ_[p]`.  Its
+/-- The monomial `single c 1` (image in `𝕃_[p]`) is algebraic over `ℚᶜᵘⁿ_[p]`.  Its
 canonical-expansion support is the singleton `{c}` (its lift `single c 1` already has
 Teichmüller-rep coefficients — the value `1 = teichmuller 1`), hence finite, so
-`alg_of_fin_supp` + `alg_QpUn_of_alg_Qp` apply. -/
+`alg_of_fin_supp` + `alg_QpCUn_of_alg_Qp` apply. -/
 private theorem single_one_isAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) :
-    IsAlgebraic ℚᵘⁿ_[p]
-      (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))) := by
+    IsAlgebraic ℚᶜᵘⁿ_[p]
+      (Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]))) := by
   classical
   -- The canonical coefficient family of the monomial is `Pi.single c 1`, supported on `{c}`.
   set t : ℚ → Fpbar p := Pi.single c (1 : Fpbar p) with ht_def
@@ -1371,10 +1371,10 @@ private theorem single_one_isAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) 
     rw [ht_def]; exact Pi.support_single_subset
   have ht_pwo : (Function.support t).IsPWO := (Set.finite_singleton c).subset ht_supp |>.isPWO
   -- The lift `single c 1` equals `Lifted.fromCoeff t` (`teichmuller p 1 = 1`).
-  have hlift : HahnSeries.single c (1 : ℤᵘⁿ_[p]) = LiftedPAdicHahnSeries.fromCoeff t ht_pwo := by
+  have hlift : HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]) = LiftedPAdicHahnSeries.fromCoeff t ht_pwo := by
     apply HahnSeries.ext
     funext a
-    change (HahnSeries.single c (1 : ℤᵘⁿ_[p])).coeff a = (WittVector.teichmuller p) (t a)
+    change (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p])).coeff a = (WittVector.teichmuller p) (t a)
     by_cases hac : a = c
     · subst hac
       rw [HahnSeries.coeff_single_same, ht_def, Pi.single_eq_same, map_one]
@@ -1382,22 +1382,22 @@ private theorem single_one_isAlgebraic {p : ℕ} [Fact (Nat.Prime p)] (c : ℚ) 
         WittVector.teichmuller_zero]
   -- Hence the monomial `= fromCoeff t`, whose support is `Function.support t ⊆ {c}`, finite.
   have hmono_eq :
-      Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᵘⁿ_[p]))
+      Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p]))
         = pAdicHahnSeries.fromCoeff t ht_pwo := by
     rw [hlift]; rfl
   have hfin : (pAdicHahnSeries.support (Ideal.Quotient.mk (NullSeriesIdeal p)
-      (HahnSeries.single c (1 : ℤᵘⁿ_[p])))).Finite := by
+      (HahnSeries.single c (1 : ℤᶜᵘⁿ_[p])))).Finite := by
     rw [hmono_eq]
     change (Function.support (pAdicHahnSeries.fromCoeff t ht_pwo).coeff).Finite
     rw [pAdicHahnSeries.coeff_of_fromCoeff_eq_self t ht_pwo]
     exact (Set.finite_singleton c).subset ht_supp
-  -- Finite support ⟹ algebraic over ℚ_[p] ⟹ algebraic over ℚᵘⁿ_[p].
-  exact pAdicHahnSeries.alg_QpUn_of_alg_Qp p _ (pAdicHahnSeries.alg_of_fin_supp p _ hfin)
+  -- Finite support ⟹ algebraic over ℚ_[p] ⟹ algebraic over ℚᶜᵘⁿ_[p].
+  exact pAdicHahnSeries.alg_QpCUn_of_alg_Qp p _ (pAdicHahnSeries.alg_of_fin_supp p _ hfin)
 
 end BoundedSupport
 
 open Bornology in
-/-- **Theorem 6.23.** A `p`-adic Hahn series `f` that is algebraic over `ℚᵘⁿ_[p]`, whose support is
+/-- **Theorem 6.23.** A `p`-adic Hahn series `f` that is algebraic over `ℚᶜᵘⁿ_[p]`, whose support is
 bounded and has only finitely many accumulation points (measured as the ℝ-derived set of the support
 under `ℚ ↪ ℝ`), has finite support.
 
@@ -1407,7 +1407,7 @@ nonzero sparse set of representatives of `-T · S'` modulo `ℤ` for a cofinite 
 support, so
 the main transcendence theorem forces `f` to be transcendental — contradicting algebraicity. -/
 theorem finite_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime p)]
-  (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚᵘⁿ_[p] f) (hf2 : IsBounded f.support)
+  (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚᶜᵘⁿ_[p] f) (hf2 : IsBounded f.support)
   (hf3 : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite) :
   f.support.Finite := by
   -- Suppose, for contradiction, that the support is infinite.
@@ -1422,22 +1422,22 @@ theorem finite_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat
   -- Split `f = f_good + f_bad` along `support = S' ⊔ (support \ S')`.
   obtain ⟨f_good, f_bad, hf_decomp, hf_good_supp, hf_bad_supp_fin⟩ :=
     support_split_decomp f S' hS'sub hdiff_fin
-  -- `f_bad` (finite support) is algebraic over ℚ_p, hence over ℚᵘⁿ_p.
-  have hf_bad_alg : IsAlgebraic ℚᵘⁿ_[p] f_bad :=
-    pAdicHahnSeries.alg_QpUn_of_alg_Qp p f_bad
+  -- `f_bad` (finite support) is algebraic over ℚ_p, hence over ℚᶜᵘⁿ_p.
+  have hf_bad_alg : IsAlgebraic ℚᶜᵘⁿ_[p] f_bad :=
+    pAdicHahnSeries.alg_QpCUn_of_alg_Qp p f_bad
       (pAdicHahnSeries.alg_of_fin_supp p f_bad hf_bad_supp_fin)
-  -- Hence `f_good = f - f_bad` is algebraic over ℚᵘⁿ_p.
-  have hf_good_alg : IsAlgebraic ℚᵘⁿ_[p] f_good := by
+  -- Hence `f_good = f - f_bad` is algebraic over ℚᶜᵘⁿ_p.
+  have hf_good_alg : IsAlgebraic ℚᶜᵘⁿ_[p] f_good := by
     have hfg : f_good = f - f_bad := by rw [hf_decomp]; ring
     rw [hfg]; exact hf1.sub hf_bad_alg
   -- The shifted series `g = single (-lam) 1 · f_good` has support `S' - lam`.
-  set mono : 𝕃_[p] := Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single (-lam) (1 : ℤᵘⁿ_[p]))
-    with hmono
+  set mono : 𝕃_[p] :=
+    Ideal.Quotient.mk (NullSeriesIdeal p) (HahnSeries.single (-lam) (1 : ℤᶜᵘⁿ_[p])) with hmono
   set g : 𝕃_[p] := mono * f_good with hg
   have hg_supp : g.support = (fun q => q + (-lam)) '' f_good.support :=
     support_single_mul_shift (-lam) f_good
-  -- `g` is algebraic over ℚᵘⁿ_p (product of two algebraics).
-  have hg_alg : IsAlgebraic ℚᵘⁿ_[p] g :=
+  -- `g` is algebraic over ℚᶜᵘⁿ_p (product of two algebraics).
+  have hg_alg : IsAlgebraic ℚᶜᵘⁿ_[p] g :=
     (single_one_isAlgebraic (-lam)).mul hf_good_alg
   -- The `IsRepModZ` set of `g.support` matches the one produced by `exists_sparse_rep`.
   have hRep' : IsRepModZ W {x : ℚ | ∃ q ∈ g.support, -1 * (T : ℚ) * q = x} := by
@@ -1453,7 +1453,7 @@ theorem finite_support_of_qpun_algebraic_of_bounded_support {p : ℕ} [Fact (Nat
       · rintro ⟨q, hq, rfl⟩
         exact ⟨q + (-lam), ⟨q, hq, rfl⟩, by ring⟩
     rw [hset_eq]; exact hRep
-  -- `main_theorem` makes `g` transcendental over ℚᵘⁿ_p — contradiction.
+  -- `main_theorem` makes `g` transcendental over ℚᶜᵘⁿ_p — contradiction.
   exact (main_theorem p g T W hW_ne hW_sparse hRep') hg_alg
 
 open Bornology in
@@ -1462,13 +1462,13 @@ support is bounded and has only finitely many accumulation points (measured as t
 the support under `ℚ ↪ ℝ`, per Remark 1.11) has finite support.
 
 This is the `ℚ_[p]`-form of Theorem 6.23 (`finite_support_of_qpun_algebraic_of_bounded_support`):
-since `ℚ_[p] ⊆ ℚᵘⁿ_[p]`, algebraicity over `ℚ_[p]` upgrades to algebraicity over `ℚᵘⁿ_[p]` via
-`pAdicHahnSeries.alg_QpUn_of_alg_Qp`, and the `ℚᵘⁿ_[p]` statement then applies directly. -/
+since `ℚ_[p] ⊆ ℚᶜᵘⁿ_[p]`, algebraicity over `ℚ_[p]` upgrades to algebraicity over `ℚᶜᵘⁿ_[p]` via
+`pAdicHahnSeries.alg_QpCUn_of_alg_Qp`, and the `ℚᶜᵘⁿ_[p]` statement then applies directly. -/
 theorem finite_support_of_qp_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime p)]
   (f : 𝕃_[p]) (hf1 : IsAlgebraic ℚ_[p] f) (hf2 : IsBounded f.support)
   (hf3 : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite) :
   f.support.Finite := by
-  have halg_un : IsAlgebraic ℚᵘⁿ_[p] f := pAdicHahnSeries.alg_QpUn_of_alg_Qp p f hf1
+  have halg_un : IsAlgebraic ℚᶜᵘⁿ_[p] f := pAdicHahnSeries.alg_QpCUn_of_alg_Qp p f hf1
   exact finite_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hf3
 
 open Bornology in
@@ -1477,7 +1477,7 @@ algebraic over `ℚ_[p]` with bounded support, the set of accumulation points of
 ℝ via `ℚ ↪ ℝ`) is either empty or infinite — it can never be a nonempty finite set.
 
 This is the contrapositive of Theorem 6.23 read over ℝ: a nonempty finite ℝ-derived set would make
-`f` (which is `ℚ_[p]`-, hence `ℚᵘⁿ_[p]`-algebraic) have bounded support with finitely many
+`f` (which is `ℚ_[p]`-, hence `ℚᶜᵘⁿ_[p]`-algebraic) have bounded support with finitely many
 accumulation points, forcing `f.support` finite; but a finite set has empty ℝ-derived set, so the
 derived set cannot be nonempty and finite. -/
 theorem support_accpt_empty_or_infinite_of_qp_algebraic_of_bounded_support
@@ -1486,7 +1486,7 @@ theorem support_accpt_empty_or_infinite_of_qp_algebraic_of_bounded_support
   (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Infinite
   := by
   -- Contrapositive of Theorem 6.23 over ℝ.  If the ℝ-derived set is nonempty and finite,
-  -- then `f` (being ℚ_p-algebraic, hence ℚᵘⁿ_p-algebraic) has bounded support with
+  -- then `f` (being ℚ_p-algebraic, hence ℚᶜᵘⁿ_p-algebraic) has bounded support with
   -- finitely many ℝ-accumulation points, so Theorem 6.23 makes `f.support` finite; then
   -- its image is finite and has empty ℝ-derived set (ℝ is T₁) — contradicting nonempty.
   rcases Set.eq_empty_or_nonempty (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)) with hempty | hne
@@ -1494,8 +1494,8 @@ theorem support_accpt_empty_or_infinite_of_qp_algebraic_of_bounded_support
   · refine Or.inr ?_
     by_contra hnotinf
     rw [Set.not_infinite] at hnotinf
-    -- ℚ_p-algebraic ⟹ ℚᵘⁿ_p-algebraic, feed Theorem 6.23.
-    have halg_un : IsAlgebraic ℚᵘⁿ_[p] f := pAdicHahnSeries.alg_QpUn_of_alg_Qp p f hf1
+    -- ℚ_p-algebraic ⟹ ℚᶜᵘⁿ_p-algebraic, feed Theorem 6.23.
+    have halg_un : IsAlgebraic ℚᶜᵘⁿ_[p] f := pAdicHahnSeries.alg_QpCUn_of_alg_Qp p f hf1
     have hsupp_fin : f.support.Finite :=
       finite_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hnotinf
     -- A finite support has finite image; a finite set has empty ℝ-derived set.
@@ -1701,11 +1701,11 @@ theorem order_type_of_qp_algebraic_of_bounded_support {p : ℕ} [Fact (Nat.Prime
   -- Dichotomy on whether the intrinsic order type is `< ω²`.
   rcases lt_or_ge (typeLT f.support) (omega0 ^ 2) with hlt | hge
   · -- `typeLT < ω²`: the forward bridge gives finitely many ℝ-accumulation points, so by
-    -- Theorem 6.23 (via ℚᵘⁿ) the support is finite, hence `typeLT < ω`.
+    -- Theorem 6.23 (via ℚᶜᵘⁿ) the support is finite, hence `typeLT < ω`.
     refine Or.inl ?_
     have hfin_acc : (derivedSet ((Rat.cast : ℚ → ℝ) '' f.support)).Finite :=
       derivedSet_real_finite_of_typeLT_lt_omega0_sq f hlt
-    have halg_un : IsAlgebraic ℚᵘⁿ_[p] f := pAdicHahnSeries.alg_QpUn_of_alg_Qp p f hf1
+    have halg_un : IsAlgebraic ℚᶜᵘⁿ_[p] f := pAdicHahnSeries.alg_QpCUn_of_alg_Qp p f hf1
     have hsupp_fin : f.support.Finite :=
       finite_support_of_qpun_algebraic_of_bounded_support f halg_un hf2 hfin_acc
     -- A finite linear order has order type `< ω`.

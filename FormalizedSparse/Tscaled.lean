@@ -20,7 +20,7 @@ obtained by adjoining a `T`-th root `p^(1/T)` of `p`, and establishes the isomor
 
 ## Main definitions
 
-- `FormalizedSparse.TScaled.OQpUnT` (`ℤᵘⁿ_[p,T]`): the ring `W(𝔽ᵃ_[p])[p^(1/T)]` via `AdjoinRoot`.
+- `FormalizedSparse.TScaled.OQpCUnT` (`ℤᶜᵘⁿ_[p,T]`): the ring `W(𝔽ᵃ_[p])[p^(1/T)]` via `AdjoinRoot`.
 - `FormalizedSparse.TScaled.TScaledNullSeries`: the `T`-null-series ideal `N_T`.
 
 ## Main statements
@@ -30,7 +30,7 @@ obtained by adjoining a `T`-th root `p^(1/T)` of `p`, and establishes the isomor
 
 ## Notation
 
-- `ℤᵘⁿ_[p,T]`, `ℚᵘⁿ_[p,T]` for the `T`-scaled rings introduced here.
+- `ℤᶜᵘⁿ_[p,T]`, `ℚᶜᵘⁿ_[p,T]` for the `T`-scaled rings introduced here.
 
 ## Tags
 
@@ -49,25 +49,25 @@ namespace TScaled
 
 variable (p : ℕ) [Fact (Nat.Prime p)] (T : ℕ) [NeZero T]
 
-/-! ### The rings `ℤᵘⁿ_[p,T]` and `ℚᵘⁿ_[p,T]` -/
+/-! ### The rings `ℤᶜᵘⁿ_[p,T]` and `ℚᶜᵘⁿ_[p,T]` -/
 
-/-- The polynomial `X^T - p` over `ℤᵘⁿ_[p]`, used to adjoin a `T`-th root of `p`. -/
-noncomputable def TPoly : Polynomial (ℤᵘⁿ_[p]) :=
-  Polynomial.X ^ T - Polynomial.C ((p : ℕ) : ℤᵘⁿ_[p])
+/-- The polynomial `X^T - p` over `ℤᶜᵘⁿ_[p]`, used to adjoin a `T`-th root of `p`. -/
+noncomputable def TPoly : Polynomial (ℤᶜᵘⁿ_[p]) :=
+  Polynomial.X ^ T - Polynomial.C ((p : ℕ) : ℤᶜᵘⁿ_[p])
 
 /-- The ring `W(𝔽ₚ^⁻)[p^{1/T}]`, realised as `AdjoinRoot (X^T - p)`. -/
-abbrev OQpUnT : Type _ := AdjoinRoot (TPoly p T)
+abbrev OQpCUnT : Type _ := AdjoinRoot (TPoly p T)
 
-@[inherit_doc] notation "ℤᵘⁿ_[" p "," T "]" => OQpUnT p T
+@[inherit_doc] notation "ℤᶜᵘⁿ_[" p "," T "]" => OQpCUnT p T
 
-/-- The canonical root `p^{1/T}` of `X^T - p` inside `ℤᵘⁿ_[p,T]`. -/
-noncomputable def pInvT : ℤᵘⁿ_[p,T] := AdjoinRoot.root (TPoly p T)
+/-- The canonical root `p^{1/T}` of `X^T - p` inside `ℤᶜᵘⁿ_[p,T]`. -/
+noncomputable def pInvT : ℤᶜᵘⁿ_[p,T] := AdjoinRoot.root (TPoly p T)
 
 omit [NeZero T] in
 /-- The defining relation `(p^{1/T})^T = p`. -/
 lemma pInvT_pow_T :
     (pInvT p T) ^ T =
-      (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) ((p : ℕ) : ℤᵘⁿ_[p]) := by
+      (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) ((p : ℕ) : ℤᶜᵘⁿ_[p]) := by
   have h := AdjoinRoot.eval₂_root (TPoly p T)
   unfold TPoly at h
   rw [Polynomial.eval₂_sub, Polynomial.eval₂_pow, Polynomial.eval₂_X,
@@ -85,19 +85,19 @@ omit [NeZero T] in
 private lemma TPoly_natDegree : (TPoly p T).natDegree = T := by
   unfold TPoly; exact Polynomial.natDegree_X_pow_sub_C
 
-/-- `TPoly p T` is Eisenstein at the maximal ideal of `ℤᵘⁿ_[p]`. -/
+/-- `TPoly p T` is Eisenstein at the maximal ideal of `ℤᶜᵘⁿ_[p]`. -/
 private lemma TPoly_isEisensteinAt :
-    (TPoly p T).IsEisensteinAt (IsLocalRing.maximalIdeal (ℤᵘⁿ_[p])) := by
-  have hp_ne : ((p : ℕ) : ℤᵘⁿ_[p]) ≠ 0 := WittVector.p_nonzero p _
+    (TPoly p T).IsEisensteinAt (IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p])) := by
+  have hp_ne : ((p : ℕ) : ℤᶜᵘⁿ_[p]) ≠ 0 := WittVector.p_nonzero p _
   have hT_ne : T ≠ 0 := NeZero.ne T
-  have hM_eq : IsLocalRing.maximalIdeal (ℤᵘⁿ_[p]) =
-      Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
+  have hM_eq : IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p]) =
+      Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
   refine (TPoly_monic p T).isEisensteinAt_of_mem_of_notMem ?_ ?_ ?_
   · exact (IsLocalRing.maximalIdeal.isMaximal _).ne_top
   · intro n hn
     rw [TPoly_natDegree] at hn
     have hcoeff : (TPoly p T).coeff n =
-        (if n = T then 1 else 0) - (if n = 0 then ((p : ℕ) : ℤᵘⁿ_[p]) else 0) := by
+        (if n = T then 1 else 0) - (if n = 0 then ((p : ℕ) : ℤᶜᵘⁿ_[p]) else 0) := by
       unfold TPoly
       rw [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_C]
     rw [hcoeff, hM_eq]
@@ -106,35 +106,35 @@ private lemma TPoly_isEisensteinAt :
     · subst hn0
       have hT0 : (0 : ℕ) ≠ T := fun h => hT_ne h.symm
       simp only [hT0, if_false, if_true, zero_sub]
-      exact (Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])}).neg_mem
+      exact (Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])}).neg_mem
         (Ideal.subset_span (Set.mem_singleton _))
     · simp [hnT, hn0]
   · -- coeff 0 of `X^T - C p` is `-p`; show `-p ∉ maximalIdeal^2`.
-    have h0 : (TPoly p T).coeff 0 = -((p : ℕ) : ℤᵘⁿ_[p]) := by
+    have h0 : (TPoly p T).coeff 0 = -((p : ℕ) : ℤᶜᵘⁿ_[p]) := by
       unfold TPoly
       rw [Polynomial.coeff_sub, Polynomial.coeff_X_pow, Polynomial.coeff_C]
       simp [hT_ne.symm]
     rw [h0]
     intro hmem
-    have hmem' : ((p : ℕ) : ℤᵘⁿ_[p]) ∈
-        (IsLocalRing.maximalIdeal (ℤᵘⁿ_[p])) ^ 2 := by
-      have h := (IsLocalRing.maximalIdeal (ℤᵘⁿ_[p]) ^ 2).neg_mem hmem
+    have hmem' : ((p : ℕ) : ℤᶜᵘⁿ_[p]) ∈
+        (IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p])) ^ 2 := by
+      have h := (IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p]) ^ 2).neg_mem hmem
       simpa using h
     rw [hM_eq, Ideal.span_singleton_pow,
       Ideal.mem_span_singleton] at hmem'
     obtain ⟨r, hr⟩ := hmem'
     -- p = p^2 * r ⇒ p * (1 - p*r) = 0 ⇒ since p ≠ 0, p*r = 1, so p is a unit, contradiction.
-    have hzero : ((p : ℕ) : ℤᵘⁿ_[p]) * (1 - ((p : ℕ) : ℤᵘⁿ_[p]) * r) = 0 := by
-      have : ((p : ℕ) : ℤᵘⁿ_[p]) - ((p : ℕ) : ℤᵘⁿ_[p]) ^ 2 * r = 0 := by
+    have hzero : ((p : ℕ) : ℤᶜᵘⁿ_[p]) * (1 - ((p : ℕ) : ℤᶜᵘⁿ_[p]) * r) = 0 := by
+      have : ((p : ℕ) : ℤᶜᵘⁿ_[p]) - ((p : ℕ) : ℤᶜᵘⁿ_[p]) ^ 2 * r = 0 := by
         rw [← hr]; ring
       linear_combination this
     rcases mul_eq_zero.mp hzero with h | h
     · exact hp_ne h
-    · have hpr : ((p : ℕ) : ℤᵘⁿ_[p]) * r = 1 := by
-        have hh : 1 - ((p : ℕ) : ℤᵘⁿ_[p]) * r = 0 := h
+    · have hpr : ((p : ℕ) : ℤᶜᵘⁿ_[p]) * r = 1 := by
+        have hh : 1 - ((p : ℕ) : ℤᶜᵘⁿ_[p]) * r = 0 := h
         linear_combination -hh
-      have hunit : IsUnit ((p : ℕ) : ℤᵘⁿ_[p]) :=
-        IsUnit.of_mul_eq_one (a := ((p : ℕ) : ℤᵘⁿ_[p])) r hpr
+      have hunit : IsUnit ((p : ℕ) : ℤᶜᵘⁿ_[p]) :=
+        IsUnit.of_mul_eq_one (a := ((p : ℕ) : ℤᶜᵘⁿ_[p])) r hpr
       exact (WittVector.irreducible p).not_isUnit hunit
 
 /-- `TPoly p T` is irreducible. -/
@@ -144,45 +144,45 @@ private lemma TPoly_irreducible : Irreducible (TPoly p T) := by
   · exact (TPoly_monic p T).isPrimitive
   · rw [TPoly_natDegree]; exact (NeZero.pos T)
 
-/-- `ℤᵘⁿ_[p,T]` is a domain.
-The argument: `X^T - p` is Eisenstein at the maximal ideal of the DVR `ℤᵘⁿ_[p]`, hence
+/-- `ℤᶜᵘⁿ_[p,T]` is a domain.
+The argument: `X^T - p` is Eisenstein at the maximal ideal of the DVR `ℤᶜᵘⁿ_[p]`, hence
 irreducible, hence the quotient `AdjoinRoot (X^T - p)` is an integral domain.  This is the same
 content as Lemma 4.1. -/
-instance instIsDomainOQpUnT : IsDomain (ℤᵘⁿ_[p,T]) := by
+instance instIsDomainOQpCUnT : IsDomain (ℤᶜᵘⁿ_[p,T]) := by
   apply AdjoinRoot.isDomain_of_prime
   exact (UniqueFactorizationMonoid.irreducible_iff_prime).mp (TPoly_irreducible p T)
 
-/-! ### Lemma 4.1 (continued) — `ℤᵘⁿ_[p,T]` is a discrete valuation ring -/
+/-! ### Lemma 4.1 (continued) — `ℤᶜᵘⁿ_[p,T]` is a discrete valuation ring -/
 
 /-- `pInvT p T` is nonzero. Proof: `(pInvT)^T = algebraMap p` is nonzero in `S`, since `p` is
 nonzero in `R` and `algebraMap` is injective. -/
 private lemma pInvT_ne_zero : pInvT p T ≠ 0 := by
   intro h
-  have h1 : (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) ((p : ℕ) : ℤᵘⁿ_[p]) = 0 := by
+  have h1 : (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) ((p : ℕ) : ℤᶜᵘⁿ_[p]) = 0 := by
     rw [← pInvT_pow_T, h, zero_pow (NeZero.ne T)]
-  have hinj : Function.Injective (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) := by
+  have hinj : Function.Injective (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) := by
     rw [AdjoinRoot.algebraMap_eq]
     apply AdjoinRoot.of.injective_of_degree_ne_zero
     rw [Polynomial.degree_eq_natDegree (TPoly_monic p T).ne_zero, TPoly_natDegree]
     exact_mod_cast NeZero.ne T
-  have h2 : ((p : ℕ) : ℤᵘⁿ_[p]) = 0 :=
+  have h2 : ((p : ℕ) : ℤᶜᵘⁿ_[p]) = 0 :=
     hinj (by rw [h1, map_zero])
   exact WittVector.p_nonzero p _ h2
 
-/-- The residue map `ρ : ℤᵘⁿ_[p,T] →+* IsLocalRing.ResidueField (ℤᵘⁿ_[p])` obtained
-by lifting the quotient `ℤᵘⁿ_[p] →+* (ℤᵘⁿ_[p])/m` along the relation `(pInvT)^T = p`.
+/-- The residue map `ρ : ℤᶜᵘⁿ_[p,T] →+* IsLocalRing.ResidueField (ℤᶜᵘⁿ_[p])` obtained
+by lifting the quotient `ℤᶜᵘⁿ_[p] →+* (ℤᶜᵘⁿ_[p])/m` along the relation `(pInvT)^T = p`.
 Sends `pInvT` to `0`. -/
 private noncomputable def TResidue :
-    ℤᵘⁿ_[p,T] →+* IsLocalRing.ResidueField (ℤᵘⁿ_[p]) :=
-  AdjoinRoot.lift (IsLocalRing.residue (ℤᵘⁿ_[p])) 0 (by
+    ℤᶜᵘⁿ_[p,T] →+* IsLocalRing.ResidueField (ℤᶜᵘⁿ_[p]) :=
+  AdjoinRoot.lift (IsLocalRing.residue (ℤᶜᵘⁿ_[p])) 0 (by
     -- Show `(TPoly p T).eval₂ residue 0 = 0`.
     unfold TPoly
     rw [Polynomial.eval₂_sub, Polynomial.eval₂_pow, Polynomial.eval₂_X, Polynomial.eval₂_C,
       zero_pow (NeZero.ne T), zero_sub, neg_eq_zero]
     -- The residue of `p` in the residue field is zero because `p` lies in the max ideal.
-    have hM_eq : IsLocalRing.maximalIdeal (ℤᵘⁿ_[p]) =
-        Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
-    change (IsLocalRing.residue (ℤᵘⁿ_[p])) ((p : ℕ) : ℤᵘⁿ_[p]) = 0
+    have hM_eq : IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p]) =
+        Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
+    change (IsLocalRing.residue (ℤᶜᵘⁿ_[p])) ((p : ℕ) : ℤᶜᵘⁿ_[p]) = 0
     rw [IsLocalRing.residue_eq_zero_iff, hM_eq]
     exact Ideal.subset_span (Set.mem_singleton _))
 
@@ -190,49 +190,49 @@ private lemma TResidue_pInvT : TResidue p T (pInvT p T) = 0 := by
   unfold TResidue pInvT
   exact AdjoinRoot.lift_root _
 
-private lemma TResidue_of (a : ℤᵘⁿ_[p]) :
-    TResidue p T (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) a) =
-      IsLocalRing.residue (ℤᵘⁿ_[p]) a := by
+private lemma TResidue_of (a : ℤᶜᵘⁿ_[p]) :
+    TResidue p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) a) =
+      IsLocalRing.residue (ℤᶜᵘⁿ_[p]) a := by
   unfold TResidue
   rw [AdjoinRoot.algebraMap_eq, AdjoinRoot.lift_of]
 
 /-- The kernel of the residue map equals the principal ideal generated by `pInvT`.
 This is the power-basis kernel calculation. -/
-private lemma TResidue_eq_zero_iff (x : ℤᵘⁿ_[p,T]) :
+private lemma TResidue_eq_zero_iff (x : ℤᶜᵘⁿ_[p,T]) :
     TResidue p T x = 0 ↔ pInvT p T ∣ x := by
   constructor
   · intro hx
     set f := TPoly p T with hf_def
     have hf_monic : f.Monic := TPoly_monic p T
-    set q : Polynomial (ℤᵘⁿ_[p]) := AdjoinRoot.modByMonicHom hf_monic x with hq_def
+    set q : Polynomial (ℤᶜᵘⁿ_[p]) := AdjoinRoot.modByMonicHom hf_monic x with hq_def
     have hq : AdjoinRoot.mk f q = x := AdjoinRoot.mk_leftInverse hf_monic x
     have hRes : TResidue p T x =
-        IsLocalRing.residue (ℤᵘⁿ_[p]) (q.coeff 0) := by
+        IsLocalRing.residue (ℤᶜᵘⁿ_[p]) (q.coeff 0) := by
       rw [← hq]
-      change AdjoinRoot.lift (IsLocalRing.residue (ℤᵘⁿ_[p])) 0 _ (AdjoinRoot.mk f q) = _
+      change AdjoinRoot.lift (IsLocalRing.residue (ℤᶜᵘⁿ_[p])) 0 _ (AdjoinRoot.mk f q) = _
       rw [AdjoinRoot.lift_mk, Polynomial.eval₂_eq_eval_map,
         ← Polynomial.coeff_zero_eq_eval_zero, Polynomial.coeff_map]
     rw [hRes, IsLocalRing.residue_eq_zero_iff] at hx
-    have hM_eq : IsLocalRing.maximalIdeal (ℤᵘⁿ_[p]) =
-        Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
+    have hM_eq : IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p]) =
+        Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
     rw [hM_eq, Ideal.mem_span_singleton] at hx
     obtain ⟨b, hb⟩ := hx
     have hq_split : Polynomial.X * q.divX + Polynomial.C (q.coeff 0) = q :=
       Polynomial.X_mul_divX_add q
     have hxeq : x = pInvT p T * AdjoinRoot.mk f q.divX +
-        algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (q.coeff 0) := by
+        algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (q.coeff 0) := by
       conv_lhs => rw [← hq, ← hq_split]
       rw [map_add, map_mul, AdjoinRoot.mk_X, AdjoinRoot.mk_C, AdjoinRoot.algebraMap_eq]
       rfl
     rw [hxeq, hb]
-    have hpπT : algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (((p : ℕ) : ℤᵘⁿ_[p]) * b) =
-        (pInvT p T) ^ T * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) b := by
+    have hpπT : algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (((p : ℕ) : ℤᶜᵘⁿ_[p]) * b) =
+        (pInvT p T) ^ T * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) b := by
       rw [map_mul]
       congr 1
       exact (pInvT_pow_T p T).symm
     rw [hpπT]
     refine ⟨AdjoinRoot.mk f q.divX +
-      (pInvT p T) ^ (T - 1) * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) b, ?_⟩
+      (pInvT p T) ^ (T - 1) * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) b, ?_⟩
     have hT_split : (pInvT p T) ^ T = pInvT p T * (pInvT p T) ^ (T - 1) := by
       conv_rhs => rw [← pow_succ', Nat.sub_add_cancel (NeZero.pos T)]
     rw [hT_split]; ring
@@ -268,7 +268,7 @@ private lemma pInvT_irreducible : Irreducible (pInvT p T) := by
 
 /-- `(pInvT)` is a maximal ideal: `S/(pInvT) ≅ ResidueField R` is a field. -/
 private lemma pInvT_maximal :
-    (Ideal.span {pInvT p T} : Ideal (ℤᵘⁿ_[p,T])).IsMaximal := by
+    (Ideal.span {pInvT p T} : Ideal (ℤᶜᵘⁿ_[p,T])).IsMaximal := by
   -- The kernel of TResidue equals span {pInvT}, and TResidue is surjective onto a field.
   have hker : RingHom.ker (TResidue p T) = Ideal.span {pInvT p T} := by
     ext x
@@ -277,34 +277,34 @@ private lemma pInvT_maximal :
     intro y
     -- Every element of the residue field is the residue of some r : R; lift via algebraMap.
     obtain ⟨r, hr⟩ := Ideal.Quotient.mk_surjective y
-    refine ⟨algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) r, ?_⟩
+    refine ⟨algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) r, ?_⟩
     rw [TResidue_of]; exact hr
   -- S/(pInvT) ≅ ResidueField R via lift.
   have hquot_field :
-      (Ideal.span {pInvT p T} : Ideal (ℤᵘⁿ_[p,T])).IsMaximal := by
+      (Ideal.span {pInvT p T} : Ideal (ℤᶜᵘⁿ_[p,T])).IsMaximal := by
     rw [← hker]
     exact RingHom.ker_isMaximal_of_surjective (TResidue p T) hsurj
   exact hquot_field
 
-/-- `ℤᵘⁿ_[p,T]` is a local ring with maximal ideal `(pInvT)`. -/
-private lemma instLocalRingOQpUnT : IsLocalRing (ℤᵘⁿ_[p,T]) := by
+/-- `ℤᶜᵘⁿ_[p,T]` is a local ring with maximal ideal `(pInvT)`. -/
+private lemma instLocalRingOQpCUnT : IsLocalRing (ℤᶜᵘⁿ_[p,T]) := by
   refine IsLocalRing.of_unique_max_ideal ?_
   refine ⟨Ideal.span {pInvT p T}, pInvT_maximal p T, ?_⟩
   intro M hM
-  have hint : Algebra.IsIntegral (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) := by
+  have hint : Algebra.IsIntegral (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) := by
     have := (TPoly_monic p T).finite_adjoinRoot
-    exact Algebra.IsIntegral.of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
+    exact Algebra.IsIntegral.of_finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
   have hMmax : M.IsMaximal := hM
-  have hMcomap_max : (M.comap (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]))).IsMaximal :=
+  have hMcomap_max : (M.comap (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]))).IsMaximal :=
     Ideal.isMaximal_comap_of_isIntegral_of_isMaximal M
-  have hMcomap_eq : M.comap (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) =
-      IsLocalRing.maximalIdeal (ℤᵘⁿ_[p]) :=
+  have hMcomap_eq : M.comap (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) =
+      IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p]) :=
     IsLocalRing.eq_maximalIdeal hMcomap_max
-  have hpR_mem : (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) ((p : ℕ) : ℤᵘⁿ_[p]) ∈ M := by
-    have : ((p : ℕ) : ℤᵘⁿ_[p]) ∈ M.comap (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) := by
+  have hpR_mem : (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) ((p : ℕ) : ℤᶜᵘⁿ_[p]) ∈ M := by
+    have : ((p : ℕ) : ℤᶜᵘⁿ_[p]) ∈ M.comap (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) := by
       rw [hMcomap_eq]
-      have hM_eq : IsLocalRing.maximalIdeal (ℤᵘⁿ_[p]) =
-          Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
+      have hM_eq : IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p]) =
+          Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])} := (WittVector.irreducible p).maximalIdeal_eq
       rw [hM_eq]; exact Ideal.subset_span (Set.mem_singleton _)
     exact Ideal.mem_comap.mp this
   have hπpow_mem : (pInvT p T) ^ T ∈ M := by
@@ -324,19 +324,19 @@ private lemma _root_.Multiset.prod_assoc_pow {α : Type*} [CommMonoid α] (m : M
     exact (h q (Multiset.mem_cons_self q m')).mul_mul
       (ih (fun r hr => h r (Multiset.mem_cons_of_mem hr)))
 
-/-- Every nonzero `x : ℤᵘⁿ_[p,T]` factors as `(pInvT)^n * u` for some unit `u`.
+/-- Every nonzero `x : ℤᶜᵘⁿ_[p,T]` factors as `(pInvT)^n * u` for some unit `u`.
 This is the existence half of `HasUnitMulPowIrreducibleFactorization`. -/
-private lemma exists_pInvT_pow_unit_decomposition (x : ℤᵘⁿ_[p,T]) (hx : x ≠ 0) :
+private lemma exists_pInvT_pow_unit_decomposition (x : ℤᶜᵘⁿ_[p,T]) (hx : x ≠ 0) :
     ∃ (n : ℕ), Associated ((pInvT p T) ^ n) x := by
-  have : IsLocalRing (ℤᵘⁿ_[p,T]) := instLocalRingOQpUnT p T
-  have : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) := (TPoly_monic p T).finite_adjoinRoot
-  have : IsNoetherian (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
-    isNoetherian_of_isNoetherianRing_of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-  have : IsNoetherianRing (ℤᵘⁿ_[p,T]) := by
-    refine isNoetherianRing_of_surjective (Polynomial (ℤᵘⁿ_[p])) (ℤᵘⁿ_[p,T])
+  have : IsLocalRing (ℤᶜᵘⁿ_[p,T]) := instLocalRingOQpCUnT p T
+  have : Module.Finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) := (TPoly_monic p T).finite_adjoinRoot
+  have : IsNoetherian (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
+    isNoetherian_of_isNoetherianRing_of_finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
+  have : IsNoetherianRing (ℤᶜᵘⁿ_[p,T]) := by
+    refine isNoetherianRing_of_surjective (Polynomial (ℤᶜᵘⁿ_[p])) (ℤᶜᵘⁿ_[p,T])
       (AdjoinRoot.mk (TPoly p T)) ?_
     exact AdjoinRoot.mk_surjective
-  have : WfDvdMonoid (ℤᵘⁿ_[p,T]) := IsNoetherianRing.wfDvdMonoid
+  have : WfDvdMonoid (ℤᶜᵘⁿ_[p,T]) := IsNoetherianRing.wfDvdMonoid
   obtain ⟨fx, hfx⟩ := WfDvdMonoid.exists_factors x hx
   refine ⟨Multiset.card fx, ?_⟩
   have hπ_irr : Irreducible (pInvT p T) := pInvT_irreducible p T
@@ -345,7 +345,7 @@ private lemma exists_pInvT_pow_unit_decomposition (x : ℤᵘⁿ_[p,T]) (hx : x 
     have hq_irr : Irreducible q := hfx.1 q hq
     -- q is irreducible, hence not a unit, hence in the unique maximal ideal = span {pInvT}
     have hq_nu : ¬ IsUnit q := hq_irr.not_isUnit
-    have hπ_max : (IsLocalRing.maximalIdeal (ℤᵘⁿ_[p,T])) = Ideal.span {pInvT p T} := by
+    have hπ_max : (IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])) = Ideal.span {pInvT p T} := by
       have hmax := pInvT_maximal p T
       exact (IsLocalRing.eq_maximalIdeal hmax).symm
     have hq_mem : q ∈ Ideal.span {pInvT p T} := by
@@ -362,29 +362,29 @@ private lemma exists_pInvT_pow_unit_decomposition (x : ℤᵘⁿ_[p,T]) (hx : x 
     Multiset.prod_assoc_pow fx (pInvT p T) hassoc_each
   exact hprod_assoc.symm.trans hfx.2
 
-instance instDVROQpUnT : IsDiscreteValuationRing (ℤᵘⁿ_[p,T]) := by
+instance instDVROQpCUnT : IsDiscreteValuationRing (ℤᶜᵘⁿ_[p,T]) := by
   apply IsDiscreteValuationRing.ofHasUnitMulPowIrreducibleFactorization
   refine ⟨pInvT p T, pInvT_irreducible p T, ?_⟩
   intro x hx
   exact exists_pInvT_pow_unit_decomposition p T x hx
 
-/-- `ℚᵘⁿ_[p,T]` := the fraction field of `ℤᵘⁿ_[p,T]`, equipped with the `(pInvT)`-adic
-valuation via the `WithVal` wrapper (mirroring the `QpUn` convention from
-`WittVector.lean:21`). The `Valued (ℚᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))` instance is
+/-- `ℚᶜᵘⁿ_[p,T]` := the fraction field of `ℤᶜᵘⁿ_[p,T]`, equipped with the `(pInvT)`-adic
+valuation via the `WithVal` wrapper (mirroring the `QpCUn` convention from
+`WittVector.lean:21`). The `Valued (ℚᶜᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))` instance is
 synthesised automatically by `WithVal.instValued`. -/
-abbrev QpUnT : Type _ :=
-  WithVal ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation
-    (FractionRing (ℤᵘⁿ_[p,T])))
+abbrev QpCUnT : Type _ :=
+  WithVal ((IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation
+    (FractionRing (ℤᶜᵘⁿ_[p,T])))
 
-@[inherit_doc] notation "ℚᵘⁿ_[" p "," T "]" => QpUnT p T
+@[inherit_doc] notation "ℚᶜᵘⁿ_[" p "," T "]" => QpCUnT p T
 
 /-- Sanity check: the `WithVal` wrapping of the maximal-ideal valuation gives the desired
-`Valued (ℚᵘⁿ_[p,T])` instance via instance synthesis. -/
-noncomputable example : Valued (ℚᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ)) := inferInstance
+`Valued (ℚᶜᵘⁿ_[p,T])` instance via instance synthesis. -/
+noncomputable example : Valued (ℚᶜᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ)) := inferInstance
 
-/-- The element `p^{1/T}` viewed inside the fraction field `ℚᵘⁿ_[p,T]`. -/
-noncomputable def pInvTQ : ℚᵘⁿ_[p,T] :=
-  algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T)
+/-- The element `p^{1/T}` viewed inside the fraction field `ℚᶜᵘⁿ_[p,T]`. -/
+noncomputable def pInvTQ : ℚᶜᵘⁿ_[p,T] :=
+  algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (pInvT p T)
 
 /-- The valuation of the uniformizer `pInvTQ p T` (a `T`-th root of `p`) is `ofAdd(-1)` — the
 `T`-scaled analogue of `valued_v_p`. -/
@@ -393,9 +393,9 @@ lemma valued_v_pInvT :
       ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
   unfold pInvTQ
   rw [WithVal.algebraMap_right_apply, WithVal.valued_toVal,
-    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_of_algebraMap]
+    (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_of_algebraMap]
   have hirr : Irreducible (pInvT p T) := pInvT_irreducible p T
-  have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).asIdeal =
+  have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).asIdeal =
       Ideal.span {pInvT p T} := hirr.maximalIdeal_eq
   rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
     (pInvT_ne_zero p T) hpe]
@@ -416,10 +416,10 @@ lemma valued_v_pInvT_zpow (n : ℤ) :
 -- v4.31 `WithVal`-migration helpers (analogues of those in `PAdicHahnSeries.lean`): the valued
 -- nhds basis is now phrased via `MonoidWithZeroHom.ValueGroup₀`, so we package the bridges once.
 
-/-- The open ball `{y | v(y) < c}` is a neighbourhood of `0` in `ℚᵘⁿ_[p,T]` for any nonzero `c` —
+/-- The open ball `{y | v(y) < c}` is a neighbourhood of `0` in `ℚᶜᵘⁿ_[p,T]` for any nonzero `c` —
 the `T`-scaled analogue of `mem_nhds_zero_v_lt`. -/
 lemma Tmem_nhds_zero_v_lt {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
-    {y : ℚᵘⁿ_[p,T] | Valued.v y < c} ∈ nhds (0 : ℚᵘⁿ_[p,T]) := by
+    {y : ℚᶜᵘⁿ_[p,T] | Valued.v y < c} ∈ nhds (0 : ℚᶜᵘⁿ_[p,T]) := by
   rw [Valued.mem_nhds]
   have hva : Valued.v ((pInvTQ p T) ^ (-(WithZero.log c))) = c := by
     rw [valued_v_pInvT_zpow, neg_neg, ← WithZero.exp_eq_coe_ofAdd, WithZero.exp_log hc]
@@ -432,10 +432,10 @@ lemma Tmem_nhds_zero_v_lt {c : WithZero (Multiplicative ℤ)} (hc : c ≠ 0) :
     Valuation.embedding_restrict, hva] at hy
   exact hy
 
-/-- Every neighbourhood `U` of `0` in `ℚᵘⁿ_[p,T]` contains a valuation ball `{y | v(y) < c}` for
+/-- Every neighbourhood `U` of `0` in `ℚᶜᵘⁿ_[p,T]` contains a valuation ball `{y | v(y) < c}` for
 some nonzero `c`. -/
-lemma Texists_v_lt_subset {U : Set (ℚᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚᵘⁿ_[p,T])) :
-    ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᵘⁿ_[p,T] | Valued.v y < c} ⊆ U := by
+lemma Texists_v_lt_subset {U : Set (ℚᶜᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚᶜᵘⁿ_[p,T])) :
+    ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᶜᵘⁿ_[p,T] | Valued.v y < c} ⊆ U := by
   rw [Valued.mem_nhds] at hU
   obtain ⟨γ, hγ⟩ := hU
   refine ⟨MonoidWithZeroHom.ValueGroup₀.embedding γ.1,
@@ -447,10 +447,10 @@ lemma Texists_v_lt_subset {U : Set (ℚᵘⁿ_[p,T])} (hU : U ∈ nhds (0 : ℚ�
   exact hy
 
 /-- Given a witness `w` with `v(w) = c ≠ 0`, the ball `{y | v(y - x) < c}` is a neighbourhood of
-`x` in `ℚᵘⁿ_[p,T]`. -/
-lemma Tmem_nhds_v_sub_lt {x w : ℚᵘⁿ_[p,T]} {c : WithZero (Multiplicative ℤ)}
+`x` in `ℚᶜᵘⁿ_[p,T]`. -/
+lemma Tmem_nhds_v_sub_lt {x w : ℚᶜᵘⁿ_[p,T]} {c : WithZero (Multiplicative ℤ)}
     (hc : c ≠ 0) (hw : Valued.v w = c) :
-    {y : ℚᵘⁿ_[p,T] | Valued.v (y - x) < c} ∈ nhds x := by
+    {y : ℚᶜᵘⁿ_[p,T] | Valued.v (y - x) < c} ∈ nhds x := by
   rw [Valued.mem_nhds]
   have hane : Valued.v.restrict w ≠ 0 := by
     rw [ne_eq, Valuation.restrict_eq_zero_iff, hw]; exact hc
@@ -461,10 +461,10 @@ lemma Tmem_nhds_v_sub_lt {x w : ℚᵘⁿ_[p,T]} {c : WithZero (Multiplicative �
     Valuation.embedding_restrict, hw] at hy
   exact hy
 
-/-- Every neighbourhood `U` of `x` in `ℚᵘⁿ_[p,T]` contains a ball `{y | v(y - x) < c}` for some
+/-- Every neighbourhood `U` of `x` in `ℚᶜᵘⁿ_[p,T]` contains a ball `{y | v(y - x) < c}` for some
 nonzero `c`. -/
-lemma Texists_v_sub_lt_subset {U : Set (ℚᵘⁿ_[p,T])} {x : ℚᵘⁿ_[p,T]} (hU : U ∈ nhds x) :
-    ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᵘⁿ_[p,T] | Valued.v (y - x) < c} ⊆ U := by
+lemma Texists_v_sub_lt_subset {U : Set (ℚᶜᵘⁿ_[p,T])} {x : ℚᶜᵘⁿ_[p,T]} (hU : U ∈ nhds x) :
+    ∃ c : WithZero (Multiplicative ℤ), c ≠ 0 ∧ {y : ℚᶜᵘⁿ_[p,T] | Valued.v (y - x) < c} ⊆ U := by
   rw [Valued.mem_nhds] at hU
   obtain ⟨γ, hγ⟩ := hU
   refine ⟨MonoidWithZeroHom.ValueGroup₀.embedding γ.1,
@@ -475,139 +475,139 @@ lemma Texists_v_sub_lt_subset {U : Set (ℚᵘⁿ_[p,T])} {x : ℚᵘⁿ_[p,T]} 
   rw [Valuation.restrict_lt_iff_lt_embedding]
   exact hy
 
-/-! ### Inclusions `ℤᵘⁿ_[p] ↪ ℤᵘⁿ_[p,T]` and `ℚᵘⁿ_[p] ↪ ℚᵘⁿ_[p,T]` -/
+/-! ### Inclusions `ℤᶜᵘⁿ_[p] ↪ ℤᶜᵘⁿ_[p,T]` and `ℚᶜᵘⁿ_[p] ↪ ℚᶜᵘⁿ_[p,T]` -/
 
-/-- The natural ring inclusion `ℤᵘⁿ_[p] ↪ ℤᵘⁿ_[p,T]`. -/
-noncomputable def OQpUn_embd : ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T] :=
-  algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
+/-- The natural ring inclusion `ℤᶜᵘⁿ_[p] ↪ ℤᶜᵘⁿ_[p,T]`. -/
+noncomputable def OQpCUn_embd : ℤᶜᵘⁿ_[p] →+* ℤᶜᵘⁿ_[p,T] :=
+  algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
 
-/-- The inclusion `ℤᵘⁿ_[p] ↪ ℤᵘⁿ_[p,T]` is injective.  Follows from Lemma 4.1
+/-- The inclusion `ℤᶜᵘⁿ_[p] ↪ ℤᶜᵘⁿ_[p,T]` is injective.  Follows from Lemma 4.1
 (`X^T - p` has positive degree, hence the quotient algebra is free of rank `T`). -/
-lemma OQpUn_embd_injective : Function.Injective (OQpUn_embd p T) := by
-  unfold OQpUn_embd
+lemma OQpCUn_embd_injective : Function.Injective (OQpCUn_embd p T) := by
+  unfold OQpCUn_embd
   rw [AdjoinRoot.algebraMap_eq]
   apply AdjoinRoot.of.injective_of_degree_ne_zero
   rw [Polynomial.degree_eq_natDegree (TPoly_monic p T).ne_zero, TPoly_natDegree]
   exact_mod_cast NeZero.ne T
 
-/-- The natural field inclusion `ℚᵘⁿ_[p] ↪ ℚᵘⁿ_[p,T]`, obtained by extending
-`OQpUn_embd` to the fraction fields. -/
-noncomputable def QpUn_embd : ℚᵘⁿ_[p] →+* ℚᵘⁿ_[p,T] :=
-  IsFractionRing.lift (A := ℤᵘⁿ_[p]) (K := ℚᵘⁿ_[p]) (L := ℚᵘⁿ_[p,T])
-    (g := (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T))
-    (((IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp
-      (OQpUn_embd_injective p T)))
+/-- The natural field inclusion `ℚᶜᵘⁿ_[p] ↪ ℚᶜᵘⁿ_[p,T]`, obtained by extending
+`OQpCUn_embd` to the fraction fields. -/
+noncomputable def QpCUn_embd : ℚᶜᵘⁿ_[p] →+* ℚᶜᵘⁿ_[p,T] :=
+  IsFractionRing.lift (A := ℤᶜᵘⁿ_[p]) (K := ℚᶜᵘⁿ_[p]) (L := ℚᶜᵘⁿ_[p,T])
+    (g := (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T))
+    (((IsFractionRing.injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp
+      (OQpCUn_embd_injective p T)))
 
-/-- View `ℚᵘⁿ_[p,T]` as a `ℚᵘⁿ_[p]`-algebra via `QpUn_embd`. -/
-noncomputable instance : Algebra (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) :=
-  (QpUn_embd p T).toAlgebra
+/-- View `ℚᶜᵘⁿ_[p,T]` as a `ℚᶜᵘⁿ_[p]`-algebra via `QpCUn_embd`. -/
+noncomputable instance : Algebra (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) :=
+  (QpCUn_embd p T).toAlgebra
 
-/-- The natural scalar-tower `ℤᵘⁿ_[p] → ℚᵘⁿ_[p] → ℚᵘⁿ_[p,T]` via the localization
+/-- The natural scalar-tower `ℤᶜᵘⁿ_[p] → ℚᶜᵘⁿ_[p] → ℚᶜᵘⁿ_[p,T]` via the localization
 square plus the Eisenstein extension. Promoted to a global instance because the closure
 construction `Module.Basis.localizationLocalization` (used in Lemma 4.8) requires it. -/
-instance instIsScalarTowerOQpUnQpUnQpUnT :
-    IsScalarTower (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
+instance instIsScalarTowerOQpCUnQpCUnQpCUnT :
+    IsScalarTower (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) := by
   refine IsScalarTower.of_algebraMap_eq fun x => ?_
-  change (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) x =
-    QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) x)
-  have hL : (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) x =
-      (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])) (OQpUn_embd p T x) := by
-    rw [show (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) =
-        (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T) from ?_]
+  change (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) x =
+    QpCUn_embd p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) x)
+  have hL : (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) x =
+      (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])) (OQpCUn_embd p T x) := by
+    rw [show (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) =
+        (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T) from ?_]
     · rfl
     · ext y
-      change (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) y =
-        (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])) ((OQpUn_embd p T) y)
-      unfold OQpUn_embd
-      exact IsScalarTower.algebraMap_apply (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) y
+      change (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) y =
+        (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])) ((OQpCUn_embd p T) y)
+      unfold OQpCUn_embd
+      exact IsScalarTower.algebraMap_apply (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) y
   rw [hL]
-  rw [show QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) x) =
-      ((algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T)) x from
+  rw [show QpCUn_embd p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) x) =
+      ((algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T)) x from
     IsFractionRing.lift_algebraMap _ x]
   rfl
 
-/-- `ℤᵘⁿ_[p,T]` is module-finite over `ℤᵘⁿ_[p]` (it is `R₀`-free of rank `T`). Promoted to
+/-- `ℤᶜᵘⁿ_[p,T]` is module-finite over `ℤᶜᵘⁿ_[p]` (it is `R₀`-free of rank `T`). Promoted to
 a global instance so Lemma 4.8 helpers do not have to re-derive it from
 `AdjoinRoot.powerBasis'`. -/
-instance instModuleFiniteOQpUnT : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+instance instModuleFiniteOQpCUnT : Module.Finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
   (AdjoinRoot.powerBasis' (TPoly_monic p T)).finite
 
-instance instFaithfulSMulOQpUnT : FaithfulSMul (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
-  (faithfulSMul_iff_algebraMap_injective _ _).mpr (OQpUn_embd_injective p T)
+instance instFaithfulSMulOQpCUnT : FaithfulSMul (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
+  (faithfulSMul_iff_algebraMap_injective _ _).mpr (OQpCUn_embd_injective p T)
 
-instance instAlgebraIsAlgebraicOQpUnT : Algebra.IsAlgebraic (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
-  Algebra.IsAlgebraic.of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
+instance instAlgebraIsAlgebraicOQpCUnT : Algebra.IsAlgebraic (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
+  Algebra.IsAlgebraic.of_finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
 
-/-- `ℚᵘⁿ_[p,T]` is a localization of `ℤᵘⁿ_[p,T]` at the image of nonzero divisors of
-`ℤᵘⁿ_[p]`. Promoted to a global instance so `Module.Basis.localizationLocalization` synthesises
+/-- `ℚᶜᵘⁿ_[p,T]` is a localization of `ℤᶜᵘⁿ_[p,T]` at the image of nonzero divisors of
+`ℤᶜᵘⁿ_[p]`. Promoted to a global instance so `Module.Basis.localizationLocalization` synthesises
 without per-call typeclass-search timeouts. -/
-instance instIsLocalizationOQpUnTQpUnT :
-    IsLocalization (Algebra.algebraMapSubmonoid (ℤᵘⁿ_[p,T])
-      (nonZeroDivisors (ℤᵘⁿ_[p]))) (ℚᵘⁿ_[p,T]) :=
+instance instIsLocalizationOQpCUnTQpCUnT :
+    IsLocalization (Algebra.algebraMapSubmonoid (ℤᶜᵘⁿ_[p,T])
+      (nonZeroDivisors (ℤᶜᵘⁿ_[p]))) (ℚᶜᵘⁿ_[p,T]) :=
   Algebra.IsAlgebraic.instIsLocalizationAlgebraMapSubmonoidNonZeroDivisors _ _ _
 
-/-- `ℚᵘⁿ_[p,T]` is module-finite over `ℚᵘⁿ_[p]` (it inherits the rank-`T` basis from
-`ℤᵘⁿ_[p,T]`). Promoted to a global instance so `LinearMap.continuous_of_finiteDimensional`
+/-- `ℚᶜᵘⁿ_[p,T]` is module-finite over `ℚᶜᵘⁿ_[p]` (it inherits the rank-`T` basis from
+`ℤᶜᵘⁿ_[p,T]`). Promoted to a global instance so `LinearMap.continuous_of_finiteDimensional`
 fires without typeclass-search timeouts. -/
-instance instModuleFiniteQpUnT : Module.Finite (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
-  have hpb : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+instance instModuleFiniteQpCUnT : Module.Finite (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) := by
+  have hpb : Module.Finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
     (AdjoinRoot.powerBasis' (TPoly_monic p T)).finite
-  exact Module.Finite.of_isLocalization (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-    (Rₚ := ℚᵘⁿ_[p]) (Sₚ := ℚᵘⁿ_[p,T]) (nonZeroDivisors (ℤᵘⁿ_[p]))
+  exact Module.Finite.of_isLocalization (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
+    (Rₚ := ℚᶜᵘⁿ_[p]) (Sₚ := ℚᶜᵘⁿ_[p,T]) (nonZeroDivisors (ℤᶜᵘⁿ_[p]))
 
 /-! ### Lemma 4.1 — Eisenstein criterion / degree formula -/
 
-/-- **Lemma 4.1.**  `[ℚᵘⁿ_[p,T] : ℚᵘⁿ_[p]] = T`.
+/-- **Lemma 4.1.**  `[ℚᶜᵘⁿ_[p,T] : ℚᶜᵘⁿ_[p]] = T`.
 
-Equivalently, `1, p^{1/T}, …, p^{(T-1)/T}` form a basis of `ℚᵘⁿ_[p,T]` over `ℚᵘⁿ_[p]`.
+Equivalently, `1, p^{1/T}, …, p^{(T-1)/T}` form a basis of `ℚᶜᵘⁿ_[p,T]` over `ℚᶜᵘⁿ_[p]`.
 The proof uses the Eisenstein criterion for general DVFs (`X^T - p` is Eisenstein at the
-maximal ideal of the DVR `ℤᵘⁿ_[p]`). -/
-theorem rank_QpUnT_over_QpUn :
-    Module.finrank (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) = T := by
-  -- Step 1: rank of `ℤᵘⁿ_[p,T]` over `ℤᵘⁿ_[p]` equals `T` via the AdjoinRoot power basis.
-  have hpb : Module.finrank (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) = T := by
+maximal ideal of the DVR `ℤᶜᵘⁿ_[p]`). -/
+theorem rank_QpCUnT_over_QpCUn :
+    Module.finrank (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) = T := by
+  -- Step 1: rank of `ℤᶜᵘⁿ_[p,T]` over `ℤᶜᵘⁿ_[p]` equals `T` via the AdjoinRoot power basis.
+  have hpb : Module.finrank (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) = T := by
     rw [(AdjoinRoot.powerBasis' (TPoly_monic p T)).finrank,
       AdjoinRoot.powerBasis'_dim, TPoly_natDegree]
-  have : Module.Finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+  have : Module.Finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
     (AdjoinRoot.powerBasis' (TPoly_monic p T)).finite
-  have : FaithfulSMul (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
-    (faithfulSMul_iff_algebraMap_injective _ _).mpr (OQpUn_embd_injective p T)
-  have : Algebra.IsAlgebraic (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
-    Algebra.IsAlgebraic.of_finite (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-  have : IsScalarTower (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) := inferInstance
-  have : IsScalarTower (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) := by
+  have : FaithfulSMul (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
+    (faithfulSMul_iff_algebraMap_injective _ _).mpr (OQpCUn_embd_injective p T)
+  have : Algebra.IsAlgebraic (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
+    Algebra.IsAlgebraic.of_finite (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
+  have : IsScalarTower (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) := inferInstance
+  have : IsScalarTower (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) := by
     refine IsScalarTower.of_algebraMap_eq fun x => ?_
-    -- `algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p,T] = QpUn_embd ∘ algebraMap ℤᵘⁿ_[p] ℚᵘⁿ_[p]`
-    -- `algebraMap ℚᵘⁿ_[p] ℚᵘⁿ_[p,T] = QpUn_embd` (definitionally)
-    change (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) x =
-      QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) x)
-    -- the LHS factors through ℤᵘⁿ_[p,T]:
-    have hL : (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) x =
-        (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])) (OQpUn_embd p T x) := by
-      rw [show (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) =
-          (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T) from ?_]
+    -- `algebraMap ℤᶜᵘⁿ_[p] ℚᶜᵘⁿ_[p,T] = QpCUn_embd ∘ algebraMap ℤᶜᵘⁿ_[p] ℚᶜᵘⁿ_[p]`
+    -- `algebraMap ℚᶜᵘⁿ_[p] ℚᶜᵘⁿ_[p,T] = QpCUn_embd` (definitionally)
+    change (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) x =
+      QpCUn_embd p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) x)
+    -- the LHS factors through ℤᶜᵘⁿ_[p,T]:
+    have hL : (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) x =
+        (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])) (OQpCUn_embd p T x) := by
+      rw [show (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) =
+          (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T) from ?_]
       · rfl
       · ext y
-        change (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) y =
-          (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])) ((OQpUn_embd p T) y)
-        unfold OQpUn_embd
-        exact IsScalarTower.algebraMap_apply (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) y
+        change (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) y =
+          (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])) ((OQpCUn_embd p T) y)
+        unfold OQpCUn_embd
+        exact IsScalarTower.algebraMap_apply (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) y
     rw [hL]
-    -- the RHS also goes through ℤᵘⁿ_[p,T] using IsFractionRing.lift_algebraMap:
-    rw [show QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) x) =
-        ((algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T)) x from
+    -- the RHS also goes through ℤᶜᵘⁿ_[p,T] using IsFractionRing.lift_algebraMap:
+    rw [show QpCUn_embd p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) x) =
+        ((algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T)) x from
       IsFractionRing.lift_algebraMap _ x]
     rfl
   -- Now apply the finrank-of-fraction-ring lemma.
-  have := IsFractionRing.finrank_eq (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+  have := IsFractionRing.finrank_eq (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
   rw [this, hpb]
 
-/-! ### Lemma 4.2 — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
+/-! ### Lemma 4.2 — Teichmüller series for `ℤᶜᵘⁿ_[p,T]` -/
 
 /-
   **Lemma 4.2** is stated and proved further down (after the `TResidue`/
   `TTeichmuller` infrastructure used in its proof) as
-  `exists_teichmuller_series_OQpUnT`.  We move the placement so the proof can
+  `exists_teichmuller_series_OQpCUnT`.  We move the placement so the proof can
   reuse the digit-extraction lemmas `Texists_T_pInvT_digits` /
   `Tteichmuller_digits_unique` rather than duplicating them inline.
 -/
@@ -615,15 +615,15 @@ theorem rank_QpUnT_over_QpUn :
 /-! ### `TLiftedPAdicHahnSeries := W(𝔽ₚ^⁻)[p^{1/T}]((t^ℚ))` -/
 
 /-- The T-scaled lifted Hahn series ring `W(𝔽ₚ^⁻)[p^{1/T}]((t^ℚ))`. -/
-abbrev TLiftedPAdicHahnSeries : Type _ := HahnSeries ℚ (ℤᵘⁿ_[p,T])
+abbrev TLiftedPAdicHahnSeries : Type _ := HahnSeries ℚ (ℤᶜᵘⁿ_[p,T])
 
 namespace TLiftedPAdicHahnSeries
 
 /-- Build a T-lifted Hahn series from a coefficient function `s : ℚ → 𝔽ᵃ_[p]` with
-well-ordered support, using the composition Teichmüller-lift then `OQpUn_embd`. -/
+well-ordered support, using the composition Teichmüller-lift then `OQpCUn_embd`. -/
 noncomputable def fromCoeff (s : ℚ → Fpbar p) (hspwo : (Function.support s).IsPWO) :
     TLiftedPAdicHahnSeries p T where
-  coeff n := OQpUn_embd p T (teichmuller p (s n))
+  coeff n := OQpCUn_embd p T (teichmuller p (s n))
   isPWO_support' := by
     apply hspwo.mono
     intro n hn
@@ -635,19 +635,19 @@ noncomputable def fromCoeff (s : ℚ → Fpbar p) (hspwo : (Function.support s).
 end TLiftedPAdicHahnSeries
 
 /-- The natural ring inclusion `LiftedPAdicHahnSeries p ↪ TLiftedPAdicHahnSeries p T`,
-obtained by applying `OQpUn_embd` coefficient-wise (Remark 2.3). -/
+obtained by applying `OQpCUn_embd` coefficient-wise (Remark 2.3). -/
 noncomputable def Lifted_to_TLifted :
     LiftedPAdicHahnSeries p →+* TLiftedPAdicHahnSeries p T where
-  toFun x := x.map (OQpUn_embd p T : ℤᵘⁿ_[p] →+* ℤᵘⁿ_[p,T])
+  toFun x := x.map (OQpCUn_embd p T : ℤᶜᵘⁿ_[p] →+* ℤᶜᵘⁿ_[p,T])
   map_zero' := by
-    change HahnSeries.map 0 (OQpUn_embd p T) = 0
-    exact HahnSeries.map_zero (OQpUn_embd p T : ZeroHom (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]))
-  map_one' := HahnSeries.map_one (OQpUn_embd p T).toMonoidWithZeroHom
+    change HahnSeries.map 0 (OQpCUn_embd p T) = 0
+    exact HahnSeries.map_zero (OQpCUn_embd p T : ZeroHom (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]))
+  map_one' := HahnSeries.map_one (OQpCUn_embd p T).toMonoidWithZeroHom
   map_add' x y := by
-    change HahnSeries.map (x + y) (OQpUn_embd p T) =
-      HahnSeries.map x (OQpUn_embd p T) + HahnSeries.map y (OQpUn_embd p T)
-    exact HahnSeries.map_add (OQpUn_embd p T : ℤᵘⁿ_[p] →+ ℤᵘⁿ_[p,T])
-  map_mul' x y := HahnSeries.map_mul (OQpUn_embd p T).toNonUnitalRingHom
+    change HahnSeries.map (x + y) (OQpCUn_embd p T) =
+      HahnSeries.map x (OQpCUn_embd p T) + HahnSeries.map y (OQpCUn_embd p T)
+    exact HahnSeries.map_add (OQpCUn_embd p T : ℤᶜᵘⁿ_[p] →+ ℤᶜᵘⁿ_[p,T])
+  map_mul' x y := HahnSeries.map_mul (OQpCUn_embd p T).toNonUnitalRingHom
 
 /-! ### Definition 2.4 — `IsTNullSeries` -/
 
@@ -702,16 +702,16 @@ open Topology Filter in
 /--
 **Definition 2.4.**  An element `x = ∑ c_q t^q ∈ TLiftedPAdicHahnSeries p T` is a
 *T-null-series* iff for every `g ∈ ℚ`, the partial sums
-`∑_{n : g + n/T ≤ M, c_{g+n/T} ≠ 0} (pInvTQ p T)^n · c_{g+n/T}` (mapped into `ℚᵘⁿ_[p,T]`
+`∑_{n : g + n/T ≤ M, c_{g+n/T} ≠ 0} (pInvTQ p T)^n · c_{g+n/T}` (mapped into `ℚᶜᵘⁿ_[p,T]`
 via `algebraMap`) tend to `0` as `M → ∞`.
 
 This mirrors `IsNullSeries` (line 55) verbatim with two substitutions:
-* `(p : QpUn p)` is replaced by `pInvTQ p T` (the T-th root of `p` in `ℚᵘⁿ_[p,T]`);
+* `(p : QpCUn p)` is replaced by `pInvTQ p T` (the T-th root of `p` in `ℚᶜᵘⁿ_[p,T]`);
 * coefficient indices are shifted by `1/T` rather than `1`. -/
 def IsTNullSeries (x : TLiftedPAdicHahnSeries p T) : Prop :=
   ∀ g : ℚ, Filter.Tendsto (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
       (pInvTQ p T) ^ (n.val : ℤ) *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) atTop (𝓝 0)
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) atTop (𝓝 0)
 
 /-! ### Helpers for `smul_mem'` — T-scaled ports of Poonen1993 helpers (Lemma 4.6 (1)) -/
 
@@ -753,45 +753,45 @@ private abbrev TfiniteBelowInt
 
 /-- T-scaled analogue of `intPartial` (line 84). -/
 private noncomputable def TintPartial
-    (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) : ℚᵘⁿ_[p,T] :=
+    (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (K : ℤ) : ℚᶜᵘⁿ_[p,T] :=
   ∑ n : Set.Finite.toFinset (TfiniteBelowInt p T x g K),
     (pInvTQ p T) ^ (n.1 : ℤ) *
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))
 
 /-- T-scaled analogue of `valued_v_term_le` (line 118). -/
-private lemma Tvalued_v_term_le (a : ℤᵘⁿ_[p,T]) (n : ℤ) :
+private lemma Tvalued_v_term_le (a : ℤᶜᵘⁿ_[p,T]) (n : ℤ) :
     Valued.v ((pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a) ≤
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) a) ≤
       ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
   rw [Valuation.map_mul, valued_v_pInvT_zpow]
-  have h_alg : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one a
+  have h_alg : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) a) ≤ 1 :=
+    (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one a
   calc ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) *
-          Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a)
+          Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) a)
       ≤ ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) * 1 :=
         mul_le_mul' (le_refl _) h_alg
     _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
 
 /-- T-scaled analogue of `valued_v_algebraMap_unit_one` (line 131). -/
-private lemma Tvalued_v_algebraMap_unit_one (u : (ℤᵘⁿ_[p,T])ˣ) :
-    Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) = 1 := by
-  have h1 : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one u.val
-  have h2 : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.inv) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one u.inv
-  have h3 : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) *
-            Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.inv) = 1 := by
+private lemma Tvalued_v_algebraMap_unit_one (u : (ℤᶜᵘⁿ_[p,T])ˣ) :
+    Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) = 1 := by
+  have h1 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) ≤ 1 :=
+    (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one u.val
+  have h2 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.inv) ≤ 1 :=
+    (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one u.inv
+  have h3 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) *
+            Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.inv) = 1 := by
     rw [← Valuation.map_mul, ← map_mul, u.val_inv]; simp
   by_contra h_ne_one
-  have h1_lt : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) < 1 :=
+  have h1_lt : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) < 1 :=
     lt_of_le_of_ne h1 h_ne_one
-  have h_lt : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) *
-            Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.inv) < 1 := by
+  have h_lt : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) *
+            Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.inv) < 1 := by
     calc
-      Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) *
-          Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.inv) ≤
-          Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) * 1 := mul_le_mul' (le_refl _) h2
-      _ = Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) u.val) := mul_one _
+      Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) *
+          Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.inv) ≤
+          Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) * 1 := mul_le_mul' (le_refl _) h2
+      _ = Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) u.val) := mul_one _
       _ < 1 := h1_lt
   rw [h3] at h_lt
   exact lt_irrefl _ h_lt
@@ -803,7 +803,7 @@ private lemma TintPartial_diff_eq_sdiff_sum
       ∑ n ∈ (Set.Finite.toFinset (TfiniteBelowInt p T x g K') \
               Set.Finite.toFinset (TfiniteBelowInt p T x g K)),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) := by
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) := by
   have hsub : Set.Finite.toFinset (TfiniteBelowInt p T x g K) ⊆
       Set.Finite.toFinset (TfiniteBelowInt p T x g K') := by
     intro n hn
@@ -812,16 +812,16 @@ private lemma TintPartial_diff_eq_sdiff_sum
     exact (Set.Finite.mem_toFinset _).mpr ⟨le_trans hn_mem.1 h, hn_mem.2⟩
   have e1 : TintPartial p T x g K' = ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x g K'),
       (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) :=
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) :=
     Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T x g K'))
       (f := fun m : ℤ => (pInvTQ p T) ^ m *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
   have e2 : TintPartial p T x g K = ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x g K),
       (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) :=
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) :=
     Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T x g K))
       (f := fun m : ℤ => (pInvTQ p T) ^ m *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (m : ℚ) / T)))
   rw [e1, e2, ← Finset.sum_sdiff hsub, add_sub_cancel_right]
 
 /-- T-scaled analogue of `partial_sum_valuation_cauchy` (line 181). -/
@@ -859,7 +859,7 @@ private lemma TpartialSum_eq_intPartial
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) (M : ℕ) :
     (∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) =
       TintPartial p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋ := by
   have hT_pos : (0 : ℚ) < T := by
     have hT : T ≠ 0 := NeZero.ne T
@@ -893,25 +893,25 @@ private lemma TpartialSum_eq_intPartial
   unfold TintPartial
   rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) =
       ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T x g M),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) from
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) from
       Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T x g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
   rw [show (∑ n : Set.Finite.toFinset
             (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ (n.1 : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n.1 : ℚ) / T))) =
       ∑ n ∈ Set.Finite.toFinset
           (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) from
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)) from
       Finset.sum_attach (s := Set.Finite.toFinset
           (TfiniteBelowInt p T x g ⌊(T : ℚ) * ((M : ℚ) - g)⌋))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n : ℚ) / T)))]
   rw [hset_eq]
 
 /-- T-scaled analogue of `null_series_tail_bound` (line 253). -/
@@ -923,14 +923,14 @@ private lemma Tnull_series_tail_bound
     have hT : T ≠ 0 := NeZero.ne T
     exact_mod_cast Nat.pos_of_ne_zero hT
   have hnhds :
-      {y : ℚᵘⁿ_[p,T] | Valued.v y <
+      {y : ℚᶜᵘⁿ_[p,T] | Valued.v y <
           ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
-        nhds (0 : ℚᵘⁿ_[p,T]) :=
+        nhds (0 : ℚᶜᵘⁿ_[p,T]) :=
     Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   have hev_close : ∀ᶠ M : ℕ in Filter.atTop,
       Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p T x g M),
           (pInvTQ p T) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) <
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g + (n.val : ℚ) / T))) <
         ((Multiplicative.ofAdd (-(K + 2) : ℤ) : Multiplicative ℤ) : WithZero _) :=
     hx g hnhds
   -- Need ⌊T·(M - g)⌋ ≥ K, i.e., T·(M - g) ≥ K, i.e., M ≥ g + K/T.
@@ -1026,13 +1026,13 @@ private lemma TintPartial_mul_valuation_bound
   have h_intPartial_attach : TintPartial p T (c * x) g K =
       ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T (c * x) g K),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) :=
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) :=
     Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T (c * x) g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)))
   have h_extend_eq : TintPartial p T (c * x) g K =
       ∑ n ∈ OuterExt, (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) := by
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) := by
     rw [h_intPartial_attach]
     apply Finset.sum_subset h_outer_sub
     intro n hn_outer hn_orig
@@ -1048,12 +1048,12 @@ private lemma TintPartial_mul_valuation_bound
     rw [hcx_zero, map_zero, mul_zero]
   have h_expand : ∀ n ∈ OuterExt,
       (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((c * x).coeff (g + (n : ℚ) / T)) =
         ∑ ab ∈ Finset.antidiagonal c.isPWO_support x.isPWO_support
             (g + (n : ℚ) / T),
           (pInvTQ p T) ^ n *
-            (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff ab.1) *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff ab.2)) := by
+            (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff ab.1) *
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff ab.2)) := by
     intro n _
     rw [HahnSeries.coeff_mul, map_sum, Finset.mul_sum]
     apply Finset.sum_congr rfl
@@ -1064,8 +1064,8 @@ private lemma TintPartial_mul_valuation_bound
         (t := fun n => Finset.antidiagonal c.isPWO_support x.isPWO_support
           (g + (n : ℚ) / T))
         (f := fun p_sig : Sigma (fun _ : ℤ => ℚ × ℚ) => (pInvTQ p T) ^ p_sig.1 *
-          (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff p_sig.2.1) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff p_sig.2.2)))
+          (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff p_sig.2.1) *
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff p_sig.2.2)))
   rw [← h_sigma_eq]
   let Triples : Finset (Sigma (fun _ : ℤ => ℚ × ℚ)) :=
     OuterExt.sigma (fun n => Finset.antidiagonal c.isPWO_support x.isPWO_support
@@ -1073,30 +1073,30 @@ private lemma TintPartial_mul_valuation_bound
   let AOf : Finset ℚ := Triples.image (fun s => s.2.1)
   have h_fubini : (∑ p_sig ∈ Triples,
         (pInvTQ p T) ^ p_sig.1 *
-          (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff p_sig.2.1) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff p_sig.2.2))) =
-      ∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
+          (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff p_sig.2.1) *
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff p_sig.2.2))) =
+      ∑ a ∈ AOf, algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a) *
         TintPartial p T x (g - a) K := by
-    rw [show (∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
+    rw [show (∑ a ∈ AOf, algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a) *
           TintPartial p T x (g - a) K) =
-        ∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
+        ∑ a ∈ AOf, algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a) *
           ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K),
             (pInvTQ p T) ^ n *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T)) from by
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T)) from by
       apply Finset.sum_congr rfl
       intro a _
       congr 1
       exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T)))]
-    rw [show (∑ a ∈ AOf, algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T)))]
+    rw [show (∑ a ∈ AOf, algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a) *
           ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K),
             (pInvTQ p T) ^ n *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T))) =
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (x.coeff (g - a + (n : ℚ) / T))) =
         ∑ a ∈ AOf, ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K),
             (pInvTQ p T) ^ n *
-              (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a) *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a) *
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
                   (x.coeff (g - a + (n : ℚ) / T))) from by
       apply Finset.sum_congr rfl
       intro a _
@@ -1108,8 +1108,8 @@ private lemma TintPartial_mul_valuation_bound
       (t := fun a => Set.Finite.toFinset (TfiniteBelowInt p T x (g - a) K))
       (f := fun p_sig : Sigma (fun _ : ℚ => ℤ) =>
         (pInvTQ p T) ^ p_sig.2 *
-          (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff p_sig.1) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff p_sig.1) *
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               (x.coeff (g - p_sig.1 + (p_sig.2 : ℚ) / T))))
     rw [← h_sigma_eq2]
     refine Finset.sum_bij
@@ -1182,12 +1182,12 @@ private lemma TintPartial_mul_valuation_bound
   apply Valuation.map_sum_le
   intro a _
   rw [Valuation.map_mul]
-  have h_alg_le : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a)) ≤ 1 :=
-    (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one (c.coeff a)
+  have h_alg_le : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a)) ≤ 1 :=
+    (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one (c.coeff a)
   have h_inner_le : Valued.v (TintPartial p T x (g - a) K) ≤
       ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) :=
     Tnull_series_tail_bound p T hx (g - a) K
-  calc Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (c.coeff a)) *
+  calc Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (c.coeff a)) *
           Valued.v (TintPartial p T x (g - a) K)
       ≤ 1 * Valued.v (TintPartial p T x (g - a) K) := mul_le_mul' h_alg_le (le_refl _)
     _ = Valued.v (TintPartial p T x (g - a) K) := one_mul _
@@ -1211,12 +1211,12 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     let sb : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (TfiniteBelow p T b g M)
     let sab : ℕ → Finset ℤ := fun M => Set.Finite.toFinset (TfiniteBelow p T (a + b) g M)
     let su : ℕ → Finset ℤ := fun M => sa M ∪ sb M
-    let fa : ℕ → ℤ → ℚᵘⁿ_[p,T] := fun _ n =>
-      (pInvTQ p T) ^ n * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (a.coeff (g + (n : ℚ) / T))
-    let fb : ℕ → ℤ → ℚᵘⁿ_[p,T] := fun _ n =>
-      (pInvTQ p T) ^ n * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (b.coeff (g + (n : ℚ) / T))
-    let fab : ℕ → ℤ → ℚᵘⁿ_[p,T] := fun _ n =>
-      (pInvTQ p T) ^ n * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((a + b).coeff (g + (n : ℚ) / T))
+    let fa : ℕ → ℤ → ℚᶜᵘⁿ_[p,T] := fun _ n =>
+      (pInvTQ p T) ^ n * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (a.coeff (g + (n : ℚ) / T))
+    let fb : ℕ → ℤ → ℚᶜᵘⁿ_[p,T] := fun _ n =>
+      (pInvTQ p T) ^ n * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (b.coeff (g + (n : ℚ) / T))
+    let fab : ℕ → ℤ → ℚᶜᵘⁿ_[p,T] := fun _ n =>
+      (pInvTQ p T) ^ n * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((a + b).coeff (g + (n : ℚ) / T))
     have hsab_sub : ∀ M, sab M ⊆ su M := by
       intro M n hn
       have hn' : g + (n : ℚ) / T ≤ M ∧ (a + b).coeff (g + (n : ℚ) / T) ≠ 0 :=
@@ -1283,33 +1283,33 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     have hxmain :
         (fun M => ∑ n : Set.Finite.toFinset (TfiniteBelow p T a g M),
             (pInvTQ p T) ^ (n.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (a.coeff (g + (n.val : ℚ) / T))) =
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (a.coeff (g + (n.val : ℚ) / T))) =
           fun M => Finset.sum (sa M) (fa M) := by
       funext M
       dsimp [sa, fa]
       simpa using (Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T a g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (a.coeff (g + (n : ℚ) / T))))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (a.coeff (g + (n : ℚ) / T))))
     have hymain :
         (fun M => ∑ n : Set.Finite.toFinset (TfiniteBelow p T b g M),
             (pInvTQ p T) ^ (n.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (b.coeff (g + (n.val : ℚ) / T))) =
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (b.coeff (g + (n.val : ℚ) / T))) =
           fun M => Finset.sum (sb M) (fb M) := by
       funext M
       dsimp [sb, fb]
       simpa using (Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T b g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (b.coeff (g + (n : ℚ) / T))))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (b.coeff (g + (n : ℚ) / T))))
     have hmain :
         (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (a + b) g M),
             (pInvTQ p T) ^ (n.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((a + b).coeff (g + (n.val : ℚ) / T))) =
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((a + b).coeff (g + (n.val : ℚ) / T))) =
           fun M => Finset.sum (sab M) (fab M) := by
       funext M
       dsimp [sab, fab]
       simpa using (Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T (a + b) g M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((a + b).coeff (g + (n : ℚ) / T))))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((a + b).coeff (g + (n : ℚ) / T))))
     have ha' : Filter.Tendsto (fun M => Finset.sum (sa M) (fa M)) Filter.atTop (nhds 0) := by
       rw [← hxmain]; exact ha g
     have hb' : Filter.Tendsto (fun M => Finset.sum (sb M) (fb M)) Filter.atTop (nhds 0) := by
@@ -1325,7 +1325,7 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     simp
   smul_mem' := by
     -- Mirrors `NullSeriesIdeal.smul_mem'` (lean:658–742).
-    -- Mechanical translation strategy: replace every occurrence of `(p : QpUn p)` with
+    -- Mechanical translation strategy: replace every occurrence of `(p : QpCUn p)` with
     -- `pInvTQ p T`, every `valued_v_p` with `valued_v_pInvT` (now proved), every
     -- `valued_v_p_zpow` with `valued_v_pInvT_zpow` (now proved), every `finiteBelow` with
     -- `TfiniteBelow`, every `(g + n)` with `(g + (n : ℚ) / T)`.
@@ -1354,7 +1354,7 @@ def TNullSeriesIdeal : Ideal (TLiftedPAdicHahnSeries p T) where
     -- Step 1: rewrite the partial sum as `TintPartial (c*x) g ⌊T·(M - g)⌋`.
     have hpartial_eq : (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (c * x) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((c * x).coeff (g + (n.val : ℚ) / T))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((c * x).coeff (g + (n.val : ℚ) / T))) =
       fun M : ℕ => TintPartial p T (c * x) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋ := by
       funext M
       exact TpartialSum_eq_intPartial p T (c * x) g M
@@ -1495,7 +1495,7 @@ private lemma one_notMem_TNullSeriesIdeal :
   have h_partial_sum_one : ∀ M : ℕ,
       (∑ n : Set.Finite.toFinset (TfiniteBelow p T (1 : TLiftedPAdicHahnSeries p T) 0 M),
           (pInvTQ p T) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n.val : ℚ) / T)))
         = 1 := by
     intro M
@@ -1526,14 +1526,14 @@ private lemma one_notMem_TNullSeriesIdeal :
         · have hzero : (0 : ℚ) + (((0 : ℤ) : ℚ)) / T = 0 := by push_cast; ring
           rw [hzero]; simp [HahnSeries.coeff_one]
     rw [show (∑ n : S, (pInvTQ p T) ^ (n.val : ℤ) *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
           ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n.val : ℚ) / T))) =
         ∑ n ∈ S, (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n : ℚ) / T)) from
       Finset.sum_attach (s := S) (f := fun n : ℤ =>
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n : ℚ) / T)))]
     rw [hS_eq, Finset.sum_singleton]
     have h_zero_eq : (0 : ℚ) + (((0 : ℤ) : ℚ)) / T = 0 := by push_cast; ring
@@ -1541,18 +1541,18 @@ private lemma one_notMem_TNullSeriesIdeal :
       rw [HahnSeries.coeff_one]; simp, map_one, mul_one]
     exact zpow_zero _
   -- The sequence is eventually `1`, so it tends to `1`. By uniqueness of limits in
-  -- `ℚᵘⁿ_[p,T]` (which is `T2`), `1 = 0`, contradicting `one_ne_zero`.
+  -- `ℚᶜᵘⁿ_[p,T]` (which is `T2`), `1 = 0`, contradicting `one_ne_zero`.
   have h_tend_one :
       Filter.Tendsto
         (fun M : ℕ =>
           ∑ n : Set.Finite.toFinset (TfiniteBelow p T (1 : TLiftedPAdicHahnSeries p T) 0 M),
             (pInvTQ p T) ^ (n.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
                 ((1 : TLiftedPAdicHahnSeries p T).coeff (0 + (n.val : ℚ) / T)))
-        Filter.atTop (nhds (1 : ℚᵘⁿ_[p,T])) := by
+        Filter.atTop (nhds (1 : ℚᶜᵘⁿ_[p,T])) := by
     apply Filter.Tendsto.congr (fun M => (h_partial_sum_one M).symm)
     exact tendsto_const_nhds
-  have h_eq : (1 : ℚᵘⁿ_[p,T]) = 0 := tendsto_nhds_unique h_tend_one htend
+  have h_eq : (1 : ℚᶜᵘⁿ_[p,T]) = 0 := tendsto_nhds_unique h_tend_one htend
   exact one_ne_zero h_eq
 
 /-! #### Cauchy property + limit of integer partial sums (Sub-tasks 1B, 1C) -/
@@ -1592,7 +1592,7 @@ private lemma TintPartial_isCauchy
     exact h_eventually.exists
   -- Helper: convert a `≤ ofAdd(-(L+1))` bound (with L ≥ N - 1) into a `< γ.1` bound.
   have h_convert : ∀ L : ℤ, (N : ℤ) - 1 ≤ L →
-      ∀ a : ℚᵘⁿ_[p,T],
+      ∀ a : ℚᶜᵘⁿ_[p,T],
         Valued.v a ≤
           ((Multiplicative.ofAdd (-(L + 1) : ℤ) : Multiplicative ℤ) : WithZero _) →
         Valued.v.restrict a < γ.1 := by
@@ -1639,52 +1639,52 @@ private lemma TintPartial_isCauchy
       rw [hneg, Valuation.map_neg]
       exact h_convert K' hK' _ hbound
 
-/-- Algebra-map square commutativity: viewing `OQpUn_embd` followed by `algebraMap` to `K`
+/-- Algebra-map square commutativity: viewing `OQpCUn_embd` followed by `algebraMap` to `K`
 agrees with `algebraMap` to `K₀` followed by the field inclusion `K₀ ↪ K`. -/
-private lemma algebraMap_OQpUn_embd_compat_early (a : ℤᵘⁿ_[p]) :
-    algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (OQpUn_embd p T a) =
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a) := by
-  change algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) a) =
-    QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)
-  unfold QpUn_embd
+private lemma algebraMap_OQpCUn_embd_compat_early (a : ℤᶜᵘⁿ_[p]) :
+    algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (OQpCUn_embd p T a) =
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a) := by
+  change algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) a) =
+    QpCUn_embd p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a)
+  unfold QpCUn_embd
   exact (IsFractionRing.lift_algebraMap (g :=
-    (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T)) _ a).symm
+    (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T)) _ a).symm
 
 /-- The integer-side valuation identity for the totally ramified extension `K₀ ↪ K`. -/
-private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᵘⁿ_[p]) :
-    Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)) =
-      (Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a))^T := by
-  rw [← algebraMap_OQpUn_embd_compat_early]
+private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᶜᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a)) =
+      (Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a))^T := by
+  rw [← algebraMap_OQpCUn_embd_compat_early]
   by_cases ha : a = 0
   · subst ha; simp [map_zero, zero_pow (NeZero.ne T)]
   · obtain ⟨n, h⟩ := IsDiscreteValuationRing.associated_pow_irreducible ha
       (WittVector.irreducible p)
     obtain ⟨u, hu⟩ := h.symm
     rw [← hu]
-    rw [map_mul (OQpUn_embd p T), map_pow (OQpUn_embd p T)]
+    rw [map_mul (OQpCUn_embd p T), map_pow (OQpCUn_embd p T)]
     rw [map_mul, map_pow]
     rw [Valuation.map_mul, Valuation.map_pow]
-    rw [show algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (((p : ℕ) : ℤᵘⁿ_[p]) ^ n * u.val) =
-          algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (((p : ℕ) : ℤᵘⁿ_[p])) ^ n *
-          algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val from by
+    rw [show algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (((p : ℕ) : ℤᶜᵘⁿ_[p]) ^ n * u.val) =
+          algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (((p : ℕ) : ℤᶜᵘⁿ_[p])) ^ n *
+          algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val from by
       rw [map_mul, map_pow]]
     rw [Valuation.map_mul, Valuation.map_pow]
-    have h_unit_K : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-        (OQpUn_embd p T u.val)) = 1 := by
-      have hunit : IsUnit (OQpUn_embd p T u.val) :=
-        (OQpUn_embd p T).isUnit_map u.isUnit
+    have h_unit_K : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+        (OQpCUn_embd p T u.val)) = 1 := by
+      have hunit : IsUnit (OQpCUn_embd p T u.val) :=
+        (OQpCUn_embd p T).isUnit_map u.isUnit
       obtain ⟨v, hv⟩ := hunit
       rw [← hv]
       exact Tvalued_v_algebraMap_unit_one (p := p) (T := T) v
-    have h_unit_K0 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) = 1 := by
-      have h1 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_le_one u.val
-      have h2 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_le_one u.inv
-      have h3 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) *
-          Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) = 1 := by
+    have h_unit_K0 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) = 1 := by
+      have h1 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) ≤ 1 :=
+        (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p])).valuation_le_one u.val
+      have h2 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) ≤ 1 :=
+        (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p])).valuation_le_one u.inv
+      have h3 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) *
+          Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) = 1 := by
         rw [← Valuation.map_mul, ← map_mul, u.val_inv, map_one, Valuation.map_one]
-      have hpos : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) ≠ 0 := by
+      have hpos : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) ≠ 0 := by
         intro hz
         rw [hz, zero_mul] at h3
         exact zero_ne_one h3
@@ -1692,27 +1692,27 @@ private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᵘⁿ_[p]) :
         rcases (eq_or_lt_of_le h1) with hEq | hLt
         · exact le_of_eq hEq.symm
         · exfalso
-          have hprod : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) *
-              Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) < 1 :=
+          have hprod : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) *
+              Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) < 1 :=
             mul_lt_one_of_lt_of_le hLt h2
           rw [h3] at hprod
           exact lt_irrefl _ hprod)
     rw [h_unit_K, h_unit_K0, mul_one, mul_pow, one_pow, mul_one, ← pow_mul]
-    have hLHS : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-          (OQpUn_embd p T ((p : ℕ) : ℤᵘⁿ_[p]))) =
+    have hLHS : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+          (OQpCUn_embd p T ((p : ℕ) : ℤᶜᵘⁿ_[p]))) =
         ((Multiplicative.ofAdd (-(T : ℤ)) : Multiplicative ℤ) : WithZero _) := by
-      rw [show OQpUn_embd p T ((p : ℕ) : ℤᵘⁿ_[p]) = (pInvT p T) ^ T from
+      rw [show OQpCUn_embd p T ((p : ℕ) : ℤᶜᵘⁿ_[p]) = (pInvT p T) ^ T from
             (pInvT_pow_T p T).symm]
       rw [map_pow]
-      rw [show algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T from rfl]
+      rw [show algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T from rfl]
       rw [show ((pInvTQ p T) ^ T) = ((pInvTQ p T) ^ ((T : ℤ))) by rfl]
       exact valued_v_pInvT_zpow (p := p) (T := T) (T : ℤ)
-    have hRHS : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
+    have hRHS : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) ((p : ℕ) : ℤᶜᵘⁿ_[p])) =
         ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      rw [QpUn.valued_algebraMap]
-      have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
-      have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
-          Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
+      rw [QpCUn.valued_algebraMap]
+      have hirr : Irreducible ((p : ℕ) : ℤᶜᵘⁿ_[p]) := WittVector.irreducible p
+      have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p])).asIdeal =
+          Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])} := hirr.maximalIdeal_eq
       rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
         (WittVector.p_nonzero p _) hpe]
       rfl
@@ -1724,17 +1724,17 @@ private lemma valued_v_algebraMap_K₀_K_int_early (a : ℤᵘⁿ_[p]) :
     rw [mul_comm]
 
 /-- The ramification-index valuation identity `v_K(ι̃ z) = (v_{K₀}(z))^T`. -/
-private lemma valued_v_algebraMap_K₀_K_early (z : ℚᵘⁿ_[p]) :
-    Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
-  obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᵘⁿ_[p]) z
+private lemma valued_v_algebraMap_K₀_K_early (z : ℚᶜᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
+  obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᶜᵘⁿ_[p]) z
   rw [← hz]
   simp only [map_div₀, div_pow]
   rw [valued_v_algebraMap_K₀_K_int_early, valued_v_algebraMap_K₀_K_int_early]
 
 /-- The algebra map `K₀ ↪ K` is continuous at `0`. -/
 private lemma tendsto_algebraMap_K₀_K_zero_early :
-    Filter.Tendsto (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
-  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p,T]) _).tendsto_right_iff]
+    Filter.Tendsto (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
+  rw [(Valued.hasBasis_nhds_zero (ℚᶜᵘⁿ_[p,T]) _).tendsto_right_iff]
   intro γ _
   -- In v4.31 `γ : (ValueGroup₀ Valued.v)ˣ`; work with its `WithZero (Multiplicative ℤ)` image.
   set c : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hc_def
@@ -1751,10 +1751,10 @@ private lemma tendsto_algebraMap_K₀_K_zero_early :
       · linarith [min_le_right (n - 1) (-1)]
     have h2 : k * 1 = k := mul_one _
     linarith
-  -- Source bound: the ball `{z | Valued.v z < ofAdd k}` on `ℚᵘⁿ_[p]`.
+  -- Source bound: the ball `{z | Valued.v z < ofAdd k}` on `ℚᶜᵘⁿ_[p]`.
   rw [Filter.eventually_iff]
-  have hsrc : {z : ℚᵘⁿ_[p] | Valued.v z <
-      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᵘⁿ_[p]) :=
+  have hsrc : {z : ℚᶜᵘⁿ_[p] | Valued.v z <
+      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᶜᵘⁿ_[p]) :=
     mem_nhds_zero_v_lt WithZero.coe_ne_zero
   refine Filter.mem_of_superset hsrc ?_
   intro z hz
@@ -1778,122 +1778,122 @@ private lemma tendsto_algebraMap_K₀_K_zero_early :
 
 /-- Continuity of `algebraMap K₀ → K`. -/
 private lemma continuous_algebraMap_K₀_K_early :
-    Continuous (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) := by
-  have h0 : ContinuousAt (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) 0 := by
+    Continuous (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) := by
+  have h0 : ContinuousAt (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) 0 := by
     rw [ContinuousAt, map_zero]
     exact tendsto_algebraMap_K₀_K_zero_early p T
   exact continuous_of_continuousAt_zero
-    (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])).toAddMonoidHom h0
+    (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])).toAddMonoidHom h0
 
--- The valuation on `ℚᵘⁿ_[p,T]` is rank-one discrete (transferred from the adic valuation on
--- `FractionRing ℤᵘⁿ_[p,T]` via the value-group equality for `WithVal`). In v4.31 `RankOne` no
+-- The valuation on `ℚᶜᵘⁿ_[p,T]` is rank-one discrete (transferred from the adic valuation on
+-- `FractionRing ℤᶜᵘⁿ_[p,T]` via the value-group equality for `WithVal`). In v4.31 `RankOne` no
 -- longer takes a bare `hom`/`exists_val_nontrivial`; we build it through `IsRankOneDiscrete`.
 noncomputable instance :
-    (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))).IsRankOneDiscrete where
+    (Valued.v : Valuation ℚᶜᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))).IsRankOneDiscrete where
   exists_generator_lt_one' := by
-    have h : ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation
-        (FractionRing (ℤᵘⁿ_[p,T]))).IsRankOneDiscrete := inferInstance
+    have h : ((IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation
+        (FractionRing (ℤᶜᵘⁿ_[p,T]))).IsRankOneDiscrete := inferInstance
     obtain ⟨γ, hγ, hγ1⟩ := h.exists_generator_lt_one'
     exact ⟨γ, by rw [WithVal.valueGroup_eq]; exact hγ, hγ1⟩
 
 noncomputable instance :
-  Valuation.RankOne (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) :=
+  Valuation.RankOne (Valued.v : Valuation ℚᶜᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))) :=
   Valuation.IsRankOneDiscrete.rankOne
-    (v := (Valued.v : Valuation ℚᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))))
+    (v := (Valued.v : Valuation ℚᶜᵘⁿ_[p,T] (WithZero (Multiplicative ℤ))))
     (by exact_mod_cast (Fact.out : Nat.Prime p).one_lt : (1 : NNReal) < (p : NNReal))
 
-noncomputable instance : NontriviallyNormedField ℚᵘⁿ_[p,T] :=
-  Valued.toNontriviallyNormedField (ℚᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))
+noncomputable instance : NontriviallyNormedField ℚᶜᵘⁿ_[p,T] :=
+  Valued.toNontriviallyNormedField (ℚᶜᵘⁿ_[p,T]) (WithZero (Multiplicative ℤ))
 
--- Surjectivity of `Valued.v` on `ℚᵘⁿ_[p,T]` (via the `WithVal` bridge to the height-one
--- valuation on `FractionRing ℤᵘⁿ_[p,T]`). Used by the norm/lift bridges below.
+-- Surjectivity of `Valued.v` on `ℚᶜᵘⁿ_[p,T]` (via the `WithVal` bridge to the height-one
+-- valuation on `FractionRing ℤᶜᵘⁿ_[p,T]`). Used by the norm/lift bridges below.
 private lemma Tvalued_v_surjective :
-    Function.Surjective (Valued.v : ℚᵘⁿ_[p,T] → WithZero (Multiplicative ℤ)) := by
+    Function.Surjective (Valued.v : ℚᶜᵘⁿ_[p,T] → WithZero (Multiplicative ℤ)) := by
   intro x
-  obtain ⟨y, hy⟩ := (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_surjective
-    (FractionRing (ℤᵘⁿ_[p,T])) x
+  obtain ⟨y, hy⟩ := (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_surjective
+    (FractionRing (ℤᶜᵘⁿ_[p,T])) x
   exact ⟨WithVal.toVal _ y, by rw [WithVal.valued_toVal]; exact hy⟩
 
-/-- The norm on `ℚᵘⁿ_[p,T]` is the real number `toNNReal (v a)`: the rank-one valuation `v` composed
-with the base-`p` embedding of the value group into `ℝ≥0`. -/
+/-- The norm on `ℚᶜᵘⁿ_[p,T]` is the real number `toNNReal (v a)`: the rank-one valuation `v`
+composed with the base-`p` embedding of the value group into `ℝ≥0`. -/
 -- v4.31: `‖·‖` on the `Valued.toNormedField` is `RankOne.hom (Valued.v.restrict ·)`, no longer
 -- defeq to `toNNReal (Valued.v ·)`; bridge through the rank-one `hom` plus surjectivity.
-lemma Tnorm_eq_toNNReal_valued (a : ℚᵘⁿ_[p,T]) :
+lemma Tnorm_eq_toNNReal_valued (a : ℚᶜᵘⁿ_[p,T]) :
     ‖a‖ = ((WithZeroMulInt.toNNReal (p_ne_zero p) (Valued.v a) : NNReal) : ℝ) := by
   rw [Valued.toNormedField.norm_def]
   norm_cast
-  rw [show (Valuation.RankOne.hom (Valued.v : Valuation ℚᵘⁿ_[p,T] _)) (Valued.v.restrict a)
+  rw [show (Valuation.RankOne.hom (Valued.v : Valuation ℚᶜᵘⁿ_[p,T] _)) (Valued.v.restrict a)
         = WithZeroMulInt.toNNReal (p_ne_zero p)
             ((Valuation.IsRankOneDiscrete.valueGroup₀_equiv_withZeroMulInt
-              (v := (Valued.v : Valuation ℚᵘⁿ_[p,T] _))) (Valued.v.restrict a)) from rfl,
+              (v := (Valued.v : Valuation ℚᶜᵘⁿ_[p,T] _))) (Valued.v.restrict a)) from rfl,
      Valuation.IsRankOneDiscrete.valueGroup₀_equiv_withZeroMulInt_restrict_apply_of_surjective
        (Tvalued_v_surjective p T) a]
 
-/-- An element of `ℚᵘⁿ_[p,T]` with valuation `≤ 1` lifts to the ring of integers `ℤᵘⁿ_[p,T]`; i.e.
+/-- An element of `ℚᶜᵘⁿ_[p,T]` with valuation `≤ 1` lifts to the ring of integers `ℤᶜᵘⁿ_[p,T]`; i.e.
 the valuation ring is exactly the closed unit ball. -/
 -- Routes through the `FractionRing` to avoid the `whnf` timeout on the `WithVal` structure.
-lemma Texists_lift_of_valued_le_one {z : ℚᵘⁿ_[p,T]} (hz : Valued.v z ≤ 1) :
-    ∃ a : ℤᵘⁿ_[p,T], algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a = z := by
-  have hz' : ((IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation
-      ((FractionRing (ℤᵘⁿ_[p,T])))) (WithVal.equiv _ z) ≤ 1 := by
+lemma Texists_lift_of_valued_le_one {z : ℚᶜᵘⁿ_[p,T]} (hz : Valued.v z ≤ 1) :
+    ∃ a : ℤᶜᵘⁿ_[p,T], algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) a = z := by
+  have hz' : ((IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation
+      ((FractionRing (ℤᶜᵘⁿ_[p,T])))) (WithVal.equiv _ z) ≤ 1 := by
     rw [WithVal.val_apply_equiv]; exact hz
   obtain ⟨a, ha⟩ := IsDiscreteValuationRing.exists_lift_of_le_one
-    (A := ℤᵘⁿ_[p,T]) (K := FractionRing (ℤᵘⁿ_[p,T])) hz'
+    (A := ℤᶜᵘⁿ_[p,T]) (K := FractionRing (ℤᶜᵘⁿ_[p,T])) hz'
   refine ⟨a, ?_⟩
   apply (WithVal.equiv _).injective
   rw [WithVal.algebraMap_right_apply] at *
   simpa [WithVal.equiv] using ha
 
-instance : ContinuousSMul (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) :=
-    continuousSMul_of_algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (continuous_algebraMap_K₀_K_early p T)
+instance : ContinuousSMul (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) :=
+    continuousSMul_of_algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (continuous_algebraMap_K₀_K_early p T)
 
-/-- The `Valued`-induced topology on `ℚᵘⁿ_[p,T]` is complete.
+/-- The `Valued`-induced topology on `ℚᶜᵘⁿ_[p,T]` is complete.
 
 Discharged via `FiniteDimensional.complete` over the finite extension
-`ℚᵘⁿ_[p,T] / ℚᵘⁿ_[p]`.  We first view both fields as rank-one nonarchimedean
+`ℚᶜᵘⁿ_[p,T] / ℚᶜᵘⁿ_[p]`.  We first view both fields as rank-one nonarchimedean
 normed fields using their `Valued` structures, then obtain `ContinuousSMul`
 from `isModuleTopologyOfFiniteDimensional`. -/
-instance instCompleteSpaceQpUnT : CompleteSpace (ℚᵘⁿ_[p,T]) :=
-  FiniteDimensional.complete (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
+instance instCompleteSpaceQpCUnT : CompleteSpace (ℚᶜᵘⁿ_[p,T]) :=
+  FiniteDimensional.complete (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
 
 /-- T-scaled analogue of `existsCanonicalExpansionAux.exists_lim_intPartial`
 (Poonen line 1043).  The integer-cutoff partial sums converge to a limit in the
-complete DVF `ℚᵘⁿ_[p,T]`. -/
+complete DVF `ℚᶜᵘⁿ_[p,T]`. -/
 private lemma Texists_lim_intPartial
     (x : TLiftedPAdicHahnSeries p T) (g : ℚ) :
-    ∃ y : ℚᵘⁿ_[p,T], Filter.Tendsto (TintPartial p T x g) Filter.atTop (nhds y) :=
+    ∃ y : ℚᶜᵘⁿ_[p,T], Filter.Tendsto (TintPartial p T x g) Filter.atTop (nhds y) :=
   ⟨_, (TintPartial_isCauchy p T x g).tendsto_limUnder⟩
 
 /-! ### Phase 2A infrastructure: per-element Teichmüller digits -/
 
-/-- The residue field of `ℤᵘⁿ_[p]` is canonically isomorphic to `Fpbar p`.
+/-- The residue field of `ℤᶜᵘⁿ_[p]` is canonically isomorphic to `Fpbar p`.
 
 Built from `WittVector.quotientPEquiv : 𝕎 k ⧸ (p) ≃+* k` and the fact that the maximal
-ideal of `ℤᵘⁿ_[p] = 𝕎 (Fpbar p)` is `(p)`. -/
+ideal of `ℤᶜᵘⁿ_[p] = 𝕎 (Fpbar p)` is `(p)`. -/
 private noncomputable def TResidueIsoFpbar :
-    IsLocalRing.ResidueField (ℤᵘⁿ_[p]) ≃+* Fpbar p :=
+    IsLocalRing.ResidueField (ℤᶜᵘⁿ_[p]) ≃+* Fpbar p :=
   (Ideal.quotEquivOfEq (WittVector.irreducible p).maximalIdeal_eq).trans
     WittVector.quotientPEquiv
 
-/-- The composite residue map `ℤᵘⁿ_[p,T] →+* Fpbar p`.  Sends `pInvT` to `0` and
+/-- The composite residue map `ℤᶜᵘⁿ_[p,T] →+* Fpbar p`.  Sends `pInvT` to `0` and
 `algebraMap (teichmuller p α)` to `α`. -/
-private noncomputable def TRes : ℤᵘⁿ_[p,T] →+* Fpbar p :=
+private noncomputable def TRes : ℤᶜᵘⁿ_[p,T] →+* Fpbar p :=
   (TResidueIsoFpbar p).toRingHom.comp (TResidue p T)
 
-/-- The Teichmüller section `Fpbar p →* ℤᵘⁿ_[p,T]`, lifting `WittVector.teichmuller p`
-through the inclusion `ℤᵘⁿ_[p] → ℤᵘⁿ_[p,T]`.
+/-- The Teichmüller section `Fpbar p →* ℤᶜᵘⁿ_[p,T]`, lifting `WittVector.teichmuller p`
+through the inclusion `ℤᶜᵘⁿ_[p] → ℤᶜᵘⁿ_[p,T]`.
 
 Only a `MonoidHom`, not a `RingHom` — `teichmuller` is multiplicative but not additive. -/
-private noncomputable def TTeichmuller : Fpbar p →* ℤᵘⁿ_[p,T] :=
-  ((algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])).toMonoidHom).comp (teichmuller p)
+private noncomputable def TTeichmuller : Fpbar p →* ℤᶜᵘⁿ_[p,T] :=
+  ((algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])).toMonoidHom).comp (teichmuller p)
 
 /-- **Step 2a key identity.**  `TRes (TTeichmuller α) = α`. -/
 private lemma TRes_TTeichmuller (α : Fpbar p) :
     TRes p T (TTeichmuller p T α) = α := by
-  change (TResidueIsoFpbar p) (TResidue p T (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
+  change (TResidueIsoFpbar p) (TResidue p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
       (teichmuller p α))) = α
   rw [TResidue_of]
-  show (TResidueIsoFpbar p) (IsLocalRing.residue (ℤᵘⁿ_[p]) (teichmuller p α)) = α
+  show (TResidueIsoFpbar p) (IsLocalRing.residue (ℤᶜᵘⁿ_[p]) (teichmuller p α)) = α
   unfold TResidueIsoFpbar
   change WittVector.quotientPEquiv
       ((Ideal.quotEquivOfEq (WittVector.irreducible p).maximalIdeal_eq)
@@ -1904,38 +1904,38 @@ private lemma TRes_TTeichmuller (α : Fpbar p) :
   change (teichmuller p α).coeff 0 = α
   exact WittVector.teichmuller_coeff_zero p α
 
-/-- For any `r : ℤᵘⁿ_[p,T]`, `r` and `TTeichmuller (TRes r)` have the same residue. -/
-private lemma TResidue_TTeichmuller_TRes (r : ℤᵘⁿ_[p,T]) :
+/-- For any `r : ℤᶜᵘⁿ_[p,T]`, `r` and `TTeichmuller (TRes r)` have the same residue. -/
+private lemma TResidue_TTeichmuller_TRes (r : ℤᶜᵘⁿ_[p,T]) :
     TResidue p T (TTeichmuller p T (TRes p T r)) = TResidue p T r := by
   apply (TResidueIsoFpbar p).injective
   change TRes p T (TTeichmuller p T (TRes p T r)) = TRes p T r
   exact TRes_TTeichmuller p T (TRes p T r)
 
-/-- `pInvT` divides `r - TTeichmuller (TRes r)` for every `r : ℤᵘⁿ_[p,T]`. -/
-private lemma pInvT_dvd_sub_TTeichmuller_TRes (r : ℤᵘⁿ_[p,T]) :
+/-- `pInvT` divides `r - TTeichmuller (TRes r)` for every `r : ℤᶜᵘⁿ_[p,T]`. -/
+private lemma pInvT_dvd_sub_TTeichmuller_TRes (r : ℤᶜᵘⁿ_[p,T]) :
     pInvT p T ∣ r - TTeichmuller p T (TRes p T r) := by
   apply (TResidue_eq_zero_iff p T _).mp
   rw [map_sub, TResidue_TTeichmuller_TRes, sub_self]
 
 /-- The recursive residual sequence used to extract Teichmüller digits.
 `TpInvTResidual z 0 = z`; `TpInvTResidual z (n+1) := (r n - TTeich(TRes (r n))) / pInvT`. -/
-private noncomputable def TpInvTResidual (z : ℤᵘⁿ_[p,T]) : ℕ → ℤᵘⁿ_[p,T]
+private noncomputable def TpInvTResidual (z : ℤᶜᵘⁿ_[p,T]) : ℕ → ℤᶜᵘⁿ_[p,T]
   | 0 => z
   | n+1 => (pInvT_dvd_sub_TTeichmuller_TRes p T (TpInvTResidual z n)).choose
 
 /-- The `n`-th Teichmüller digit of `z` (as a `Fpbar p`-valued sequence). -/
-private noncomputable def TpInvTDigit (z : ℤᵘⁿ_[p,T]) (n : ℕ) : Fpbar p :=
+private noncomputable def TpInvTDigit (z : ℤᶜᵘⁿ_[p,T]) (n : ℕ) : Fpbar p :=
   TRes p T (TpInvTResidual p T z n)
 
 /-- The defining recursion: each step pulls out a factor of `pInvT`. -/
-private lemma TpInvTResidual_succ_eq (z : ℤᵘⁿ_[p,T]) (n : ℕ) :
+private lemma TpInvTResidual_succ_eq (z : ℤᶜᵘⁿ_[p,T]) (n : ℕ) :
     TpInvTResidual p T z n - TTeichmuller p T (TpInvTDigit p T z n) =
       pInvT p T * TpInvTResidual p T z (n+1) :=
   (pInvT_dvd_sub_TTeichmuller_TRes p T (TpInvTResidual p T z n)).choose_spec
 
 /-- Auxiliary partial-sum identity: after subtracting the first `n+1` Teichmüller terms
 from `z`, the remainder equals `(pInvT)^(n+1) * r(n+1)`. -/
-private lemma TpInvT_partial_sum_eq (z : ℤᵘⁿ_[p,T]) (n : ℕ) :
+private lemma TpInvT_partial_sum_eq (z : ℤᶜᵘⁿ_[p,T]) (n : ℕ) :
     z - ∑ i ∈ Finset.Iic n, (pInvT p T)^i * TTeichmuller p T (TpInvTDigit p T z i) =
       (pInvT p T)^(n+1) * TpInvTResidual p T z (n+1) := by
   induction n with
@@ -1971,19 +1971,19 @@ private lemma TpInvT_partial_sum_eq (z : ℤᵘⁿ_[p,T]) (n : ℕ) :
 /-- **Phase 2A digit lemma** (T-DVR analogue of
 `WittVector.dvd_sub_sum_teichmuller_iterateFrobeniusEquiv_coeff`).
 
-For every `z : ℤᵘⁿ_[p,T]`, there exist Teichmüller digits `a : ℕ → Fpbar p` such that
+For every `z : ℤᶜᵘⁿ_[p,T]`, there exist Teichmüller digits `a : ℕ → Fpbar p` such that
 for every `n`, `(pInvT)^(n+1)` divides `z - ∑ i ≤ n, (pInvT)^i * algMap (teichmuller p (a i))`. -/
-private lemma Texists_T_pInvT_digits (z : ℤᵘⁿ_[p,T]) :
+private lemma Texists_T_pInvT_digits (z : ℤᶜᵘⁿ_[p,T]) :
     ∃ a : ℕ → Fpbar p,
       ∀ n : ℕ,
         (pInvT p T)^(n+1) ∣ z - ∑ i ∈ Finset.Iic n,
-          (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (a i)) := by
+          (pInvT p T)^i * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (a i)) := by
   refine ⟨TpInvTDigit p T z, fun n => ?_⟩
   refine ⟨TpInvTResidual p T z (n+1), ?_⟩
   have h := TpInvT_partial_sum_eq p T z n
   -- TTeichmuller α = algebraMap (teichmuller p α) by defn
   change z - ∑ i ∈ Finset.Iic n,
-      (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
+      (pInvT p T)^i * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
         (teichmuller p (TpInvTDigit p T z i)) =
       (pInvT p T)^(n+1) * TpInvTResidual p T z (n+1)
   exact h
@@ -1993,26 +1993,26 @@ set_option maxHeartbeats 1000000 in
 -- exists_teichmuller_digits)
 /-- **Phase 2A wrapper** — T-port of `exists_teichmuller_digits`.
 
-For every `y : ℚᵘⁿ_[p,T]`, there exist Teichmüller digits `b : ℤ → Fpbar p` and a
+For every `y : ℚᶜᵘⁿ_[p,T]`, there exist Teichmüller digits `b : ℤ → Fpbar p` and a
 cutoff `m₀ : ℤ` such that `b k = 0` for `k < m₀` and the partial sums
 `∑_{k ∈ [m₀, K]} (pInvTQ p T)^k * algMap (teichmuller p (b k))` converge to `y`. -/
-private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
+private lemma Texists_teichmuller_digits (y : ℚᶜᵘⁿ_[p,T]) :
     ∃ (b : ℤ → Fpbar p) (m₀ : ℤ),
       (∀ k : ℤ, k < m₀ → b k = 0) ∧
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m₀ K,
           (pInvTQ p T) ^ k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k))))
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k))))
         Filter.atTop (nhds y) := by
   by_cases hy : y = 0
   · -- Case 1: y = 0. Take b ≡ 0, m₀ = 0.
     refine ⟨0, 0, fun _ _ => rfl, ?_⟩
     rw [hy]
     have hzero : (fun K : ℤ => ∑ k ∈ Finset.Icc (0 : ℤ) K,
-        (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-          (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])
-            (teichmuller p ((0 : ℤ → Fpbar p) k)))) = fun _ => (0 : ℚᵘⁿ_[p,T]) := by
+        (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+          (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])
+            (teichmuller p ((0 : ℤ → Fpbar p) k)))) = fun _ => (0 : ℚᶜᵘⁿ_[p,T]) := by
       funext K
       apply Finset.sum_eq_zero
       intro k _
@@ -2031,12 +2031,12 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
       congr
     have hpn_val := valued_v_pInvT_zpow (p := p) (T := T)
     -- z := pInvTQ^(-m₀) * y, Valued.v z = 1
-    set z : ℚᵘⁿ_[p,T] := (pInvTQ p T)^(-m₀) * y with hz_def
+    set z : ℚᶜᵘⁿ_[p,T] := (pInvTQ p T)^(-m₀) * y with hz_def
     have hpInvTQ_ne : pInvTQ p T ≠ 0 := by
       unfold pInvTQ
       intro h
       exact pInvT_ne_zero p T
-        ((IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]))
+        ((IsFractionRing.injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]))
           (by simpa using h))
     have hvz : Valued.v z = 1 := by
       rw [hz_def, Valuation.map_mul, hpn_val (-m₀), hvy_eq, hm'_eq]
@@ -2046,7 +2046,7 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
         rw [← ofAdd_add]; simp]
       rfl
     have hvz_le : Valued.v z ≤ 1 := hvz.le
-    -- Lift z to ℤᵘⁿ_[p,T]
+    -- Lift z to ℤᶜᵘⁿ_[p,T]
     obtain ⟨z', hz'⟩ := Texists_lift_of_valued_le_one p T hvz_le
     -- Apply Texists_T_pInvT_digits
     obtain ⟨a, ha⟩ := Texists_T_pInvT_digits p T z'
@@ -2061,23 +2061,23 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
       -- Bound: for K ≥ m₀, Valued.v (y - partial_sum K) ≤ ofAdd(-(K+1))
       have hbound : ∀ K : ℤ, m₀ ≤ K → Valued.v (y -
           ∑ k ∈ Finset.Icc m₀ K,
-            (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k)))) ≤
+            (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k)))) ≤
         ((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := by
         intro K hK
         set n : ℕ := (K - m₀).toNat with hn_def
         have hK_eq : K = m₀ + (n : ℤ) := by rw [hn_def]; omega
         -- Apply digit lemma at z'
         have hdigit : (pInvT p T)^(n+1) ∣ z' - ∑ i ∈ Finset.Iic n,
-            (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (a i)) :=
+            (pInvT p T)^i * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (a i)) :=
           ha n
         obtain ⟨c, hc⟩ := hdigit
-        -- Transport to ℚᵘⁿ_[p,T]
-        have halg := congrArg (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])) hc
+        -- Transport to ℚᶜᵘⁿ_[p,T]
+        have halg := congrArg (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])) hc
         simp only [map_sub, map_sum, map_mul, map_pow] at halg
         rw [hz'] at halg
         -- algebraMap (pInvT) = pInvTQ
-        have hpInvT_cast : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T :=
+        have hpInvT_cast : algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T :=
           rfl
         rw [hpInvT_cast] at halg
         -- y = pInvTQ^m₀ * z
@@ -2086,11 +2086,11 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
             zpow_zero, one_mul]
         -- Reindex partial sum
         have hreindex : ∑ k ∈ Finset.Icc m₀ K,
-            (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k))) =
+            (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k))) =
           (pInvTQ p T)^m₀ * ∑ i ∈ Finset.Iic n,
-            (pInvTQ p T)^i * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (a i))) := by
+            (pInvTQ p T)^i * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (a i))) := by
           have hIcc_eq : Finset.Icc m₀ K =
               (Finset.range (n + 1)).map (Nat.castEmbedding.trans <| addLeftEmbedding m₀) := by
             rw [Int.Icc_eq_finset_map]
@@ -2112,22 +2112,22 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
           ring
         -- y - partial_sum K = pInvTQ^m₀ * (pInvTQ^(n+1) * algebraMap c)
         have hkey : y - ∑ k ∈ Finset.Icc m₀ K,
-            (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k))) =
+            (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k))) =
           (pInvTQ p T)^m₀ *
-            ((pInvTQ p T)^(n+1) * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) c) := by
+            ((pInvTQ p T)^(n+1) * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) c) := by
           rw [hreindex, hy_eq, ← mul_sub, halg]
         rw [hkey]
         rw [Valuation.map_mul, Valuation.map_mul, hpn_val m₀]
-        rw [show ((pInvTQ p T)^(n+1) : ℚᵘⁿ_[p,T]) =
-              ((pInvTQ p T)^((n : ℤ)+1) : ℚᵘⁿ_[p,T]) from by
+        rw [show ((pInvTQ p T)^(n+1) : ℚᶜᵘⁿ_[p,T]) =
+              ((pInvTQ p T)^((n : ℤ)+1) : ℚᶜᵘⁿ_[p,T]) from by
           rw [← zpow_natCast (pInvTQ p T) (n+1)]; push_cast; rfl]
         rw [hpn_val ((n : ℤ)+1)]
-        have h_alg_le : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) c) ≤ 1 :=
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one c
+        have h_alg_le : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) c) ≤ 1 :=
+          (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one c
         calc ((Multiplicative.ofAdd (-m₀ : ℤ) : Multiplicative ℤ) : WithZero _) *
             (((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) *
-              Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) c))
+              Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) c))
             ≤ ((Multiplicative.ofAdd (-m₀ : ℤ) : Multiplicative ℤ) : WithZero _) *
               (((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) :
                   WithZero _) * 1) :=
@@ -2169,14 +2169,14 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
       have hK_plus_1 : (N : ℤ) ≤ K + 1 := by linarith
       apply hγ
       change Valued.v ((∑ k ∈ Finset.Icc m₀ K,
-        (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-          (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k)))) - y) < γ
+        (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+          (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k)))) - y) < γ
       rw [Valuation.map_sub_swap]
       have h1 := hbound K hK_ge_m₀
       have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p)
           (Valued.v (y - ∑ k ∈ Finset.Icc m₀ K,
-            (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k))))) ≤
+            (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k))))) ≤
           WithZeroMulInt.toNNReal (p_ne_zero p)
             (((Multiplicative.ofAdd (-(K + 1) : ℤ) : Multiplicative ℤ) : WithZero _)) :=
         hsm.monotone h1
@@ -2198,8 +2198,8 @@ private lemma Texists_teichmuller_digits (y : ℚᵘⁿ_[p,T]) :
         omega
       have h_chain : WithZeroMulInt.toNNReal (p_ne_zero p)
           (Valued.v (y - ∑ k ∈ Finset.Icc m₀ K,
-            (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b k))))) < ε :=
+            (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b k))))) < ε :=
         (h_nnreal_le.trans h_pow_le).trans_lt hN
       rw [hε_def] at h_chain
       exact hsm.lt_iff_lt.mp h_chain
@@ -2210,23 +2210,23 @@ omit [NeZero T] in
 /-- **Helper.** `TTeichmuller (0 : Fpbar p) = 0`. Needed because `TTeichmuller`
 is only a `MonoidHom`, so `MonoidHom.map_zero` does not apply directly. -/
 private lemma TTeichmuller_zero : TTeichmuller p T (0 : Fpbar p) = 0 := by
-  change algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (0 : Fpbar p)) = 0
+  change algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (0 : Fpbar p)) = 0
   rw [WittVector.teichmuller_zero, map_zero]
 
 /-- **Helper A.** `TTeichmuller p T` is injective. Composition of
-`OQpUn_embd_injective` with `injective_teichmuller`. -/
+`OQpCUn_embd_injective` with `injective_teichmuller`. -/
 private lemma Tinjective_TTeichmuller :
     Function.Injective (TTeichmuller p T) :=
-  (OQpUn_embd_injective p T).comp (injective_teichmuller p)
+  (OQpCUn_embd_injective p T).comp (injective_teichmuller p)
 
 set_option maxHeartbeats 1000000 in
 -- maxHeartbeats: heavy elaboration in the multi-phase proof body (mirrors
 -- teichmuller_digits_unique)
-/-- **Phase 2B (T-Lemma 4.5).** Uniqueness of Teichmüller digits for `ℚᵘⁿ_[p,T]`.
+/-- **Phase 2B (T-Lemma 4.5).** Uniqueness of Teichmüller digits for `ℚᶜᵘⁿ_[p,T]`.
 T-scaled analogue of `teichmuller_digits_unique` (Poonen 1336–1818).
 
 Steps 1–7 follow Poonen mechanically with the substitution rule
-`(p : QpUn p) ↦ pInvTQ p T`, `(p : OQpUn p) ↦ pInvT p T`,
+`(p : QpCUn p) ↦ pInvTQ p T`, `(p : OQpCUn p) ↦ pInvT p T`,
 `teichmuller ↦ TTeichmuller`, `valued_v_p_zpow ↦ valued_v_pInvT_zpow`.
 Step 9 (extraction of leading digit) **diverges**: where Poonen routes through
 `WittVector.mem_span_p_pow_iff_le_coeff_eq_zero` + `teichmuller_coeff_zero`,
@@ -2235,16 +2235,16 @@ private lemma Tteichmuller_digits_unique
     (b b' : ℤ → Fpbar p) (m₀ m₀' : ℤ)
     (hb : ∀ k : ℤ, k < m₀  → b  k = 0)
     (hb' : ∀ k : ℤ, k < m₀' → b' k = 0)
-    {y : ℚᵘⁿ_[p,T]}
+    {y : ℚᶜᵘⁿ_[p,T]}
     (htb : Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m₀ K,
           (pInvTQ p T) ^ k *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (TTeichmuller p T (b k)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (TTeichmuller p T (b k)))
         Filter.atTop (nhds y))
     (htb' : Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m₀' K,
           (pInvTQ p T) ^ k *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (TTeichmuller p T (b' k)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (TTeichmuller p T (b' k)))
         Filter.atTop (nhds y)) :
     ∀ k : ℤ, b k = b' k := by
   -- Step 1. Unify cutoff
@@ -2257,21 +2257,21 @@ private lemma Tteichmuller_digits_unique
   let c : ℕ → Fpbar p := fun i => b (m + i)
   let c' : ℕ → Fpbar p := fun i => b' (m + i)
   -- Step 3. Witt-integer partial sum.
-  let Spart : (ℕ → Fpbar p) → ℕ → ℤᵘⁿ_[p,T] := fun d N =>
+  let Spart : (ℕ → Fpbar p) → ℕ → ℤᶜᵘⁿ_[p,T] := fun d N =>
     ∑ i ∈ Finset.Iic N, (pInvT p T)^i * TTeichmuller p T (d i)
   have hpInvTQ_ne : pInvTQ p T ≠ 0 := by
     unfold pInvTQ
     intro h
     exact pInvT_ne_zero p T
-      ((IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]))
+      ((IsFractionRing.injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]))
         (by simpa using h))
   have hpn_val := valued_v_pInvT_zpow (p := p) (T := T)
   -- Step 4. Replace `Icc m₀ K`-sum with `Icc m K`-sum (extending b by 0).
   have hsum_eq_b : ∀ K : ℤ, ∑ k ∈ Finset.Icc m₀ K,
-        (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
           (TTeichmuller p T (b k)) =
       ∑ k ∈ Finset.Icc m K,
-        (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
           (TTeichmuller p T (b k)) := by
     intro K
     apply Finset.sum_subset
@@ -2286,10 +2286,10 @@ private lemma Tteichmuller_digits_unique
         exact hk_not (Finset.mem_Icc.mpr ⟨hge, hk.2⟩)
       rw [hb k hk_lt, TTeichmuller_zero, map_zero, mul_zero]
   have hsum_eq_b' : ∀ K : ℤ, ∑ k ∈ Finset.Icc m₀' K,
-        (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
           (TTeichmuller p T (b' k)) =
       ∑ k ∈ Finset.Icc m K,
-        (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
           (TTeichmuller p T (b' k)) := by
     intro K
     apply Finset.sum_subset
@@ -2306,9 +2306,9 @@ private lemma Tteichmuller_digits_unique
   -- Step 5. Bridge sum to algebraMap of Spart.
   have h_to_Spart : ∀ (d : ℕ → Fpbar p) (N : ℕ),
       ∑ i ∈ Finset.Iic N,
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
           (TTeichmuller p T (d i)) * (pInvTQ p T)^i =
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
         (∑ i ∈ Finset.Iic N, (pInvT p T)^i * TTeichmuller p T (d i)) := by
     intro d N
     rw [map_sum]
@@ -2317,37 +2317,37 @@ private lemma Tteichmuller_digits_unique
     rw [map_mul, map_pow, mul_comm]
     rfl
   -- Step 6. Build converging shifted sequence.
-  set z : ℚᵘⁿ_[p,T] := (pInvTQ p T)^(-m) * y with hz_def
+  set z : ℚᶜᵘⁿ_[p,T] := (pInvTQ p T)^(-m) * y with hz_def
   have h_natTendsto : ∀ (d : ℕ → Fpbar p),
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m K,
-          (pInvTQ p T) ^ k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (pInvTQ p T) ^ k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (d (k - m).toNat)))
         Filter.atTop (nhds y) →
       Filter.Tendsto
-        (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart d N))
+        (fun N : ℕ => algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart d N))
         Filter.atTop (nhds z) := by
     intro d hd
     have h_mul : Filter.Tendsto
         (fun K : ℤ => (pInvTQ p T)^(-m) *
           ∑ k ∈ Finset.Icc m K, (pInvTQ p T)^k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               (TTeichmuller p T (d (k - m).toNat)))
         Filter.atTop (nhds ((pInvTQ p T)^(-m) * y)) := hd.const_mul _
     have h_compose : Filter.Tendsto (fun N : ℕ => m + (N : ℤ)) Filter.atTop Filter.atTop :=
       Filter.tendsto_atTop_add_const_left _ m tendsto_natCast_atTop_atTop
     have h_comp := h_mul.comp h_compose
     change Filter.Tendsto
-      (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart d N)) _ _
+      (fun N : ℕ => algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart d N)) _ _
     apply h_comp.congr
     intro N
     simp only [Function.comp_apply]
     have h_inner_eq : ∀ d : ℕ → Fpbar p, ∀ N : ℕ,
         ∑ k ∈ Finset.Icc m (m + (N : ℤ)),
-          (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (d (k - m).toNat)) =
         (pInvTQ p T)^m * ∑ i ∈ Finset.Iic N,
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (d i)) * (pInvTQ p T)^i := by
       intros d N
       have hIcc_eq : Finset.Icc m ((m : ℤ) + N) =
@@ -2371,29 +2371,29 @@ private lemma Tteichmuller_digits_unique
     rw [show (pInvTQ p T)^(-m) * ((pInvTQ p T)^m * _) =
         ((pInvTQ p T)^(-m) * (pInvTQ p T)^m) *
         ∑ i ∈ Finset.Iic N,
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (d i)) * (pInvTQ p T)^i from by ring]
-    rw [show (pInvTQ p T)^(-m) * (pInvTQ p T)^m = (1 : ℚᵘⁿ_[p,T]) from by
+    rw [show (pInvTQ p T)^(-m) * (pInvTQ p T)^m = (1 : ℚᶜᵘⁿ_[p,T]) from by
       rw [← zpow_add₀ hpInvTQ_ne]; rw [neg_add_cancel]; rw [zpow_zero]]
     rw [one_mul]
     rw [h_to_Spart d N]
   have hcb_to_z : Filter.Tendsto
-      (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N))
+      (fun N : ℕ => algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c N))
       Filter.atTop (nhds z) := by
     apply h_natTendsto c
     have h_eventual : ∀ᶠ K : ℤ in Filter.atTop,
         ∑ k ∈ Finset.Icc m K,
-          (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (c (k - m).toNat)) =
         ∑ k ∈ Finset.Icc m₀ K,
-          (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (b k)) := by
       filter_upwards [Filter.eventually_ge_atTop m] with K hKm
       have h_inner : ∑ k ∈ Finset.Icc m K,
-            (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               (TTeichmuller p T (c (k - m).toNat)) =
           ∑ k ∈ Finset.Icc m K,
-            (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               (TTeichmuller p T (b k)) := by
         apply Finset.sum_congr rfl
         intro k hk
@@ -2407,22 +2407,22 @@ private lemma Tteichmuller_digits_unique
       rw [h_inner, hsum_eq_b K]
     exact Filter.Tendsto.congr' (Filter.EventuallyEq.symm h_eventual) htb
   have hcb'_to_z : Filter.Tendsto
-      (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c' N))
+      (fun N : ℕ => algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c' N))
       Filter.atTop (nhds z) := by
     apply h_natTendsto c'
     have h_eventual : ∀ᶠ K : ℤ in Filter.atTop,
         ∑ k ∈ Finset.Icc m K,
-          (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (c' (k - m).toNat)) =
         ∑ k ∈ Finset.Icc m₀' K,
-          (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (TTeichmuller p T (b' k)) := by
       filter_upwards [Filter.eventually_ge_atTop m] with K hKm
       have h_inner : ∑ k ∈ Finset.Icc m K,
-            (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               (TTeichmuller p T (c' (k - m).toNat)) =
           ∑ k ∈ Finset.Icc m K,
-            (pInvTQ p T)^k * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            (pInvTQ p T)^k * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               (TTeichmuller p T (b' k)) := by
         apply Finset.sum_congr rfl
         intro k hk
@@ -2436,7 +2436,7 @@ private lemma Tteichmuller_digits_unique
       rw [h_inner, hsum_eq_b' K]
     exact Filter.Tendsto.congr' (Filter.EventuallyEq.symm h_eventual) htb'
   have hdiff_tendsto : Filter.Tendsto
-      (fun N : ℕ => algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N))
+      (fun N : ℕ => algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c N - Spart c' N))
       Filter.atTop (nhds 0) := by
     have h := hcb_to_z.sub hcb'_to_z
     simp only [sub_self] at h
@@ -2451,24 +2451,24 @@ private lemma Tteichmuller_digits_unique
       ((Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) : WithZero (Multiplicative ℤ))
       with hcval_def
     have h_nhds :
-        {a : ℚᵘⁿ_[p,T] | Valued.v a < cval} ∈ nhds (0 : ℚᵘⁿ_[p,T]) :=
+        {a : ℚᶜᵘⁿ_[p,T] | Valued.v a < cval} ∈ nhds (0 : ℚᶜᵘⁿ_[p,T]) :=
       Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
     have h_eventual : ∀ᶠ N : ℕ in Filter.atTop,
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N) ∈
-          {a : ℚᵘⁿ_[p,T] | Valued.v a < cval} :=
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c N - Spart c' N) ∈
+          {a : ℚᶜᵘⁿ_[p,T] | Valued.v a < cval} :=
       hdiff_tendsto h_nhds
     rw [Filter.eventually_atTop] at h_eventual
     obtain ⟨N₀, hN₀⟩ := h_eventual
     refine ⟨max N₀ i, le_max_right _ _, ?_⟩
     set N := max N₀ i
     have hN_ge : N₀ ≤ N := le_max_left _ _
-    have h_lt : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N)) <
+    have h_lt : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c N - Spart c' N)) <
         ((Multiplicative.ofAdd (-(i : ℤ)) : Multiplicative ℤ) : WithZero _) := by
       rw [← hcval_def]; exact hN₀ N hN_ge
-    have h_le : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N)) ≤
+    have h_le : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c N - Spart c' N)) ≤
         ((Multiplicative.ofAdd (-((i : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) := by
       rcases eq_or_ne
-          (Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Spart c N - Spart c' N))) 0
+          (Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Spart c N - Spart c' N))) 0
         with h0 | h0
       · rw [h0]; exact bot_le
       · rw [← WithZero.coe_unzero h0 ,WithZero.coe_le_coe]
@@ -2479,13 +2479,13 @@ private lemma Tteichmuller_digits_unique
         rw [Multiplicative.ofAdd_lt] at h_lt
         rw [Multiplicative.ofAdd_le]
         omega
-    set diff : ℤᵘⁿ_[p,T] := Spart c N - Spart c' N with hdiff_def
-    set q : ℚᵘⁿ_[p,T] := algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff *
+    set diff : ℤᶜᵘⁿ_[p,T] := Spart c N - Spart c' N with hdiff_def
+    set q : ℚᶜᵘⁿ_[p,T] := algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) diff *
       (pInvTQ p T)^(-((i : ℤ)+1)) with hq_def
     have hq_val_le_one : Valued.v q ≤ 1 := by
       rw [hq_def, Valuation.map_mul, hpn_val (-((i : ℤ)+1))]
       rw [show (-(-((i : ℤ)+1))) = (i : ℤ)+1 from by ring]
-      have h_prod : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff) *
+      have h_prod : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) diff) *
           ((Multiplicative.ofAdd ((i : ℤ)+1) : Multiplicative ℤ) : WithZero _) ≤
           ((Multiplicative.ofAdd (-((i : ℤ)+1)) : Multiplicative ℤ) : WithZero _) *
           ((Multiplicative.ofAdd ((i : ℤ)+1) : Multiplicative ℤ) : WithZero _) :=
@@ -2500,25 +2500,25 @@ private lemma Tteichmuller_digits_unique
         rfl
       rwa [h_one] at h_prod
     obtain ⟨q', hq'⟩ := Texists_lift_of_valued_le_one p T hq_val_le_one
-    have h_eq_QpUn : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff =
-        (pInvTQ p T)^((i : ℤ)+1) * algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) q' := by
+    have h_eq_QpCUn : algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) diff =
+        (pInvTQ p T)^((i : ℤ)+1) * algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) q' := by
       rw [hq']; rw [hq_def]
       rw [show (pInvTQ p T)^((i : ℤ)+1) *
-          (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff *
+          (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) diff *
             (pInvTQ p T)^(-((i : ℤ)+1))) =
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) diff *
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) diff *
           ((pInvTQ p T)^((i : ℤ)+1) * (pInvTQ p T)^(-((i : ℤ)+1))) from by ring]
       rw [show (pInvTQ p T)^((i : ℤ)+1) * (pInvTQ p T)^(-((i : ℤ)+1)) = 1 from by
         rw [← zpow_add₀ hpInvTQ_ne]; rw [add_neg_cancel]; rw [zpow_zero]]
       rw [mul_one]
     have h_pow_alg : (pInvTQ p T)^((i : ℤ)+1) =
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((pInvT p T)^(i+1)) := by
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((pInvT p T)^(i+1)) := by
       have hz : (pInvTQ p T)^((i : ℤ)+1) = (pInvTQ p T)^(i+1) := by
         rw [show ((i : ℤ)+1) = ((i+1 : ℕ) : ℤ) from by push_cast; ring]; exact zpow_natCast _ _
       rw [hz, map_pow]
       rfl
-    rw [h_pow_alg, ← map_mul] at h_eq_QpUn
-    exact ⟨q', IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) h_eq_QpUn⟩
+    rw [h_pow_alg, ← map_mul] at h_eq_QpCUn
+    exact ⟨q', IsFractionRing.injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) h_eq_QpCUn⟩
   -- Step 8. Induction `c i = c' i`.
   have h_induction : ∀ i : ℕ, c i = c' i := by
     intro i
@@ -2653,28 +2653,28 @@ private lemma Tteichmuller_digits_unique
     rw [← h_c_eq, ← h_c'_eq]
     exact h_induction (k - m).toNat
 
-/-! ### Lemma 4.2 proper — Teichmüller series for `ℤᵘⁿ_[p,T]` -/
+/-! ### Lemma 4.2 proper — Teichmüller series for `ℤᶜᵘⁿ_[p,T]` -/
 
 open Topology Filter in
-/-- **Lemma 4.2.**  Every element of `ℤᵘⁿ_[p,T]` can be uniquely written as
+/-- **Lemma 4.2.**  Every element of `ℤᶜᵘⁿ_[p,T]` can be uniquely written as
 `∑_{k≥0} [c_k] · (pInvT)^k` with `c_k ∈ 𝔽ᵃ_[p]`, where the sum converges in the
-`(pInvT)`-adic topology on `ℤᵘⁿ_[p,T]` (formalised here as the `Valued`-induced topology
-on `ℚᵘⁿ_[p,T]` after taking `algebraMap`).
+`(pInvT)`-adic topology on `ℤᶜᵘⁿ_[p,T]` (formalised here as the `Valued`-induced topology
+on `ℚᶜᵘⁿ_[p,T]` after taking `algebraMap`).
 
-This is a consequence of the Teichmüller-series representation of `ℤᵘⁿ_[p]` (Mathlib
+This is a consequence of the Teichmüller-series representation of `ℤᶜᵘⁿ_[p]` (Mathlib
 `WittVector.TeichmullerSeries`) combined with Lemma 4.1.
 
 Existence comes from `Texists_T_pInvT_digits` (the divisibility step) plus a standard
 valuation/Tendsto argument; uniqueness is obtained by extending `c : ℕ → 𝔽ᵃ_[p]` to
 `b : ℤ → 𝔽ᵃ_[p]` with cutoff `m₀ = 0` and applying `Tteichmuller_digits_unique`. -/
-theorem exists_teichmuller_series_OQpUnT :
-    ∀ a : ℤᵘⁿ_[p,T], ∃! c : ℕ → 𝔽ᵃ_[p],
+theorem exists_teichmuller_series_OQpCUnT :
+    ∀ a : ℤᶜᵘⁿ_[p,T], ∃! c : ℕ → 𝔽ᵃ_[p],
       Filter.Tendsto
         (fun N : ℕ => ∑ k ∈ Finset.range N,
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-            (OQpUn_embd p T (teichmuller p (c k)) * (pInvT p T) ^ k))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+            (OQpCUn_embd p T (teichmuller p (c k)) * (pInvT p T) ^ k))
         Filter.atTop
-        (𝓝 (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) a)) := by
+        (𝓝 (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) a)) := by
   intro a
   obtain ⟨digits, hdigits⟩ := Texists_T_pInvT_digits p T a
   -- Common ingredients used in both existence and uniqueness branches.
@@ -2684,22 +2684,22 @@ theorem exists_teichmuller_series_OQpUnT :
     WithZeroMulInt.toNNReal_strictMono hp1
   have hpinv_lt : (p : NNReal)⁻¹ < 1 := inv_lt_one_of_one_lt₀ hp1
   have hpinv_nn : 0 ≤ ((p : NNReal)⁻¹ : NNReal) := zero_le
-  -- Abbreviation: `algMapₐ` is the algebra map `ℤᵘⁿ_[p,T] → ℚᵘⁿ_[p,T]`.
-  set algMapₐ : ℤᵘⁿ_[p,T] →+* ℚᵘⁿ_[p,T] := algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) with halgMapₐ
+  -- Abbreviation: `algMapₐ` is the algebra map `ℤᶜᵘⁿ_[p,T] → ℚᶜᵘⁿ_[p,T]`.
+  set algMapₐ : ℤᶜᵘⁿ_[p,T] →+* ℚᶜᵘⁿ_[p,T] := algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) with halgMapₐ
   -- Convenience: rewrite the partial-sum form in two equivalent ways.
-  -- Form A (the goal's form): algMapₐ (OQpUn_embd p T teich(c k) * (pInvT)^k)
+  -- Form A (the goal's form): algMapₐ (OQpCUn_embd p T teich(c k) * (pInvT)^k)
   -- Form B (TTeichmuller form, used in Tteichmuller_digits_unique):
   --   (pInvTQ)^k * algMapₐ (TTeichmuller (c k))   -- using TTeichmuller := algMap ∘ teich
   -- Equality of forms: form A = (pInvTQ)^k * algMapₐ (algMapₐ_inner (teich (c k)))
-  -- where algMapₐ_inner = algebraMap ℤᵘⁿ_[p] → ℤᵘⁿ_[p,T].
+  -- where algMapₐ_inner = algebraMap ℤᶜᵘⁿ_[p] → ℤᶜᵘⁿ_[p,T].
   -- Build the existence-side bound first.
   have hbound : ∀ (digits' : ℕ → Fpbar p),
       (∀ n : ℕ,
         (pInvT p T)^(n+1) ∣ a - ∑ i ∈ Finset.Iic n,
-          (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) →
+          (pInvT p T)^i * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (digits' i))) →
       ∀ N : ℕ, 1 ≤ N → Valued.v (algMapₐ a -
         ∑ k ∈ Finset.range N,
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) ≤
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) ≤
       ((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _) := by
     intro digits' hdigits' N hN
     obtain ⟨n, rfl⟩ : ∃ n : ℕ, N = n + 1 := ⟨N - 1, by omega⟩
@@ -2709,20 +2709,20 @@ theorem exists_teichmuller_series_OQpUnT :
     simp only [map_sub, map_sum, map_mul, map_pow] at halg
     have hreindex :
         (∑ k ∈ Finset.range (n + 1),
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) =
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) =
         ∑ i ∈ Finset.Iic n,
           algMapₐ ((pInvT p T)^i *
-            algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) := by
+            algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (digits' i))) := by
       rw [← Nat.range_succ_eq_Iic]
       apply Finset.sum_congr rfl
       intro i _
-      unfold OQpUn_embd
+      unfold OQpCUn_embd
       rw [mul_comm]
     rw [hreindex]
     have hkey : algMapₐ a -
         ∑ i ∈ Finset.Iic n,
           algMapₐ ((pInvT p T)^i *
-            algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) =
+            algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (digits' i))) =
         algMapₐ ((pInvT p T)^(n+1) * c) := by
       rw [← map_sum, ← map_sub, hc]
     rw [hkey]
@@ -2732,12 +2732,12 @@ theorem exists_teichmuller_series_OQpUnT :
     have hpInvT_cast : algMapₐ (pInvT p T) = pInvTQ p T := rfl
     rw [hpInvT_cast]
     have hpn_val := valued_v_pInvT_zpow (p := p) (T := T)
-    rw [show ((pInvTQ p T) ^ (n + 1) : ℚᵘⁿ_[p,T]) =
+    rw [show ((pInvTQ p T) ^ (n + 1) : ℚᶜᵘⁿ_[p,T]) =
           (pInvTQ p T) ^ ((n : ℤ) + 1) from by
       rw [← zpow_natCast (pInvTQ p T) (n+1)]; push_cast; rfl]
     rw [hpn_val ((n : ℤ) + 1)]
     have h_alg_le : Valued.v (algMapₐ c) ≤ 1 :=
-      (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one c
+      (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one c
     calc ((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) *
         Valued.v (algMapₐ c)
         ≤ ((Multiplicative.ofAdd (-((n : ℤ) + 1)) : Multiplicative ℤ) : WithZero _) * 1 :=
@@ -2750,10 +2750,10 @@ theorem exists_teichmuller_series_OQpUnT :
   have htendsto_of_bound : ∀ (digits' : ℕ → Fpbar p),
       (∀ n : ℕ,
         (pInvT p T)^(n+1) ∣ a - ∑ i ∈ Finset.Iic n,
-          (pInvT p T)^i * algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (digits' i))) →
+          (pInvT p T)^i * algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (digits' i))) →
       Filter.Tendsto
         (fun N : ℕ => ∑ k ∈ Finset.range N,
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))
         Filter.atTop
         (𝓝 (algMapₐ a)) := by
     intro digits' hdigits'
@@ -2779,13 +2779,13 @@ theorem exists_teichmuller_series_OQpUnT :
     have hN_ge_N₀ : N₀ ≤ N := le_of_max_le_right hN
     apply hγ
     change Valued.v ((∑ k ∈ Finset.range N,
-        algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) -
+        algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) -
           algMapₐ a) < γ
     rw [Valuation.map_sub_swap]
     have h1 := hbound digits' hdigits' N hN_ge_1
     have h_nnreal_le : WithZeroMulInt.toNNReal (p_ne_zero p)
         (Valued.v (algMapₐ a - ∑ k ∈ Finset.range N,
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))) ≤
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))) ≤
         WithZeroMulInt.toNNReal (p_ne_zero p)
           (((Multiplicative.ofAdd (-(N : ℤ)) : Multiplicative ℤ) : WithZero _)) :=
       hsm.monotone h1
@@ -2804,7 +2804,7 @@ theorem exists_teichmuller_series_OQpUnT :
       exact hN_ge_N₀
     have h_chain : WithZeroMulInt.toNNReal (p_ne_zero p)
         (Valued.v (algMapₐ a - ∑ k ∈ Finset.range N,
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))) < ε :=
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))) < ε :=
       (h_nnreal_le.trans h_pow_le).trans_lt hN₀
     rw [hε_def] at h_chain
     exact hsm.lt_iff_lt.mp h_chain
@@ -2832,7 +2832,7 @@ theorem exists_teichmuller_series_OQpUnT :
   have hsum_eq : ∀ (f : ℕ → Fpbar p) (b'' : ℤ → Fpbar p)
       (hb'' : ∀ k : ℕ, b'' (k : ℤ) = f k) (N : ℕ),
       (∑ k ∈ Finset.range N,
-        algMapₐ (OQpUn_embd p T (teichmuller p (f k)) * (pInvT p T) ^ k)) =
+        algMapₐ (OQpCUn_embd p T (teichmuller p (f k)) * (pInvT p T) ^ k)) =
       (∑ k ∈ Finset.Icc (0 : ℤ) (N - 1 : ℤ),
         (pInvTQ p T) ^ k *
         algMapₐ (TTeichmuller p T (b'' k))) := by
@@ -2862,12 +2862,12 @@ theorem exists_teichmuller_series_OQpUnT :
       -- Identify the new term and reorder.
       have hbN : b'' (N : ℤ) = f N := hb'' N
       have hTT_eq :
-          algMapₐ (OQpUn_embd p T (teichmuller p (f N)) * (pInvT p T) ^ N) =
+          algMapₐ (OQpCUn_embd p T (teichmuller p (f N)) * (pInvT p T) ^ N) =
           (pInvTQ p T) ^ ((N : ℤ)) * algMapₐ (TTeichmuller p T (b'' (N : ℤ))) := by
         rw [hbN, map_mul, map_pow]
         have hpInvT_cast : algMapₐ (pInvT p T) = pInvTQ p T := rfl
         rw [hpInvT_cast]
-        unfold OQpUn_embd TTeichmuller
+        unfold OQpCUn_embd TTeichmuller
         rw [show (pInvTQ p T) ^ ((N : ℤ)) = (pInvTQ p T) ^ N from zpow_natCast _ _, mul_comm]
         rfl
       rw [hTT_eq]
@@ -2892,7 +2892,7 @@ theorem exists_teichmuller_series_OQpUnT :
       (hb_below'' : ∀ k : ℤ, k < 0 → b'' k = 0)
       (h_orig_tendsto : Filter.Tendsto
         (fun N : ℕ => ∑ k ∈ Finset.range N,
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k))
         Filter.atTop (𝓝 (algMapₐ a))),
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc (0 : ℤ) K,
@@ -2922,7 +2922,7 @@ theorem exists_teichmuller_series_OQpUnT :
     have hK_eq : (((K + 1).toNat : ℕ) : ℤ) - 1 = K := by
       omega
     change (∑ k ∈ Finset.range (K + 1).toNat,
-          algMapₐ (OQpUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) =
+          algMapₐ (OQpCUn_embd p T (teichmuller p (digits' k)) * (pInvT p T) ^ k)) =
         ∑ k ∈ Finset.Icc (0 : ℤ) K, (pInvTQ p T) ^ k * algMapₐ (TTeichmuller p T (b'' k))
     rw [hsum_eq digits' b'' hb_eq (K + 1).toNat]
     rw [hK_eq]
@@ -2948,16 +2948,16 @@ Teichmüller argument is nonzero. -/
 private lemma Tvalued_v_pInvTQ_term_val
     (a : Fpbar p) (n : ℤ) (ha : a ≠ 0) :
     Valued.v ((pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-          (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p a))) =
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+          (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p a))) =
       ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := by
   rw [Valuation.map_mul, valued_v_pInvT_zpow]
   have h_a_unit : IsUnit a := isUnit_iff_ne_zero.mpr ha
   have h_teich_unit : IsUnit (teichmuller p a) := h_a_unit.map (teichmuller p)
-  have h_inner_unit : IsUnit (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p a)) :=
-    h_teich_unit.map (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]))
-  have h_val_one : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-      (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p a))) = 1 := by
+  have h_inner_unit : IsUnit (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p a)) :=
+    h_teich_unit.map (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]))
+  have h_val_one : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+      (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p a))) = 1 := by
     rcases h_inner_unit with ⟨u, hu⟩
     rw [← hu, Tvalued_v_algebraMap_unit_one p T u]
   rw [h_val_one, mul_one]
@@ -2968,23 +2968,23 @@ Teichmüller-valued and vanishes below `m`. -/
 private lemma Th_intPartial_eq_Icc
     (γ' : ℚ) (β' : TLiftedPAdicHahnSeries p T) (t : ℚ → Fpbar p) (m : ℤ)
     (hβ' : ∀ q : ℚ, β'.coeff q =
-      algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (t q)))
+      algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (t q)))
     (hm  : ∀ k : ℤ, k < m → t (γ' + (k : ℚ) / T) = 0) :
     ∀ K : ℤ, m ≤ K →
       TintPartial p T β' γ' K =
         ∑ k ∈ Finset.Icc m K,
           (pInvTQ p T) ^ k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (t (γ' + (k : ℚ) / T)))) := by
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (t (γ' + (k : ℚ) / T)))) := by
   intro K hK
   have h_step1 : TintPartial p T β' γ' K =
       ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) := by
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) := by
     simp only [TintPartial]
     exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)))
   rw [h_step1]
   have h_subset : Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K) ⊆ Finset.Icc m K := by
     intro n hn
@@ -3001,10 +3001,10 @@ private lemma Th_intPartial_eq_Icc
     exact Finset.mem_Icc.mpr ⟨h_n_ge, hn_mem.1⟩
   have h_extend : ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' γ' K),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) =
       ∑ n ∈ Finset.Icc m K,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) := by
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (γ' + (n : ℚ) / T)) := by
     apply Finset.sum_subset h_subset
     intro n hn_Icc hn_not
     rw [Finset.mem_Icc] at hn_Icc
@@ -3030,25 +3030,25 @@ private lemma Th_intPartial_sub
   set T_U : Finset ℤ := T_α ∪ T_β with hT_U_def
   have e_α : TintPartial p T α g K =
       ∑ n ∈ T_α, (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) := by
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) := by
     simp only [TintPartial, hT_α_def]
     exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T α g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)))
   have e_β : TintPartial p T β g K =
       ∑ n ∈ T_β, (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) := by
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) := by
     simp only [TintPartial, hT_β_def]
     exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)))
   have e_d : TintPartial p T (α - β) g K =
       ∑ n ∈ T_d, (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) := by
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) := by
     simp only [TintPartial, hT_d_def]
     exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g K))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
   have h_α_sub_U : T_α ⊆ T_U := Finset.subset_union_left
   have h_β_sub_U : T_β ⊆ T_U := Finset.subset_union_right
   have h_d_sub_U : T_d ⊆ T_U := by
@@ -3069,10 +3069,10 @@ private lemma Th_intPartial_sub
         ((Set.Finite.mem_toFinset (hs := TfiniteBelowInt p T α g K)).mpr ⟨hn_mem.1, h_α_z⟩)
   have he_α_U : ∑ n ∈ T_α,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) =
       ∑ n ∈ T_U,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) := by
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (g + (n : ℚ) / T)) := by
     apply Finset.sum_subset h_α_sub_U
     intro n hn_U hn_not_α
     have hn_le_K : n ≤ K := by
@@ -3087,10 +3087,10 @@ private lemma Th_intPartial_sub
     simp
   have he_β_U : ∑ n ∈ T_β,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) =
       ∑ n ∈ T_U,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) := by
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β.coeff (g + (n : ℚ) / T)) := by
     apply Finset.sum_subset h_β_sub_U
     intro n hn_U hn_not_β
     have hn_le_K : n ≤ K := by
@@ -3105,10 +3105,10 @@ private lemma Th_intPartial_sub
     simp
   have he_d_U : ∑ n ∈ T_d,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) =
       ∑ n ∈ T_U,
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) := by
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) := by
     apply Finset.sum_subset h_d_sub_U
     intro n hn_U hn_not_d
     have hn_le_K : n ≤ K := by
@@ -3140,13 +3140,13 @@ private lemma Th_key
     (hb_tendsto : Filter.Tendsto
       (fun K : ℤ => ∑ j ∈ Finset.Icc m_b K,
         (pInvTQ p T) ^ j *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-            (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j))))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+            (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j))))
       Filter.atTop (nhds (Texists_lim_intPartial p T α γ).choose))
     (hbk : b k ≠ 0) :
     ∃ n_α : ℤ, n_α ≤ k ∧ α.coeff (γ + (n_α : ℚ) / T) ≠ 0 := by
   classical
-  set y : ℚᵘⁿ_[p,T] := (Texists_lim_intPartial p T α γ).choose with hy_def
+  set y : ℚᶜᵘⁿ_[p,T] := (Texists_lim_intPartial p T α γ).choose with hy_def
   have hy_spec : Filter.Tendsto (TintPartial p T α γ) Filter.atTop (nhds y) :=
     (Texists_lim_intPartial p T α γ).choose_spec
   -- Step 0: define `k_min`.
@@ -3163,8 +3163,8 @@ private lemma Th_key
   -- Step 1: strict-ultrametric valuation of the truncated sum.
   have h_sum_eq : ∀ K : ℤ, k_min ≤ K → Valued.v (∑ j ∈ Finset.Icc m_b K,
         (pInvTQ p T) ^ j *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-            (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+            (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) =
       ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := by
     intro K hK
     have h_in : k_min ∈ Finset.Icc m_b K := Finset.mem_Icc.mpr ⟨hk_min_mem.1, hK⟩
@@ -3175,8 +3175,8 @@ private lemma Th_key
     · exact Tvalued_v_pInvTQ_term_val p T (b k_min) k_min hk_min_mem.2
     · have h_bound : Valued.v (∑ j ∈ (Finset.Icc m_b K).erase k_min,
             (pInvTQ p T) ^ j *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-                (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) ≤
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+                (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) ≤
           ((Multiplicative.ofAdd (-(k_min + 1) : ℤ) : Multiplicative ℤ) : WithZero _) := by
         apply Valuation.map_sum_le
         intro j hj_mem
@@ -3200,15 +3200,15 @@ private lemma Th_key
   · -- Step 2A: `y = 0` ⇒ contradiction.
     exfalso
     have h_nhds :
-        {x : ℚᵘⁿ_[p,T] | Valued.v x <
+        {x : ℚᶜᵘⁿ_[p,T] | Valued.v x <
             ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
-          nhds (0 : ℚᵘⁿ_[p,T]) :=
+          nhds (0 : ℚᶜᵘⁿ_[p,T]) :=
       Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
     have h_evtl_close : ∀ᶠ K : ℤ in Filter.atTop,
         Valued.v (∑ j ∈ Finset.Icc m_b K,
             (pInvTQ p T) ^ j *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-                (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) <
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+                (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) <
           ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := by
       have h_tend := hb_tendsto
       rw [h_y] at h_tend
@@ -3223,13 +3223,13 @@ private lemma Th_key
         ((Multiplicative.ofAdd (-k_min : ℤ) : Multiplicative ℤ) : WithZero _) := by
       have h_v_y_ne : Valued.v y ≠ 0 := by rwa [Valuation.ne_zero_iff]
       have h_nhds_y :
-          {x : ℚᵘⁿ_[p,T] | Valued.v (x - y) < Valued.v y} ∈ nhds y :=
+          {x : ℚᶜᵘⁿ_[p,T] | Valued.v (x - y) < Valued.v y} ∈ nhds y :=
         Tmem_nhds_v_sub_lt p T h_v_y_ne rfl
       have h_evtl_stable : ∀ᶠ K : ℤ in Filter.atTop,
           Valued.v ((∑ j ∈ Finset.Icc m_b K,
               (pInvTQ p T) ^ j *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-                  (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) - y) <
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+                  (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) - y) <
             Valued.v y :=
         hb_tendsto h_nhds_y
       have h_evtl_K_ge : ∀ᶠ K : ℤ in Filter.atTop, k_min ≤ K :=
@@ -3237,17 +3237,17 @@ private lemma Th_key
       obtain ⟨K, hKge, hKstable⟩ := (h_evtl_K_ge.and h_evtl_stable).exists
       have h_valeq : Valued.v (∑ j ∈ Finset.Icc m_b K,
             (pInvTQ p T) ^ j *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-                (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) =
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+                (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) =
           Valued.v y := by
         rw [show (∑ j ∈ Finset.Icc m_b K,
               (pInvTQ p T) ^ j *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-                  (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) =
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+                  (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) =
             y + ((∑ j ∈ Finset.Icc m_b K,
               (pInvTQ p T) ^ j *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-                  (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b j)))) - y)
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+                  (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b j)))) - y)
             from by ring]
         rw [Valuation.map_add_eq_of_lt_left]
         exact hKstable
@@ -3268,7 +3268,7 @@ private lemma Th_key
         apply h_sl_e
         exact ⟨n.1, hn_mem.2⟩
       have h := hy_spec
-      rw [show (TintPartial p T α γ) = (fun _ => (0 : ℚᵘⁿ_[p,T])) from
+      rw [show (TintPartial p T α γ) = (fun _ => (0 : ℚᶜᵘⁿ_[p,T])) from
         funext h_intP_zero] at h
       exact (tendsto_nhds_unique h tendsto_const_nhds)
     have hT_pos : (0 : ℚ) < T := by
@@ -3304,13 +3304,13 @@ private lemma Th_key
         simp only [TintPartial]
         rw [show (∑ n : Set.Finite.toFinset (TfiniteBelowInt p T α γ K),
               (pInvTQ p T) ^ n.1 *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (γ + (n.1 : ℚ) / T))) =
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (γ + (n.1 : ℚ) / T))) =
             ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T α γ K),
               (pInvTQ p T) ^ n *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (γ + (n : ℚ) / T)) from
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (γ + (n : ℚ) / T)) from
             Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T α γ K))
               (f := fun n : ℤ => (pInvTQ p T) ^ n *
-                algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (α.coeff (γ + (n : ℚ) / T)))]
+                algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (α.coeff (γ + (n : ℚ) / T)))]
         apply Valuation.map_sum_le
         intro n hn
         have hn_mem : n ≤ K ∧ α.coeff (γ + (n : ℚ) / T) ≠ 0 :=
@@ -3318,12 +3318,12 @@ private lemma Th_key
         have hn_in_slice : n ∈ slice := hn_mem.2
         have hm_le_n : m ≤ n := hm_min n hn_in_slice
         rw [Valuation.map_mul, valued_v_pInvT_zpow (p := p) (T := T) n]
-        have h_alg_le : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        have h_alg_le : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (α.coeff (γ + (n : ℚ) / T))) ≤ 1 :=
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one
+          (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one
             (α.coeff (γ + (n : ℚ) / T))
         calc ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) *
-                Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+                Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
                   (α.coeff (γ + (n : ℚ) / T)))
             ≤ ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) * 1 :=
               mul_le_mul' (le_refl _) h_alg_le
@@ -3333,7 +3333,7 @@ private lemma Th_key
               exact Multiplicative.ofAdd_le.mpr (by omega)
       have h_v_y_ne : Valued.v y ≠ 0 := by rwa [Valuation.ne_zero_iff]
       have h_nhds_y :
-          {x : ℚᵘⁿ_[p,T] | Valued.v (x - y) < Valued.v y} ∈ nhds y :=
+          {x : ℚᶜᵘⁿ_[p,T] | Valued.v (x - y) < Valued.v y} ∈ nhds y :=
         Tmem_nhds_v_sub_lt p T h_v_y_ne rfl
       have h_evtl_stable : ∀ᶠ K : ℤ in Filter.atTop,
           Valued.v (TintPartial p T α γ K - y) < Valued.v y :=
@@ -3375,10 +3375,10 @@ theorem Texists_canonical_T_representative
     unfold pInvTQ
     intro h
     exact pInvT_ne_zero p T
-      ((IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]))
+      ((IsFractionRing.injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]))
         (by simpa using h))
   -- Per-γ data: f γ, b γ, m_b γ via choose
-  set f : ℚ → ℚᵘⁿ_[p,T] := fun γ =>
+  set f : ℚ → ℚᶜᵘⁿ_[p,T] := fun γ =>
     (Texists_lim_intPartial p T α γ).choose with hf_def
   have hf_spec : ∀ γ, Filter.Tendsto (TintPartial p T α γ) Filter.atTop (nhds (f γ)) :=
     fun γ => (Texists_lim_intPartial p T α γ).choose_spec
@@ -3391,16 +3391,16 @@ theorem Texists_canonical_T_representative
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc (m_b γ) K,
           (pInvTQ p T) ^ k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b γ k))))
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b γ k))))
         Filter.atTop (nhds (f γ)) := fun γ =>
     (Texists_teichmuller_digits p T (f γ)).choose_spec.choose_spec
   have hb_vanish : ∀ γ k, k < m_b γ → b γ k = 0 := fun γ => (hb_spec γ).1
   have hb_tendsto : ∀ γ, Filter.Tendsto
       (fun K : ℤ => ∑ k ∈ Finset.Icc (m_b γ) K,
         (pInvTQ p T) ^ k *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-            (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b γ k))))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+            (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b γ k))))
       Filter.atTop (nhds (f γ)) := fun γ => (hb_spec γ).2
   -- Key claim: ∀ γ k, b γ k ≠ 0 → ∃ n_α ≤ k with α.coeff (γ + n_α/T) ≠ 0.
   have h_key : ∀ γ : ℚ, ∀ k : ℤ, b γ k ≠ 0 →
@@ -3410,8 +3410,8 @@ theorem Texists_canonical_T_representative
     have hb_tendsto_γ' : Filter.Tendsto
         (fun K : ℤ => ∑ j ∈ Finset.Icc (m_b γ) K,
           (pInvTQ p T) ^ j *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b γ j))))
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b γ j))))
         Filter.atTop (nhds ((Texists_lim_intPartial p T α γ).choose)) := hb_tendsto γ
     exact Th_key p T α γ k (b γ) (m_b γ) (hb_vanish γ) hb_tendsto_γ' hbk
   -- DEFINE s
@@ -3472,7 +3472,7 @@ theorem Texists_canonical_T_representative
     rw [hTγ_eq]
     exact ⟨Int.fract_nonneg _, Int.fract_lt_one _⟩
   have hβ_coeff : ∀ q : ℚ, β.coeff q =
-      algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (s q)) := fun _ => rfl
+      algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (s q)) := fun _ => rfl
   -- intPartial β γ K → f γ via Th_intPartial_eq_Icc + hb_tendsto
   have hs_eq_b : ∀ k : ℤ, s (γ + (k : ℚ) / T) = b γ k := by
     intro k
@@ -3498,8 +3498,8 @@ theorem Texists_canonical_T_representative
       TintPartial p T β γ K =
         ∑ k ∈ Finset.Icc (m_b γ) K,
           (pInvTQ p T) ^ k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (b γ k))) := by
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (b γ k))) := by
     intro K hK
     rw [Th_intPartial_eq_Icc p T γ β s (m_b γ) hβ_coeff h_vanish_γ K hK]
     apply Finset.sum_congr rfl
@@ -3517,19 +3517,19 @@ theorem Texists_canonical_T_representative
     have hL : TintPartial p T β' g K =
         ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' g K),
           (pInvTQ p T) ^ n *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (g + (n : ℚ) / T)) := by
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (g + (n : ℚ) / T)) := by
       simp only [TintPartial]
       exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β' g K))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (g + (n : ℚ) / T)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (g + (n : ℚ) / T)))
     have hR : TintPartial p T β' γ (K + n₀) =
         ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)),
           (pInvTQ p T) ^ n *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ + (n : ℚ) / T)) := by
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (γ + (n : ℚ) / T)) := by
       simp only [TintPartial]
       exact Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (β'.coeff (γ + (n : ℚ) / T)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (β'.coeff (γ + (n : ℚ) / T)))
     rw [hL, hR]
     have h_image : Set.Finite.toFinset (TfiniteBelowInt p T β' γ (K + n₀)) =
         (Set.Finite.toFinset (TfiniteBelowInt p T β' g K)).image (fun n : ℤ => n + n₀) := by
@@ -3563,10 +3563,10 @@ theorem Texists_canonical_T_representative
       rw [hg_eq]; ring
     rw [h_coeff]
     rw [show ((pInvTQ p T) ^ (-n₀)) * ((pInvTQ p T) ^ (n + n₀) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (β'.coeff ((g : ℚ) + (n : ℚ) / T))) =
         ((pInvTQ p T) ^ (-n₀) * (pInvTQ p T) ^ (n + n₀)) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (β'.coeff ((g : ℚ) + (n : ℚ) / T)) from by ring]
     rw [show (pInvTQ p T) ^ (-n₀) * (pInvTQ p T) ^ (n + n₀) = (pInvTQ p T) ^ n from by
       rw [← zpow_add₀ hp_ne]
@@ -3603,7 +3603,7 @@ theorem Texists_canonical_T_representative
     exact (h_translate β K).symm
   -- intPartial (α - β) g K → 0
   have h_intPartial_zero : Filter.Tendsto (fun K : ℤ => TintPartial p T (α - β) g K)
-      Filter.atTop (nhds (0 : ℚᵘⁿ_[p,T])) := by
+      Filter.atTop (nhds (0 : ℚᶜᵘⁿ_[p,T])) := by
     have h_diff : Filter.Tendsto
         (fun K : ℤ => TintPartial p T α g K - TintPartial p T β g K) Filter.atTop
         (nhds ((f g) - (f g))) := h_α_g.sub h_β_g
@@ -3648,7 +3648,7 @@ theorem Texists_canonical_T_representative
   have h_finiteBelow_to_intPartial :
       (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - β) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             ((α - β).coeff (g + (n.val : ℚ) / T))) =
       fun M : ℕ => TintPartial p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋ := by
     funext M
@@ -3656,24 +3656,24 @@ theorem Texists_canonical_T_representative
     have h_attach_α := Finset.sum_attach
       (s := Set.Finite.toFinset (TfiniteBelow p T (α - β) g M))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
     have h_attach_β := Finset.sum_attach
       (s := Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋))
       (f := fun n : ℤ => (pInvTQ p T) ^ n *
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)))
     rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - β) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n.val : ℚ) / T))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n.val : ℚ) / T))) =
       ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T (α - β) g M),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) from h_attach_α]
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) from h_attach_α]
     rw [show (∑ n : Set.Finite.toFinset
           (TfiniteBelowInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ (n.1 : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n.1 : ℚ) / T))) =
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n.1 : ℚ) / T))) =
       ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T (α - β) g ⌊(T : ℚ) * ((M : ℚ) - g)⌋),
         (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) from h_attach_β]
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - β).coeff (g + (n : ℚ) / T)) from h_attach_β]
     rw [h_finiteBelow_eq_finiteBelowInt (α - β) M]
   have h_φ : Filter.Tendsto (fun M : ℕ => ⌊(T : ℚ) * ((M : ℚ) - g)⌋) Filter.atTop
       Filter.atTop := by
@@ -3722,12 +3722,12 @@ theorem Tunique_canonical_T_representative
     unfold pInvTQ
     intro h_z
     exact pInvT_ne_zero p T
-      ((IsFractionRing.injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]))
+      ((IsFractionRing.injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]))
         (by simpa using h_z))
   have hα_coeff  : ∀ q : ℚ, α.coeff  q
-      = algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (s  q)) := fun _ => rfl
+      = algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (s  q)) := fun _ => rfl
   have hα'_coeff : ∀ q : ℚ, α'.coeff q
-      = algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (s' q)) := fun _ => rfl
+      = algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (s' q)) := fun _ => rfl
   funext q
   set γ  : ℚ := Int.fract ((T : ℚ) * q) / T with hγ_def
   set n₀ : ℤ := ⌊(T : ℚ) * q⌋ with hn₀_def
@@ -3805,8 +3805,8 @@ theorem Tunique_canonical_T_representative
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m_s K,
           (pInvTQ p T) ^ k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (Bs k))))
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (Bs k))))
         Filter.atTop (nhds y_s) := by
     apply hy_s.congr'
     rw [Filter.EventuallyEq]
@@ -3816,8 +3816,8 @@ theorem Tunique_canonical_T_representative
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m_s' K,
           (pInvTQ p T) ^ k *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-              (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) (teichmuller p (Bs' k))))
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+              (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) (teichmuller p (Bs' k))))
         Filter.atTop (nhds y_s') := by
     apply hy_s'.congr'
     rw [Filter.EventuallyEq]
@@ -3875,7 +3875,7 @@ theorem Tunique_canonical_T_representative
     have h_finiteBelow_to_intPartial :
         (fun M : ℕ => ∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M),
           (pInvTQ p T) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
               ((α - α').coeff (γ + (n.val : ℚ) / T))) =
         fun M : ℕ => TintPartial p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋ := by
       funext M
@@ -3883,24 +3883,24 @@ theorem Tunique_canonical_T_representative
       have h_attach_α := Finset.sum_attach
         (s := Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)))
       have h_attach_β := Finset.sum_attach
         (s := Set.Finite.toFinset (TfiniteBelowInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋))
         (f := fun n : ℤ => (pInvTQ p T) ^ n *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)))
       rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M),
           (pInvTQ p T) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n.val : ℚ) / T))) =
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - α').coeff (γ + (n.val : ℚ) / T))) =
         ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T (α - α') γ M),
           (pInvTQ p T) ^ n *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)) from h_attach_α]
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)) from h_attach_α]
       rw [show (∑ n : Set.Finite.toFinset
             (TfiniteBelowInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋),
           (pInvTQ p T) ^ (n.1 : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n.1 : ℚ) / T))) =
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - α').coeff (γ + (n.1 : ℚ) / T))) =
         ∑ n ∈ Set.Finite.toFinset (TfiniteBelowInt p T (α - α') γ ⌊(T : ℚ) * ((M : ℚ) - γ)⌋),
           (pInvTQ p T) ^ n *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)) from h_attach_β]
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((α - α').coeff (γ + (n : ℚ) / T)) from h_attach_β]
       rw [h_finiteBelow_eq_finiteBelowInt (α - α') M]
     have h_at_γ := h γ
     rw [h_finiteBelow_to_intPartial] at h_at_γ
@@ -3935,13 +3935,13 @@ theorem Tunique_canonical_T_representative
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m_s K,
           (pInvTQ p T) ^ k *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (TTeichmuller p T (Bs k)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (TTeichmuller p T (Bs k)))
         Filter.atTop (nhds y_s') := htendsto_s
   have htendsto_s'_TT :
       Filter.Tendsto
         (fun K : ℤ => ∑ k ∈ Finset.Icc m_s' K,
           (pInvTQ p T) ^ k *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (TTeichmuller p T (Bs' k)))
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (TTeichmuller p T (Bs' k)))
         Filter.atTop (nhds y_s') := htendsto_s'
   exact Tteichmuller_digits_unique (p := p) (T := T)
     Bs Bs' m_s m_s' hm_s hm_s' htendsto_s_TT htendsto_s'_TT
@@ -4001,7 +4001,7 @@ private lemma Tsupport_nonempty_of_nonzero
     exact Quotient.sound this
   apply HahnSeries.ext
   funext n
-  change OQpUn_embd p T (teichmuller p ((0 : ℚ → Fpbar p) n)) =
+  change OQpCUn_embd p T (teichmuller p ((0 : ℚ → Fpbar p) n)) =
     (0 : TLiftedPAdicHahnSeries p T).coeff n
   simp [WittVector.teichmuller_zero]
 
@@ -4020,10 +4020,10 @@ private lemma Tnull_series_no_unit_leading
   have hT_ne : (T : ℚ) ≠ 0 := ne_of_gt hT_pos
   -- n=0 term has valuation ofAdd(0).
   have h_lead_val : Valued.v ((pInvTQ p T)^(0 : ℤ) *
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff q)) =
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff q)) =
       ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
     rw [Valuation.map_mul, hpn_val 0]
-    have hval : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff q)) = 1 := by
+    have hval : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff q)) = 1 := by
       rcases hq_unit with ⟨u, hu⟩
       rw [← hu, Tvalued_v_algebraMap_unit_one (p := p) (T := T) u]
     rw [hval, mul_one]
@@ -4044,18 +4044,18 @@ private lemma Tnull_series_no_unit_leading
   have h_sum_eq : ∀ M : ℕ, q ≤ (M : ℚ) →
       Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p T Δ q M),
           (pInvTQ p T) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) =
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) =
         ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) := by
     intro M hMq
     rw [show (∑ n : Set.Finite.toFinset (TfiniteBelow p T Δ q M),
             (pInvTQ p T) ^ (n.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) =
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) =
         ∑ n ∈ Set.Finite.toFinset (TfiniteBelow p T Δ q M),
           (pInvTQ p T) ^ n *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)) from
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)) from
         Finset.sum_attach (s := Set.Finite.toFinset (TfiniteBelow p T Δ q M))
           (f := fun n : ℤ => (pInvTQ p T) ^ n *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)))]
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)))]
     have h_in : (0 : ℤ) ∈ Set.Finite.toFinset (TfiniteBelow p T Δ q M) := h_zero_in M hMq
     rw [show Set.Finite.toFinset (TfiniteBelow p T Δ q M) =
         insert (0 : ℤ) ((Set.Finite.toFinset (TfiniteBelow p T Δ q M)).erase 0) from
@@ -4065,7 +4065,7 @@ private lemma Tnull_series_no_unit_leading
     · rw [h_zero_idx]; exact h_lead_val
     · have h_bound : Valued.v (∑ n ∈ (Set.Finite.toFinset (TfiniteBelow p T Δ q M)).erase 0,
             (pInvTQ p T) ^ n *
-              algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T))) ≤
+              algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T))) ≤
           ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
         apply Valuation.map_sum_le
         intro n hn_mem
@@ -4084,12 +4084,12 @@ private lemma Tnull_series_no_unit_leading
             linarith
           · omega
         rw [Valuation.map_mul, hpn_val n]
-        have h_alg_le : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+        have h_alg_le : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             (Δ.coeff (q + (n : ℚ) / T))) ≤ 1 :=
-          (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p,T])).valuation_le_one
+          (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p,T])).valuation_le_one
             (Δ.coeff (q + (n : ℚ) / T))
         calc ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) *
-                Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)))
+                Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n : ℚ) / T)))
             ≤ ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) * 1 :=
               mul_le_mul' (le_refl _) h_alg_le
           _ = ((Multiplicative.ofAdd (-n : ℤ) : Multiplicative ℤ) : WithZero _) := mul_one _
@@ -4101,14 +4101,14 @@ private lemma Tnull_series_no_unit_leading
       rw [WithZero.coe_lt_coe]
       exact Multiplicative.ofAdd_lt.mpr (by omega)
   have h_nhds :
-      {x : ℚᵘⁿ_[p,T] | Valued.v x <
+      {x : ℚᶜᵘⁿ_[p,T] | Valued.v x <
           ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _)} ∈
-        nhds (0 : ℚᵘⁿ_[p,T]) :=
+        nhds (0 : ℚᶜᵘⁿ_[p,T]) :=
     Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   have h_evtl_close : ∀ᶠ M : ℕ in Filter.atTop,
       Valued.v (∑ n : Set.Finite.toFinset (TfiniteBelow p T Δ q M),
           (pInvTQ p T) ^ (n.val : ℤ) *
-            algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) <
+            algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (Δ.coeff (q + (n.val : ℚ) / T))) <
         ((Multiplicative.ofAdd (0 : ℤ) : Multiplicative ℤ) : WithZero _) :=
     htend h_nhds
   have h_evtl_M_ge : ∀ᶠ M : ℕ in Filter.atTop, q ≤ (M : ℚ) := by
@@ -4123,7 +4123,7 @@ private lemma Tnull_series_no_unit_leading
 
 /-- **Helper C.** Port of `canonical_leading_coeff_isUnit` (Poonen 3149–3162),
 re-routed via the residue map (since `WittVector.isUnit_of_coeff_zero_ne_zero` does not
-apply to `ℤᵘⁿ_[p,T]`). -/
+apply to `ℤᶜᵘⁿ_[p,T]`). -/
 private lemma Tcanonical_leading_coeff_isUnit
     {s : ℚ → Fpbar p} (hspwo : (Function.support s).IsPWO)
     (hsne : (Function.support s).Nonempty) :
@@ -4133,12 +4133,12 @@ private lemma Tcanonical_leading_coeff_isUnit
   have hq₀_in : q₀ ∈ Function.support s := hspwo.isWF.min_mem hsne
   have hsq₀_ne : s q₀ ≠ 0 := hq₀_in
   change IsUnit (TTeichmuller p T (s q₀))
-  -- In the local ring `ℤᵘⁿ_[p,T]`, `IsUnit a ↔ a ∉ maximalIdeal`.
+  -- In the local ring `ℤᶜᵘⁿ_[p,T]`, `IsUnit a ↔ a ∉ maximalIdeal`.
   rw [← IsLocalRing.notMem_maximalIdeal]
   intro hmem
   -- Apply the residue route: `TRes (TTeichmuller α) = α`, but if it lies in maximalIdeal then
   -- its residue is 0.
-  have hmax_eq : IsLocalRing.maximalIdeal (ℤᵘⁿ_[p,T]) =
+  have hmax_eq : IsLocalRing.maximalIdeal (ℤᶜᵘⁿ_[p,T]) =
       Ideal.span {pInvT p T} := (IsLocalRing.eq_maximalIdeal (pInvT_maximal p T)).symm
   rw [hmax_eq, Ideal.mem_span_singleton] at hmem
   have hres : TResidue p T (TTeichmuller p T (s q₀)) = 0 :=
@@ -4235,106 +4235,106 @@ end TScaledPAdicHahnSeries
 /-! ### Phase 5 — Projection infrastructure for Lemmas 2.8 and 2.9
 
 These helpers set up the projection layer used in Lemmas 2.8 and 2.9.
-The `R₀`-coordinate projection layer (`OQpUn_basis`, `OQpUn_basis_apply`,
-`OQpUn_proj`, `OQpUn_basis_decomp`), the `K₀`-side base-change, and the
+The `R₀`-coordinate projection layer (`OQpCUn_basis`, `OQpCUn_basis_apply`,
+`OQpCUn_proj`, `OQpCUn_basis_decomp`), the `K₀`-side base-change, and the
 index-splitting identities are developed here.
 
-Auxiliary algebra-map identities below (`pInvTQ_pow_T`, `algebraMap_OQpUn_embd_compat`,
+Auxiliary algebra-map identities below (`pInvTQ_pow_T`, `algebraMap_OQpCUn_embd_compat`,
 `Lifted_to_TLifted_coeff`) are reused throughout these arguments. -/
 
-/-- Reindexed `R₀`-power-basis of `ℤᵘⁿ_[p,T]`: the basis `{1, π, …, π^(T-1)}` indexed by
+/-- Reindexed `R₀`-power-basis of `ℤᶜᵘⁿ_[p,T]`: the basis `{1, π, …, π^(T-1)}` indexed by
 `Fin T` (rather than `Fin (TPoly p T).natDegree`). -/
-private noncomputable def OQpUn_basis :
-    Module.Basis (Fin T) (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) :=
+private noncomputable def OQpCUn_basis :
+    Module.Basis (Fin T) (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) :=
   ((AdjoinRoot.powerBasis' (TPoly_monic p T)).basis).reindex
     (finCongr (by rw [AdjoinRoot.powerBasis'_dim, TPoly_natDegree]))
 
-private lemma OQpUn_basis_apply (i : Fin T) :
-    OQpUn_basis p T i = (pInvT p T) ^ (i.val : ℕ) := by
-  unfold OQpUn_basis
+private lemma OQpCUn_basis_apply (i : Fin T) :
+    OQpCUn_basis p T i = (pInvT p T) ^ (i.val : ℕ) := by
+  unfold OQpCUn_basis
   rw [Module.Basis.reindex_apply, PowerBasis.basis_eq_pow]
   rfl
 
 /-- The `R₀`-coordinate projection on the `i`-th vector of the `R₀`-power-basis of
-`ℤᵘⁿ_[p,T]`. -/
-private noncomputable def OQpUn_proj (i : Fin T) :
-    ℤᵘⁿ_[p,T] →ₗ[ℤᵘⁿ_[p]] ℤᵘⁿ_[p] :=
-  (OQpUn_basis p T).coord i
+`ℤᶜᵘⁿ_[p,T]`. -/
+private noncomputable def OQpCUn_proj (i : Fin T) :
+    ℤᶜᵘⁿ_[p,T] →ₗ[ℤᶜᵘⁿ_[p]] ℤᶜᵘⁿ_[p] :=
+  (OQpCUn_basis p T).coord i
 
-/-- Basis decomposition: every `c : ℤᵘⁿ_[p,T]` writes as a `ℤᵘⁿ_[p]`-linear combination of
+/-- Basis decomposition: every `c : ℤᶜᵘⁿ_[p,T]` writes as a `ℤᶜᵘⁿ_[p]`-linear combination of
 `{1, π, …, π^(T-1)}`. -/
-private lemma OQpUn_basis_decomp (c : ℤᵘⁿ_[p,T]) :
+private lemma OQpCUn_basis_decomp (c : ℤᶜᵘⁿ_[p,T]) :
     c = ∑ i : Fin T, (pInvT p T) ^ (i.val : ℕ) *
-        OQpUn_embd p T (OQpUn_proj p T i c) := by
-  have h := (OQpUn_basis p T).sum_repr c
+        OQpCUn_embd p T (OQpCUn_proj p T i c) := by
+  have h := (OQpCUn_basis p T).sum_repr c
   conv_lhs => rw [← h]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [OQpUn_basis_apply, Algebra.smul_def, mul_comm]
+  rw [OQpCUn_basis_apply, Algebra.smul_def, mul_comm]
   rfl
 
-/-- The valuation identity `(pInvTQ)^T = algebraMap p`, viewed inside `ℚᵘⁿ_[p,T]`. -/
+/-- The valuation identity `(pInvTQ)^T = algebraMap p`, viewed inside `ℚᶜᵘⁿ_[p,T]`. -/
 private lemma pInvTQ_pow_T :
     (pInvTQ p T) ^ T =
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-        ((algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T])) ((p : ℕ) : ℤᵘⁿ_[p])) := by
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+        ((algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T])) ((p : ℕ) : ℤᶜᵘⁿ_[p])) := by
   unfold pInvTQ
   rw [← map_pow, pInvT_pow_T]
 
 omit [NeZero T] in
 /-- Coefficient identity for the inclusion: `Lifted_to_TLifted` acts coefficient-wise via
-`OQpUn_embd`. -/
+`OQpCUn_embd`. -/
 private lemma Lifted_to_TLifted_coeff (x : LiftedPAdicHahnSeries p) (q : ℚ) :
-    (Lifted_to_TLifted p T x).coeff q = OQpUn_embd p T (x.coeff q) := rfl
+    (Lifted_to_TLifted p T x).coeff q = OQpCUn_embd p T (x.coeff q) := rfl
 
-private noncomputable def QpUn_basis :
-    Module.Basis (Fin T) (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) :=
-  (OQpUn_basis p T).localizationLocalization
-    (Rₛ := ℚᵘⁿ_[p]) (Aₛ := ℚᵘⁿ_[p,T]) (S := nonZeroDivisors (ℤᵘⁿ_[p]))
+private noncomputable def QpCUn_basis :
+    Module.Basis (Fin T) (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) :=
+  (OQpCUn_basis p T).localizationLocalization
+    (Rₛ := ℚᶜᵘⁿ_[p]) (Aₛ := ℚᶜᵘⁿ_[p,T]) (S := nonZeroDivisors (ℤᶜᵘⁿ_[p]))
 
-private lemma QpUn_basis_apply (i : Fin T) :
-    QpUn_basis p T i = (pInvTQ p T) ^ (i.val : ℕ) := by
-  unfold QpUn_basis
-  rw [Module.Basis.localizationLocalization_apply, OQpUn_basis_apply]
+private lemma QpCUn_basis_apply (i : Fin T) :
+    QpCUn_basis p T i = (pInvTQ p T) ^ (i.val : ℕ) := by
+  unfold QpCUn_basis
+  rw [Module.Basis.localizationLocalization_apply, OQpCUn_basis_apply]
   unfold pInvTQ
   rw [map_pow]
 
 /-- `K₀`-coordinate projection on the `i`-th basis vector of the `K₀`-power-basis of `K`. -/
-private noncomputable def QpUn_proj (i : Fin T) :
-    ℚᵘⁿ_[p,T] →ₗ[ℚᵘⁿ_[p]] ℚᵘⁿ_[p] :=
-  (QpUn_basis p T).coord i
+private noncomputable def QpCUn_proj (i : Fin T) :
+    ℚᶜᵘⁿ_[p,T] →ₗ[ℚᶜᵘⁿ_[p]] ℚᶜᵘⁿ_[p] :=
+  (QpCUn_basis p T).coord i
 
--- K₀-basis decomposition: every `c : ℚᵘⁿ_[p,T]` writes as a `K₀`-linear combination of
+-- K₀-basis decomposition: every `c : ℚᶜᵘⁿ_[p,T]` writes as a `K₀`-linear combination of
 -- `{1, π, …, π^(T-1)}`.
-private lemma QpUn_basis_decomp (c : ℚᵘⁿ_[p,T]) :
+private lemma QpCUn_basis_decomp (c : ℚᶜᵘⁿ_[p,T]) :
     c = ∑ i : Fin T, (pInvTQ p T) ^ (i.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i c) := by
-  have h := (QpUn_basis p T).sum_repr c
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T i c) := by
+  have h := (QpCUn_basis p T).sum_repr c
   conv_lhs => rw [← h]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [QpUn_basis_apply, Algebra.smul_def, mul_comm]
+  rw [QpCUn_basis_apply, Algebra.smul_def, mul_comm]
   rfl
 
--- Naturality of the `K₀`-projection: on the image of `algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])`,
--- `QpUn_proj` agrees with `OQpUn_proj` followed by the localization map of `ℤᵘⁿ_[p]`.
-private lemma QpUn_proj_algebraMap (i : Fin T) (c : ℤᵘⁿ_[p,T]) :
-    QpUn_proj p T i (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) c) =
-      algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (OQpUn_proj p T i c) := by
-  unfold QpUn_proj OQpUn_proj QpUn_basis
+-- Naturality of the `K₀`-projection: on the image of `algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])`,
+-- `QpCUn_proj` agrees with `OQpCUn_proj` followed by the localization map of `ℤᶜᵘⁿ_[p]`.
+private lemma QpCUn_proj_algebraMap (i : Fin T) (c : ℤᶜᵘⁿ_[p,T]) :
+    QpCUn_proj p T i (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) c) =
+      algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (OQpCUn_proj p T i c) := by
+  unfold QpCUn_proj OQpCUn_proj QpCUn_basis
   exact Module.Basis.localizationLocalization_repr_algebraMap
-    (Rₛ := ℚᵘⁿ_[p]) (Aₛ := ℚᵘⁿ_[p,T]) (S := nonZeroDivisors (ℤᵘⁿ_[p])) _ _ _
+    (Rₛ := ℚᶜᵘⁿ_[p]) (Aₛ := ℚᶜᵘⁿ_[p,T]) (S := nonZeroDivisors (ℤᶜᵘⁿ_[p])) _ _ _
 
--- Key extraction lemma: `QpUn_proj j` extracts the `j`-th coordinate from a `K₀`-linear
+-- Key extraction lemma: `QpCUn_proj j` extracts the `j`-th coordinate from a `K₀`-linear
 -- combination of `{1, π, …, π^(T-1)}`.
-private lemma QpUn_proj_sum (a : Fin T → ℚᵘⁿ_[p]) (j : Fin T) :
-    QpUn_proj p T j (∑ i : Fin T, (pInvTQ p T) ^ (i.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (a i)) = a j := by
+private lemma QpCUn_proj_sum (a : Fin T → ℚᶜᵘⁿ_[p]) (j : Fin T) :
+    QpCUn_proj p T j (∑ i : Fin T, (pInvTQ p T) ^ (i.val : ℕ) *
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (a i)) = a j := by
   have h : (∑ i : Fin T, (pInvTQ p T) ^ (i.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (a i)) =
-      ∑ i : Fin T, (a i) • (QpUn_basis p T i) := by
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (a i)) =
+      ∑ i : Fin T, (a i) • (QpCUn_basis p T i) := by
     refine Finset.sum_congr rfl fun i _ => ?_
-    rw [QpUn_basis_apply, Algebra.smul_def, mul_comm]
+    rw [QpCUn_basis_apply, Algebra.smul_def, mul_comm]
   rw [h]
-  unfold QpUn_proj
+  unfold QpCUn_proj
   rw [map_sum, Finset.sum_eq_single j]
   · rw [LinearMap.map_smul, Module.Basis.coord_apply, Module.Basis.repr_self]
     simp
@@ -4343,82 +4343,82 @@ private lemma QpUn_proj_sum (a : Fin T → ℚᵘⁿ_[p]) (j : Fin T) :
     simp [hij]
   · intro h0; exact absurd (Finset.mem_univ _) h0
 
-/-- Algebra-map square commutativity: viewing `OQpUn_embd` followed by `algebraMap` to `K`
+/-- Algebra-map square commutativity: viewing `OQpCUn_embd` followed by `algebraMap` to `K`
 agrees with `algebraMap` to `K₀` followed by the field inclusion `K₀ ↪ K`. -/
-private lemma algebraMap_OQpUn_embd_compat (a : ℤᵘⁿ_[p]) :
-    algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (OQpUn_embd p T a) =
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a) := by
-  change algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℤᵘⁿ_[p,T]) a) =
-    QpUn_embd p T (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)
-  unfold QpUn_embd
+private lemma algebraMap_OQpCUn_embd_compat (a : ℤᶜᵘⁿ_[p]) :
+    algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (OQpCUn_embd p T a) =
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a) := by
+  change algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) a) =
+    QpCUn_embd p T (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a)
+  unfold QpCUn_embd
   exact (IsFractionRing.lift_algebraMap (g :=
-    (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])).comp (OQpUn_embd p T)) _ a).symm
+    (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])).comp (OQpCUn_embd p T)) _ a).symm
 
 /-- `pInvTQ` is nonzero — used for `zpow` arithmetic on negative exponents. -/
 private lemma pInvTQ_ne_zero : (pInvTQ p T) ≠ 0 := by
-  change (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])) (pInvT p T) ≠ 0
+  change (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])) (pInvT p T) ≠ 0
   intro h
-  have hinj := FaithfulSMul.algebraMap_injective (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+  have hinj := FaithfulSMul.algebraMap_injective (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
   exact pInvT_ne_zero p T (hinj (by rw [h, map_zero]))
 
-/-- `(pInvTQ)^T` equals the image of `(p : ℚᵘⁿ_[p])` in `K`. -/
+/-- `(pInvTQ)^T` equals the image of `(p : ℚᶜᵘⁿ_[p])` in `K`. -/
 private lemma pInvTQ_pow_T_K :
     (pInvTQ p T) ^ T =
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) := by
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
+        (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) ((p : ℕ) : ℤᶜᵘⁿ_[p])) := by
   rw [pInvTQ_pow_T]
-  exact algebraMap_OQpUn_embd_compat p T _
+  exact algebraMap_OQpCUn_embd_compat p T _
 
 -- `(pInvTQ)^(T·m)` equals `algebraMap K₀ K` of `(p)^m` for any integer `m`.
 private lemma pInvTQ_pow_T_zmul (m : ℤ) :
     (pInvTQ p T) ^ ((T : ℤ) * m) =
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (((p : ℕ) : ℚᵘⁿ_[p]) ^ m) := by
-  have hp_K0 : ((p : ℕ) : ℚᵘⁿ_[p]) =
-      algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p]) := by simp
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
+        (((p : ℕ) : ℚᶜᵘⁿ_[p]) ^ m) := by
+  have hp_K0 : ((p : ℕ) : ℚᶜᵘⁿ_[p]) =
+      algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) ((p : ℕ) : ℤᶜᵘⁿ_[p]) := by simp
   rw [hp_K0, map_zpow₀, ← pInvTQ_pow_T_K]
   -- Goal: pInvTQ ^ (T * m) = (pInvTQ ^ T) ^ m
   rw [zpow_mul, zpow_natCast]
 
--- The integer-side valuation identity: for `a : ℤᵘⁿ_[p]`,
+-- The integer-side valuation identity: for `a : ℤᶜᵘⁿ_[p]`,
 -- `v_K(algMap_{K₀→K}(algMap_{R₀→K₀} a)) = (v_{K₀}(algMap_{R₀→K₀} a))^T`.
 -- Derived via the DVR canonical decomposition `a = u · p^n` together with
--- `OQpUn_embd p = pInvT^T` and `pInvTQ^T = algMap p`.
-private lemma valued_v_algebraMap_K₀_K_int (a : ℤᵘⁿ_[p]) :
-    Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a)) =
-      (Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) a))^T := by
-  rw [← algebraMap_OQpUn_embd_compat]
+-- `OQpCUn_embd p = pInvT^T` and `pInvTQ^T = algMap p`.
+private lemma valued_v_algebraMap_K₀_K_int (a : ℤᶜᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a)) =
+      (Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a))^T := by
+  rw [← algebraMap_OQpCUn_embd_compat]
   by_cases ha : a = 0
   · subst ha; simp [map_zero, zero_pow (NeZero.ne T)]
   · obtain ⟨n, h⟩ := IsDiscreteValuationRing.associated_pow_irreducible ha
       (WittVector.irreducible p)
     obtain ⟨u, hu⟩ := h.symm
     rw [← hu]
-    rw [map_mul (OQpUn_embd p T), map_pow (OQpUn_embd p T)]
+    rw [map_mul (OQpCUn_embd p T), map_pow (OQpCUn_embd p T)]
     rw [map_mul, map_pow]
     rw [Valuation.map_mul, Valuation.map_pow]
     -- Now also expand the RHS algebraMap (p^n * u)
-    rw [show algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (((p : ℕ) : ℤᵘⁿ_[p]) ^ n * u.val) =
-          algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (((p : ℕ) : ℤᵘⁿ_[p])) ^ n *
-          algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val from by
+    rw [show algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (((p : ℕ) : ℤᶜᵘⁿ_[p]) ^ n * u.val) =
+          algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (((p : ℕ) : ℤᶜᵘⁿ_[p])) ^ n *
+          algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val from by
       rw [map_mul, map_pow]]
     rw [Valuation.map_mul, Valuation.map_pow]
-    have h_unit_K : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-        (OQpUn_embd p T u.val)) = 1 := by
-      have hunit : IsUnit (OQpUn_embd p T u.val) :=
-        (OQpUn_embd p T).isUnit_map u.isUnit
+    have h_unit_K : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+        (OQpCUn_embd p T u.val)) = 1 := by
+      have hunit : IsUnit (OQpCUn_embd p T u.val) :=
+        (OQpCUn_embd p T).isUnit_map u.isUnit
       obtain ⟨v, hv⟩ := hunit
       rw [← hv]
       exact Tvalued_v_algebraMap_unit_one (p := p) (T := T) v
-    have h_unit_K0 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) = 1 := by
-      have h1 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_le_one u.val
-      have h2 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) ≤ 1 :=
-        (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).valuation_le_one u.inv
-      have h3 : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) *
-          Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) = 1 := by
+    have h_unit_K0 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) = 1 := by
+      have h1 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) ≤ 1 :=
+        (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p])).valuation_le_one u.val
+      have h2 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) ≤ 1 :=
+        (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p])).valuation_le_one u.inv
+      have h3 : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) *
+          Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) = 1 := by
         rw [← Valuation.map_mul, ← map_mul, u.val_inv, map_one, Valuation.map_one]
-      have hpos : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) ≠ 0 := by
+      have hpos : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) ≠ 0 := by
         intro hz
         rw [hz, zero_mul] at h3
         exact zero_ne_one h3
@@ -4426,28 +4426,28 @@ private lemma valued_v_algebraMap_K₀_K_int (a : ℤᵘⁿ_[p]) :
         rcases (eq_or_lt_of_le h1) with h | h
         · exact le_of_eq h.symm
         · exfalso
-          have hi_lt : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) ≤ 1 := h2
-          have hprod : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.val) *
-              Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) u.inv) < 1 :=
+          have hi_lt : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) ≤ 1 := h2
+          have hprod : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.val) *
+              Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) u.inv) < 1 :=
             mul_lt_one_of_lt_of_le h hi_lt
           rw [h3] at hprod
           exact lt_irrefl _ hprod)
     rw [h_unit_K, h_unit_K0, mul_one, mul_pow, one_pow, mul_one, ← pow_mul]
-    have hLHS : Valued.v (algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-          (OQpUn_embd p T ((p : ℕ) : ℤᵘⁿ_[p]))) =
+    have hLHS : Valued.v (algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+          (OQpCUn_embd p T ((p : ℕ) : ℤᶜᵘⁿ_[p]))) =
         ((Multiplicative.ofAdd (-(T : ℤ)) : Multiplicative ℤ) : WithZero _) := by
-      rw [show OQpUn_embd p T ((p : ℕ) : ℤᵘⁿ_[p]) = (pInvT p T) ^ T from
+      rw [show OQpCUn_embd p T ((p : ℕ) : ℤᶜᵘⁿ_[p]) = (pInvT p T) ^ T from
             (pInvT_pow_T p T).symm]
       rw [map_pow]
-      rw [show algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T from rfl]
+      rw [show algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (pInvT p T) = pInvTQ p T from rfl]
       rw [show ((pInvTQ p T) ^ T) = ((pInvTQ p T) ^ ((T : ℤ))) by rfl]
       exact valued_v_pInvT_zpow (p := p) (T := T) (T : ℤ)
-    have hRHS : Valued.v (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])) =
+    have hRHS : Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) ((p : ℕ) : ℤᶜᵘⁿ_[p])) =
         ((Multiplicative.ofAdd (-1 : ℤ) : Multiplicative ℤ) : WithZero _) := by
-      rw [QpUn.valued_algebraMap]
-      have hirr : Irreducible ((p : ℕ) : ℤᵘⁿ_[p]) := WittVector.irreducible p
-      have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᵘⁿ_[p])).asIdeal =
-          Ideal.span {((p : ℕ) : ℤᵘⁿ_[p])} := hirr.maximalIdeal_eq
+      rw [QpCUn.valued_algebraMap]
+      have hirr : Irreducible ((p : ℕ) : ℤᶜᵘⁿ_[p]) := WittVector.irreducible p
+      have hpe : (IsDiscreteValuationRing.maximalIdeal (ℤᶜᵘⁿ_[p])).asIdeal =
+          Ideal.span {((p : ℕ) : ℤᶜᵘⁿ_[p])} := hirr.maximalIdeal_eq
       rw [IsDedekindDomain.HeightOneSpectrum.intValuation_singleton _
         (WittVector.p_nonzero p _) hpe]
       rfl
@@ -4459,9 +4459,9 @@ private lemma valued_v_algebraMap_K₀_K_int (a : ℤᵘⁿ_[p]) :
     rw [mul_comm]
 /-- The valuation identity for the totally-ramified extension `K₀ ↪ K`:
 `v_K(ι̃ z) = (v_{K₀}(z))^T`, encoding the ramification index `T`. -/
-private lemma valued_v_algebraMap_K₀_K (z : ℚᵘⁿ_[p]) :
-    Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
-  obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᵘⁿ_[p]) z
+private lemma valued_v_algebraMap_K₀_K (z : ℚᶜᵘⁿ_[p]) :
+    Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
+  obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᶜᵘⁿ_[p]) z
   rw [← hz]
   simp only [map_div₀, div_pow]
   rw [valued_v_algebraMap_K₀_K_int, valued_v_algebraMap_K₀_K_int]
@@ -4470,8 +4470,8 @@ private lemma valued_v_algebraMap_K₀_K (z : ℚᵘⁿ_[p]) :
 ramification-index identity `v_K(ι̃ z) = (v_{K₀}(z))^T` plus the topological-valuation
 basis (`Valued.hasBasis_nhds_zero`). -/
 private lemma tendsto_algebraMap_K₀_K_zero :
-    Filter.Tendsto (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
-  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p,T]) _).tendsto_right_iff]
+    Filter.Tendsto (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) (nhds 0) (nhds 0) := by
+  rw [(Valued.hasBasis_nhds_zero (ℚᶜᵘⁿ_[p,T]) _).tendsto_right_iff]
   intro γ _
   -- v4.31: `γ : (ValueGroup₀ Valued.v)ˣ`; work with its `WithZero (Multiplicative ℤ)` image.
   set c : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ.1 with hc_def
@@ -4490,8 +4490,8 @@ private lemma tendsto_algebraMap_K₀_K_zero :
     have h2 : k * 1 = k := mul_one _
     linarith
   rw [Filter.eventually_iff]
-  have hsrc : {z : ℚᵘⁿ_[p] | Valued.v z <
-      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᵘⁿ_[p]) :=
+  have hsrc : {z : ℚᶜᵘⁿ_[p] | Valued.v z <
+      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᶜᵘⁿ_[p]) :=
     mem_nhds_zero_v_lt WithZero.coe_ne_zero
   refine Filter.mem_of_superset hsrc ?_
   intro z hz
@@ -4515,28 +4515,28 @@ private lemma tendsto_algebraMap_K₀_K_zero :
 /-- Continuity of `algebraMap K₀ → K`. Derived from continuity at `0`
 (`tendsto_algebraMap_K₀_K_zero`) plus the additive-group-hom upgrade. -/
 private lemma continuous_algebraMap_K₀_K :
-    Continuous (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) := by
-  have h0 : ContinuousAt (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])) 0 := by
+    Continuous (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) := by
+  have h0 : ContinuousAt (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])) 0 := by
     rw [ContinuousAt, map_zero]
     exact tendsto_algebraMap_K₀_K_zero p T
   exact continuous_of_continuousAt_zero
-    (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])).toAddMonoidHom h0
+    (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])).toAddMonoidHom h0
 
 -- Helper 1B: for each j, the j-th K₀-coordinate of the basis decomposition
 -- has valuation bounded by `v(c) * ofAdd(j)`. Proof via strict ultrametric: nonzero
--- terms in `c = Σ_i pInvTQ^i · algMap(QpUn_proj i c)` have pairwise distinct
+-- terms in `c = Σ_i pInvTQ^i · algMap(QpCUn_proj i c)` have pairwise distinct
 -- K-valuations (mod T argument), hence by `Valuation.map_sum_eq_of_lt`,
 -- `v(c) = max_i v(term_i) ≥ v(term_j)`.
 
-private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
+private lemma valued_v_QpCUn_proj_term_le (c : ℚᶜᵘⁿ_[p,T]) (j : Fin T) :
     Valued.v ((pInvTQ p T) ^ (j.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T j c)) ≤ Valued.v c := by
-  -- Notation: term_i := pInvTQ^i * algMap (QpUn_proj i c).
-  let term : Fin T → ℚᵘⁿ_[p,T] := fun i =>
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T j c)) ≤ Valued.v c := by
+  -- Notation: term_i := pInvTQ^i * algMap (QpCUn_proj i c).
+  let term : Fin T → ℚᶜᵘⁿ_[p,T] := fun i =>
     (pInvTQ p T) ^ (i.val : ℕ) *
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i c)
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T i c)
   change Valued.v (term j) ≤ Valued.v c
-  have h_decomp : c = ∑ i : Fin T, term i := QpUn_basis_decomp p T c
+  have h_decomp : c = ∑ i : Fin T, term i := QpCUn_basis_decomp p T c
   -- If term j = 0, the bound is trivial.
   by_cases hj : term j = 0
   · rw [hj, Valuation.map_zero]; exact zero_le (a := Valued.v c)
@@ -4551,37 +4551,37 @@ private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
     intro i₁ hi₁ i₂ hi₂ h_ne
     have hterm₁_ne : term i₁ ≠ 0 := h_mem_supp.mp hi₁
     have hterm₂_ne : term i₂ ≠ 0 := h_mem_supp.mp hi₂
-    -- term i = pInvTQ^i * algMap (QpUn_proj i c)
+    -- term i = pInvTQ^i * algMap (QpCUn_proj i c)
     have hpInvTQ_ne : (pInvTQ p T) ≠ 0 := pInvTQ_ne_zero p T
     have hpInvTQ_pow_ne : ∀ k : ℕ, ((pInvTQ p T) ^ k) ≠ 0 := fun k =>
       pow_ne_zero k hpInvTQ_ne
-    have h_a₁_ne : QpUn_proj p T i₁ c ≠ 0 := by
+    have h_a₁_ne : QpCUn_proj p T i₁ c ≠ 0 := by
       intro h0
       apply hterm₁_ne
       change (pInvTQ p T) ^ (i₁.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i₁ c) = 0
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T i₁ c) = 0
       rw [h0, map_zero, mul_zero]
-    have h_a₂_ne : QpUn_proj p T i₂ c ≠ 0 := by
+    have h_a₂_ne : QpCUn_proj p T i₂ c ≠ 0 := by
       intro h0
       apply hterm₂_ne
       change (pInvTQ p T) ^ (i₂.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i₂ c) = 0
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T i₂ c) = 0
       rw [h0, map_zero, mul_zero]
-    -- v(QpUn_proj i_k c) ≠ 0
-    have h_v_a_ne₁ : Valued.v (QpUn_proj p T i₁ c) ≠ 0 := by
+    -- v(QpCUn_proj i_k c) ≠ 0
+    have h_v_a_ne₁ : Valued.v (QpCUn_proj p T i₁ c) ≠ 0 := by
       intro h0
       apply h_a₁_ne
       exact (Valuation.zero_iff _).1 h0
-    have h_v_a_ne₂ : Valued.v (QpUn_proj p T i₂ c) ≠ 0 := by
+    have h_v_a_ne₂ : Valued.v (QpCUn_proj p T i₂ c) ≠ 0 := by
       intro h0
       apply h_a₂_ne
       exact (Valuation.zero_iff _).1 h0
     -- Express valuations via Helper 1A.
-    have h_alg_eq₁ : Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (QpUn_proj p T i₁ c)) = (Valued.v (QpUn_proj p T i₁ c))^T :=
+    have h_alg_eq₁ : Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
+        (QpCUn_proj p T i₁ c)) = (Valued.v (QpCUn_proj p T i₁ c))^T :=
       valued_v_algebraMap_K₀_K p T _
-    have h_alg_eq₂ : Valued.v (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (QpUn_proj p T i₂ c)) = (Valued.v (QpUn_proj p T i₂ c))^T :=
+    have h_alg_eq₂ : Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
+        (QpCUn_proj p T i₂ c)) = (Valued.v (QpCUn_proj p T i₂ c))^T :=
       valued_v_algebraMap_K₀_K p T _
     have h_pInvTQ₁ : Valued.v ((pInvTQ p T) ^ (i₁.val : ℕ)) =
         ((Multiplicative.ofAdd (-(i₁.val : ℤ)) : Multiplicative ℤ) :
@@ -4597,24 +4597,24 @@ private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
     -- Unfold term and apply valuation calculations.
     have h_v_term₁ : Valued.v (term i₁) =
         ((Multiplicative.ofAdd (-(i₁.val : ℤ)) : Multiplicative ℤ) :
-            WithZero (Multiplicative ℤ)) * (Valued.v (QpUn_proj p T i₁ c))^T := by
+            WithZero (Multiplicative ℤ)) * (Valued.v (QpCUn_proj p T i₁ c))^T := by
       change Valued.v ((pInvTQ p T) ^ (i₁.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i₁ c)) = _
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T i₁ c)) = _
       rw [Valuation.map_mul, h_pInvTQ₁, h_alg_eq₁]
     have h_v_term₂ : Valued.v (term i₂) =
         ((Multiplicative.ofAdd (-(i₂.val : ℤ)) : Multiplicative ℤ) :
-            WithZero (Multiplicative ℤ)) * (Valued.v (QpUn_proj p T i₂ c))^T := by
+            WithZero (Multiplicative ℤ)) * (Valued.v (QpCUn_proj p T i₂ c))^T := by
       change Valued.v ((pInvTQ p T) ^ (i₂.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T i₂ c)) = _
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T i₂ c)) = _
       rw [Valuation.map_mul, h_pInvTQ₂, h_alg_eq₂]
     rw [h_v_term₁, h_v_term₂] at h_eq
     set m₁ : ℤ := Multiplicative.toAdd (WithZero.unzero h_v_a_ne₁) with hm₁_def
     set m₂ : ℤ := Multiplicative.toAdd (WithZero.unzero h_v_a_ne₂) with hm₂_def
-    have hva₁ : Valued.v (QpUn_proj p T i₁ c) =
+    have hva₁ : Valued.v (QpCUn_proj p T i₁ c) =
         ((Multiplicative.ofAdd m₁ : Multiplicative ℤ) :
             WithZero (Multiplicative ℤ)) := by
       rw [hm₁_def]; simp [WithZero.coe_unzero h_v_a_ne₁]
-    have hva₂ : Valued.v (QpUn_proj p T i₂ c) =
+    have hva₂ : Valued.v (QpCUn_proj p T i₂ c) =
         ((Multiplicative.ofAdd m₂ : Multiplicative ℤ) :
             WithZero (Multiplicative ℤ)) := by
       rw [hm₂_def]; simp [WithZero.coe_unzero h_v_a_ne₂]
@@ -4667,12 +4667,12 @@ private lemma valued_v_QpUn_proj_term_le (c : ℚᵘⁿ_[p,T]) (j : Fin T) :
   rw [h_v_c]
   exact hk_max j hj_supp
 
--- Helper 1B: tendsto-at-zero of `QpUn_proj j`. Built from
--- `valued_v_QpUn_proj_term_le` plus Helper 1A `valued_v_algebraMap_K₀_K` (the
+-- Helper 1B: tendsto-at-zero of `QpCUn_proj j`. Built from
+-- `valued_v_QpCUn_proj_term_le` plus Helper 1A `valued_v_algebraMap_K₀_K` (the
 -- ramification identity `v(algMap z) = v(z)^T`).
-private lemma tendsto_QpUn_proj_zero (j : Fin T) :
-    Filter.Tendsto (QpUn_proj p T j) (nhds (0 : ℚᵘⁿ_[p,T])) (nhds (0 : ℚᵘⁿ_[p])) := by
-  rw [(Valued.hasBasis_nhds_zero (ℚᵘⁿ_[p]) _).tendsto_right_iff]
+private lemma tendsto_QpCUn_proj_zero (j : Fin T) :
+    Filter.Tendsto (QpCUn_proj p T j) (nhds (0 : ℚᶜᵘⁿ_[p,T])) (nhds (0 : ℚᶜᵘⁿ_[p])) := by
+  rw [(Valued.hasBasis_nhds_zero (ℚᶜᵘⁿ_[p]) _).tendsto_right_iff]
   intro γ' _
   -- v4.31: `γ' : (ValueGroup₀ Valued.v)ˣ` on the `K₀` side; use its `WithZero` image.
   set c' : WithZero (Multiplicative ℤ) := MonoidWithZeroHom.ValueGroup₀.embedding γ'.1 with hc'_def
@@ -4684,32 +4684,32 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
   have hT_pos : (0 : ℤ) < T := by exact_mod_cast Nat.pos_of_neZero T
   -- Source ball on `K` side, with cutoff `ofAdd k`.
   rw [Filter.eventually_iff]
-  have hsrc : {c : ℚᵘⁿ_[p,T] | Valued.v c <
-      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᵘⁿ_[p,T]) :=
+  have hsrc : {c : ℚᶜᵘⁿ_[p,T] | Valued.v c <
+      ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _)} ∈ nhds (0 : ℚᶜᵘⁿ_[p,T]) :=
     Tmem_nhds_zero_v_lt p T WithZero.coe_ne_zero
   refine Filter.mem_of_superset hsrc ?_
   intro c hc
   simp only [Set.mem_ofPred_eq] at hc ⊢
   rw [Valuation.restrict_lt_iff_lt_embedding, ← hc'_def]
   -- We have hc : v(c) < ofAdd k.
-  -- Goal: v(QpUn_proj j c) < c' = ofAdd N.
+  -- Goal: v(QpCUn_proj j c) < c' = ofAdd N.
   have h_term_le : Valued.v ((pInvTQ p T) ^ (j.val : ℕ) *
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) (QpUn_proj p T j c)) ≤ Valued.v c :=
-    valued_v_QpUn_proj_term_le p T c j
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (QpCUn_proj p T j c)) ≤ Valued.v c :=
+    valued_v_QpCUn_proj_term_le p T c j
   -- Compute v(pInvTQ^j) = ofAdd(-j).
   have h_pInvTQ_j : Valued.v ((pInvTQ p T) ^ (j.val : ℕ)) =
       ((Multiplicative.ofAdd (-(j.val : ℤ)) : Multiplicative ℤ) : WithZero _) := by
     rw [show ((pInvTQ p T) ^ (j.val : ℕ)) = ((pInvTQ p T) ^ ((j.val : ℤ))) by rfl]
     exact valued_v_pInvT_zpow (p := p) (T := T) (j.val : ℤ)
   rw [Valuation.map_mul, h_pInvTQ_j, valued_v_algebraMap_K₀_K] at h_term_le
-  -- h_term_le : ofAdd(-j) * v(QpUn_proj j c)^T ≤ v(c) < ofAdd k.
+  -- h_term_le : ofAdd(-j) * v(QpCUn_proj j c)^T ≤ v(c) < ofAdd k.
   have h_combined :
       ((Multiplicative.ofAdd (-(j.val : ℤ)) : Multiplicative ℤ) : WithZero _) *
-        (Valued.v (QpUn_proj p T j c))^T <
+        (Valued.v (QpCUn_proj p T j c))^T <
       ((Multiplicative.ofAdd k : Multiplicative ℤ) : WithZero _) :=
     lt_of_le_of_lt h_term_le hc
-  -- Multiply both sides by ofAdd j: v(QpUn_proj j c)^T < ofAdd(k + j).
-  have h_pow_lt : (Valued.v (QpUn_proj p T j c))^T <
+  -- Multiply both sides by ofAdd j: v(QpCUn_proj j c)^T < ofAdd(k + j).
+  have h_pow_lt : (Valued.v (QpCUn_proj p T j c))^T <
       ((Multiplicative.ofAdd (k + (j.val : ℤ)) : Multiplicative ℤ) : WithZero _) := by
     have hofAdd_j_pos : (0 : WithZero (Multiplicative ℤ)) <
         ((Multiplicative.ofAdd ((j.val : ℤ)) : Multiplicative ℤ) :
@@ -4719,8 +4719,8 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
     -- Simplify LHS: ofAdd(j) * (ofAdd(-j) * v^T) = v^T.
     have h_simpL : ((Multiplicative.ofAdd ((j.val : ℤ)) : Multiplicative ℤ) : WithZero _) *
         (((Multiplicative.ofAdd (-(j.val : ℤ)) : Multiplicative ℤ) : WithZero _) *
-          (Valued.v (QpUn_proj p T j c))^T) =
-        (Valued.v (QpUn_proj p T j c))^T := by
+          (Valued.v (QpCUn_proj p T j c))^T) =
+        (Valued.v (QpCUn_proj p T j c))^T := by
       rw [← mul_assoc]
       rw [← WithZero.coe_mul, ← ofAdd_add]
       simp
@@ -4739,7 +4739,7 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
   -- Now v^T < ofAdd(k + j) ≤ ofAdd(N*T - 1) < ofAdd(N*T) = (ofAdd N)^T = γ'^T.
   have h_kj_lt : k + (j.val : ℤ) < N * T := by
     rw [hk_def]; linarith
-  have h_pow_lt_NT : (Valued.v (QpUn_proj p T j c))^T <
+  have h_pow_lt_NT : (Valued.v (QpCUn_proj p T j c))^T <
       ((Multiplicative.ofAdd (N * T) : Multiplicative ℤ) : WithZero _) := by
     apply lt_of_lt_of_le h_pow_lt
     rw [WithZero.coe_le_coe, Multiplicative.ofAdd_le]
@@ -4757,13 +4757,13 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
   have h_rhs_pos : (0 : WithZero (Multiplicative ℤ)) <
       ((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero (Multiplicative ℤ)) :=
     WithZero.zero_lt_coe _
-  have h_lt : Valued.v (QpUn_proj p T j c) <
+  have h_lt : Valued.v (QpCUn_proj p T j c) <
       ((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero _) := by
     have hT_ne : T ≠ 0 := NeZero.ne T
     by_contra h_not_lt
     push Not at h_not_lt
     have h_pow_le : (((Multiplicative.ofAdd N : Multiplicative ℤ) : WithZero _))^T ≤
-        (Valued.v (QpUn_proj p T j c))^T :=
+        (Valued.v (QpCUn_proj p T j c))^T :=
       pow_le_pow_left₀ (le_of_lt h_rhs_pos) h_not_lt T
     exact absurd (lt_of_lt_of_le h_pow_lt_NT h_pow_le) (lt_irrefl _)
   -- Convert c' to ofAdd N.
@@ -4773,14 +4773,14 @@ private lemma tendsto_QpUn_proj_zero (j : Fin T) :
   rw [hc'_eq]
   exact h_lt
 
--- Helper 1B: continuity of `QpUn_proj j`. Derived from the
+-- Helper 1B: continuity of `QpCUn_proj j`. Derived from the
 -- tendsto-at-zero result above plus the additive-group-hom upgrade.
-private lemma continuous_QpUn_proj (j : Fin T) :
-    Continuous (QpUn_proj p T j) := by
-  have h0 : ContinuousAt (QpUn_proj p T j) 0 := by
+private lemma continuous_QpCUn_proj (j : Fin T) :
+    Continuous (QpCUn_proj p T j) := by
+  have h0 : ContinuousAt (QpCUn_proj p T j) 0 := by
     rw [ContinuousAt, map_zero]
-    exact tendsto_QpUn_proj_zero p T j
-  exact continuous_of_continuousAt_zero (QpUn_proj p T j).toAddMonoidHom h0
+    exact tendsto_QpCUn_proj_zero p T j
+  exact continuous_of_continuousAt_zero (QpCUn_proj p T j).toAddMonoidHom h0
 
 -- Helper 1C: index-splitting identity (Sub-lemma 4.8.1).
 -- For x : LiftedPAdic, g : ℚ, M : ℕ, the T-side partial sum at base g equals
@@ -4790,14 +4790,14 @@ private lemma TLifted_partial_sum_split
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
     (∑ n : Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M),
         (pInvTQ p T) ^ (n.val : ℤ) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             ((Lifted_to_TLifted p T x).coeff (g + (n.val : ℚ) / T)))
     =
     ∑ r : Fin T, (pInvTQ p T) ^ (r.val : ℕ) *
-      algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
+      algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
         (∑ m : Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M),
-            ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
+            ((p : ℕ) : ℚᶜᵘⁿ_[p]) ^ (m.val : ℤ) *
+              algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p])
                 (x.coeff ((g + (r.val : ℚ) / T) + (m.val : ℚ)))) := by
   classical
   have hT_ne : (T : ℤ) ≠ 0 := by exact_mod_cast NeZero.ne T
@@ -4808,43 +4808,43 @@ private lemma TLifted_partial_sum_split
   rw [Finset.univ_eq_attach, Finset.sum_attach
     (Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M))
     (fun n => (pInvTQ p T) ^ (n : ℤ) *
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
         ((Lifted_to_TLifted p T x).coeff (g + (n : ℚ) / T)))]
   -- Push algebraMap and reindex on RHS to a doubled sum on K side.
   have h_RHS : ∀ r : Fin T,
       (pInvTQ p T) ^ (r.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
           (∑ m : Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M),
-            ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m.val : ℤ) *
-              algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p])
+            ((p : ℕ) : ℚᶜᵘⁿ_[p]) ^ (m.val : ℤ) *
+              algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p])
                 (x.coeff ((g + (r.val : ℚ) / T) + (m.val : ℚ)))) =
       ∑ m ∈ Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M),
         (pInvTQ p T) ^ ((T : ℤ) * (m : ℤ) + (r.val : ℤ)) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             ((Lifted_to_TLifted p T x).coeff
               (g + (((T : ℤ) * (m : ℤ) + (r.val : ℤ) : ℤ) : ℚ) / T)) := by
     intro r
     rw [Finset.univ_eq_attach, Finset.sum_attach
       (Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M))
-      (fun m => ((p : ℕ) : ℚᵘⁿ_[p]) ^ (m : ℤ) *
-        algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ))))]
+      (fun m => ((p : ℕ) : ℚᶜᵘⁿ_[p]) ^ (m : ℤ) *
+        algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ))))]
     rw [map_sum]
     rw [Finset.mul_sum]
     refine Finset.sum_congr rfl (fun m _ => ?_)
     -- Single-term identity:
     -- pInvTQ^r * algMap (p^m * algMap (x.coeff h)) where h = g + r/T + m
-    -- = pInvTQ^(T*m+r) * algMap_{R→K}(OQpUn_embd (x.coeff h))
+    -- = pInvTQ^(T*m+r) * algMap_{R→K}(OQpCUn_embd (x.coeff h))
     -- = pInvTQ^(T*m+r) * algMap_{R→K}((ι x).coeff (g + (T*m+r)/T))
     rw [map_mul, map_zpow₀]
     -- p in K₀ as algMap from R₀
-    have hp_K0 : ((p : ℕ) : ℚᵘⁿ_[p]) =
-        algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p]) := by simp
-    -- algMap_{K₀→K} (algMap_{R₀→K₀} z) = algMap_{R→K} (OQpUn_embd z)
-    have h_compat : algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ)))) =
-        algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
-          (OQpUn_embd p T (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ)))) :=
-      (algebraMap_OQpUn_embd_compat p T _).symm
+    have hp_K0 : ((p : ℕ) : ℚᶜᵘⁿ_[p]) =
+        algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) ((p : ℕ) : ℤᶜᵘⁿ_[p]) := by simp
+    -- algMap_{K₀→K} (algMap_{R₀→K₀} z) = algMap_{R→K} (OQpCUn_embd z)
+    have h_compat : algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
+        (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ)))) =
+        algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
+          (OQpCUn_embd p T (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ)))) :=
+      (algebraMap_OQpCUn_embd_compat p T _).symm
     rw [h_compat]
     -- Compute index identity g + (T*m+r)/T = (g + r/T) + m
     have h_idx : g + (((T : ℤ) * (m : ℤ) + (r.val : ℤ) : ℤ) : ℚ) / T =
@@ -4852,12 +4852,12 @@ private lemma TLifted_partial_sum_split
       push_cast; field_simp; ring
     rw [show (Lifted_to_TLifted p T x).coeff
         (g + (((T : ℤ) * (m : ℤ) + (r.val : ℤ) : ℤ) : ℚ) / T) =
-        OQpUn_embd p T (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ))) from by
+        OQpCUn_embd p T (x.coeff ((g + (r.val : ℚ) / T) + (m : ℚ))) from by
       rw [h_idx]; rfl]
     -- Now compute pInvTQ^r * algMap p^m * algMap_{R→K}(...)
     -- = pInvTQ^r * pInvTQ^(T*m) * algMap_{R→K}(...)
-    have h_alg_p_pow : (algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
-        (algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) ((p : ℕ) : ℤᵘⁿ_[p])))^(m : ℤ) =
+    have h_alg_p_pow : (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
+        (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) ((p : ℕ) : ℤᶜᵘⁿ_[p])))^(m : ℤ) =
         (pInvTQ p T) ^ ((T : ℤ) * (m : ℤ)) := by
       rw [← hp_K0, ← map_zpow₀, ← pInvTQ_pow_T_zmul]
     rw [hp_K0]
@@ -4876,7 +4876,7 @@ private lemma TLifted_partial_sum_split
       (fun r : Fin T => Set.Finite.toFinset (finiteBelow x (g + (r.val : ℚ) / T) M))
       (fun rm : Σ _ : Fin T, ℤ =>
         (pInvTQ p T) ^ ((T : ℤ) * rm.2 + (rm.1.val : ℤ)) *
-          algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
             ((Lifted_to_TLifted p T x).coeff
               (g + (((T : ℤ) * rm.2 + (rm.1.val : ℤ) : ℤ) : ℚ) / T)))]
   -- Apply Finset.sum_bij with the bijection n ↔ ⟨n % T, n / T⟩.
@@ -4907,8 +4907,8 @@ private lemma TLifted_partial_sum_split
         exact_mod_cast this.symm
       rw [hcast]
       field_simp; ring
-    have hcoeff_eq : (Lifted_to_TLifted p T x).coeff (g + (n : ℚ) / T) =
-        OQpUn_embd p T (x.coeff (g + ((n.emod (T : ℤ)).toNat : ℚ) / T + (n.ediv (T : ℤ) : ℚ))) := by
+    have hcoeff_eq : (Lifted_to_TLifted p T x).coeff (g + (n : ℚ) / T) = OQpCUn_embd p T
+      (x.coeff (g + ((n.emod (T : ℤ)).toNat : ℚ) / T + (n.ediv (T : ℤ) : ℚ))) := by
       rw [show g + (n : ℚ) / T =
           g + ((n.emod (T : ℤ)).toNat : ℚ) / T + (n.ediv (T : ℤ) : ℚ) from by
         rw [hn_split]; ring]
@@ -4948,10 +4948,10 @@ private lemma TLifted_partial_sum_split
       · rw [hidx]
         intro h0
         apply hrm.2
-        have h1 : OQpUn_embd p T (x.coeff (g + (r.val : ℚ) / T + (m : ℚ))) = 0 := h0
-        have : OQpUn_embd p T (x.coeff (g + (r.val : ℚ) / T + (m : ℚ))) =
-          OQpUn_embd p T 0 := by rw [h1, map_zero]
-        exact (OQpUn_embd_injective p T) this
+        have h1 : OQpCUn_embd p T (x.coeff (g + (r.val : ℚ) / T + (m : ℚ))) = 0 := h0
+        have : OQpCUn_embd p T (x.coeff (g + (r.val : ℚ) / T + (m : ℚ))) =
+          OQpCUn_embd p T 0 := by rw [h1, map_zero]
+        exact (OQpCUn_embd_injective p T) this
     · -- bijection function value matches
       have hr_lt : (r.val : ℤ) < T := by exact_mod_cast r.isLt
       have hr_nn : (0 : ℤ) ≤ r.val := Int.natCast_nonneg _
@@ -5000,18 +5000,18 @@ private lemma TLifted_partial_sum_split
 /-- K₀-side partial sum (Poonen `S_M(h; x)`).  Definitionally matches the body of
 `IsNullSeries x` at base `h`, step `M`. -/
 private noncomputable def S_partial
-    (x : LiftedPAdicHahnSeries p) (h : ℚ) (M : ℕ) : ℚᵘⁿ_[p] :=
+    (x : LiftedPAdicHahnSeries p) (h : ℚ) (M : ℕ) : ℚᶜᵘⁿ_[p] :=
   ∑ n : Set.Finite.toFinset (finiteBelow x h M),
-    ((p : ℕ) : ℚᵘⁿ_[p]) ^ (n.val : ℤ) *
-      algebraMap (ℤᵘⁿ_[p]) (ℚᵘⁿ_[p]) (x.coeff (h + n.val))
+    ((p : ℕ) : ℚᶜᵘⁿ_[p]) ^ (n.val : ℤ) *
+      algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) (x.coeff (h + n.val))
 
 /-- K-side partial sum (Poonen `T_M(g; ι x)`).  Definitionally matches the body of
 `IsTNullSeries (Lifted_to_TLifted p T x)` at base `g`, step `M`. -/
 private noncomputable def T_partial
-    (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) : ℚᵘⁿ_[p,T] :=
+    (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) : ℚᶜᵘⁿ_[p,T] :=
   ∑ n : Set.Finite.toFinset (TfiniteBelow p T (Lifted_to_TLifted p T x) g M),
     (pInvTQ p T) ^ (n.val : ℤ) *
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
         ((Lifted_to_TLifted p T x).coeff (g + (n.val : ℚ) / T))
 
 /-- Sub-lemma 4.8.1 packaged through the opaque names: the K-side partial sum
@@ -5020,7 +5020,7 @@ private lemma T_partial_eq_proj_sum
     (x : LiftedPAdicHahnSeries p) (g : ℚ) (M : ℕ) :
     T_partial p T x g M
       = ∑ r : Fin T, (pInvTQ p T) ^ (r.val : ℕ) *
-          algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
+          algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
             (S_partial p x (g + (r.val : ℚ) / T) M) := by
   unfold T_partial S_partial
   exact TLifted_partial_sum_split (p := p) (T := T) x g M
@@ -5034,22 +5034,22 @@ private lemma tendsto_T_partial_of_null
     Filter.Tendsto (fun M => T_partial p T x g M) Filter.atTop (𝓝 0) := by
   have hf : (fun M => T_partial p T x g M) =
       (fun M => ∑ r : Fin T, (pInvTQ p T) ^ (r.val : ℕ) *
-        algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
+        algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
           (S_partial p x (g + (r.val : ℚ) / T) M)) := by
     funext M; exact T_partial_eq_proj_sum p T x g M
   rw [hf]
-  have hzero : (0 : ℚᵘⁿ_[p,T]) = ∑ _r : Fin T, (0 : ℚᵘⁿ_[p,T]) := by simp
+  have hzero : (0 : ℚᶜᵘⁿ_[p,T]) = ∑ _r : Fin T, (0 : ℚᶜᵘⁿ_[p,T]) := by simp
   rw [hzero]
   refine tendsto_finsetSum _ ?_
   intro r _
   -- For each r: π^r · ι̃(S_partial p x (g + r/T) M) → π^r · 0 = 0.
   have h_inner : Filter.Tendsto
-      (fun M => algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T])
+      (fun M => algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T])
         (S_partial p x (g + (r.val : ℚ) / T) M))
       Filter.atTop (𝓝 0) := by
     have hcts := (continuous_algebraMap_K₀_K p T).tendsto 0
-    have h0 : (0 : ℚᵘⁿ_[p,T])
-        = algebraMap (ℚᵘⁿ_[p]) (ℚᵘⁿ_[p,T]) 0 := (map_zero _).symm
+    have h0 : (0 : ℚᶜᵘⁿ_[p,T])
+        = algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) 0 := (map_zero _).symm
     rw [h0]
     exact hcts.comp (hN (g + (r.val : ℚ) / T))
   have h_mul := h_inner.const_mul ((pInvTQ p T) ^ (r.val : ℕ))
@@ -5063,19 +5063,19 @@ private lemma tendsto_S_partial_of_T_null
     (hT : ∀ g, Filter.Tendsto (fun M => T_partial p T x g M) Filter.atTop (𝓝 0))
     (h : ℚ) :
     Filter.Tendsto (fun M => S_partial p x h M) Filter.atTop (𝓝 0) := by
-  -- Apply continuous_QpUn_proj 0 to hT h.
+  -- Apply continuous_QpCUn_proj 0 to hT h.
   have h_proj : Filter.Tendsto
-      (fun M => QpUn_proj p T 0 (T_partial p T x h M)) Filter.atTop (𝓝 0) := by
-    have hcts := (continuous_QpUn_proj p T 0).tendsto 0
-    have h0 : (0 : ℚᵘⁿ_[p]) = QpUn_proj p T 0 0 := by
+      (fun M => QpCUn_proj p T 0 (T_partial p T x h M)) Filter.atTop (𝓝 0) := by
+    have hcts := (continuous_QpCUn_proj p T 0).tendsto 0
+    have h0 : (0 : ℚᶜᵘⁿ_[p]) = QpCUn_proj p T 0 0 := by
       rw [map_zero]
     rw [h0]
     exact hcts.comp (hT h)
   -- Show the projection equals S_partial pointwise.
-  have h_eq : ∀ M, QpUn_proj p T 0 (T_partial p T x h M) = S_partial p x h M := by
+  have h_eq : ∀ M, QpCUn_proj p T 0 (T_partial p T x h M) = S_partial p x h M := by
     intro M
     rw [T_partial_eq_proj_sum]
-    rw [QpUn_proj_sum (p := p) (T := T)
+    rw [QpCUn_proj_sum (p := p) (T := T)
         (a := fun r : Fin T => S_partial p x (h + (r.val : ℚ) / T) M) 0]
     show S_partial p x (h + ((0 : Fin T).val : ℚ) / T) M = S_partial p x h M
     have hzero : ((0 : Fin T).val : ℚ) = 0 := by simp
@@ -5125,21 +5125,21 @@ private lemma LiftedPAdic_shift_coeff (δ : ℚ) (z : LiftedPAdicHahnSeries p) (
     (LiftedPAdic_shift (p := p) δ z).coeff q = z.coeff (q - δ) := rfl
 
 /-- The i-th `R₀`-coordinate projection of `y : TLifted` viewed as a `LiftedPAdic`
-Hahn series. Coefficient at `q` is `OQpUn_proj p T i (y.coeff q)`. Support is
-`⊆ y.support` because `OQpUn_proj` sends 0 to 0. -/
+Hahn series. Coefficient at `q` is `OQpCUn_proj p T i (y.coeff q)`. Support is
+`⊆ y.support` because `OQpCUn_proj` sends 0 to 0. -/
 private noncomputable def sProj
     (y : TLiftedPAdicHahnSeries p T) (i : Fin T) : LiftedPAdicHahnSeries p where
-  coeff q := OQpUn_proj p T i (y.coeff q)
+  coeff q := OQpCUn_proj p T i (y.coeff q)
   isPWO_support' := by
     apply y.isPWO_support'.mono
     intro q hq h_y_zero
     apply hq
-    change OQpUn_proj p T i (y.coeff q) = 0
+    change OQpCUn_proj p T i (y.coeff q) = 0
     rw [show y.coeff q = 0 from h_y_zero, map_zero]
 
 private lemma sProj_coeff
     (y : TLiftedPAdicHahnSeries p T) (i : Fin T) (q : ℚ) :
-    (sProj p T y i).coeff q = OQpUn_proj p T i (y.coeff q) := rfl
+    (sProj p T y i).coeff q = OQpCUn_proj p T i (y.coeff q) := rfl
 
 /-- The "linear-shift element": `pInvT^i` at index 0 minus `1` at index `i.val/T`.
 This element has at most two non-zero coefficients, and lies in `TNullSeriesIdeal`. -/
@@ -5202,10 +5202,10 @@ the body of `IsTNullSeries (linearShiftElt p T i)` at `(g, M)`.  Wrapping the su
 opaque `private noncomputable def` prevents Lean from re-elaborating the
 `Set.Finite.toFinset`-based index sets on every defeq check. -/
 private noncomputable def linearShiftPartial
-    (i : Fin T) (g : ℚ) (M : ℕ) : ℚᵘⁿ_[p,T] :=
+    (i : Fin T) (g : ℚ) (M : ℕ) : ℚᶜᵘⁿ_[p,T] :=
   ∑ n : Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M),
     (pInvTQ p T) ^ (n.val : ℤ) *
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
         ((linearShiftElt p T i).coeff (g + (n.val : ℚ) / T))
 
 -- **Bridge.** Unfolding `IsTNullSeries (linearShiftElt p T i)` to the opaque partial-sum
@@ -5252,7 +5252,7 @@ private lemma linearShiftPartial_eventually_zero (i : Fin T) (g : ℚ) :
   rw [Finset.univ_eq_attach, Finset.sum_attach
     (Set.Finite.toFinset (TfiniteBelow p T (linearShiftElt p T i) g M))
     (fun n => (pInvTQ p T) ^ (n : ℤ) *
-      algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T])
+      algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T])
         ((linearShiftElt p T i).coeff (g + (n : ℚ) / T)))]
   -- Now case-split on whether `gT ∈ ℤ`.
   by_cases hgT : ∃ k : ℤ, g + (k : ℚ) / T = 0
@@ -5317,12 +5317,12 @@ private lemma linearShiftPartial_eventually_zero (i : Fin T) (g : ℚ) :
     rw [hn_0, hn_1, linearShiftElt_coeff_zero p T i hi,
       linearShiftElt_coeff_iT p T i hi]
     -- Goal: (pInvTQ)^n_0 * algMap(pInvT^i) + (pInvTQ)^n_1 * algMap(-1) = 0
-    have h_alg_pInvT_pow : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) ((pInvT p T) ^ (i.val))
+    have h_alg_pInvT_pow : algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) ((pInvT p T) ^ (i.val))
         = (pInvTQ p T) ^ (i.val : ℤ) := by
       unfold pInvTQ
       rw [map_pow]
       rfl
-    have h_alg_neg_one : algebraMap (ℤᵘⁿ_[p,T]) (ℚᵘⁿ_[p,T]) (-1 : ℤᵘⁿ_[p,T]) = -1 := by
+    have h_alg_neg_one : algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (-1 : ℤᶜᵘⁿ_[p,T]) = -1 := by
       rw [map_neg, map_one]
     rw [h_alg_pInvT_pow, h_alg_neg_one]
     rw [show (pInvTQ p T) ^ (n_0 : ℤ) * (pInvTQ p T) ^ (i.val : ℤ)
@@ -5357,7 +5357,7 @@ private lemma linearShiftElt_mem_TNullSeriesIdeal (i : Fin T) :
   rw [isTNullSeries_linearShiftElt_iff]
   intro g
   -- The partial sum is eventually zero, so it tends to 0.
-  refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℚᵘⁿ_[p,T])))
+  refine Filter.Tendsto.congr' ?_ (tendsto_const_nhds (x := (0 : ℚᶜᵘⁿ_[p,T])))
   filter_upwards [linearShiftPartial_eventually_zero p T i g] with M hM
   exact hM.symm
 
@@ -5373,12 +5373,12 @@ private lemma coeff_identity_n
     (y - Lifted_to_TLifted p T (xFromY p T y)).coeff q
       = ∑ i : Fin T,
           (linearShiftElt p T i * Lifted_to_TLifted p T (sProj p T y i)).coeff q := by
-  -- RHS = Σ_i ((pInvT)^i * OQpUn_embd((sProj y i).coeff q)
-  --             - OQpUn_embd((sProj y i).coeff (q - i/T)))
+  -- RHS = Σ_i ((pInvT)^i * OQpCUn_embd((sProj y i).coeff q)
+  --             - OQpCUn_embd((sProj y i).coeff (q - i/T)))
   have h_term : ∀ i : Fin T,
       (linearShiftElt p T i * Lifted_to_TLifted p T (sProj p T y i)).coeff q
-        = (pInvT p T) ^ i.val * OQpUn_embd p T (OQpUn_proj p T i (y.coeff q))
-            - OQpUn_embd p T (OQpUn_proj p T i (y.coeff (q - (i.val : ℚ) / T))) := by
+        = (pInvT p T) ^ i.val * OQpCUn_embd p T (OQpCUn_proj p T i (y.coeff q))
+            - OQpCUn_embd p T (OQpCUn_proj p T i (y.coeff (q - (i.val : ℚ) / T))) := by
     intro i
     unfold linearShiftElt
     rw [show ((HahnSeries.single 0 ((pInvT p T) ^ (i.val))
@@ -5386,26 +5386,26 @@ private lemma coeff_identity_n
         * Lifted_to_TLifted p T (sProj p T y i))
         = HahnSeries.single 0 ((pInvT p T) ^ (i.val))
             * Lifted_to_TLifted p T (sProj p T y i)
-          - HahnSeries.single ((i.val : ℚ) / T) (1 : ℤᵘⁿ_[p,T])
+          - HahnSeries.single ((i.val : ℚ) / T) (1 : ℤᶜᵘⁿ_[p,T])
             * Lifted_to_TLifted p T (sProj p T y i) from by ring]
     rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_mul, HahnSeries.coeff_single_mul,
       sub_zero, one_mul]
     rw [Lifted_to_TLifted_coeff, Lifted_to_TLifted_coeff, sProj_coeff, sProj_coeff]
-  -- LHS expands via OQpUn_basis_decomp.
+  -- LHS expands via OQpCUn_basis_decomp.
   rw [HahnSeries.coeff_sub, Lifted_to_TLifted_coeff]
   unfold xFromY
   rw [HahnSeries.coeff_sum, map_sum]
-  -- LHS: y.coeff q - Σ_i OQpUn_embd ((sProj y i).coeff (q - i/T))
-  -- Apply OQpUn_basis_decomp to y.coeff q:
-  conv_lhs => rw [OQpUn_basis_decomp p T (y.coeff q)]
+  -- LHS: y.coeff q - Σ_i OQpCUn_embd ((sProj y i).coeff (q - i/T))
+  -- Apply OQpCUn_basis_decomp to y.coeff q:
+  conv_lhs => rw [OQpCUn_basis_decomp p T (y.coeff q)]
   rw [← Finset.sum_sub_distrib]
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [h_term i]
-  -- Goal: (pInvT p T) ^ i.val * OQpUn_embd .. y.coeff q
-  --   - OQpUn_embd ((LiftedPAdic_shift (i.val/T) (sProj y i)).coeff q)
-  --   = (pInvT p T) ^ i.val * OQpUn_embd .. y.coeff q
-  --   - OQpUn_embd (OQpUn_proj i (y.coeff (q - i.val/T)))
-  -- Reduces to: LiftedPAdic_shift δ z .coeff q = z.coeff (q - δ), and sProj.coeff = OQpUn_proj.
+  -- Goal: (pInvT p T) ^ i.val * OQpCUn_embd .. y.coeff q
+  --   - OQpCUn_embd ((LiftedPAdic_shift (i.val/T) (sProj y i)).coeff q)
+  --   = (pInvT p T) ^ i.val * OQpCUn_embd .. y.coeff q
+  --   - OQpCUn_embd (OQpCUn_proj i (y.coeff (q - i.val/T)))
+  -- Reduces to: LiftedPAdic_shift δ z .coeff q = z.coeff (q - δ), and sProj.coeff = OQpCUn_proj.
   rfl
 
 /-- **Lemma 4.8.**  The image of `Lifted_to_TLifted` together with `TNullSeriesIdeal` spans

@@ -15,7 +15,7 @@ This file records two consequences of the bounded-support finiteness engine
 `finite_support_of_qpun_algebraic_of_bounded_support` (Theorem 6.23 of `BoundedSupport.lean`).
 
 The first, `tendsto_atTop_of_strictMono_support_of_qpun_algebraic` (Corollary 1.12), says that an
-`ℚᵘⁿ_[p]`-algebraic series whose support is the range of a strictly monotone rational sequence `s`
+`ℚᶜᵘⁿ_[p]`-algebraic series whose support is the range of a strictly monotone rational sequence `s`
 forces `s` to diverge to `+∞`: such a support cannot be bounded above. The proof is by
 contradiction — a bounded strictly monotone sequence accumulates only at its supremum, so the
 support has finitely many accumulation points, and the engine would then make it finite,
@@ -23,15 +23,15 @@ contradicting the injectivity of `s`.
 
 The second, `padic_huang_stefanescu_tfae` (Proposition 1.14), is the `p`-adic analogue of the
 Huang–Stefanescu equivalence: for a series supported in the sparse set `{-p^{-i} | i : ℕ+}`,
-finite support, algebraicity over `ℚᵘⁿ_[p]`, and algebraicity over `ℚ_[p]` are all
-equivalent. The nontrivial implication (algebraic over `ℚᵘⁿ_[p]` ⟹ finite support) runs the same
+finite support, algebraicity over `ℚᶜᵘⁿ_[p]`, and algebraicity over `ℚ_[p]` are all
+equivalent. The nontrivial implication (algebraic over `ℚᶜᵘⁿ_[p]` ⟹ finite support) runs the same
 engine: the support lies in `[-1, 0]`, hence is bounded, and its image under `ℚ ↪ ℝ` is covered
 by the range of `n ↦ -p^{-n}`, which converges to `0`, so its ℝ-derived set is finite.
 
 ## Main statements
 
 - `FormalizedSparse.tendsto_atTop_of_strictMono_support_of_qpun_algebraic` (Corollary 1.12): a
-  strictly monotone rational support sequence of an `ℚᵘⁿ_[p]`-algebraic series diverges to `+∞`.
+  strictly monotone rational support sequence of an `ℚᶜᵘⁿ_[p]`-algebraic series diverges to `+∞`.
 - `FormalizedSparse.padic_huang_stefanescu_tfae` (Proposition 1.14): the `p`-adic analogue of the
   Huang–Stefanescu equivalence for series supported in `{-p^{-i} | i : ℕ+}`.
 
@@ -85,14 +85,14 @@ private theorem isBounded_of_bddBelow_bddAbove {s : Set ℚ} (hb : BddBelow s) (
   constructor <;> linarith
 
 open Filter Topology in
-/-- **Corollary 1.12.** If `f : 𝕃_[p]` is algebraic over `ℚᵘⁿ_[p]` and its support is the range
+/-- **Corollary 1.12.** If `f : 𝕃_[p]` is algebraic over `ℚᶜᵘⁿ_[p]` and its support is the range
 of a strictly monotone rational sequence `s`, then `s` diverges to `+∞`. Equivalently, the
 support of such an `f` is unbounded above: were it bounded, the sequence would accumulate at its
 supremum, and `finite_support_of_qpun_algebraic_of_bounded_support` would force the support
 finite, contradicting the injectivity of `s`. -/
 theorem tendsto_atTop_of_strictMono_support_of_qpun_algebraic
     {p : ℕ} [Fact (Nat.Prime p)] (s : ℕ → ℚ) (hs : StrictMono s) (f : 𝕃_[p])
-    (hf1 : IsAlgebraic ℚᵘⁿ_[p] f) (hf2 : f.support = Set.range s) :
+    (hf1 : IsAlgebraic ℚᶜᵘⁿ_[p] f) (hf2 : f.support = Set.range s) :
     Tendsto s atTop atTop := by
   -- It suffices to show `Set.range s` is unbounded above.
   apply tendsto_atTop_atTop_of_monotone hs.monotone
@@ -129,12 +129,12 @@ theorem tendsto_atTop_of_strictMono_support_of_qpun_algebraic
 open Filter Topology pAdicHahnSeries in
 /-- **Proposition 1.14.** The `p`-adic analogue of the Huang–Stefanescu equivalence: for a
 `p`-adic Hahn series `f` whose support is contained in the sparse set `{-p^{-i} | i : ℕ+}`, the
-following are equivalent: `f` has finite support, `f` is algebraic over `ℚᵘⁿ_[p]`, and `f` is
+following are equivalent: `f` has finite support, `f` is algebraic over `ℚᶜᵘⁿ_[p]`, and `f` is
 algebraic over `ℚ_[p]`. -/
 theorem padic_huang_stefanescu_tfae (p : ℕ) [Fact (Nat.Prime p)] (f : 𝕃_[p])
     (hf : f.support ⊆ {-(p : ℚ) ^ (-(i : ℤ)) | i : ℕ+}) :
-    List.TFAE [f.support.Finite, IsAlgebraic ℚᵘⁿ_[p] f, IsAlgebraic ℚ_[p] f] := by
-  tfae_have 3 → 2 := fun a ↦ alg_QpUn_of_alg_Qp p f a
+    List.TFAE [f.support.Finite, IsAlgebraic ℚᶜᵘⁿ_[p] f, IsAlgebraic ℚ_[p] f] := by
+  tfae_have 3 → 2 := fun a ↦ alg_QpCUn_of_alg_Qp p f a
   tfae_have 1 → 3 := fun a ↦ alg_of_fin_supp p f a
   tfae_have 2 → 1 := by
     -- Deduced from Corollary 1.12 (`tendsto_atTop_of_strictMono_support_of_qpun_algebraic`),
