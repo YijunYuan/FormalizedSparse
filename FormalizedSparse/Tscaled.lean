@@ -5,7 +5,7 @@ Authors: Shanwen Wang, Yijun Yuan
 -/
 module
 
-public import TrustworthyKedlaya.PAdicHahnSeries
+public import TrustworthyKedlaya.Lp.Basic
 public import Mathlib.RingTheory.AdjoinRoot
 public import Mathlib.RingTheory.Localization.Finiteness
 public import Mathlib.RingTheory.Polynomial.Eisenstein.Basic

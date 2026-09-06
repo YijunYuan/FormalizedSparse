@@ -25,11 +25,11 @@ development is admitted.
 |------|---------|-------------|
 | `TrustworthyKedlaya/Miscellaneous.lean` (dependency) | — | Helper: `WithZeroRat.toNNReal` for the p-adic absolute value |
 | `TrustworthyKedlaya/WittVector.lean` (dependency) | §2 | ℚᶜᵘⁿ_[p] via Witt vectors, Teichmüller lift, valuation topology |
-| `TrustworthyKedlaya/PAdicHahnSeries.lean` (dependency) | §2 | 𝕃_[p] as W(𝔽ᵃ_[p])((t^ℚ)) / null series, coefficients, support well-orderedness |
+| `TrustworthyKedlaya/Lp/Basic.lean` (dependency) | §2 | 𝕃_[p] as W(𝔽ᵃ_[p])((t^ℚ)) / null series, coefficients, support well-orderedness |
 | `FormalizedSparse/Sparse.lean` | §3 | Digit series, (c,n)-sparseness, sparseness of disjoint-digit sets |
 | `FormalizedSparse/Tscaled.lean` | §4 | T-scaled realization of 𝕃_[p]: adjoining p^(1/T), T-null-series, isomorphism 𝕃_[p] ≅ W(𝔽ᵃ_[p])[p^(1/T)]((t^ℚ))/N_T |
 | `FormalizedSparse/MainTheorem.lean` | §5 | Main theorem: sparse support ⇒ transcendental over ℚᶜᵘⁿ_[p] |
-| `TrustworthyKedlaya/Kedlaya.lean` (dependency) | §6 | External results of Kedlaya, fully proved in TrustworthyKedlaya |
+| `TrustworthyKedlaya/MainResults.lean` (dependency) | §6 | External results of Kedlaya, fully proved in TrustworthyKedlaya |
 | `FormalizedSparse/QuasiTwistRecurrent.lean` | §6.1 | Quasi-twist-recurrent (QTR) functions and Kedlaya's integrality criterion |
 | `FormalizedSparse/RayDecomposition.lean` | §6.2 | Ray decomposition of bounded QTR sets |
 | `FormalizedSparse/BoundedSupport.lean` | §6.3 | Sparse representatives and finiteness of bounded QTR supports (the application) |

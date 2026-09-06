@@ -5,7 +5,7 @@ Authors: Shanwen Wang, Yijun Yuan
 -/
 module
 
-public import TrustworthyKedlaya.Kedlaya
+public import TrustworthyKedlaya.MainResults
 
 /-!
 # Quasi-twist-recurrent functions
