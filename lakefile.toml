@@ -17,7 +17,7 @@ rev = "v4.33.0"
 [[require]]
 name = "TrustworthyKedlaya"
 git = "https://github.com/YijunYuan/TrustworthyKedlaya.git"
-rev = "6e935eb559147e8e9bda430a266d27b432087143"
+rev = "f97be4372713e25a21603dec26706d8bb0cd9d24"
 
 [[lean_lib]]
 name = "FormalizedSparse"
