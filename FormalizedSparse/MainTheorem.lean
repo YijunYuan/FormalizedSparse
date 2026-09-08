@@ -424,7 +424,7 @@ lift of a nonzero element has nonzero `coeff 0` (it IS the element), so by
 `WittVector.isUnit_of_coeff_zero_ne_zero` the Teichmüller lift is a unit; the
 image under `OQpCUn_embd` (a ring hom) is also a unit; and `Valuation.Integers.one_of_isUnit'`
 gives valuation `1`. -/
-private lemma Cs_term_zero_v_eq_one
+lemma Cs_term_zero_v_eq_one
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)
@@ -1028,7 +1028,7 @@ topology on `ℚᶜᵘⁿ_[p,T]`. -/
 /-- `Valued.v (algebraMap (Cs hf2 s - Cs_partial hf2 s N)) ≤ ofAdd(-N)`.
 Obtained from the Cauchy bound `Cs_partial_diff_alg_v_le` by taking the limit as
 `N' → ∞`, using `Cs_tendsto` plus `Valued.isClosed_closedBall`. -/
-private lemma Cs_diff_alg_v_le
+lemma Cs_diff_alg_v_le
     {p : ℕ} [Fact (Nat.Prime p)] {f : 𝕃_[p]} {T : ℕ+}
     {S : Set DigitSeries}
     (hf2 : IsRepModZ ((DigitSeries.norm p) '' S)

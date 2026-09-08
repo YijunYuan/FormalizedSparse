@@ -4345,7 +4345,7 @@ private lemma QpCUn_proj_sum (a : Fin T → ℚᶜᵘⁿ_[p]) (j : Fin T) :
 
 /-- Algebra-map square commutativity: viewing `OQpCUn_embd` followed by `algebraMap` to `K`
 agrees with `algebraMap` to `K₀` followed by the field inclusion `K₀ ↪ K`. -/
-private lemma algebraMap_OQpCUn_embd_compat (a : ℤᶜᵘⁿ_[p]) :
+lemma algebraMap_OQpCUn_embd_compat (a : ℤᶜᵘⁿ_[p]) :
     algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (OQpCUn_embd p T a) =
       algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a) := by
   change algebraMap (ℤᶜᵘⁿ_[p,T]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℤᶜᵘⁿ_[p,T]) a) =
@@ -4384,7 +4384,7 @@ private lemma pInvTQ_pow_T_zmul (m : ℤ) :
 -- `v_K(algMap_{K₀→K}(algMap_{R₀→K₀} a)) = (v_{K₀}(algMap_{R₀→K₀} a))^T`.
 -- Derived via the DVR canonical decomposition `a = u · p^n` together with
 -- `OQpCUn_embd p = pInvT^T` and `pInvTQ^T = algMap p`.
-private lemma valued_v_algebraMap_K₀_K_int (a : ℤᶜᵘⁿ_[p]) :
+lemma valued_v_algebraMap_K₀_K_int (a : ℤᶜᵘⁿ_[p]) :
     Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a)) =
       (Valued.v (algebraMap (ℤᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p]) a))^T := by
   rw [← algebraMap_OQpCUn_embd_compat]
@@ -4459,7 +4459,7 @@ private lemma valued_v_algebraMap_K₀_K_int (a : ℤᶜᵘⁿ_[p]) :
     rw [mul_comm]
 /-- The valuation identity for the totally-ramified extension `K₀ ↪ K`:
 `v_K(ι̃ z) = (v_{K₀}(z))^T`, encoding the ramification index `T`. -/
-private lemma valued_v_algebraMap_K₀_K (z : ℚᶜᵘⁿ_[p]) :
+lemma valued_v_algebraMap_K₀_K (z : ℚᶜᵘⁿ_[p]) :
     Valued.v (algebraMap (ℚᶜᵘⁿ_[p]) (ℚᶜᵘⁿ_[p,T]) z) = (Valued.v z)^T := by
   obtain ⟨a, b, _, hz⟩ := IsFractionRing.div_surjective (A := ℤᶜᵘⁿ_[p]) z
   rw [← hz]
